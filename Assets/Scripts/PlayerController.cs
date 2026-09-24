@@ -266,7 +266,7 @@ public class PlayerController : MonoBehaviour
         // 좌클릭 일반 발사
         // =========================
 
-        if (Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime) Shoot();
+        if (Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작
@@ -416,6 +416,13 @@ void Shoot()
     // =====================================
     // 총알 생성
     // =====================================
+
+    // 마우스가 버튼 같은 UI 위에 있으면 사격하지 않음
+    static bool PointerOverUI()
+    {
+        return UnityEngine.EventSystems.EventSystem.current != null
+            && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+    }
 
     // 잠깐 동안 목표 방향을 바라보게 함 (이동 입력보다 우선)
     void FaceTowards(Vector3 worldPos)

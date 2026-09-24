@@ -79332,7 +79332,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -24, y: 140}
+  m_AnchoredPosition: {x: -24, y: 178}
   m_SizeDelta: {x: 300, y: 222}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &910000164
@@ -79396,3 +79396,8 @@ MonoBehaviour:
   rowHeight: 34
   padding: 26
   refreshInterval: 0.2
+  tabSprite: {fileID: 21300000, guid: 98c29720d317884d7d8f9ad4c9093046, type: 3}
+  arrowSprite: {fileID: 21300000, guid: fa67b2bdb84895dd3b5410e46fee9baf, type: 3}
+  tabSize: {x: 64, y: 38}
+  startOpen: 0
+  animSpeed: 8

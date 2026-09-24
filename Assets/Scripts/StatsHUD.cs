@@ -15,6 +15,20 @@ public class StatsHUD : MonoBehaviour
     public float padding = 26f;
     public float refreshInterval = 0.2f;
 
+    [Header("열고 닫기 탭")]
+    public Sprite tabSprite;
+    public Sprite arrowSprite;          // 위쪽을 가리키는 화살표
+    public Vector2 tabSize = new Vector2(64f, 38f);
+    public bool startOpen = false;      // 처음엔 접힌 상태
+    public float animSpeed = 8f;
+
+    const string PrefKey = "StatsPanelOpen";
+
+    bool open;
+    float openAmount;                   // 0 = 접힘, 1 = 펼침
+    RectTransform panelRect;
+    RectTransform arrowRect;
+
     static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도" };
 
     PlayerController player;
@@ -30,7 +44,71 @@ public class StatsHUD : MonoBehaviour
         values = new TextMeshProUGUI[Labels.Length];
         for (int i = 0; i < Labels.Length; i++) BuildRow(i);
 
+        panelRect = GetComponent<RectTransform>();
+        BuildTab();
+
+        open = PlayerPrefs.GetInt(PrefKey, startOpen ? 1 : 0) == 1;
+        openAmount = open ? 1f : 0f;
+        ApplyOpenAmount();
+
         Refresh();
+    }
+
+    // 패널 바로 아래(탄약 패널 위)에 붙는 화살표 버튼
+    void BuildTab()
+    {
+        GameObject tab = new GameObject("StatsToggle", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform tabRect = tab.GetComponent<RectTransform>();
+        tabRect.SetParent(panelRect.parent, false);
+        tabRect.SetSiblingIndex(panelRect.GetSiblingIndex() + 1);
+        tabRect.anchorMin = panelRect.anchorMin;
+        tabRect.anchorMax = panelRect.anchorMax;
+        tabRect.pivot = new Vector2(1f, 0f);
+        tabRect.sizeDelta = tabSize;
+        tabRect.anchoredPosition = panelRect.anchoredPosition - new Vector2(0f, tabSize.y + 4f);
+
+        Image bg = tab.GetComponent<Image>();
+        bg.sprite = tabSprite;
+        bg.type = Image.Type.Sliced;
+
+        Button button = tab.GetComponent<Button>();
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(1f, 0.9f, 0.62f);
+        colors.pressedColor = new Color(0.72f, 0.62f, 0.48f);
+        colors.selectedColor = Color.white;
+        button.colors = colors;
+        button.onClick.AddListener(Toggle);
+
+        TooltipTrigger tip = tab.AddComponent<TooltipTrigger>();
+        tip.title = "능력치";
+        tip.body = "눌러서 능력치 창을 열고 닫습니다.";
+
+        GameObject arrow = new GameObject("Arrow", typeof(RectTransform), typeof(Image));
+        arrowRect = arrow.GetComponent<RectTransform>();
+        arrowRect.SetParent(tabRect, false);
+        arrowRect.sizeDelta = new Vector2(tabSize.y - 6f, tabSize.y - 6f);
+        Image arrowImage = arrow.GetComponent<Image>();
+        arrowImage.sprite = arrowSprite;
+        arrowImage.preserveAspect = true;
+        arrowImage.raycastTarget = false;
+    }
+
+    public void Toggle()
+    {
+        open = !open;
+        PlayerPrefs.SetInt(PrefKey, open ? 1 : 0);
+        // 버튼이 선택된 채로 남아 색이 고정되지 않도록
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    // 패널은 아래쪽 기준으로 세로로 접힘
+    void ApplyOpenAmount()
+    {
+        float eased = openAmount * openAmount * (3f - 2f * openAmount);
+        panelRect.localScale = new Vector3(1f, eased, 1f);
+        // 열려 있으면 ▼(접기), 닫혀 있으면 ▲(펼치기)
+        if (arrowRect != null) arrowRect.localEulerAngles = new Vector3(0f, 0f, open ? 180f : 0f);
     }
 
     void BuildRow(int i)
@@ -83,6 +161,15 @@ public class StatsHUD : MonoBehaviour
 
     void Update()
     {
+        float target = open ? 1f : 0f;
+        if (!Mathf.Approximately(openAmount, target))
+        {
+            openAmount = Mathf.MoveTowards(openAmount, target, Time.unscaledDeltaTime * animSpeed);
+            ApplyOpenAmount();
+        }
+
+        if (!open) return;
+
         timer += Time.unscaledDeltaTime;
         if (timer < refreshInterval) return;
         timer = 0f;
