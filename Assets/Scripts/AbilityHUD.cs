@@ -21,7 +21,10 @@ public class AbilityHUD : MonoBehaviour
     {
         public RectTransform rect;
         public TextMeshProUGUI label;
+        public int level;
     }
+
+    LevelShop levelShop;
 
     readonly Dictionary<int, Slot> slots = new Dictionary<int, Slot>();
 
@@ -39,6 +42,7 @@ public class AbilityHUD : MonoBehaviour
             slots.Add(id, slot);
         }
 
+        slot.level = level;
         slot.label.text = "Lv." + level;
 
         // 레벨이 오른 칸을 잠깐 키웠다가 되돌림
@@ -51,6 +55,20 @@ public class AbilityHUD : MonoBehaviour
         {
             slot.rect.localScale = Vector3.MoveTowards(slot.rect.localScale, Vector3.one, Time.unscaledDeltaTime * 2f);
         }
+    }
+
+    string AbilityName(int id)
+    {
+        if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
+        if (levelShop == null || id >= levelShop.ability_name.Length) return "";
+        return levelShop.ability_name[id];
+    }
+
+    string AbilityDescription(int id)
+    {
+        if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
+        if (levelShop == null || id >= levelShop.ability_content.Length) return "";
+        return levelShop.ability_content[id];
     }
 
     Slot CreateSlot(int id, int index)
@@ -71,7 +89,11 @@ public class AbilityHUD : MonoBehaviour
         Image bg = slotGo.GetComponent<Image>();
         bg.sprite = slotSprite;
         bg.type = Image.Type.Sliced;
-        bg.raycastTarget = false;
+        bg.raycastTarget = true;   // 마우스를 올리면 설명 표시
+
+        TooltipTrigger tip = slotGo.AddComponent<TooltipTrigger>();
+        tip.titleProvider = () => AbilityName(id) + "  Lv." + (slots.TryGetValue(id, out Slot s) ? s.level : 1);
+        tip.bodyProvider = () => AbilityDescription(id);
 
         GameObject iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         RectTransform iconRect = iconGo.GetComponent<RectTransform>();
