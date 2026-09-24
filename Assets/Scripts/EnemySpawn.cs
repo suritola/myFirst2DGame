@@ -1,28 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
-// 한 페이즈의 적 생성 규칙
-[System.Serializable]
-public class SpawnPhase
-{
-    public int killsToEnter = 0;        // 스테이지에서 이만큼 처치하면 이 페이즈로
-    public float spawnInterval = 1.5f;  // 적 생성 간격(초)
-    public int maxAlive = 10;           // 동시에 살아 있을 수 있는 최대 적 수
-    public float[] weights;             // 적 종류별 등장 비율 (stage.enemies 순서)
-}
-
-// 한 스테이지(맵)의 적 구성
-[System.Serializable]
-public class StageConfig
-{
-    public string stageName;
-    public GameObject[] enemies;        // 약한 적부터 강한 적 순서
-    public SpawnPhase[] phases;
-    public int bossKills = 60;          // 이만큼 처치하면 보스 등장
-    public GameObject bossPrefab;
-    public float[] minionWeights;       // 보스가 부르는 부하 비율
-}
-
+// 스테이지 설정(SpawnPhase, StageConfig)은 StageConfig.cs
+// 이 파일에는 컴포넌트 클래스만 둔다 (Unity가 파일의 첫 클래스를 스크립트로 연결함)
 public class EnemySpawner : MonoBehaviour
 {
     [Header("스테이지")]
