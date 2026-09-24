@@ -46,7 +46,7 @@ public class PlayerController : MonoBehaviour
 
     public float ShootSpeed = 0.8f;
 
-    public int damage = 1;
+    public float damage = 1f;
 
     public int pene = 1;
 
@@ -165,6 +165,8 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public string ammoTextOverride;
 
     public bool CanShoot => !isSkillUsing && !isReloading && NowBullet > 0;
+    // 메뉴로 게임이 멈췄는지 (타겟팅 스킬의 느린 시간은 멈춘 것이 아님)
+    public static bool IsPaused => Time.timeScale == 0f;
     public bool IsSkillUsing => isSkillUsing;
     public Camera MainCamera => mainCamera;
 
@@ -248,6 +250,14 @@ public class PlayerController : MonoBehaviour
         // 생명의 샘: 초당 체력 회복
         if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)
             PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + regenPerSecond * Time.deltaTime);
+
+        // 상점 · ESC · 레벨업 등으로 멈춘 동안에는 입력을 받지 않음
+        // (멈춘 화면에서 클릭하면 총이 나가거나 스킬이 시간을 다시 흐르게 하던 문제)
+        if (IsPaused)
+        {
+            move = Vector3.zero;
+            return;
+        }
 
         // =========================
         // 재장전 입력

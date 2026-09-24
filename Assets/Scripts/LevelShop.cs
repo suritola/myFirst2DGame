@@ -95,10 +95,10 @@ public class LevelShop : MonoBehaviour
         ability_content[7] = "총알이 적을 밀어내는 효과 +25%\n( 최대 " + KnockBackMaxLevel + "번 )";
 
         ability_name[8] = "강철같은 심장";
-        ability_content[8] = "체력을 즉시 모두 회복하며, 최대 체력이 20% 증가합니다.";
+        ability_content[8] = "체력을 즉시 모두 회복하며, 최대 체력이 12% 증가합니다.";
 
         ability_name[9] = "단단한 신체";
-        ability_content[9] = "받는 피해를 30% 감소시킵니다.";
+        ability_content[9] = "받는 피해를 12% 감소시킵니다.\n( 최대 " + DefMaxLevel + "번 )";
 
         ability_name[10] = "생명의 샘";
         ability_content[10] = "시간이 지나면 체력이 조금씩 회복됩니다.\n( 초당 " + bul.regenPerSecond.ToString("0.#") + " -> " + (bul.regenPerSecond + RegenStep).ToString("0.#") + " )";
@@ -212,7 +212,10 @@ public class LevelShop : MonoBehaviour
     const int MinSkillPoint = 10;
 
     static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
-    const int VampireHeal = 2;
+    const int VampireHeal = 1;
+    const int VampireMaxLevel = 3;
+    const float DefStep = 0.12f;            // 단단한 신체 1회당 받는 피해 감소
+    const int DefMaxLevel = 3;
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.3f;
@@ -334,7 +337,11 @@ public class LevelShop : MonoBehaviour
         }
         if (what == 3) bul.Skill_setTime *= 0.8f;
         if (what == 4) lv.bonusEXP += 0.1f;
-        if (what == 5) bul.getHP += VampireHeal;
+        if (what == 5)
+        {
+            bul.getHP += VampireHeal;
+            if (ability_level[5] >= VampireMaxLevel) ability_selected[5] = true;
+        }
         if (what == 6)
         {
             bul.multiShot += 1;
@@ -347,13 +354,13 @@ public class LevelShop : MonoBehaviour
         }
         if (what == 8)
         {
-            bul.PlayerMaxHealth = Mathf.Round(bul.PlayerMaxHealth * 1.2f);
+            bul.PlayerMaxHealth = Mathf.Round(bul.PlayerMaxHealth * 1.12f);
             bul.PlayerHealth = bul.PlayerMaxHealth;
         }
         if (what == 9)
         {
-            bul.def += 0.3f;
-            if (bul.def >= 0.6f) ability_selected[9] = true;
+            bul.def += DefStep;
+            if (ability_level[9] >= DefMaxLevel) ability_selected[9] = true;
         }
         if (what == 10)
         {

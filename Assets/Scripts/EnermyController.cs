@@ -49,6 +49,12 @@ public class EnermyController : MonoBehaviour
     // 이 적이 처치됐을 때
     public System.Action onKilled;
 
+    [Header("스킬")]
+    public EnemySkillType skill = EnemySkillType.None;
+    public float skillCooldown = 0f;       // 0이면 스킬 기본값
+    // 스킬 시전 중에는 걸어서 움직이지 않음
+    [HideInInspector] public bool casting;
+
     public bool IsDead => isDead;
 
     // 시간 왜곡 (적 전체 감속)
@@ -77,6 +83,13 @@ public class EnermyController : MonoBehaviour
 
         // 머리 위 체력바
         EnemyHealthBar.Attach(this, spriteRenderer);
+
+        if (skill != EnemySkillType.None)
+        {
+            EnemySkill s = gameObject.AddComponent<EnemySkill>();
+            s.type = skill;
+            s.cooldown = skillCooldown;
+        }
     }
 
     void Update()
@@ -103,7 +116,7 @@ public class EnermyController : MonoBehaviour
     void FixedUpdate()
     {
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null)
+        if (!isDead && player != null && !casting)
         {
             moveTime += Time.fixedDeltaTime;
 
@@ -118,9 +131,38 @@ public class EnermyController : MonoBehaviour
             float currentSpeed = speed * GlobalSpeedMultiplier;
             if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
 
-            Vector3 step = dir * currentSpeed + Separation() * separationSpeed;
-            transform.Translate(step * Time.fixedDeltaTime);
+            Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;
+
+            // 구조물에 막히면 벽을 따라 미끄러짐
+            if (Blocked(transform.position + step))
+            {
+                Vector3 alongX = new Vector3(step.x, 0f, 0f);
+                Vector3 alongY = new Vector3(0f, step.y, 0f);
+                if (!Blocked(transform.position + alongX)) step = alongX;
+                else if (!Blocked(transform.position + alongY)) step = alongY;
+                else step = Vector3.zero;
+            }
+            transform.Translate(step);
         }
+    }
+
+    static readonly Collider2D[] wallHits = new Collider2D[8];
+
+    bool Blocked(Vector3 pos)
+    {
+        float r = bodyCollider != null ? WorldRadius(bodyCollider) * 0.8f : 0.5f;
+        Vector2 center = (Vector2)pos + (bodyCollider != null ? bodyCollider.offset * (Vector2)transform.lossyScale : Vector2.zero);
+        int n = Physics2D.OverlapCircleNonAlloc(center, r, wallHits);
+        for (int i = 0; i < n; i++)
+            if (!wallHits[i].isTrigger && wallHits[i].CompareTag("Wall")) return true;
+        return false;
+    }
+
+    // 스킬로 스스로 터졌을 때 (처치로 인정)
+    public void KillBySkill()
+    {
+        EnemyHealth = 0;
+        Die(1);
     }
 
     // 원 콜라이더의 월드 반지름

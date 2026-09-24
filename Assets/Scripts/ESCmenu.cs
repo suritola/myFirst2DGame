@@ -9,6 +9,8 @@ public class ESCmenu : MonoBehaviour
     public GameObject shopPanel;
     private bool isEscOpen = false;
     private bool isShopOpen = false;
+    // 열기 전 시간 배율 (레벨업 창 위에서 열었다 닫아도 그대로 멈춰 있도록)
+    private float timeScaleBeforeOpen = 1f;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,7 +22,10 @@ public class ESCmenu : MonoBehaviour
     void Update()
     {
         isShopOpen = shop.isShopOpen;
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // 타겟팅 스킬(시간이 느려진 상태) 중에는 열지 않음
+        PlayerController player = FindFirstObjectByType<PlayerController>();
+        bool skillUsing = player != null && player.IsSkillUsing;
+        if (Input.GetKeyDown(KeyCode.Escape) && (!skillUsing || isEscOpen))
         {
             if (isShopOpen)
             {
@@ -50,7 +55,11 @@ public class ESCmenu : MonoBehaviour
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
 
-        if (isEscOpen) Time.timeScale = 0f;
-        else Time.timeScale = 1f;
+        if (isEscOpen)
+        {
+            timeScaleBeforeOpen = Time.timeScale;
+            Time.timeScale = 0f;
+        }
+        else Time.timeScale = timeScaleBeforeOpen;
     }
 }

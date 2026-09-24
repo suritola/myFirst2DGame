@@ -201,3 +201,4 @@ MonoBehaviour:
   enragedSummonCount: 5
   summonOnHitCount: 2
   knockBackTaken: 0.15
+  bossKind: 1

@@ -184,7 +184,7 @@ public class StatsHUD : MonoBehaviour
         int shots = Mathf.Max(1, player.multiShot);
         values[0].text = shots > 1
             ? (player.damage * player.MultiShotDamageRate(shots)).ToString("0.##") + " x " + shots
-            : player.damage.ToString();
+            : player.damage.ToString("0.##");
 
         // 방어력: 받는 피해 감소율
         values[1].text = (player.def * 100f).ToString("0") + "%";

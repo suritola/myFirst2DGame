@@ -40,10 +40,16 @@ public class bosss : MonoBehaviour
     // 총알 넉백을 이 비율만큼만 받음
     public float knockBackTaken = 0.25f;
 
+    [Header("스킬")]
+    public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주
+    // 스킬 시전 중에는 걸어서 움직이지 않음
+    [HideInInspector] public bool casting;
+
     float summonTimer;
     EnemySpawner spawner;
 
-    bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
+    public bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
+    public bool IsDead => isDead;
 
     void Summon(int count)
     {
@@ -63,6 +69,7 @@ public class bosss : MonoBehaviour
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
+        gameObject.AddComponent<BossSkills>().kind = bossKind;
     }
     bossbar bossbar;
     void Update()
@@ -100,7 +107,7 @@ public class bosss : MonoBehaviour
     void FixedUpdate()
     {
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null) transform.Translate(move * speed * EnermyController.GlobalSpeedMultiplier * Time.fixedDeltaTime);
+        if (!isDead && player != null && !casting) transform.Translate(move * speed * EnermyController.GlobalSpeedMultiplier * Time.fixedDeltaTime);
     }
 
     public void TakeDamage(float damage, float knockBack, Vector3 dir)

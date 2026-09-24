@@ -6,7 +6,7 @@ public class HPpack : MonoBehaviour
 {
     public GameObject pack;
     PlayerController playerC;
-    public float healAmount = 25f;
+    public float healAmount = 15f;
     // Start is called before the first frame update
     void Start()
     {

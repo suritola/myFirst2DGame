@@ -111,8 +111,16 @@ public class SpecialAbilities : MonoBehaviour
     RectTransform hud;
     readonly List<HudRow> hudRows = new List<HudRow>();
 
+    // 적 · 보스 스킬이 같이 쓰는 빛 스프라이트와 소리
+    public static Sprite GlowSprite;
+    public static SpecialFeedback SharedFx;
+
+    // 그림자 대시 거리: 이동 속도에 비례 (기본 속도 20 → 6칸)
+    float DashDistance => player.speed * 0.3f;
+
     void Awake()
     {
+        GlowSprite = glowSprite;
         // 씬을 다시 불러와도 정적 상태가 남지 않도록
         EnermyController.GlobalSpeedMultiplier = 1f;
         EnermyController.Decoy = null;
@@ -129,6 +137,7 @@ public class SpecialAbilities : MonoBehaviour
         Burn.FireSprite = glowSprite;
         fx = gameObject.AddComponent<SpecialFeedback>();
         fx.Init(font, fontMaterial);
+        SharedFx = fx;
         aimLine = fx.NewLine("AimLine", true);
         previewRing = fx.NewLine("PreviewRing", true);
         previewCone = fx.NewLine("PreviewCone", true);
@@ -700,7 +709,7 @@ public class SpecialAbilities : MonoBehaviour
         {
             case DashId:
                 {
-                    Vector3 end = ClampToArena(from + (Vector3)(dir * 6f));
+                    Vector3 end = ClampToArena(from + (Vector3)(dir * DashDistance));
                     fx.SetLine(aimLine, from, end, new Color(0.5f, 0.95f, 1f, 0.7f), 0.1f);
                     fx.SetRing(previewRing, end, 0.9f, new Color(0.5f, 0.95f, 1f, 0.8f), 0.1f);
                 }
@@ -846,7 +855,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector3 start = player.transform.position;
         Vector3 dir = (MouseWorld() - start).normalized;
-        Vector3 end = ClampToArena(start + dir * 6f);
+        Vector3 end = ClampToArena(start + dir * DashDistance);
         player.GrantInvincibility(0.35f);
         SpriteRenderer body = player.GetComponent<SpriteRenderer>();
         int ghosts = 0;
@@ -997,10 +1006,12 @@ public class SpecialAbilities : MonoBehaviour
     {
         for (int i = 0; i < count; i++)
         {
-            GameObject o = MakeSprite("GuardianSoul", swirlSprite, player.transform.position, 0.45f, new Color(0.55f, 0.95f, 1f), "Effect", 2);
+            GameObject o = MakeSprite("GuardianSoul", swirlSprite, player.transform.position, 0.55f, new Color(0.55f, 0.95f, 1f), "Effect", 2);
             orbs.Add(o.transform);
         }
     }
+
+    const float OrbRadius = 4.6f;
 
     void UpdateOrbs()
     {
@@ -1009,11 +1020,11 @@ public class SpecialAbilities : MonoBehaviour
         {
             if (orbs[i] == null) continue;
             float a = (baseAngle + 360f / orbs.Count * i) * Mathf.Deg2Rad;
-            Vector3 pos = player.transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a) - 0.4f, 0f) * 3.2f;
+            Vector3 pos = player.transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a) - 0.4f, 0f) * OrbRadius;
             orbs[i].position = pos;
             orbs[i].Rotate(0f, 0f, -540f * Time.deltaTime);
 
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 0.9f))
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 1.25f))
             {
                 if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                 if (orbHitTimes.TryGetValue(c, out float last) && Time.time - last < 0.5f) continue;
@@ -1096,13 +1107,14 @@ public class SpecialAbilities : MonoBehaviour
         }
     }
 
-    public void SpawnZone(Vector3 pos, float radius, float duration, float tickDamage, Color color)
+    public DamageZone SpawnZone(Vector3 pos, float radius, float duration, float tickDamage, Color color)
     {
         GameObject z = MakeSprite("DamageZone", glowSprite, pos, radius * 2f / 8f, color, "Background", 7);
         DamageZone dz = z.AddComponent<DamageZone>();
         dz.radius = radius;
         dz.duration = duration;
         dz.tickDamage = tickDamage;
+        return dz;
     }
 
     void ChainLightning(Vector3 from, Collider2D first, float damage, int jumps, float falloff = 0.8f)
@@ -1531,7 +1543,7 @@ public class Scythe : MonoBehaviour
     }
 }
 
-// 용암 유탄: 목표 지점까지 날아가 폭발하고 용암 웅덩이를 남김
+// 용암 유탄: 불꼬리를 끌며 포물선으로 날아가 폭발하고 끓는 용암 웅덩이를 남김
 public class Grenade : MonoBehaviour
 {
     public SpecialAbilities owner;
@@ -1543,37 +1555,115 @@ public class Grenade : MonoBehaviour
     public float flightTime = 0.5f;
     Vector3 start;
     float t;
+    float puff;
+    float baseScale;
+    SpriteRenderer sr;
+    Color baseColor;
+    GameObject shadow;
+    LineRenderer marker;
 
-    void Start() => start = transform.position;
+    static readonly Color Hot = new Color(1f, 0.92f, 0.55f);
+    static readonly Color Lava = new Color(1f, 0.45f, 0.1f, 0.9f);
+
+    void Start()
+    {
+        start = transform.position;
+        sr = GetComponent<SpriteRenderer>();
+        baseColor = sr.color;
+        baseScale = transform.localScale.x;
+        // 떨어질 곳의 그림자와 범위 고리
+        shadow = SpecialAbilities.MakeSprite("GrenadeShadow", sr.sprite, target, 0.05f, new Color(0f, 0f, 0f, 0.4f), "Effect", 0);
+        marker = Hostile.NewLine("GrenadeMark", new Color(1f, 0.45f, 0.1f, 0.6f), mini ? 0.06f : 0.1f, 1);
+        marker.loop = true;
+    }
 
     void Update()
     {
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / flightTime);
         Vector3 p = Vector3.Lerp(start, target, k);
-        p.y += Mathf.Sin(k * Mathf.PI) * 2.5f;     // 포물선
+        p.y += Mathf.Sin(k * Mathf.PI) * (mini ? 1.5f : 2.8f);     // 포물선
         transform.position = p;
-        if (k >= 1f)
+
+        // 달아오른 핵: 회전하며 깜빡임
+        transform.Rotate(0f, 0f, -720f * Time.deltaTime);
+        float pulse = Mathf.PingPong(Time.time * 12f, 1f);
+        transform.localScale = Vector3.one * baseScale * (0.85f + 0.3f * pulse);
+        sr.color = Color.Lerp(baseColor, Hot, pulse);
+
+        // 불꽃 꼬리와 연기
+        puff += Time.deltaTime;
+        if (puff >= 0.02f)
         {
-            owner.Explode(target, radius, damage, 1.5f, new Color(1f, 0.45f, 0.1f, 0.9f));
-            if (!mini) owner.SpawnZone(target, radius * 0.7f, 2.5f, damage * 0.25f, new Color(1f, 0.35f, 0.05f, 0.7f));
-            if (cluster)
-            {
-                SpriteRenderer sr = GetComponent<SpriteRenderer>();
-                for (int i = 0; i < 3; i++)
-                {
-                    GameObject g = SpecialAbilities.MakeSprite("LavaShard", sr.sprite, target, transform.localScale.x * 0.6f, sr.color, "Effect", 5);
-                    Grenade m = g.AddComponent<Grenade>();
-                    m.owner = owner;
-                    m.target = target + (Vector3)(Quaternion.Euler(0, 0, i * 120f + Random.Range(-20f, 20f)) * Vector2.right * Random.Range(2.5f, 4f));
-                    m.damage = damage * 0.5f;
-                    m.radius = radius * 0.6f;
-                    m.mini = true;
-                    m.flightTime = 0.35f;
-                }
-            }
-            Destroy(gameObject);
+            puff = 0f;
+            FlameParticle.Spawn(sr.sprite, p, Random.insideUnitCircle * 1.5f, Random.Range(0.25f, 0.4f), 0.05f, mini ? 0.15f : 0.25f, false);
+            if (Random.value < 0.35f) FlameParticle.Spawn(sr.sprite, p, Vector2.up * 1.5f, 0.6f, 0.04f, 0.2f, true);
+            if (Random.value < 0.3f) FlameParticle.SpawnEmber(sr.sprite, p, Random.insideUnitCircle * 6f);
         }
+
+        if (shadow != null) shadow.transform.localScale = Vector3.one * Mathf.Lerp(0.05f, radius * 0.12f, k);
+        if (marker != null)
+        {
+            Hostile.SetArc(marker, target, radius * Mathf.Lerp(0.3f, 1f, k), 0f, 354f);
+            marker.startColor = marker.endColor = new Color(1f, 0.45f, 0.1f, 0.3f + 0.5f * k);
+        }
+
+        if (k >= 1f) Blast();
+    }
+
+    void Blast()
+    {
+        owner.Explode(target, radius, damage, 1.5f, Lava);
+        Sprite glow = sr.sprite;
+
+        // 하얗게 달아오른 중심 섬광
+        GameObject core = SpecialAbilities.MakeSprite("GrenadeCore", glow, target, radius * 1.1f / 8f, new Color(1f, 0.97f, 0.8f, 1f), "Effect", 6);
+        core.AddComponent<FadeOut>().duration = 0.14f;
+        // 두 겹의 충격파
+        ShockRing.Spawn(target, radius * 0.2f, radius * 1.2f, 0.3f, new Color(1f, 0.8f, 0.4f, 0.95f), mini ? 0.2f : 0.35f);
+        ShockRing.Spawn(target, radius * 0.1f, radius * 0.9f, 0.5f, new Color(0.8f, 0.2f, 0.05f, 0.8f), mini ? 0.3f : 0.6f);
+        // 사방으로 튀는 불꽃, 불티, 연기
+        int flames = mini ? 7 : 16;
+        for (int i = 0; i < flames; i++)
+        {
+            Vector2 v = Random.insideUnitCircle.normalized * Random.Range(radius * 3f, radius * 6f);
+            FlameParticle.Spawn(glow, target, v, Random.Range(0.4f, 0.65f), 0.07f, Random.Range(0.35f, 0.6f), false);
+        }
+        for (int i = 0; i < (mini ? 5 : 12); i++)
+            FlameParticle.SpawnEmber(glow, target, Random.insideUnitCircle.normalized * Random.Range(9f, 20f));
+        for (int i = 0; i < (mini ? 2 : 6); i++)
+            FlameParticle.Spawn(glow, target + (Vector3)(Random.insideUnitCircle * radius * 0.5f), Vector2.up * Random.Range(1.5f, 3f) + Random.insideUnitCircle,
+                                Random.Range(0.9f, 1.4f), 0.1f, Random.Range(0.4f, 0.7f), true);
+        // 그을음 자국
+        GameObject scorch = SpecialAbilities.MakeSprite("Scorch", glow, target, radius * 1.6f / 8f, new Color(0.12f, 0.04f, 0.02f, 0.55f), "Background", 6);
+        scorch.AddComponent<FadeOut>().duration = 3f;
+
+        if (!mini)
+        {
+            DamageZone zone = owner.SpawnZone(target, radius * 0.7f, 2.5f, damage * 0.25f, new Color(1f, 0.35f, 0.05f, 0.7f));
+            if (zone != null) zone.lava = true;
+        }
+        if (cluster)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject g = SpecialAbilities.MakeSprite("LavaShard", glow, target, baseScale * 0.6f, baseColor, "Effect", 5);
+                Grenade m = g.AddComponent<Grenade>();
+                m.owner = owner;
+                m.target = target + (Vector3)(Quaternion.Euler(0, 0, i * 120f + Random.Range(-20f, 20f)) * Vector2.right * Random.Range(2.5f, 4f));
+                m.damage = damage * 0.5f;
+                m.radius = radius * 0.6f;
+                m.mini = true;
+                m.flightTime = 0.35f;
+            }
+        }
+        Destroy(gameObject);
+    }
+
+    void OnDestroy()
+    {
+        if (shadow != null) Destroy(shadow);
+        if (marker != null) Destroy(marker.gameObject);
     }
 }
 
@@ -1583,8 +1673,10 @@ public class DamageZone : MonoBehaviour
     public float radius = 3f;
     public float duration = 4f;
     public float tickDamage = 1f;
+    public bool lava;           // 끓어오르는 용암 (불꽃과 불티가 올라옴)
     float t;
     float tick;
+    float bubble;
     SpriteRenderer sr;
     Color baseColor;
 
@@ -1599,6 +1691,17 @@ public class DamageZone : MonoBehaviour
         t += Time.deltaTime;
         tick += Time.deltaTime;
         sr.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * (0.75f + Mathf.Sin(t * 8f) * 0.25f) * Mathf.Clamp01((duration - t) * 2f));
+        if (lava)
+        {
+            bubble += Time.deltaTime;
+            if (bubble >= 0.06f)
+            {
+                bubble = 0f;
+                Vector3 at = transform.position + (Vector3)(Random.insideUnitCircle * radius * 0.85f);
+                FlameParticle.Spawn(sr.sprite, at, new Vector2(Random.Range(-0.4f, 0.4f), Random.Range(2f, 4f)), Random.Range(0.35f, 0.55f), 0.04f, Random.Range(0.15f, 0.3f), false);
+                if (Random.value < 0.3f) FlameParticle.SpawnEmber(sr.sprite, at, new Vector2(Random.Range(-2f, 2f), Random.Range(4f, 8f)));
+            }
+        }
         if (tick >= 0.5f)
         {
             tick = 0f;

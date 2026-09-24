@@ -34,7 +34,7 @@ public class Shop : MonoBehaviour
     public int coins;
 
     [Header("스텟")]
-    public int damage = 1;
+    public float damage = 1f;
     public float ShootSpeed = 0.8f;
     public float ReloadSpeed = 3f;
     public int MaxBullet = 6;
@@ -92,18 +92,20 @@ public class Shop : MonoBehaviour
 
 
     [Header("가격 증가 / 최대치")]
-    public float damagePriceGrowth = 1.55f;     // 살 때마다 가격 x1.55
-    public int shootSpeedPriceStep = 4;         // 살 때마다 가격 +4
-    public float shootSpeedMultiplier = 0.88f;  // 발사 간격 x0.88 (12% 빨라짐)
-    public float minShootSpeed = 0.2f;          // 초당 5발이 최대
-    public float reloadPriceGrowth = 1.5f;
-    public float reloadStep = 0.2f;
-    public float minReloadTime = 0.8f;
+    // 한 번에 확 강해지지 않도록 작게 자주 오르는 방식
+    public float damageStep = 0.25f;            // 살 때마다 공격력 +0.25 (기본 1의 25%)
+    public float damagePriceGrowth = 1.3f;      // 살 때마다 가격 x1.3
+    public int shootSpeedPriceStep = 5;         // 살 때마다 가격 +5
+    public float shootSpeedMultiplier = 0.94f;  // 발사 간격 x0.94 (6% 빨라짐)
+    public float minShootSpeed = 0.22f;
+    public float reloadPriceGrowth = 1.45f;
+    public float reloadStep = 0.12f;
+    public float minReloadTime = 0.9f;
     public float maxBulletPriceGrowth = 1.5f;
-    public int maxBulletLimit = 16;
+    public int maxBulletLimit = 14;
     public float moveSpeedPriceGrowth = 1.6f;
-    public float moveSpeedMultiplier = 1.06f;
-    public int maxMoveSpeedBuys = 6;
+    public float moveSpeedMultiplier = 1.04f;
+    public int maxMoveSpeedBuys = 5;
 
     int moveSpeedBuys = 0;
 
@@ -130,7 +132,7 @@ public class Shop : MonoBehaviour
     {
         if (!TryPay(damagePrice)) return;
 
-        damage++;
+        damage += damageStep;
         playerControllerd.damage = damage;
         damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();
@@ -206,8 +208,8 @@ public class Shop : MonoBehaviour
         }
         else
         {
-            // 상점 열기
-            if (isPause) return;
+            // 상점 열기 (다른 메뉴나 타겟팅 스킬 중에는 열지 않음)
+            if (isPause || Time.timeScale != 1f) return;
 
             isShopOpen = true;
 
@@ -277,7 +279,7 @@ public class Shop : MonoBehaviour
         if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);
         if (statTextInput != null)
         {
-            statTextInput.text = "총알 공격력\n" + damage + " -> " + (damage + 1);
+            statTextInput.text = "총알 공격력\n" + damage.ToString("0.##") + " -> " + (damage + damageStep).ToString("0.##");
 
             // 멀티샷 중이면 실제 한 발당 피해도 함께 표시
             int shots = playerControllerd.multiShot;
@@ -285,7 +287,7 @@ public class Shop : MonoBehaviour
             {
                 float rate = playerControllerd.MultiShotDamageRate(shots);
                 statTextInput.text += "  (" + shots + "발, 발당 " + (damage * rate).ToString("0.##")
-                    + " -> " + ((damage + 1) * rate).ToString("0.##") + ")";
+                    + " -> " + ((damage + damageStep) * rate).ToString("0.##") + ")";
             }
         }
 
