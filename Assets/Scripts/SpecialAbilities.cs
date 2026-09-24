@@ -337,178 +337,234 @@ public class SpecialAbilities : MonoBehaviour
 
     static bool Alive(EnermyController e) => e != null && !e.IsDead;
 
-    // 우클릭 타겟팅 스킬이 끝날 때: 들고 있는 무기의 개성대로 조준한 적들을 공격
+    // 우클릭 타겟팅 스킬: 들고 있는 무기마다 전혀 다른 형식의 필살기
+    static string VolleyName(int id) => id switch
+    {
+        ShotgunId => "지옥불 포격",
+        SniperId => "관통 레일건",
+        DualId => "총알 폭풍",
+        FlameId => "화염 회오리",
+        SeekerId => "영혼 떼",
+        ChainId => "뇌운",
+        ScytheId => "죽음의 춤",
+        GrenadeId => "용암 융단폭격",
+        _ => "일제 사격",
+    };
+
     public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
     {
         int id = CurrentWeapon;
         float dmg = baseDamage * WeaponDamageMul(id);
         Color c = WeaponColor(id);
-        fx.FloatText(player.transform.position, abilities[id].name + " 일제 사격!", c, 5.5f, 0f);
+        fx.FloatText(player.transform.position, VolleyName(id) + "!", c, 6f, 0f);
         fx.Play("pulse", 0.6f, 1.4f);
+        List<EnermyController> alive = targets.FindAll(Alive);
 
         switch (id)
         {
             case ShotgunId:
-                // 조준한 적마다 부채꼴 폭발
-                foreach (EnermyController t in targets)
+                // 지옥불 포격: 마우스 쪽으로 거대한 부채꼴 폭발 3연발
+                for (int blast = 0; blast < 3; blast++)
                 {
-                    if (!Alive(t)) continue;
                     Vector3 start = player.MuzzlePosition;
-                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
-                    player.FaceTowards(t.transform.position);
-                    foreach (Collider2D col in Physics2D.OverlapCircleAll(start, 9f))
+                    Vector2 dir = AimDir();
+                    player.FaceTowards(MouseWorld());
+                    const float range = 11f, half = 35f;
+                    foreach (Collider2D col in Physics2D.OverlapCircleAll(start, range))
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         Vector2 to = col.transform.position - start;
-                        if (Vector2.Angle(dir, to) <= 35f) Specials.Damage(col.gameObject, dmg * 0.8f, to.normalized, 3f);
+                        if (Vector2.Angle(dir, to) <= half) Specials.Damage(col.gameObject, dmg * 0.9f, to.normalized, 3.5f);
                     }
                     for (int i = -2; i <= 2; i++)
                         for (int k = 1; k <= 3; k++)
-                            Flash(start + (Vector3)((Vector2)(Quaternion.Euler(0, 0, i * 16f) * dir) * 9f * k / 3.5f), 1.4f + k * 0.7f, new Color(c.r, c.g, c.b, 0.85f), 0.2f + k * 0.04f);
-                    ShockRing.Spawn(start, 0.5f, 3f, 0.25f, c, 0.3f);
-                    fx.Play("boom", 0.8f, 1.2f);
-                    fx.Shake(0.3f, 0.12f);
-                    yield return new WaitForSeconds(0.14f);
+                        {
+                            Vector2 d = Quaternion.Euler(0, 0, i * half / 2.2f) * dir;
+                            Fx.Play("fx_explosion", start + (Vector3)(d * range * k / 3.4f), 2.2f + k * 0.9f, Color.white, 14f + Random.Range(0f, 6f));
+                        }
+                    Fx.Play("fx_shock", start, 5f, c, 20f);
+                    fx.Play("boom", 1f, 1.1f - blast * 0.1f);
+                    fx.Shake(0.4f, 0.15f);
+                    yield return new WaitForSeconds(0.28f);
                 }
                 break;
 
             case SniperId:
-                // 적마다 관통 저격 + 긴 궤적
-                foreach (EnermyController t in targets)
+                // 관통 레일건: 충전 뒤 화면을 가로지르는 굵은 광선 (조준한 적이 많을수록 강함)
                 {
-                    if (!Alive(t)) continue;
-                    Vector3 start = player.MuzzlePosition;
-                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
-                    player.FaceTowards(t.transform.position);
-                    Bullet b = player.CreateBullet(start, dir, dmg * 1.3f, 999, blood, true, 1.5f);
-                    if (b != null)
+                    float power = 1.5f + 0.25f * alive.Count;
+                    FxAnim aim = null;
+                    fx.StartLoop("hum", 0.6f, 1f);
+                    for (float t = 0f; t < 0.5f; t += Time.deltaTime)
                     {
-                        b.speed *= 1.8f;
-                        b.transform.localScale *= 1.4f;
-                        if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                        Vector3 m = player.MuzzlePosition;
+                        if (aim != null) Destroy(aim.gameObject);
+                        aim = Fx.Beam(m, m + (Vector3)(AimDir() * 45f), 0.2f + t * 0.6f, new Color(c.r, c.g, c.b, 0.6f), 0.1f);
+                        Fx.Play("fx_orb", m, 0.8f + t * 2f, c, 20f);
+                        yield return null;
                     }
-                    DrawLine(start, start + (Vector3)(dir * 40f), new Color(c.r, c.g, c.b, 0.8f), 0.12f);
-                    Flash(start, 2f, c, 0.12f);
-                    fx.Play("crack", 0.7f, 1.1f);
-                    fx.Shake(0.2f, 0.1f);
-                    yield return new WaitForSeconds(0.12f);
+                    fx.StopLoop();
+                    if (aim != null) Destroy(aim.gameObject);
+                    Vector3 from = player.MuzzlePosition;
+                    Vector3 to = from + (Vector3)(AimDir() * 45f);
+                    Fx.Beam(from, to, 2.4f, c, 0.4f, 16);
+                    Fx.Beam(from, to, 0.8f, Color.white, 0.3f, 17);
+                    foreach (Collider2D col in Physics2D.OverlapCircleAll((from + to) * 0.5f, 23f))
+                    {
+                        if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
+                        if (Hostile.DistanceToSegment(col.transform.position, from, to) > 1.5f) continue;
+                        Specials.Damage(col.gameObject, dmg * power, (to - from).normalized, 2f);
+                        Fx.Play("fx_spark", col.transform.position, 2f, c, 20f);
+                    }
+                    Fx.Play("fx_shock", from, 4f, c, 22f);
+                    fx.Play("crack", 1f, 0.7f);
+                    fx.Shake(0.5f, 0.2f);
                 }
                 break;
 
             case DualId:
-                // 적마다 양손 4연사
-                foreach (EnermyController t in targets)
+                // 총알 폭풍: 1.6초 동안 두 줄기 나선으로 사방 난사 (움직이며 쓸 수 있음)
                 {
-                    for (int i = 0; i < 4 && Alive(t); i++)
+                    float angle = Random.Range(0f, 360f);
+                    for (float t = 0f; t < 1.6f; t += 0.04f)
                     {
-                        Vector3 start = player.MuzzlePosition;
-                        Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
-                        Vector3 side = new Vector3(-dir.y, dir.x) * (i % 2 == 0 ? 0.35f : -0.35f);
-                        player.FaceTowards(t.transform.position);
-                        Bullet b = player.CreateBullet(start + side, dir, dmg * 0.35f, player.pene, blood, true, 0.6f);
-                        if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
-                        Flash(start + side, 1f, c, 0.06f);
-                        fx.Play("pew", 0.3f, i % 2 == 0 ? 1f : 1.15f);
-                        yield return new WaitForSeconds(0.035f);
+                        for (int arm = 0; arm < 2; arm++)
+                        {
+                            float a = (angle + arm * 180f) * Mathf.Deg2Rad;
+                            Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                            Bullet b = player.CreateBullet(player.transform.position + (Vector3)(d * 0.6f), d, dmg * 0.3f, player.pene, 0f, true, 0.4f);
+                            if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                            Fx.Play("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
+                        }
+                        angle += 22f;
+                        if (Mathf.Repeat(t, 0.12f) < 0.04f) fx.Play("pew", 0.3f, Random.Range(0.9f, 1.2f));
+                        yield return new WaitForSeconds(0.04f);
                     }
                 }
                 break;
 
             case FlameId:
-                // 적마다 화염 폭발 + 강한 화상
-                foreach (EnermyController t in targets)
+                // 화염 회오리: 마우스 위치에 불기둥이 생겨 적에게 다가가며 빨아들이고 태움
                 {
-                    if (!Alive(t)) continue;
-                    Vector3 at = t.transform.position;
-                    Vector2 aim = ((Vector2)(at - player.MuzzlePosition)).normalized;
-                    for (int i = 0; i < 8; i++)
-                        FlameParticle.Spawn(glowSprite, player.MuzzlePosition, (Vector2)(Quaternion.Euler(0, 0, Random.Range(-10f, 10f)) * aim) * Random.Range(28f, 38f),
-                                            0.4f, 0.06f, 0.5f, false);
-                    Burn.Apply(t.gameObject, dmg * 0.4f, 3f);
-                    Explode(at, 2.4f, dmg * 0.6f, 1f, new Color(1f, 0.5f, 0.15f, 0.9f));
-                    for (int i = 0; i < 10; i++)
-                        FlameParticle.Spawn(glowSprite, at, Random.insideUnitCircle.normalized * Random.Range(6f, 12f), 0.5f, 0.06f, 0.4f, false);
-                    fx.Play("ignite", 0.6f, 1.2f);
-                    yield return new WaitForSeconds(0.08f);
+                    GameObject go = new GameObject("FireTornado");
+                    go.transform.position = MouseWorld();
+                    FireTornado ft = go.AddComponent<FireTornado>();
+                    ft.owner = this;
+                    ft.damage = dmg * 0.25f;
+                    fx.Play("ignite", 1f, 0.7f);
+                    fx.Play("flame", 0.8f, 0.8f);
                 }
                 break;
 
             case SeekerId:
-                // 사방으로 퍼지는 유도탄 무리 (조준한 적 한 명당 2발)
+                // 영혼 떼: 영혼 구슬 다섯이 주위를 돌다 조준한 적에게 번갈아 달려듦 (4초)
                 {
-                    int count = Mathf.Max(4, targets.Count * 2);
-                    for (int i = 0; i < count; i++)
-                    {
-                        float a = (i / (float)count * 360f + Random.Range(-8f, 8f)) * Mathf.Deg2Rad;
-                        Bullet b = player.CreateBullet(player.MuzzlePosition, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), dmg * 0.55f, 1, blood, true, 0.5f);
-                        if (b != null)
-                        {
-                            b.speed *= 0.35f;
-                            b.transform.localScale *= 1.2f;
-                            if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
-                            b.gameObject.AddComponent<Homing>().turnSpeed = 420f;
-                        }
-                        if (i % 3 == 0) fx.Play("whoosh", 0.3f, 1.6f);
-                        yield return new WaitForSeconds(0.03f);
-                    }
+                    GameObject go = new GameObject("SoulSwarm");
+                    SoulSwarm sw = go.AddComponent<SoulSwarm>();
+                    sw.owner = player.transform;
+                    sw.targets = alive;
+                    sw.damage = dmg * 0.45f;
+                    sw.color = c;
+                    fx.Play("shimmer", 0.8f, 1.3f);
                 }
                 break;
 
             case ChainId:
-                // 적마다 번개가 내리꽂히고 다시 연쇄
-                foreach (EnermyController t in targets)
+                // 뇌운: 2.5초 동안 하늘에서 번개가 조준한 적들에게 연달아 떨어짐
                 {
-                    if (!Alive(t)) continue;
-                    Vector3 at = t.transform.position;
-                    DrawBolt(at + Vector3.up * 12f, at, c, 0.18f);
-                    DrawBolt(player.MuzzlePosition, at, c, 0.15f);
-                    Flash(at, 3f, c, 0.2f);
-                    Specials.Damage(t.gameObject, dmg, Vector3.zero, 0f);
-                    Collider2D col = t.GetComponent<Collider2D>();
-                    ChainLightning(at, col, dmg * 0.7f, 3);
-                    fx.Shake(0.15f, 0.08f);
-                    yield return new WaitForSeconds(0.1f);
+                    FxAnim cloud = Fx.Play("fx_cloud", player.transform.position + Vector3.up * 6f, 12f, new Color(0.35f, 0.4f, 0.55f, 0.8f), 3f, 0f, 25, true, 2.6f);
+                    if (cloud != null) cloud.follow = player.transform;
+                    for (float t = 0f; t < 2.5f; t += 0.15f)
+                    {
+                        alive.RemoveAll(e => !Alive(e));
+                        Transform target = alive.Count > 0 ? alive[Random.Range(0, alive.Count)].transform
+                                                           : Specials.NearestEnemy(player.transform.position + (Vector3)(Random.insideUnitCircle * 6f), 14f);
+                        if (target != null)
+                        {
+                            Vector3 at = target.position;
+                            Fx.Bolt(at + new Vector3(Random.Range(-2f, 2f), 14f), at, 1.4f, c, 0.2f);
+                            Fx.Play("fx_shock", at, 3f, c, 24f);
+                            Specials.Damage(target.gameObject, dmg * 0.5f, Vector3.zero, 0f);
+                            Collider2D col = target.GetComponent<Collider2D>();
+                            if (col != null) ChainLightning(at, col, dmg * 0.25f, 1);
+                            fx.Play("zap", 0.5f, Random.Range(0.8f, 1.1f));
+                            fx.Shake(0.1f, 0.06f);
+                        }
+                        yield return new WaitForSeconds(0.15f);
+                    }
                 }
                 break;
 
             case ScytheId:
-                // 적마다 회전하는 낫을 던짐
-                foreach (EnermyController t in targets)
+                // 죽음의 춤: 무적 상태로 조준한 적들 사이를 순간이동하며 벰
                 {
-                    if (!Alive(t)) continue;
-                    Vector3 start = player.MuzzlePosition;
-                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
-                    player.FaceTowards(t.transform.position);
-                    Bullet b = player.CreateBullet(start, dir, dmg * 1.2f, 9999, blood, true, 1.2f);
-                    if (b != null)
+                    SpriteRenderer body = player.GetComponent<SpriteRenderer>();
+                    if (alive.Count == 0)
                     {
-                        b.speed *= 1.2f;
-                        b.lifetime = 0.9f;
-                        b.gameObject.AddComponent<Spin>().speed = -1080f;
-                        AttachScytheVisual(b, 1.2f);
+                        Transform near = Specials.NearestEnemy(player.transform.position, 12f);
+                        if (near != null) alive.Add(near.GetComponent<EnermyController>());
+                        alive.RemoveAll(e => e == null);
                     }
-                    fx.Play("whoosh", 0.6f, 1.1f);
-                    yield return new WaitForSeconds(0.07f);
+                    player.GrantInvincibility(0.2f * alive.Count + 0.4f);
+                    foreach (EnermyController t in alive)
+                    {
+                        if (!Alive(t)) continue;
+                        Vector3 from = player.transform.position;
+                        Vector3 to = ClampToArena(t.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 1.2f));
+                        // 잔상
+                        if (body != null)
+                        {
+                            GameObject g = MakeSprite("DanceGhost", body.sprite, from, 1f, new Color(0.8f, 0.55f, 1f, 0.5f), "Character", -1);
+                            g.transform.localScale = player.transform.lossyScale;
+                            g.AddComponent<FadeOut>().duration = 0.3f;
+                        }
+                        Fx.Beam(from, to, 0.3f, new Color(0.8f, 0.55f, 1f, 0.7f), 0.15f);
+                        player.transform.position = to;
+                        player.FaceTowards(t.transform.position);
+                        Fx.Play("fx_slash", t.transform.position, 5f, c, 30f, Random.Range(0f, 360f), 16);
+                        foreach (Collider2D col in Physics2D.OverlapCircleAll(t.transform.position, 2.5f))
+                            if (col.CompareTag("enermy") || col.CompareTag("boss"))
+                                Specials.Damage(col.gameObject, dmg * 1.2f, (col.transform.position - to).normalized, 1.5f);
+                        fx.Play("whoosh", 0.7f, 1.3f);
+                        yield return new WaitForSeconds(0.12f);
+                    }
+                    Fx.Play("fx_soulburst", player.transform.position, 4f, Color.white, 18f);
                 }
                 break;
 
             case GrenadeId:
-                // 조준한 적 위치마다 용암탄 비
-                foreach (EnermyController t in targets)
+                // 용암 융단폭격: 플레이어에서 마우스 쪽으로 줄지어 운석이 떨어짐
                 {
-                    if (!Alive(t)) continue;
-                    GameObject g = MakeSprite("LavaGrenade", glowSprite, player.MuzzlePosition, 1f, new Color(1f, 0.45f, 0.1f), "Effect", 5);
-                    Grenade gr = g.AddComponent<Grenade>();
-                    gr.owner = this;
-                    gr.target = t.transform.position;
-                    gr.damage = dmg * 1.1f;
-                    gr.radius = 3f;
-                    gr.flightTime = 0.45f;
-                    fx.Play("thump", 0.6f, 1.1f);
-                    yield return new WaitForSeconds(0.1f);
+                    Vector3 start = player.transform.position;
+                    Vector2 dir = AimDir();
+                    Vector2 side = new Vector2(-dir.y, dir.x);
+                    for (int row = 1; row <= 6; row++)
+                    {
+                        for (int col = -1; col <= 1; col++)
+                        {
+                            Vector3 at = ClampToArena(start + (Vector3)(dir * row * 2.6f + side * col * 2.6f));
+                            StartCoroutine(Bombard(at, dmg * 0.7f));
+                        }
+                        yield return new WaitForSeconds(0.12f);
+                    }
                 }
                 break;
+
+            default:
+                yield break;
         }
+    }
+
+    IEnumerator Bombard(Vector3 at, float damage)
+    {
+        FxAnim rock = Fx.Play("fx_meteor", at + Vector3.up * 8f, 2.2f, Color.white, 16f, 0f, 20, true, 0.35f);
+        for (float t = 0f; t < 0.3f; t += Time.deltaTime)
+        {
+            if (rock != null) rock.transform.position = Vector3.Lerp(at + Vector3.up * 8f, at, t / 0.3f);
+            yield return null;
+        }
+        if (rock != null) Destroy(rock.gameObject);
+        Explode(at, 2f, damage, 1.2f, new Color(1f, 0.45f, 0.1f, 0.9f));
     }
 
     // 지그재그 번개 선
@@ -2347,5 +2403,125 @@ public class LineFade : MonoBehaviour
         lr.startWidth = w0 * (1f - k * 0.5f);
         lr.endWidth = w1 * (1f - k * 0.5f);
         if (k >= 1f) Destroy(gameObject);
+    }
+}
+
+// 화염 회오리: 가까운 적에게 천천히 다가가며 주변 적을 빨아들이고 태움 (4초)
+public class FireTornado : MonoBehaviour
+{
+    public SpecialAbilities owner;
+    public float damage;
+    public float life = 4f;
+    const float Radius = 3f;
+    float age, tick;
+    FxAnim body;
+
+    void Start()
+    {
+        body = Fx.Play("fx_tornado", transform.position + Vector3.up * 1.8f, 5f, Color.white, 14f, 0f, 14, true, life);
+        FxAnim rune = Fx.Play("fx_rune", transform.position, Radius * 2f, new Color(1f, 0.5f, 0.15f, 0.55f), 1f, 0f, 1, true, life);
+        if (rune != null) { rune.follow = transform; rune.spin = 120f; }
+    }
+
+    void Update()
+    {
+        age += Time.deltaTime;
+        Transform target = Specials.NearestEnemy(transform.position, 14f);
+        if (target != null) transform.position = Vector3.MoveTowards(transform.position, target.position, 5f * Time.deltaTime);
+        if (body != null) body.transform.position = transform.position + Vector3.up * 1.8f;
+
+        // 빨아들임
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, Radius * 1.6f))
+        {
+            if (!c.CompareTag("enermy")) continue;
+            c.transform.position = Vector3.MoveTowards(c.transform.position, transform.position, 4f * Time.deltaTime);
+        }
+
+        tick += Time.deltaTime;
+        if (tick >= 0.25f)
+        {
+            tick = 0f;
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, Radius))
+            {
+                if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+                Specials.Damage(c.gameObject, damage, Vector3.zero, 0f);
+                Burn.Apply(c.gameObject, damage, 2f);
+            }
+            if (SpecialAbilities.GlowSprite != null)
+                for (int i = 0; i < 4; i++)
+                    FlameParticle.SpawnEmber(SpecialAbilities.GlowSprite, transform.position, Random.insideUnitCircle.normalized * Random.Range(6f, 12f));
+        }
+        if (age >= life)
+        {
+            Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
+            Destroy(gameObject);
+        }
+    }
+}
+
+// 영혼 떼: 구슬들이 주인 주위를 돌다가 번갈아 표적에게 달려들고 돌아옴 (4초)
+public class SoulSwarm : MonoBehaviour
+{
+    public Transform owner;
+    public List<EnermyController> targets;
+    public float damage;
+    public Color color = Color.white;
+    public float life = 4f;
+    const int Count = 5;
+    readonly FxAnim[] orbs = new FxAnim[Count];
+    readonly Transform[] chasing = new Transform[Count];
+    readonly float[] dashT = new float[Count];
+    float age, next;
+    int turn;
+
+    void Start()
+    {
+        for (int i = 0; i < Count; i++) orbs[i] = Fx.Play("fx_orb", owner.position, 1.1f, color, 12f, 0f, 18, true, life);
+    }
+
+    Vector3 Home(int i) => owner.position + (Vector3)(Quaternion.Euler(0, 0, age * 200f + i * 72f) * Vector2.right * 2.2f);
+
+    Transform PickTarget()
+    {
+        targets.RemoveAll(e => e == null || e.IsDead);
+        if (targets.Count > 0) return targets[Random.Range(0, targets.Count)].transform;
+        return Specials.NearestEnemy(owner.position, 14f);
+    }
+
+    void Update()
+    {
+        if (owner == null) { Destroy(gameObject); return; }
+        age += Time.deltaTime;
+
+        // 0.25초마다 한 구슬씩 출격
+        if (age >= next)
+        {
+            next = age + 0.25f;
+            int i = turn++ % Count;
+            if (chasing[i] == null) { chasing[i] = PickTarget(); dashT[i] = 0f; }
+        }
+
+        for (int i = 0; i < Count; i++)
+        {
+            if (orbs[i] == null) continue;
+            Transform t = chasing[i];
+            if (t == null)
+            {
+                orbs[i].transform.position = Vector3.MoveTowards(orbs[i].transform.position, Home(i), 30f * Time.deltaTime);
+                continue;
+            }
+            orbs[i].transform.position = Vector3.MoveTowards(orbs[i].transform.position, t.position, 28f * Time.deltaTime);
+            dashT[i] += Time.deltaTime;
+            if (Vector2.Distance(orbs[i].transform.position, t.position) < 0.6f || dashT[i] > 0.8f)
+            {
+                if (dashT[i] <= 0.8f)
+                {
+                    Specials.Damage(t.gameObject, damage, Vector3.zero, 0.5f);
+                    Fx.Play("fx_soulburst", t.position, 2f, Color.white, 22f);
+                }
+                chasing[i] = null;
+            }
+        }
+        if (age >= life) Destroy(gameObject);
     }
 }
