@@ -141,6 +141,7 @@ public class bosss : MonoBehaviour
         // 죽었으면 아무것도 하지 않음
         if (isDead) return;
 
+        bossbar.bossKind = bossKind;
         if (IsSlime)
         {
             bossbar.MaxHealth = 2600 + 2 * Gen2Hp + 3 * Gen3Hp;

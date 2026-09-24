@@ -328,11 +328,57 @@ public class SpecialFeedback : MonoBehaviour
         for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
         {
             float k = 1f - t / duration;
-            cam.localPosition = camRest + (Vector3)(Random.insideUnitCircle * strength * k);
+            shakeOffset = Random.insideUnitCircle * strength * k;
             yield return null;
         }
-        cam.localPosition = camRest;
+        shakeOffset = Vector2.zero;
         shake = null;
+    }
+
+    // ================================================================= camera hold
+    // 카메라는 플레이어의 자식이라 원래는 플레이어를 따라감.
+    // HoldCamera 동안에는 월드의 한 점에 머물고, ReleaseCamera 하면 부드럽게 플레이어에게 돌아감
+    Vector2 shakeOffset;
+    Vector3 holdTarget, holdPos;
+    bool holding;
+    float returnBlend = 1f;             // 1 = 플레이어에 붙음
+
+    public void HoldCamera(Vector3 worldCenter)
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return;
+        if (!camRestSet) { camRest = cam.transform.localPosition; camRestSet = true; }
+        if (!holding) holdPos = cam.transform.position;
+        holdTarget = new Vector3(worldCenter.x, worldCenter.y, cam.transform.position.z);
+        holding = true;
+        returnBlend = 0f;
+    }
+
+    public void ReleaseCamera() => holding = false;
+
+    void LateUpdate()
+    {
+        Camera cam = Camera.main;
+        if (cam == null || !camRestSet) return;
+        Transform t = cam.transform;
+        float dt = Time.unscaledDeltaTime;
+        if (holding)
+        {
+            holdPos = Vector3.Lerp(holdPos, holdTarget, 1f - Mathf.Exp(-12f * dt));
+            t.position = holdPos + (Vector3)shakeOffset;
+            return;
+        }
+        if (returnBlend < 1f)
+        {
+            // 붙잡혀 있던 자리에서 플레이어 쪽으로 돌아감
+            returnBlend = Mathf.Min(1f, returnBlend + dt / 0.25f);
+            Vector3 follow = t.parent != null ? t.parent.TransformPoint(camRest) : camRest;
+            float k = 1f - (1f - returnBlend) * (1f - returnBlend);
+            holdPos = Vector3.Lerp(holdPos, follow, k);
+            t.position = holdPos + (Vector3)shakeOffset;
+            return;
+        }
+        t.localPosition = camRest + (Vector3)shakeOffset;
     }
 }
 

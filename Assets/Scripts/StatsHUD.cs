@@ -29,7 +29,8 @@ public class StatsHUD : MonoBehaviour
     RectTransform panelRect;
     RectTransform arrowRect;
 
-    static readonly string[] Labels = { Loc.T("공격력"), Loc.T("방어력"), Loc.T("공격 속도"), Loc.T("재장전"), Loc.T("이동 속도") };
+    // 한국어 원문 (static 초기화 중엔 설정을 읽을 수 없으므로 쓸 때 번역)
+    static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도" };
 
     PlayerController player;
     TextMeshProUGUI[] values;
@@ -126,7 +127,7 @@ public class StatsHUD : MonoBehaviour
         icon.preserveAspect = true;
         icon.raycastTarget = false;
 
-        MakeText("Label", Labels[i], new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.Left,
+        MakeText("Label", Loc.T(Labels[i]), new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.Left,
                  padding + rowHeight + 8f, y);
         values[i] = MakeText("Value", "", new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.Right,
                              padding, y);

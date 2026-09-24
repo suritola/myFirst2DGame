@@ -521,7 +521,8 @@ public class SpecialAbilities : MonoBehaviour
                 break;
 
             case ScytheId:
-                // 죽음의 춤: 무적 상태로 조준한 적들 사이를 순간이동하며 벰
+                // 죽음의 춤: 무적 상태로 조준한 적들 사이를 순간이동하며 벤 뒤 제자리로 돌아옴
+                // 카메라는 플레이어를 따라가지 않고 움직이는 범위의 가운데에 고정
                 {
                     SpriteRenderer body = player.GetComponent<SpriteRenderer>();
                     if (alive.Count == 0)
@@ -530,7 +531,11 @@ public class SpecialAbilities : MonoBehaviour
                         if (near != null) alive.Add(near.GetComponent<EnermyController>());
                         alive.RemoveAll(e => e == null);
                     }
-                    player.GrantInvincibility(0.2f * alive.Count + 0.4f);
+                    player.GrantInvincibility(0.2f * alive.Count + 0.6f);
+                    Vector3 home = player.transform.position;
+                    Bounds span = new Bounds(home, Vector3.zero);
+                    foreach (EnermyController t in alive) if (Alive(t)) span.Encapsulate(t.transform.position);
+                    fx.HoldCamera(span.center);
                     foreach (EnermyController t in alive)
                     {
                         if (!Alive(t)) continue;
@@ -556,7 +561,21 @@ public class SpecialAbilities : MonoBehaviour
                         fx.Shake(0.2f, 0.06f);
                         yield return new WaitForSeconds(0.12f);
                     }
+                    // 제자리로 복귀
+                    {
+                        Vector3 from = player.transform.position;
+                        if (body != null)
+                        {
+                            GameObject g = MakeSprite("DanceGhost", body.sprite, from, 1f, new Color(0.8f, 0.55f, 1f, 0.5f), "Character", -1);
+                            g.transform.localScale = player.transform.lossyScale;
+                            g.AddComponent<FadeOut>().duration = 0.3f;
+                        }
+                        Fx.Beam(from, home, 0.3f, new Color(0.8f, 0.55f, 1f, 0.7f), 0.15f);
+                        player.transform.position = home;
+                    }
                     Fx.Play("fx_soulburst", player.transform.position, 4f, Color.white, 18f);
+                    yield return new WaitForSeconds(0.15f);
+                    fx.ReleaseCamera();
                 }
                 break;
 
@@ -685,8 +704,8 @@ public class SpecialAbilities : MonoBehaviour
     public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);
 
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
-    public bool IsInstantUlt => WeaponActive && (CurrentWeapon == ShotgunId || CurrentWeapon == SniperId || CurrentWeapon == DualId
-                                                  || CurrentWeapon == FlameId || CurrentWeapon == GrenadeId);
+    // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)
+    public bool IsInstantUlt => WeaponActive && (CurrentWeapon == ShotgunId || CurrentWeapon == DualId || CurrentWeapon == GrenadeId);
 
     // 조준 화면 (WeaponAim)이 쓰는 값들
     public Transform PlayerTransform => player.transform;
@@ -725,29 +744,29 @@ public class SpecialAbilities : MonoBehaviour
         if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
     }
 
-    // 진화 효과 설명 (ID 순서)
+    // 진화 효과 설명 (ID 순서, 한국어 원문 · 쓸 때 Loc.T로 번역)
     public static readonly string[] EvolveTexts =
     {
-        Loc.T("사거리 +2, 부채꼴이 넓어지고 피해 320%. 맞은 적이 불탑니다."),
-        Loc.T("충전 시간 0.8초. 완충 사격이 맞은 곳에서 폭발합니다."),
-        Loc.T("두 총구에서 동시에 발사합니다 (탄약 소모는 그대로)."),
-        Loc.T("열이 40% 덜 오르고 불길 화상 피해가 강해집니다."),
-        Loc.T("한 번에 유도탄 2발을 쏩니다."),
-        Loc.T("번개가 7번 튀고, 튈 때 피해가 덜 줄어듭니다."),
-        Loc.T("낫이 더 커지고 더 멀리 날아가며 피해 220%."),
-        Loc.T("폭발 후 작은 용암탄 3개로 흩어집니다."),
-        Loc.T("쿨타임 1.8초. 도착 지점에서 충격파가 터집니다."),
-        Loc.T("장판이 더 넓고 6초 동안 지속됩니다. 쿨타임 9초."),
-        Loc.T("적이 75% 느려지고 7초 동안 지속됩니다."),
-        Loc.T("체력을 잃지 않고 12초 동안 지속됩니다."),
-        Loc.T("영혼 3개부터 쓸 수 있고 폭발 범위가 넓어집니다."),
-        Loc.T("해골 5마리를 부르고 쿨타임 10초."),
-        Loc.T("분신이 5초 동안 남고 사라질 때 폭발합니다."),
-        Loc.T("쿨타임 2초, 갈고리 피해 300%."),
-        Loc.T("영혼이 5개로 늘고 피해가 강해집니다."),
-        Loc.T("반격 범위와 피해가 크게 늘어납니다."),
-        Loc.T("탄창의 마지막 두 발이 저주탄이 됩니다."),
-        Loc.T("두 번 부활하고, 부활할 때 체력 50%로 일어납니다."),
+        "사거리 +2, 부채꼴이 넓어지고 피해 320%. 맞은 적이 불탑니다.",
+        "충전 시간 0.8초. 완충 사격이 맞은 곳에서 폭발합니다.",
+        "두 총구에서 동시에 발사합니다 (탄약 소모는 그대로).",
+        "열이 40% 덜 오르고 불길 화상 피해가 강해집니다.",
+        "한 번에 유도탄 2발을 쏩니다.",
+        "번개가 7번 튀고, 튈 때 피해가 덜 줄어듭니다.",
+        "낫이 더 커지고 더 멀리 날아가며 피해 220%.",
+        "폭발 후 작은 용암탄 3개로 흩어집니다.",
+        "쿨타임 1.8초. 도착 지점에서 충격파가 터집니다.",
+        "장판이 더 넓고 6초 동안 지속됩니다. 쿨타임 9초.",
+        "적이 75% 느려지고 7초 동안 지속됩니다.",
+        "체력을 잃지 않고 12초 동안 지속됩니다.",
+        "영혼 3개부터 쓸 수 있고 폭발 범위가 넓어집니다.",
+        "해골 5마리를 부르고 쿨타임 10초.",
+        "분신이 5초 동안 남고 사라질 때 폭발합니다.",
+        "쿨타임 2초, 갈고리 피해 300%.",
+        "영혼이 5개로 늘고 피해가 강해집니다.",
+        "반격 범위와 피해가 크게 늘어납니다.",
+        "탄창의 마지막 두 발이 저주탄이 됩니다.",
+        "두 번 부활하고, 부활할 때 체력 50%로 일어납니다.",
     };
 
     // ================================================================= weapon upgrades (shop)

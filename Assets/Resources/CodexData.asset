@@ -1,0 +1,127 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb7ccd700dd747efbe6821a915133485, type: 3}
+  m_Name: CodexData
+  m_EditorClassIdentifier:
+  specials:
+  - name: "\uC9C0\uC625\uBD88 \uC0B0\uD0C4\uCD1D"
+    kind: 0
+    description: "\uCD1D\uC54C \uB300\uC2E0 \uC55E\uCABD \uBD80\uCC44\uAF34(6\uCE78) \uC548\uC758 \uC801 \uBAA8\uB450\uC5D0\uAC8C\n\uC989\uC2DC 250% \uD53C\uD574\uC640 \uAC15\uD55C \uB109\uBC31. \uBC1C\uC0AC \uAC04\uACA9 1.4\uBC30."
+    icon: {fileID: 21300000, guid: 60a98310ec0fb5c86f12750f87a46be5, type: 3}
+  - name: "\uC601\uD63C \uC800\uACA9\uCD1D"
+    kind: 0
+    description: "\uB204\uB974\uACE0 \uC788\uB2E4\uAC00 \uB5BC\uBA74 \uBC1C\uC0AC\uD569\uB2C8\uB2E4. \uBAA8\uB4E0 \uC801\uC744 \uAD00\uD1B5\uD558\uACE0\n\uCDA9\uC804 \uC815\uB3C4\uC5D0 \uB530\uB77C \uD53C\uD574 150%~300%."
+    icon: {fileID: 21300000, guid: 7b50a0344fc74ad3cca966cfcf21c4cb, type: 3}
+  - name: "\uC800\uC8FC\uBC1B\uC740 \uC30D\uAD8C\uCD1D"
+    kind: 0
+    description: "\uB204\uB974\uACE0 \uC788\uC73C\uBA74 \uC5F0\uC0AC\uD569\uB2C8\uB2E4. \uBC1C\uC0AC \uAC04\uACA9 \uC808\uBC18, \uBC1C\uB2F9 \uD53C\uD574 55%.\n\uB450 \uBC1C\uC5D0 \uD0C4 1\uAC1C\uB9CC \uC501\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: ff72c1b7e1ee6ec9e03edf190ac055d4, type: 3}
+  - name: "\uD654\uC5FC \uBC29\uC0AC\uAE30"
+    kind: 0
+    description: "\uB204\uB974\uACE0 \uC788\uC73C\uBA74 \uBD88\uC744 \uBFDC\uC5B4 \uC801\uC744 \uAD00\uD1B5\uD558\uACE0 \uBD88\uD0DC\uC6C1\uB2C8\uB2E4.\n\uD0C4\uC57D \uB300\uC2E0 \uACFC\uC5F4 \uAC8C\uC774\uC9C0\uB97C \uC501\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: a34ef2033e97522795146f15c1f51bda, type: 3}
+  - name: "\uC601\uD63C \uC778\uB3C4 \uC9C0\uD321\uC774"
+    kind: 0
+    description: "\uAC00\uC7A5 \uAC00\uAE4C\uC6B4 \uC801\uC744 \uCAD3\uC544\uAC00\uB294 \uC720\uB3C4\uD0C4\uC744 \uC3E9\uB2C8\uB2E4.\n\uBC1C\uB2F9 \uD53C\uD574 70%, \uC870\uC900\uC774 \uD544\uC694 \uC5C6\uC2B5\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: c79268ae5717a2481d6ada6e2cc8d546, type: 3}
+  - name: "\uBC88\uAC1C \uC0AC\uC2AC\uCD1D"
+    kind: 0
+    description: "\uB9DE\uC740 \uC801\uC5D0\uAC8C\uC11C \uCD5C\uB300 4\uB9C8\uB9AC\uC5D0\uAC8C \uBC88\uAC1C\uAC00 \uD291\uB2C8\uB2E4.\n\uD288 \uB54C\uB9C8\uB2E4 \uD53C\uD574\uAC00 20%\uC529 \uC904\uC5B4\uB4ED\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: 11e7001f878569b87c16f95a19af62c5, type: 3}
+  - name: "\uBD80\uBA54\uB791 \uB0AB"
+    kind: 0
+    description: "\uB0A0\uC544\uAC14\uB2E4 \uB3CC\uC544\uC624\uBA70 \uC624\uAC00\uB294 \uAE38\uC758 \uC801\uC744 \uBAA8\uB450 \uBCB1\uB2C8\uB2E4.\n\uD53C\uD574 150%, \uD55C \uBC88\uC5D0 \uD558\uB098\uB9CC \uB358\uC9C8 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: 74662b172f609f4364938b7f4f8e3f9f, type: 3}
+  - name: "\uC6A9\uC554 \uC720\uD0C4 \uBC1C\uC0AC\uAE30"
+    kind: 0
+    description: "\uB9C8\uC6B0\uC2A4 \uC704\uCE58\uC5D0 \uB5A8\uC5B4\uC838 \uD3ED\uBC1C(\uD53C\uD574 200%)\uD558\uACE0\n\uC7A0\uAE50 \uC6A9\uC554 \uC6C5\uB369\uC774\uB97C \uB0A8\uAE41\uB2C8\uB2E4. \uD0C4 2\uAC1C \uC0AC\uC6A9."
+    icon: {fileID: 21300000, guid: 70226abc8f60e0f71293767273afcfa3, type: 3}
+  - name: "\uADF8\uB9BC\uC790 \uB300\uC2DC"
+    kind: 1
+    description: "\uB9C8\uC6B0\uC2A4 \uBC29\uD5A5\uC73C\uB85C \uC9E7\uAC8C \uB3CC\uC9C4\uD569\uB2C8\uB2E4.\n\uB3CC\uC9C4 \uC911\uC5D0\uB294 \uBB34\uC801. \uCFE8\uD0C0\uC784 3\uCD08."
+    icon: {fileID: 21300000, guid: e9a5d1df009ee0f484c88751d897c21d, type: 3}
+  - name: "\uC9C0\uC625\uBD88 \uC7A5\uD310"
+    kind: 1
+    description: "\uB9C8\uC6B0\uC2A4 \uC704\uCE58\uC5D0 4\uCD08 \uB3D9\uC548 \uBD88 \uC7A5\uD310\uC744 \uAE5D\uB2C8\uB2E4.\n0.5\uCD08\uB9C8\uB2E4 \uACF5\uACA9\uB825 75% \uD53C\uD574. \uCFE8\uD0C0\uC784 12\uCD08."
+    icon: {fileID: 21300000, guid: 9c56561bae009a9444e0601df7fcbc41, type: 3}
+  - name: "\uC2DC\uAC04 \uC65C\uACE1"
+    kind: 1
+    description: "5\uCD08 \uB3D9\uC548 \uBAA8\uB4E0 \uC801\uC774 50% \uB290\uB824\uC9D1\uB2C8\uB2E4.\n\uD50C\uB808\uC774\uC5B4\uB294 \uC815\uC0C1 \uC18D\uB3C4. \uCFE8\uD0C0\uC784 20\uCD08."
+    icon: {fileID: 21300000, guid: 12bb6622a054e3273bd7d2215e5628a5, type: 3}
+  - name: "\uD76C\uC0DD\uC758 \uACC4\uC57D"
+    kind: 1
+    description: "\uCD5C\uB300 \uCCB4\uB825 20%\uB97C \uBC14\uCCD0 8\uCD08 \uB3D9\uC548\n\uACF5\uACA9\uB825 2\uBC30, \uC5F0\uC0AC 1.5\uBC30. \uCFE8\uD0C0\uC784 25\uCD08."
+    icon: {fileID: 21300000, guid: b4c0e400330cf22a6199393f32400e6c, type: 3}
+  - name: "\uC601\uD63C \uD3ED\uBC1C"
+    kind: 1
+    description: "\uC801\uC744 \uCC98\uCE58\uD558\uBA74 \uC601\uD63C\uC774 \uC313\uC785\uB2C8\uB2E4(\uCD5C\uB300 40).\n5\uAC1C \uC774\uC0C1\uC77C \uB54C \uBAA8\uB450 \uD130\uB728\uB824 \uC8FC\uBCC0\uC5D0 \uD53C\uD574. \uCFE8\uD0C0\uC784 5\uCD08."
+    icon: {fileID: 21300000, guid: 34b64472d05b235b364c22ed3d4d3081, type: 3}
+  - name: "\uD574\uACE8 \uC18C\uD658"
+    kind: 1
+    description: "\uC544\uAD70 \uD574\uACE8 3\uAE30\uB97C 10\uCD08 \uB3D9\uC548 \uBD80\uB985\uB2C8\uB2E4.\n\uC801\uC5D0\uAC8C \uB2EC\uB824\uAC00 \uC790\uD3ED(\uACF5\uACA9\uB825 300%). \uCFE8\uD0C0\uC784 15\uCD08."
+    icon: {fileID: 21300000, guid: da72a3c41d263e76a3c1b3f12ad3a4bf, type: 3}
+  - name: "\uAC70\uC6B8 \uBD84\uC2E0"
+    kind: 1
+    description: "\uC81C\uC790\uB9AC\uC5D0 \uBD84\uC2E0\uC744 \uB0A8\uAE30\uACE0 \uBC18\uD22C\uBA85\uD574\uC9D1\uB2C8\uB2E4.\n3\uCD08 \uB3D9\uC548 \uC801\uC774 \uBD84\uC2E0\uC744 \uCAD3\uC2B5\uB2C8\uB2E4. \uCFE8\uD0C0\uC784 12\uCD08."
+    icon: {fileID: 21300000, guid: a110e04252002d03b0708c69b7cf958a, type: 3}
+  - name: "\uD53C\uC758 \uAC08\uACE0\uB9AC"
+    kind: 1
+    description: "\uC0AC\uC2AC\uC744 \uB358\uC838 \uC801\uC744 \uB04C\uC5B4\uC624\uAC70\uB098(\uD53C\uD574 150%)\n\uBCBD \uCABD\uC73C\uB85C \uB0A0\uC544\uAC11\uB2C8\uB2E4. \uCFE8\uD0C0\uC784 4\uCD08."
+    icon: {fileID: 21300000, guid: 6cb92ab6f01547aeadc8ca2a11bff830, type: 3}
+  - name: "\uC218\uD638 \uC601\uD63C"
+    kind: 2
+    description: "\uC601\uD63C \uAD6C\uCCB4 3\uAC1C\uAC00 \uC8FC\uC704\uB97C \uB3CC\uBA70\n\uB2FF\uC740 \uC801\uC5D0\uAC8C \uACF5\uACA9\uB825 80% \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: 1330d927757c331b1a4f51961f7481c8, type: 3}
+  - name: "\uBCF5\uC218\uC758 \uAC00\uC2DC"
+    kind: 2
+    description: "\uD53C\uACA9\uB420 \uB54C\uB9C8\uB2E4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C\n\uACF5\uACA9\uB825 300% \uD53C\uD574\uB97C \uC8FC\uACE0 \uBC00\uC5B4\uB0C5\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: d435be91dccf23d5fa0343616db7b495, type: 3}
+  - name: "\uD0C4\uCC3D \uC800\uC8FC"
+    kind: 2
+    description: "\uD0C4\uCC3D\uC758 \uB9C8\uC9C0\uB9C9 \uD55C \uBC1C\uC774 \uD53C\uD574 3\uBC30\uAC00 \uB418\uACE0\n\uB9DE\uC740 \uACF3\uC5D0\uC11C \uD3ED\uBC1C\uD569\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: 465f9f36a615f2e54e4f210fb478f5ab, type: 3}
+  - name: "\uBD88\uC0AC\uC758 \uB9F9\uC138"
+    kind: 2
+    description: "\uD55C \uD310\uC5D0 \uD55C \uBC88, \uC8FD\uC744 \uD53C\uD574\uB97C \uBC1B\uC73C\uBA74\n\uCCB4\uB825 1\uB85C \uBC84\uD2F0\uACE0 3\uCD08 \uB3D9\uC548 \uBB34\uC801\uC774 \uB429\uB2C8\uB2E4."
+    icon: {fileID: 21300000, guid: f25b45685d16776e4cda74eaeeae5af9, type: 3}
+  abilityIcons:
+  - {fileID: 21300000, guid: 7b50a0344fc74ad3cca966cfcf21c4cb, type: 3}
+  - {fileID: 21300000, guid: 6de5853d0c20e1280b160c7e56ff4dfb, type: 3}
+  - {fileID: 21300000, guid: 1330d927757c331b1a4f51961f7481c8, type: 3}
+  - {fileID: 21300000, guid: c79268ae5717a2481d6ada6e2cc8d546, type: 3}
+  - {fileID: 21300000, guid: 4eaaf9d1d354e0dcfaba83844daebf09, type: 3}
+  - {fileID: 21300000, guid: b4c0e400330cf22a6199393f32400e6c, type: 3}
+  - {fileID: 21300000, guid: 60a98310ec0fb5c86f12750f87a46be5, type: 3}
+  - {fileID: 21300000, guid: 32f668bc2510b39e858336dc57f5aa87, type: 3}
+  - {fileID: 21300000, guid: f25b45685d16776e4cda74eaeeae5af9, type: 3}
+  - {fileID: 21300000, guid: d435be91dccf23d5fa0343616db7b495, type: 3}
+  - {fileID: 21300000, guid: 94174311f0534d04b5c0c9024e77a701, type: 3}
+  - {fileID: 21300000, guid: db631e0c10fbb21ae659e339b67bc374, type: 3}
+  enemies:
+  - {fileID: 1715350116318572997, guid: 079a1fe05e4e18f479af04db706c6c41, type: 3}
+  - {fileID: 7385768420141801066, guid: c3c39af40a78ab240b8c748fdb77ad23, type: 3}
+  - {fileID: 3135040425113743428, guid: 0170c005ffda08d46bd99275ed76cb65, type: 3}
+  - {fileID: 3135040425113743428, guid: 5b359bd5603e03e22a7354f7bb8c556f, type: 3}
+  - {fileID: 3135040425113743428, guid: f1b38bc3af97ded227e7a06ea00f1751, type: 3}
+  - {fileID: 3135040425113743428, guid: eaa8b5cdbcbcd429d62f2f8209616e9a, type: 3}
+  - {fileID: 3135040425113743428, guid: 69fc8fce7c31ea625264d6f639714e50, type: 3}
+  - {fileID: 3135040425113743428, guid: 00caf67d7533771c04532924fae5ba4d, type: 3}
+  - {fileID: 3135040425113743428, guid: 24b6e9f324edf125210a0629f8fee724, type: 3}
+  - {fileID: 3135040425113743428, guid: 810b755c88a43a18dd645436b526036d, type: 3}
+  - {fileID: 3135040425113743428, guid: 275510898e8746ae959f0f852f721194, type: 3}
+  - {fileID: 3135040425113743428, guid: 12bcaafe46b263f206c732e05122fd88, type: 3}
+  - {fileID: 3135040425113743428, guid: 63b13b1228225dc5abf4b7db80fc556d, type: 3}
+  enemyStage: 00000000000000000000000001000000010000000100000001000000010000000200000002000000020000000200000002000000
+  bosses:
+  - {fileID: 2886160030303269951, guid: 0bab40755664e6e47965ccdb0bb06bc9, type: 3}
+  - {fileID: 2886160030303269951, guid: 379449b4d7fb6f681a0a124a85389bf4, type: 3}
+  - {fileID: 2886160030303269951, guid: 26f551656e36d54cfc2c22e50a8ec7b5, type: 3}
