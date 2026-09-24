@@ -50,7 +50,9 @@ public class EnemySpawner : MonoBehaviour
 
     public StageConfig Stage => stages[Mathf.Clamp(stageIndex, 0, stages.Length - 1)];
     SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
-    int MaxAlive => Phase.maxAlive + (bossSpawned ? bossExtraAlive : 0);
+    // 보스를 뺀 적은 (소환 포함) 최대 20마리
+    public const int AliveLimit = 20;
+    int MaxAlive => Mathf.Min(AliveLimit, Phase.maxAlive + (bossSpawned ? bossExtraAlive : 0));
 
     void Start()
     {

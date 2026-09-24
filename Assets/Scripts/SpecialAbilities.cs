@@ -890,7 +890,7 @@ public class SpecialAbilities : MonoBehaviour
         if (hitAny)
         {
             SkillGauge gauge = FindFirstObjectByType<SkillGauge>();
-            if (gauge != null) gauge.AddSkillPoint(PlayerController.GaugeRate);
+            // 스킬 게이지는 시간으로 참
         }
     }
 

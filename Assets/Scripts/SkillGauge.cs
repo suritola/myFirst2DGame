@@ -10,6 +10,28 @@ public class SkillGauge : MonoBehaviour
     public float SkillPoint = 0f;
     public int MaxSkillPoint = 10;
 
+    [Header("자동 충전")]
+    // 적을 맞혀서가 아니라 시간이 지나면서 참 (스킬 난사 방지)
+    public float pointsPerSecond = 1.4f;
+    // 적을 처치하면 잠깐 더 빨리 참
+    public float killBoost = 3f;
+    public float killBoostTime = 1.5f;
+    float boostUntil;
+
+    void OnEnable() => EnermyController.Killed += OnKill;
+    void OnDisable() => EnermyController.Killed -= OnKill;
+    void OnKill(Vector3 pos) => boostUntil = Time.time + killBoostTime;
+
+    public bool Boosted => Time.time < boostUntil;
+
+    void Update()
+    {
+        PlayerController p = Hostile.Player;
+        // 멈췄을 때나 스킬을 쓰는 중에는 차지 않음
+        if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;
+        AddSkillPoint(pointsPerSecond * (Boosted ? killBoost : 1f) * Time.deltaTime);
+    }
+
     void Start()
     {
         // Inspector에 연결 안 했으면
@@ -59,8 +81,7 @@ public class SkillGauge : MonoBehaviour
 
         // 충전 중에는 청록색, 가득 차면 금색
         if (value >= 1) gaugeImage.color = new Color(1f, 0.82f, 0.3f);
-        else gaugeImage.color = new Color(0.3f, 0.86f, 0.9f);
+        else gaugeImage.color = Boosted ? new Color(0.6f, 1f, 0.95f) : new Color(0.3f, 0.86f, 0.9f);
 
-        Debug.Log("게이지 Fill Amount: " + value);
     }
 }

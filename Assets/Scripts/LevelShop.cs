@@ -55,7 +55,8 @@ public class LevelShop : MonoBehaviour
         lv = FindFirstObjectByType<Level>();
         for (int i = 0; i< Total_abilitys; i++)
         {
-            ability_selected[i] = false;
+            // 11번(처치 시 회복)은 더 이상 나오지 않음
+            ability_selected[i] = i == 11;
         }
         //레벨업 능력들
         setAbilitys();
@@ -83,8 +84,8 @@ public class LevelShop : MonoBehaviour
         ability_name[4] = "더 많은 경험치";
         ability_content[4] = "킬 경험치 +10%";
 
-        ability_name[5] = "흡혈 스킬";
-        ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP.ToString("0.#") + " -> " + (VampireHeal + bul.getHP).ToString("0.#") + " )";
+        ability_name[5] = "코인 자석";
+        ability_content[5] = "주변의 코인을 끌어옵니다.\n( 범위 " + bul.coinMagnetRange.ToString("0") + " -> " + (bul.coinMagnetRange + MagnetStep).ToString("0") + " )";
 
         ability_name[6] = "멀티 샷";
         ability_content[6] = "한 번에 쏘는 총알이 1발 늘어나지만, 한 발당 피해는 줄어듭니다.\n( "
@@ -279,8 +280,8 @@ public class LevelShop : MonoBehaviour
     const int MinSkillPoint = 10;
 
     static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
-    const float VampireHeal = 0.4f;
-    const int VampireMaxLevel = 3;
+    const float MagnetStep = 4f;            // 코인 자석 1회당 끌어오는 범위
+    const int MagnetMaxLevel = 4;
     const float DefStep = 0.12f;            // 단단한 신체 1회당 받는 피해 감소
     const int DefMaxLevel = 3;
 
@@ -316,8 +317,8 @@ public class LevelShop : MonoBehaviour
                 current = "코인 1개당 획득량: " + (1 + bul.bonusCoin);
                 break;
             case 2:
-                summary = "스킬 게이지가 더 빨리 가득 찹니다.";
-                current = "스킬 발동에 필요한 적중: " + (skill != null ? skill.MaxSkillPoint : 0) + "회";
+                summary = "스킬 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)";
+                current = "게이지가 가득 차는 시간: " + (skill != null ? (skill.MaxSkillPoint / skill.pointsPerSecond).ToString("0") : "0") + "초";
                 break;
             case 3:
                 summary = "스킬을 쓰는 동안 적이 더 느려집니다.";
@@ -328,8 +329,8 @@ public class LevelShop : MonoBehaviour
                 current = "경험치 배율: " + ((lv != null ? lv.bonusEXP : 1f) * 100f).ToString("0") + "%";
                 break;
             case 5:
-                summary = "스킬로 맞힌 적 1명당 체력을 회복합니다.";
-                current = "회복량: 적 1명당 " + bul.getHP.ToString("0.#");
+                summary = "주변의 코인을 끌어옵니다.";
+                current = "끌어오는 범위: " + bul.coinMagnetRange.ToString("0") + " (" + ability_level[5] + "/" + MagnetMaxLevel + ")";
                 break;
             case 6:
                 summary = "한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다.";
@@ -397,8 +398,8 @@ public class LevelShop : MonoBehaviour
         if (what == 4) lv.bonusEXP += 0.1f;
         if (what == 5)
         {
-            bul.getHP += VampireHeal;
-            if (ability_level[5] >= VampireMaxLevel) ability_selected[5] = true;
+            bul.coinMagnetRange += MagnetStep;
+            if (ability_level[5] >= MagnetMaxLevel) ability_selected[5] = true;
         }
         if (what == 6)
         {

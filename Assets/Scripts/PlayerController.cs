@@ -100,6 +100,12 @@ public class PlayerController : MonoBehaviour
 
     public float targetRange = 8f;
 
+    // 타겟팅 스킬로 조준할 수 있는 최대 적 수
+    public int maxTargets = 6;
+
+    // 코인 자석 (레벨업 능력): 이 거리 안의 코인을 끌어옴
+    [HideInInspector] public float coinMagnetRange = 0f;
+
     public float targetInterval = 0.2f;
 
     public float shootDelay = 0.08f;
@@ -254,6 +260,16 @@ public class PlayerController : MonoBehaviour
         // 생명의 샘: 초당 체력 회복
         if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)
             PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + regenPerSecond * Time.deltaTime);
+
+        // 코인 자석: 주변 코인이 날아옴
+        if (coinMagnetRange > 0f && Time.timeScale > 0f)
+        {
+            foreach (GameObject c in GameObject.FindGameObjectsWithTag("coin"))
+            {
+                float d = Vector2.Distance(c.transform.position, transform.position);
+                if (d < coinMagnetRange) c.transform.position = Vector3.MoveTowards(c.transform.position, transform.position, (10f + (coinMagnetRange - d) * 3f) * Time.deltaTime);
+            }
+        }
 
         // 상점 · ESC · 레벨업 등으로 멈춘 동안에는 입력을 받지 않음
         // (멈춘 화면에서 클릭하면 총이 나가거나 스킬이 시간을 다시 흐르게 하던 문제)
@@ -530,6 +546,9 @@ void Shoot()
 
     void FindNextTarget()
     {
+        // 한 번에 조준할 수 있는 적 수 (상점에서 6 → 12)
+        if (targets.Count >= maxTargets) return;
+
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,targetRange);
 
         EnermyController closestEnemy = null;

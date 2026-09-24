@@ -204,7 +204,9 @@ public class EnemySkill : MonoBehaviour
         Hostile.HitCircle(transform.position, r, Dmg * 1.6f);
         Hostile.Burst(transform.position, r, new Color(1f, 0.5f, 0.1f, 0.9f), true);
         Hostile.Play("boom", 0.6f, 1.2f);
-        enemy.KillBySkill();
+        // 중간 보스는 터져도 죽지 않음
+        if (enemy.survivesContact) transform.localScale = baseScale;
+        else enemy.KillBySkill();
     }
 
     // 지옥견: 경로를 보여준 뒤 일직선 돌진

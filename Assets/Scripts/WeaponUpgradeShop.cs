@@ -13,7 +13,7 @@ public class WeaponUpgradeShop : MonoBehaviour
     static readonly Color Warn = new Color(1f, 0.45f, 0.4f);
 
     // 단계별 가격: 기본 가격 x 증가율^단계
-    static readonly int[] BasePrice = { 15, 15, 20, 30 };
+    static readonly int[] BasePrice = { 75, 75, 100, 150 };
     static readonly float[] PriceGrowth = { 1.5f, 1.5f, 1.6f, 1.8f };
 
     Shop shop;

@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Shop : MonoBehaviour
 {
@@ -79,6 +80,93 @@ public class Shop : MonoBehaviour
 
         if (pause != null) pause.SetActive(false);
 
+        BuildTargetButton();
+        UpdateShopText();
+    }
+
+    // ================================================================= 떠돌이 상점 제단
+    [Header("상점 제단")]
+    public int killsPerStall = 10;          // 일반 몹을 이만큼 잡을 때마다 제단이 나타남
+    int killsForStall;
+
+    void OnEnable() => EnermyController.Killed += OnEnemyKilled;
+    void OnDisable() => EnermyController.Killed -= OnEnemyKilled;
+
+    void OnEnemyKilled(Vector3 pos)
+    {
+        killsForStall++;
+        if (killsForStall < killsPerStall || playerControllerd == null) return;
+        killsForStall = 0;
+
+        // 플레이어 근처, 벽이 아닌 곳
+        Vector3 at = playerControllerd.transform.position;
+        for (int i = 0; i < 12; i++)
+        {
+            Vector3 p = Hostile.ClampArena(playerControllerd.transform.position + (Vector3)(UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(5f, 8f)));
+            if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
+        }
+        ShopStall.Spawn(this, at);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner("떠돌이 상점이 나타났다!\n10초 안에 가까이 가세요", 2f);
+    }
+
+    // 제단에 다가갔을 때 (열렸으면 true)
+    public bool OpenFromStall()
+    {
+        if (isShopOpen || isPause || Time.timeScale != 1f) return false;
+        ToggleShop();
+        return isShopOpen;
+    }
+
+    // ================================================================= 스킬 타겟 수 강화
+    [Header("스킬 타겟 수")]
+    public int targetPrice = 40;
+    public float targetPriceGrowth = 1.5f;
+    public int maxTargetLimit = 12;
+    TextMeshProUGUI targetText;
+
+    bool TargetMaxed => playerControllerd != null && playerControllerd.maxTargets >= maxTargetLimit;
+
+    void BuildTargetButton()
+    {
+        if (shopPanel == null || priceTextInput == null) return;
+        Image template = priceTextInput.GetComponentInParent<Image>();
+
+        GameObject go = new GameObject("TargetButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(shopPanel.transform, false);
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+        r.sizeDelta = new Vector2(250f, 64f);
+        r.anchoredPosition = new Vector2(-430f, 330f);
+        Image img = go.GetComponent<Image>();
+        if (template != null)
+        {
+            img.sprite = template.sprite;
+            img.type = template.type;
+        }
+        go.GetComponent<Button>().onClick.AddListener(OnPressTargets);
+
+        GameObject t = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform tr = t.GetComponent<RectTransform>();
+        tr.SetParent(r, false);
+        tr.anchorMin = Vector2.zero;
+        tr.anchorMax = Vector2.one;
+        tr.offsetMin = new Vector2(8f, 4f);
+        tr.offsetMax = new Vector2(-8f, -4f);
+        targetText = t.GetComponent<TextMeshProUGUI>();
+        targetText.font = priceTextInput.font;
+        targetText.fontSharedMaterial = priceTextInput.fontSharedMaterial;
+        targetText.enableAutoSizing = true;
+        targetText.fontSizeMin = 12f;
+        targetText.fontSizeMax = 22f;
+        targetText.alignment = TextAlignmentOptions.Center;
+        targetText.raycastTarget = false;
+    }
+
+    public void OnPressTargets()
+    {
+        if (TargetMaxed || !TryPay(targetPrice)) return;
+        playerControllerd.maxTargets++;
+        targetPrice = Mathf.CeilToInt(targetPrice * targetPriceGrowth);
         UpdateShopText();
     }
 
@@ -87,7 +175,8 @@ public class Shop : MonoBehaviour
     {
         // 특수 능력 화면이 열려 있으면 상점을 열지 않음
         bool specialOpen = StageManager.Instance != null && StageManager.Instance.IsMenuOpen;
-        if (Input.GetKeyDown(KeyCode.P) && !specialOpen) ToggleShop();
+        // 상점은 떠돌이 제단으로만 열림 (P는 닫기만)
+        if (Input.GetKeyDown(KeyCode.P) && isShopOpen && !specialOpen) ToggleShop();
     }
 
 
@@ -274,6 +363,14 @@ public class Shop : MonoBehaviour
         moveSpeed = playerControllerd.speed;
         showedSpeed = 1f / ShootSpeed;
         if (mycoins != null) mycoins.text = "코인 : " + coins;
+
+        if (targetText != null)
+        {
+            int n = playerControllerd.maxTargets;
+            targetText.text = TargetMaxed
+                ? "스킬 타겟 수 " + n + " (최대)"
+                : "스킬 타겟 수 " + n + " -> " + (n + 1) + "\n<color=#f5d478>" + targetPrice + " 코인</color>";
+        }
 
         // 공격력
         if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);

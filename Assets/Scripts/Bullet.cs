@@ -102,7 +102,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(skillCharge);
+                // 스킬 게이지는 이제 시간으로 참 (SkillGauge)
 
                 onHitEnemy?.Invoke(this, collision);
             }
@@ -133,7 +133,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(skillCharge);
+                // 스킬 게이지는 이제 시간으로 참 (SkillGauge)
             }
 
 
