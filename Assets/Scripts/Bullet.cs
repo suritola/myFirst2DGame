@@ -11,7 +11,7 @@ public class Bullet : MonoBehaviour
     //관통 개수
     public int pene = 1;
 
-    public int blood = 0;
+    public float blood = 0f;
 
     // 스킬로 쏜 총알은 스킬 게이지를 채우지 않음
     public bool isSkill = false;
@@ -92,8 +92,8 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                if (playerC.PlayerHealth < playerC.PlayerMaxHealth - blood) playerC.PlayerHealth += blood;
-                else playerC.PlayerHealth = playerC.PlayerMaxHealth;
+                // 흡혈: 맞힌 만큼 회복 (최대 체력은 넘지 않음)
+                if (blood > 0f) playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + blood);
 
 
                 // =========================
@@ -123,8 +123,8 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                if (playerC.PlayerHealth < playerC.PlayerMaxHealth - blood) playerC.PlayerHealth += blood;
-                else playerC.PlayerHealth = playerC.PlayerMaxHealth;
+                // 흡혈: 맞힌 만큼 회복 (최대 체력은 넘지 않음)
+                if (blood > 0f) playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + blood);
 
 
                 // =========================

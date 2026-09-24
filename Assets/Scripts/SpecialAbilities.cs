@@ -49,8 +49,8 @@ public class SpecialAbilities : MonoBehaviour
     public bool IsEvolved(int id) => evolved.Contains(id);
 
     // 무기 강화 (2장 상점): 무기마다 [피해, 속도, 특성] 단계
-    public const int StatDamage = 0, StatRate = 1, StatTrait = 2;
-    public static readonly int[] WeaponStatMax = { 5, 5, 3 };
+    public const int StatDamage = 0, StatRate = 1, StatMag = 2, StatTrait = 3;
+    public static readonly int[] WeaponStatMax = { 5, 5, 3, 3 };
     readonly Dictionary<int, int[]> weaponLevels = new Dictionary<int, int[]>();
 
     // 스킬 키: 고른 순서대로 E, F, Space
@@ -113,6 +113,7 @@ public class SpecialAbilities : MonoBehaviour
 
     // 적 · 보스 스킬이 같이 쓰는 빛 스프라이트와 소리
     public static Sprite GlowSprite;
+    public static Sprite SwirlSprite;
     public static SpecialFeedback SharedFx;
 
     // 그림자 대시 거리: 이동 속도에 비례 (기본 속도 20 → 6칸)
@@ -121,6 +122,7 @@ public class SpecialAbilities : MonoBehaviour
     void Awake()
     {
         GlowSprite = glowSprite;
+        SwirlSprite = swirlSprite;
         // 씬을 다시 불러와도 정적 상태가 남지 않도록
         EnermyController.GlobalSpeedMultiplier = 1f;
         EnermyController.Decoy = null;
@@ -170,8 +172,385 @@ public class SpecialAbilities : MonoBehaviour
 
     public bool Has(int id) => equipped.Contains(id);
 
+    // ================================================================= weapon ammo (무기마다 따로)
+    class WeaponAmmo
+    {
+        public int ammo;
+        public float reloadEnd = -1f;
+        public bool Reloading => reloadEnd > 0f;
+    }
+    readonly Dictionary<int, WeaponAmmo> ammoOf = new Dictionary<int, WeaponAmmo>();
+
+    // 기본 탄창 (0 = 탄약 없음: 화염 방사기는 열기, 낫은 회수)
+    static int BaseMag(int id) => id switch
+    {
+        ShotgunId => 5, SniperId => 4, DualId => 24, SeekerId => 12, ChainId => 8, GrenadeId => 6, _ => 0,
+    };
+    // 발사 간격 (초) — 권총의 공격 속도 강화와는 별개
+    static float BaseInterval(int id) => id switch
+    {
+        ShotgunId => 0.65f, SniperId => 0.8f, DualId => 0.22f, SeekerId => 0.4f, ChainId => 0.45f, GrenadeId => 0.8f, _ => 0.45f,
+    };
+    static float BaseReload(int id) => id switch
+    {
+        ShotgunId => 2f, SniperId => 2.2f, DualId => 1.8f, SeekerId => 1.6f, ChainId => 1.8f, GrenadeId => 2.4f, _ => 1.8f,
+    };
+
+    public static bool UsesAmmo(int id) => BaseMag(id) > 0;
+    public int MagSize(int id) => Mathf.RoundToInt(BaseMag(id) * (1f + 0.25f * WeaponLevel(id, StatMag)));
+
+    WeaponAmmo Ammo(int id)
+    {
+        if (!ammoOf.TryGetValue(id, out WeaponAmmo a))
+        {
+            a = new WeaponAmmo { ammo = MagSize(id) };
+            ammoOf[id] = a;
+        }
+        return a;
+    }
+
+    bool WeaponHasAmmo(int id)
+    {
+        if (!UsesAmmo(id)) return true;
+        WeaponAmmo a = Ammo(id);
+        return !a.Reloading && a.ammo > 0;
+    }
+
+    void StartWeaponReload(int id)
+    {
+        if (!UsesAmmo(id)) return;
+        WeaponAmmo a = Ammo(id);
+        if (a.Reloading || a.ammo >= MagSize(id)) return;
+        a.reloadEnd = Time.time + BaseReload(id);
+        if (player.reloadSound != null && player.TryGetComponent(out AudioSource src)) src.PlayOneShot(player.reloadSound);
+    }
+
+    // 들고 있지 않은 무기도 장전은 계속 진행
+    void UpdateWeaponReloads()
+    {
+        foreach (int id in weapons)
+        {
+            if (!UsesAmmo(id)) continue;
+            WeaponAmmo a = Ammo(id);
+            if (a.Reloading && Time.time >= a.reloadEnd)
+            {
+                a.reloadEnd = -1f;
+                a.ammo = MagSize(id);
+                if (id == CurrentWeapon) fx.Play("clank", 0.4f, 1.3f);
+            }
+        }
+    }
+
+    string AmmoText(int id)
+    {
+        if (!UsesAmmo(id)) return null;
+        WeaponAmmo a = Ammo(id);
+        if (a.Reloading) return "장전 중" + new string('.', (int)(Time.unscaledTime / 0.3f) % 3 + 1);
+        return a.ammo + " / " + MagSize(id);
+    }
+
+    // ================================================================= scythe sprite (코드로 그린 낫)
+    static Sprite scytheSprite;
+    static Sprite ScytheSprite => scytheSprite != null ? scytheSprite : (scytheSprite = MakeScytheSprite());
+
+    static Sprite MakeScytheSprite()
+    {
+        const int S = 48;
+        Texture2D tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Point;
+        Color[] px = new Color[S * S];
+        bool[] solid = new bool[S * S];
+        void Put(int x, int y, Color c)
+        {
+            if (x < 0 || y < 0 || x >= S || y >= S) return;
+            px[y * S + x] = c;
+            solid[y * S + x] = true;
+        }
+
+        // 자루: 왼쪽 아래에서 오른쪽 위로
+        for (float t = 0f; t <= 1f; t += 0.01f)
+        {
+            int x = Mathf.RoundToInt(Mathf.Lerp(9f, 33f, t));
+            int y = Mathf.RoundToInt(Mathf.Lerp(5f, 37f, t));
+            Color wood = Color.Lerp(new Color(0.32f, 0.2f, 0.14f), new Color(0.5f, 0.34f, 0.22f), (x + y) % 5 == 0 ? 1f : 0.3f);
+            Put(x, y, wood);
+            Put(x + 1, y, wood * 0.85f + new Color(0f, 0f, 0f, 0.15f));
+        }
+        // 자루 끝 장식
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                Put(9 + dx, 5 + dy, new Color(0.6f, 0.45f, 0.8f));
+
+        // 날: 자루 끝에서 왼쪽 아래로 휘어지는 초승달
+        Vector2 outer = new Vector2(24f, 30f);
+        Vector2 inner = new Vector2(20f, 25f);
+        for (int y = 0; y < S; y++)
+        {
+            for (int x = 0; x < S; x++)
+            {
+                Vector2 p = new Vector2(x + 0.5f, y + 0.5f);
+                float dOut = Vector2.Distance(p, outer);
+                float dIn = Vector2.Distance(p, inner);
+                if (dOut > 16f || dIn < 15f || p.y < 27f || p.x > 38f) continue;
+                // 바깥 가장자리일수록 밝게 빛나는 날
+                float edge = Mathf.Clamp01((dOut - 12f) / 4f);
+                Color c = Color.Lerp(new Color(0.42f, 0.2f, 0.62f), new Color(0.93f, 0.88f, 1f), edge);
+                Put(x, y, c);
+            }
+        }
+
+        // 어두운 외곽선
+        Color line = new Color(0.12f, 0.04f, 0.18f, 1f);
+        Color[] result = (Color[])px.Clone();
+        for (int y = 0; y < S; y++)
+        {
+            for (int x = 0; x < S; x++)
+            {
+                if (solid[y * S + x]) continue;
+                bool near = false;
+                for (int k = 0; k < 4 && !near; k++)
+                {
+                    int nx = x + (k == 0 ? 1 : k == 1 ? -1 : 0), ny = y + (k == 2 ? 1 : k == 3 ? -1 : 0);
+                    near = nx >= 0 && ny >= 0 && nx < S && ny < S && solid[ny * S + nx];
+                }
+                result[y * S + x] = near ? line : new Color(0f, 0f, 0f, 0f);
+            }
+        }
+        tex.SetPixels(result);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), 24f);
+    }
+
+    // ================================================================= weapon volley (타겟팅 스킬 일제 사격)
+    static Color WeaponColor(int id) => id switch
+    {
+        ShotgunId => new Color(1f, 0.55f, 0.2f),
+        SniperId => new Color(0.5f, 0.95f, 1f),
+        DualId => new Color(1f, 0.85f, 0.5f),
+        FlameId => new Color(1f, 0.5f, 0.15f),
+        SeekerId => new Color(0.75f, 0.5f, 1f),
+        ChainId => new Color(0.6f, 0.9f, 1f),
+        ScytheId => new Color(0.8f, 0.55f, 1f),
+        GrenadeId => new Color(1f, 0.45f, 0.1f),
+        _ => new Color(1f, 0.9f, 0.6f),
+    };
+
+    static bool Alive(EnermyController e) => e != null && !e.IsDead;
+
+    // 우클릭 타겟팅 스킬이 끝날 때: 들고 있는 무기의 개성대로 조준한 적들을 공격
+    public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
+    {
+        int id = CurrentWeapon;
+        float dmg = baseDamage * WeaponDamageMul(id);
+        Color c = WeaponColor(id);
+        fx.FloatText(player.transform.position, abilities[id].name + " 일제 사격!", c, 5.5f, 0f);
+        fx.Play("pulse", 0.6f, 1.4f);
+
+        switch (id)
+        {
+            case ShotgunId:
+                // 조준한 적마다 부채꼴 폭발
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    Vector3 start = player.MuzzlePosition;
+                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
+                    player.FaceTowards(t.transform.position);
+                    foreach (Collider2D col in Physics2D.OverlapCircleAll(start, 9f))
+                    {
+                        if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
+                        Vector2 to = col.transform.position - start;
+                        if (Vector2.Angle(dir, to) <= 35f) Specials.Damage(col.gameObject, dmg * 0.8f, to.normalized, 3f);
+                    }
+                    for (int i = -2; i <= 2; i++)
+                        for (int k = 1; k <= 3; k++)
+                            Flash(start + (Vector3)((Vector2)(Quaternion.Euler(0, 0, i * 16f) * dir) * 9f * k / 3.5f), 1.4f + k * 0.7f, new Color(c.r, c.g, c.b, 0.85f), 0.2f + k * 0.04f);
+                    ShockRing.Spawn(start, 0.5f, 3f, 0.25f, c, 0.3f);
+                    fx.Play("boom", 0.8f, 1.2f);
+                    fx.Shake(0.3f, 0.12f);
+                    yield return new WaitForSeconds(0.14f);
+                }
+                break;
+
+            case SniperId:
+                // 적마다 관통 저격 + 긴 궤적
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    Vector3 start = player.MuzzlePosition;
+                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
+                    player.FaceTowards(t.transform.position);
+                    Bullet b = player.CreateBullet(start, dir, dmg * 1.3f, 999, blood, true, 1.5f);
+                    if (b != null)
+                    {
+                        b.speed *= 1.8f;
+                        b.transform.localScale *= 1.4f;
+                        if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                    }
+                    DrawLine(start, start + (Vector3)(dir * 40f), new Color(c.r, c.g, c.b, 0.8f), 0.12f);
+                    Flash(start, 2f, c, 0.12f);
+                    fx.Play("crack", 0.7f, 1.1f);
+                    fx.Shake(0.2f, 0.1f);
+                    yield return new WaitForSeconds(0.12f);
+                }
+                break;
+
+            case DualId:
+                // 적마다 양손 4연사
+                foreach (EnermyController t in targets)
+                {
+                    for (int i = 0; i < 4 && Alive(t); i++)
+                    {
+                        Vector3 start = player.MuzzlePosition;
+                        Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
+                        Vector3 side = new Vector3(-dir.y, dir.x) * (i % 2 == 0 ? 0.35f : -0.35f);
+                        player.FaceTowards(t.transform.position);
+                        Bullet b = player.CreateBullet(start + side, dir, dmg * 0.35f, player.pene, blood, true, 0.6f);
+                        if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                        Flash(start + side, 1f, c, 0.06f);
+                        fx.Play("pew", 0.3f, i % 2 == 0 ? 1f : 1.15f);
+                        yield return new WaitForSeconds(0.035f);
+                    }
+                }
+                break;
+
+            case FlameId:
+                // 적마다 화염 폭발 + 강한 화상
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    Vector3 at = t.transform.position;
+                    Vector2 aim = ((Vector2)(at - player.MuzzlePosition)).normalized;
+                    for (int i = 0; i < 8; i++)
+                        FlameParticle.Spawn(glowSprite, player.MuzzlePosition, (Vector2)(Quaternion.Euler(0, 0, Random.Range(-10f, 10f)) * aim) * Random.Range(28f, 38f),
+                                            0.4f, 0.06f, 0.5f, false);
+                    Burn.Apply(t.gameObject, dmg * 0.4f, 3f);
+                    Explode(at, 2.4f, dmg * 0.6f, 1f, new Color(1f, 0.5f, 0.15f, 0.9f));
+                    for (int i = 0; i < 10; i++)
+                        FlameParticle.Spawn(glowSprite, at, Random.insideUnitCircle.normalized * Random.Range(6f, 12f), 0.5f, 0.06f, 0.4f, false);
+                    fx.Play("ignite", 0.6f, 1.2f);
+                    yield return new WaitForSeconds(0.08f);
+                }
+                break;
+
+            case SeekerId:
+                // 사방으로 퍼지는 유도탄 무리 (조준한 적 한 명당 2발)
+                {
+                    int count = Mathf.Max(4, targets.Count * 2);
+                    for (int i = 0; i < count; i++)
+                    {
+                        float a = (i / (float)count * 360f + Random.Range(-8f, 8f)) * Mathf.Deg2Rad;
+                        Bullet b = player.CreateBullet(player.MuzzlePosition, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), dmg * 0.55f, 1, blood, true, 0.5f);
+                        if (b != null)
+                        {
+                            b.speed *= 0.35f;
+                            b.transform.localScale *= 1.2f;
+                            if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                            b.gameObject.AddComponent<Homing>().turnSpeed = 420f;
+                        }
+                        if (i % 3 == 0) fx.Play("whoosh", 0.3f, 1.6f);
+                        yield return new WaitForSeconds(0.03f);
+                    }
+                }
+                break;
+
+            case ChainId:
+                // 적마다 번개가 내리꽂히고 다시 연쇄
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    Vector3 at = t.transform.position;
+                    DrawBolt(at + Vector3.up * 12f, at, c, 0.18f);
+                    DrawBolt(player.MuzzlePosition, at, c, 0.15f);
+                    Flash(at, 3f, c, 0.2f);
+                    Specials.Damage(t.gameObject, dmg, Vector3.zero, 0f);
+                    Collider2D col = t.GetComponent<Collider2D>();
+                    ChainLightning(at, col, dmg * 0.7f, 3);
+                    fx.Shake(0.15f, 0.08f);
+                    yield return new WaitForSeconds(0.1f);
+                }
+                break;
+
+            case ScytheId:
+                // 적마다 회전하는 낫을 던짐
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    Vector3 start = player.MuzzlePosition;
+                    Vector2 dir = ((Vector2)(t.transform.position - start)).normalized;
+                    player.FaceTowards(t.transform.position);
+                    Bullet b = player.CreateBullet(start, dir, dmg * 1.2f, 9999, blood, true, 1.2f);
+                    if (b != null)
+                    {
+                        b.speed *= 1.2f;
+                        b.lifetime = 0.9f;
+                        b.gameObject.AddComponent<Spin>().speed = -1080f;
+                        AttachScytheVisual(b, 1.2f);
+                    }
+                    fx.Play("whoosh", 0.6f, 1.1f);
+                    yield return new WaitForSeconds(0.07f);
+                }
+                break;
+
+            case GrenadeId:
+                // 조준한 적 위치마다 용암탄 비
+                foreach (EnermyController t in targets)
+                {
+                    if (!Alive(t)) continue;
+                    GameObject g = MakeSprite("LavaGrenade", glowSprite, player.MuzzlePosition, 1f, new Color(1f, 0.45f, 0.1f), "Effect", 5);
+                    Grenade gr = g.AddComponent<Grenade>();
+                    gr.owner = this;
+                    gr.target = t.transform.position;
+                    gr.damage = dmg * 1.1f;
+                    gr.radius = 3f;
+                    gr.flightTime = 0.45f;
+                    fx.Play("thump", 0.6f, 1.1f);
+                    yield return new WaitForSeconds(0.1f);
+                }
+                break;
+        }
+    }
+
+    // 지그재그 번개 선
+    void DrawBolt(Vector3 a, Vector3 b, Color color, float duration)
+    {
+        GameObject go = new GameObject("Bolt");
+        LineRenderer lr = go.AddComponent<LineRenderer>();
+        lr.material = lineMaterial;
+        lr.sortingLayerName = "Effect";
+        lr.sortingOrder = 22;
+        const int seg = 8;
+        lr.positionCount = seg + 1;
+        Vector3 side = Vector3.Cross(b - a, Vector3.forward).normalized;
+        for (int i = 0; i <= seg; i++)
+        {
+            float k = i / (float)seg;
+            float jitter = i == 0 || i == seg ? 0f : Random.Range(-0.6f, 0.6f);
+            lr.SetPosition(i, Vector3.Lerp(a, b, k) + side * jitter);
+        }
+        lr.startColor = Color.white;
+        lr.endColor = color;
+        lr.startWidth = 0.3f;
+        lr.endWidth = 0.15f;
+        go.AddComponent<LineFade>().duration = duration;
+    }
+
+    // 낫 모양 그림을 총알에 붙임 (판정은 총알 그대로)
+    void AttachScytheVisual(Bullet b, float worldSize)
+    {
+        if (b.TryGetComponent(out SpriteRenderer bulletSr)) bulletSr.enabled = false;
+        float s = Mathf.Max(0.01f, b.transform.lossyScale.x);
+        GameObject blade = MakeSprite("ScytheBlade", ScytheSprite, b.transform.position, 1f, Color.white, "Effect", 8);
+        blade.transform.SetParent(b.transform, true);
+        blade.transform.localScale = Vector3.one * (worldSize / s);
+        GameObject aura = MakeSprite("ScytheGlow", glowSprite, b.transform.position, 1f, new Color(0.7f, 0.4f, 1f, 0.35f), "Effect", 7);
+        aura.transform.SetParent(b.transform, true);
+        aura.transform.localScale = Vector3.one * (worldSize * 0.3f / s);
+    }
+
     // ================================================================= evolution
-    public void Evolve(int id)
+    // order: 한 번에 여러 개를 진화할 때 알림 글자를 위로 쌓는 순서
+    public void Evolve(int id, int order = 0)
     {
         if (!equipped.Contains(id) || evolved.Contains(id)) return;
         evolved.Add(id);
@@ -181,7 +560,7 @@ public class SpecialAbilities : MonoBehaviour
         {
             fx.Play("pulse", 0.9f, 0.9f);
             fx.Play("chime", 0.8f, 1.1f);
-            if (player != null) fx.FloatText(player.transform.position, abilities[id].name + " 진화!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
+            if (player != null) fx.FloatText(player.transform.position + Vector3.up * (1.4f * order), abilities[id].name + " 진화!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
         }
         if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
     }
@@ -217,8 +596,11 @@ public class SpecialAbilities : MonoBehaviour
     public bool UpgradeWeapon(int id, int stat)
     {
         if (!weapons.Contains(id) || WeaponLevel(id, stat) >= WeaponStatMax[stat]) return false;
-        if (!weaponLevels.ContainsKey(id)) weaponLevels[id] = new int[3];
+        if (!weaponLevels.ContainsKey(id)) weaponLevels[id] = new int[4];
+        int oldMag = MagSize(id);
         weaponLevels[id][stat]++;
+        // 탄창이 커지면 늘어난 만큼 바로 채움
+        if (stat == StatMag && UsesAmmo(id)) Ammo(id).ammo += MagSize(id) - oldMag;
         if (fx != null)
         {
             fx.Play("clank", 0.6f, 1.2f);
@@ -285,7 +667,10 @@ public class SpecialAbilities : MonoBehaviour
                 fx.Play("clank", 0.5f, 1.4f);
                 fx.FloatText(player.transform.position, WeaponActive ? abilities[CurrentWeapon].name : "기본 권총", new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
             }
-            player.ammoTextOverride = null;
+            UpdateWeaponReloads();
+            // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
+            player.ammoTextOverride = WeaponActive ? AmmoText(CurrentWeapon) : null;
+            if (WeaponActive && Input.GetKeyDown(KeyCode.R)) StartWeaponReload(CurrentWeapon);
             if (WeaponActive) UpdateWeapon();
         }
 
@@ -311,7 +696,6 @@ public class SpecialAbilities : MonoBehaviour
     float Damage => player.damage * player.damageMultiplier;
     // 들고 있는 무기의 강화가 반영된 피해
     float WDamage => Damage * WeaponDamageMul(CurrentWeapon);
-    float Interval(float mul) => player.ShootSpeed * mul / player.fireRateMultiplier;
     bool OverUI => UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
 
     // ================================================================= weapons
@@ -366,7 +750,7 @@ public class SpecialAbilities : MonoBehaviour
         }
     }
 
-    bool Ready() => player.CanShoot && Time.time >= nextFire;
+    bool Ready() => !player.IsSkillUsing && WeaponHasAmmo(CurrentWeapon) && Time.time >= nextFire;
 
     Vector2 AimDir() => ((Vector2)(MouseWorld() - player.MuzzlePosition)).normalized;
 
@@ -439,14 +823,18 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     // 공통: 발사 준비 (방향, 소리, 탄약, 탄창 저주)
-    Vector2 BeginShot(float intervalMul, int ammoCost, out Vector3 start, out bool cursed)
+    Vector2 BeginShot(int ammoCost, out Vector3 start, out bool cursed)
     {
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
         start = player.MuzzlePosition;
-        nextFire = Time.time + Interval(intervalMul) * WeaponRateMul(CurrentWeapon);
-        cursed = IsLastBulletCursed(player.NowBullet);
-        player.NowBullet = Mathf.Max(0, player.NowBullet - ammoCost);
+        nextFire = Time.time + BaseInterval(CurrentWeapon) / player.fireRateMultiplier * WeaponRateMul(CurrentWeapon);
+        // 무기마다 자기 탄창을 씀 (권총 탄창과 별개)
+        Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
+        WeaponAmmo mag = Ammo(CurrentWeapon);
+        cursed = IsLastBulletCursed(mag.ammo);
+        mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
+        if (mag.ammo <= 0) StartWeaponReload(CurrentWeapon);
         if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound);
         return ((Vector2)(target - start)).normalized;
     }
@@ -455,7 +843,8 @@ public class SpecialAbilities : MonoBehaviour
     {
         Bullet b = player.CreateBullet(start, dir, dmg * (cursed ? 3f : 1f), pene, 0, false, knockRate);
         if (b == null) return null;
-        b.skillCharge = skillCharge;
+        // 스킬 게이지: 화염 방사기가 기준, 나머지 무기는 천천히
+        b.skillCharge = skillCharge * (CurrentWeapon == FlameId ? 1f : PlayerController.GaugeRate);
         b.speed *= speedMul;
         b.transform.localScale *= scale;
         if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = tint;
@@ -469,7 +858,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void FireShotgun()
     {
-        Vector2 dir = BeginShot(1.4f, 1, out Vector3 start, out bool cursed);
+        Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         bool evo = IsEvolved(ShotgunId);
         float dmg = WDamage * (evo ? 3.2f : 2.5f) * (cursed ? 3f : 1f);
         bool hitAny = false;
@@ -501,14 +890,14 @@ public class SpecialAbilities : MonoBehaviour
         if (hitAny)
         {
             SkillGauge gauge = FindFirstObjectByType<SkillGauge>();
-            if (gauge != null) gauge.AddSkillPoint(1f);
+            if (gauge != null) gauge.AddSkillPoint(PlayerController.GaugeRate);
         }
     }
 
     void FireSniper(float charge)
     {
-        if (!player.CanShoot) return;
-        Vector2 dir = BeginShot(1.8f, 1, out Vector3 start, out bool cursed);
+        if (player.IsSkillUsing || !WeaponHasAmmo(SniperId)) return;
+        Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         Bullet b = Shot(start, dir, WDamage * Mathf.Lerp(1.5f, 3f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
         // 진화: 완충 사격이 맞은 곳마다 폭발
         if (b != null && charge >= 1f && IsEvolved(SniperId))
@@ -523,7 +912,7 @@ public class SpecialAbilities : MonoBehaviour
     void FireDual()
     {
         dualToggle = !dualToggle;
-        Vector2 dir = BeginShot(0.5f, dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
+        Vector2 dir = BeginShot(dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
         Vector3 side = new Vector3(-dir.y, dir.x) * 0.35f;
         fx.Play("pew", 0.35f, dualToggle ? 1f : 1.15f);
         int pene = player.pene + Trait(DualId);
@@ -531,7 +920,7 @@ public class SpecialAbilities : MonoBehaviour
         foreach (float s in IsEvolved(DualId) ? new[] { 1f, -1f } : new[] { dualToggle ? 1f : -1f })
         {
             Flash(start + side * s, 0.9f, new Color(1f, 0.85f, 0.5f, 0.8f), 0.06f);
-            Shot(start + side * s, dir, WDamage * 0.55f, pene, 0.6f, cursed, new Color(1f, 0.85f, 0.5f), 1f, 1f, 0.6f);
+            Shot(start + side * s, dir, WDamage * 0.55f, pene, 0.6f, cursed, new Color(1f, 0.85f, 0.5f), 1f, 1f, 0.25f);
         }
     }
 
@@ -616,7 +1005,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void FireSeeker()
     {
-        Vector2 dir = BeginShot(0.9f, 1, out Vector3 start, out bool cursed);
+        Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         fx.Play("whoosh", 0.4f, 1.6f);
         // 진화: 양옆으로 두 발
         int count = IsEvolved(SeekerId) ? 2 : 1;
@@ -630,7 +1019,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void FireChain()
     {
-        Vector2 dir = BeginShot(1f, 1, out Vector3 start, out bool cursed);
+        Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         Bullet b = Shot(start, dir, WDamage, 1, 1f, cursed, new Color(0.6f, 0.9f, 1f));
         fx.Play("pew", 0.35f, 0.8f);
         if (b != null)
@@ -654,6 +1043,8 @@ public class SpecialAbilities : MonoBehaviour
         b.lifetime = 5f;
         Scythe s = b.gameObject.AddComponent<Scythe>();
         s.distance = (evo ? 16f : 12f) * grow;
+        // 총알 대신 코드로 그린 낫을 보여줌 (판정은 그대로)
+        AttachScytheVisual(b, (evo ? 1.7f : 1.3f) * grow);
         s.outTime = 0.45f * WeaponRateMul(ScytheId);
         s.owner = player.transform;
         s.direction = ((Vector2)(target - player.MuzzlePosition)).normalized;
@@ -664,7 +1055,7 @@ public class SpecialAbilities : MonoBehaviour
     void FireGrenade()
     {
         Vector3 target = GrenadeLanding();
-        BeginShot(1.8f, 2, out Vector3 start, out bool cursed);
+        BeginShot(2, out Vector3 start, out bool cursed);
         fx.Play("thump", 0.8f);
         GameObject g = MakeSprite("LavaGrenade", glowSprite, start, 1.2f, new Color(1f, 0.45f, 0.1f), "Effect", 5);
         Grenade gr = g.AddComponent<Grenade>();
@@ -739,7 +1130,9 @@ public class SpecialAbilities : MonoBehaviour
         {
             case DashId: StartCoroutine(Dash()); StartCooldown(id, evo ? 1.8f : 3f); fx.Play("whoosh", 0.9f, 1.2f); break;
             case FireZoneId:
-                SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
+                DamageZone zone = SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
+                zone.lava = true;
+                ShockRing.Spawn(zone.transform.position, 0.3f, FireZoneRadius * 1.2f, 0.35f, new Color(1f, 0.55f, 0.2f, 0.9f), 0.3f);
                 StartCooldown(id, evo ? 9f : 12f);
                 fx.Play("boom", 0.5f, 0.8f);
                 fx.Play("crackle", 0.8f);
@@ -810,7 +1203,7 @@ public class SpecialAbilities : MonoBehaviour
     void UpdateCurseNotice()
     {
         if (!Has(CurseId)) return;
-        int now = player.NowBullet;
+        int now = WeaponActive && UsesAmmo(CurrentWeapon) ? Ammo(CurrentWeapon).ammo : player.NowBullet;
         if (IsLastBulletCursed(now) && !IsLastBulletCursed(lastBullets))
         {
             fx.Play("pulse", 0.6f, 1.6f);
@@ -818,7 +1211,7 @@ public class SpecialAbilities : MonoBehaviour
         }
         lastBullets = now;
 
-        bool show = IsLastBulletCursed(now) && !WeaponActive;
+        bool show = IsLastBulletCursed(now) && (!WeaponActive || UsesAmmo(CurrentWeapon));
         if (show && curseGlow == null) curseGlow = MakeSprite("CurseGlow", glowSprite, player.MuzzlePosition, 0.18f, new Color(1f, 0.2f, 0.2f, 0.8f), "Effect", 6);
         if (!show && curseGlow != null) Destroy(curseGlow);
         if (curseGlow != null)
@@ -857,6 +1250,7 @@ public class SpecialAbilities : MonoBehaviour
         Vector3 dir = (MouseWorld() - start).normalized;
         Vector3 end = ClampToArena(start + dir * DashDistance);
         player.GrantInvincibility(0.35f);
+        ShockRing.Spawn(start, 0.3f, 2.2f, 0.3f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.25f);
         SpriteRenderer body = player.GetComponent<SpriteRenderer>();
         int ghosts = 0;
         for (float t = 0f; t < 0.15f; t += Time.deltaTime)
@@ -874,6 +1268,8 @@ public class SpecialAbilities : MonoBehaviour
             yield return null;
         }
         player.transform.position = end;
+        ShockRing.Spawn(end, 0.3f, 1.8f, 0.25f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.2f);
+        for (int i = 0; i < 6; i++) SoulWisp.Spawn(end, end + (Vector3)(Random.insideUnitCircle.normalized * 2.5f), new Color(0.5f, 0.95f, 1f), true);
         // 진화: 도착 지점 충격파
         if (IsEvolved(DashId)) Explode(end, 2.5f, Damage * 1.5f, 2f, new Color(0.5f, 0.95f, 1f, 0.85f));
     }
@@ -885,6 +1281,8 @@ public class SpecialAbilities : MonoBehaviour
         EnermyController.GlobalSpeedMultiplier = evo ? 0.25f : 0.5f;
         timeWarpUntil = Time.time + duration;
         Flash(player.transform.position, 12f, new Color(0.5f, 0.8f, 1f, 0.5f), 0.5f);
+        ShockRing.Spawn(player.transform.position, 1f, 14f, 0.7f, new Color(0.55f, 0.85f, 1f, 0.9f), 0.5f);
+        ShockRing.Spawn(player.transform.position, 0.5f, 9f, 0.5f, Color.white, 0.2f);
         yield return new WaitForSeconds(duration);
         EnermyController.GlobalSpeedMultiplier = 1f;
     }
@@ -898,6 +1296,9 @@ public class SpecialAbilities : MonoBehaviour
         if (pactAura != null) Destroy(pactAura);
         pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, new Color(1f, 0.15f, 0.2f, 0.45f), "Background", 8);
         Flash(player.transform.position, 5f, new Color(1f, 0.15f, 0.2f, 0.7f), 0.4f);
+        for (int i = 0; i < 14; i++)
+            SoulWisp.Spawn(player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f), player.transform.position, new Color(1f, 0.2f, 0.25f));
+        ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.3f);
         yield return new WaitForSeconds(evo ? 12f : 8f);
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
@@ -912,6 +1313,8 @@ public class SpecialAbilities : MonoBehaviour
         decoy.transform.localScale = player.transform.lossyScale;
         decoy.GetComponent<SpriteRenderer>().flipX = body.flipX;
         EnermyController.Decoy = decoy.transform;
+        ShockRing.Spawn(decoy.transform.position, 0.3f, 3f, 0.35f, new Color(0.55f, 0.9f, 1f, 0.9f), 0.25f);
+        for (int i = 0; i < 8; i++) SoulWisp.Spawn(decoy.transform.position, decoy.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 3f), new Color(0.55f, 0.9f, 1f), true);
         player.bodyAlpha = 0.4f;
         bool evo = IsEvolved(MirrorId);
         yield return new WaitForSeconds(evo ? 5f : 3f);
@@ -930,7 +1333,8 @@ public class SpecialAbilities : MonoBehaviour
 
         if (enemy != null)
         {
-            DrawLine(from, enemy.transform.position, new Color(0.8f, 0.1f, 0.15f), 0.2f);
+            DrawBolt(from, enemy.transform.position, new Color(0.9f, 0.15f, 0.2f), 0.25f);
+            Flash(enemy.transform.position, 2f, new Color(1f, 0.2f, 0.25f, 0.8f), 0.15f);
             Specials.Damage(enemy.gameObject, Damage * (IsEvolved(HookId) ? 3f : 1.5f), Vector3.zero, 0f);
             if (enemy.CompareTag("enermy")) StartCoroutine(Pull(enemy.transform, from + (Vector3)dir * 2.5f));
         }
@@ -995,6 +1399,8 @@ public class SpecialAbilities : MonoBehaviour
             Vector3 pos = player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 2f);
             GameObject s = MakeSprite("AllySkeleton", allySprite, pos, 1f, new Color(0.6f, 0.95f, 1f), "Character", 1);
             s.transform.localScale = Vector3.one * 1.1f;
+            Flash(pos, 2.2f, new Color(0.6f, 0.95f, 1f, 0.8f), 0.25f);
+            ShockRing.Spawn(pos, 0.2f, 1.6f, 0.3f, new Color(0.6f, 0.95f, 1f, 0.9f), 0.15f);
             AllySkeleton a = s.AddComponent<AllySkeleton>();
             a.owner = this;
             a.damage = Damage * 3f;
@@ -1100,6 +1506,10 @@ public class SpecialAbilities : MonoBehaviour
             Specials.Damage(c.gameObject, damage, dir, knock);
         }
         Flash(pos, radius * 2f, color, 0.3f);
+        Flash(pos, radius * 0.9f, new Color(1f, 1f, 1f, 0.9f), 0.12f);
+        ShockRing.Spawn(pos, radius * 0.3f, radius * 1.15f, 0.3f, color, 0.3f);
+        for (int i = 0; i < Mathf.Clamp(Mathf.RoundToInt(radius * 3f), 4, 16); i++)
+            SoulWisp.Spawn(pos, pos + (Vector3)(Random.insideUnitCircle.normalized * radius * 1.5f), color, true);
         if (fx != null)
         {
             fx.Play("boom", Mathf.Clamp(radius / 5f, 0.3f, 0.9f), Mathf.Clamp(1.6f - radius * 0.12f, 0.8f, 1.5f));
@@ -1134,7 +1544,8 @@ public class SpecialAbilities : MonoBehaviour
             }
             if (next == null) break;
             hit.Add(next);
-            DrawLine(current, next.transform.position, new Color(0.6f, 0.9f, 1f), 0.15f);
+            DrawBolt(current, next.transform.position, new Color(0.6f, 0.9f, 1f), 0.18f);
+            Flash(next.transform.position, 1.6f, new Color(0.6f, 0.9f, 1f, 0.8f), 0.12f);
             Specials.Damage(next.gameObject, damage, Vector3.zero, 0f);
             current = next.transform.position;
             damage *= falloff;
@@ -1187,56 +1598,112 @@ public class SpecialAbilities : MonoBehaviour
         if (fx != null && CurrentWeapon == ScytheId) fx.Play("clank", 0.5f);
     }
 
-    // ================================================================= HUD (탄약 패널 왼쪽)
+    // ================================================================= HUD: 무기 / 스킬 / 패시브 세 창 (왼쪽 아래)
+    class HudPanel
+    {
+        public RectTransform rect;
+        public int count;
+    }
+    HudPanel weaponPanel, skillPanel, passivePanel;
+    const int PistolRow = -1;
+
     void BuildHud()
     {
         Canvas canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null) return;
+        weaponPanel = NewPanel(canvas, "WeaponSlot", "무기  [Q] 교체  [R] 장전");
+        skillPanel = NewPanel(canvas, "SkillSlot", "스킬");
+        passivePanel = NewPanel(canvas, "PassiveSlot", "패시브");
+        hud = weaponPanel.rect;
+    }
 
-        GameObject go = new GameObject("SpecialSlot", typeof(RectTransform), typeof(Image));
-        hud = go.GetComponent<RectTransform>();
-        hud.SetParent(canvas.transform, false);
+    HudPanel NewPanel(Canvas canvas, string name, string title)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(canvas.transform, false);
         Transform ammo = canvas.transform.Find("AmmoPanel");
-        if (ammo != null) hud.SetSiblingIndex(ammo.GetSiblingIndex() + 1);
-        // 왼쪽 아래, 레벨 명판 위 (경험치 바를 가리지 않게)
-        hud.anchorMin = hud.anchorMax = new Vector2(0f, 0f);
-        hud.pivot = new Vector2(0f, 0f);
-        hud.anchoredPosition = new Vector2(24f, 100f);
-        hud.sizeDelta = new Vector2(360f, 104f);
+        if (ammo != null) r.SetSiblingIndex(ammo.GetSiblingIndex() + 1);
+        r.anchorMin = r.anchorMax = new Vector2(0f, 0f);
+        r.pivot = new Vector2(0f, 0f);
+        r.sizeDelta = new Vector2(PanelWidth, 100f);
         Image bg = go.GetComponent<Image>();
         bg.sprite = panelSprite;
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = false;
 
-        hud.gameObject.SetActive(false);
+        GameObject head = new GameObject("Title", typeof(RectTransform));
+        RectTransform hr = head.GetComponent<RectTransform>();
+        hr.SetParent(r, false);
+        hr.anchorMin = new Vector2(0f, 1f);
+        hr.anchorMax = new Vector2(1f, 1f);
+        hr.pivot = new Vector2(0.5f, 1f);
+        hr.offsetMin = new Vector2(HudPad, 0f);
+        hr.offsetMax = new Vector2(-HudPad, 0f);
+        hr.sizeDelta = new Vector2(hr.sizeDelta.x, TitleHeight);
+        hr.anchoredPosition = new Vector2(hr.anchoredPosition.x, -HudPad + 8f);
+        RowText(hr, 16f, new Color(1f, 0.72f, 0.55f), TextAlignmentOptions.TopLeft).text = title;
+
+        go.SetActive(false);
+        return new HudPanel { rect = r };
     }
 
-    const float HudPad = 24f;
-    const float HudRowHeight = 50f;
+    const float PanelWidth = 320f;
+    const float PanelGap = 12f;
+    const float HudPad = 22f;
+    const float TitleHeight = 24f;
+    const float HudRowHeight = 46f;
 
-    // 고른 능력 수만큼 줄을 만들고 패널 높이를 맞춤
+    // 고른 능력을 종류별 창에 한 줄씩 넣고 창 크기와 위치를 맞춤
     void RebuildHudRows()
     {
-        if (hud == null) return;
+        if (weaponPanel == null) return;
         foreach (HudRow row in hudRows) Destroy(row.name.transform.parent.gameObject);
         hudRows.Clear();
 
-        for (int i = 0; i < equipped.Count; i++)
+        List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
+        if (weapons.Count > 0) w.Add(PistolRow);
+        foreach (int id in equipped)
+        {
+            if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
+            else if (abilities[id].kind == SpecialKind.Skill) s.Add(id);
+            else p.Add(id);
+        }
+        Fill(weaponPanel, w);
+        Fill(skillPanel, s);
+        Fill(passivePanel, p);
+
+        // 첫 창은 왼쪽 아래, 둘째 창은 그 오른쪽, 셋째 창은 첫 창 위
+        List<HudPanel> shown = new List<HudPanel>();
+        foreach (HudPanel panel in new[] { weaponPanel, skillPanel, passivePanel })
+            if (panel.count > 0) shown.Add(panel);
+        for (int i = 0; i < shown.Count; i++)
+        {
+            float x = 24f + (i == 1 ? PanelWidth + PanelGap : 0f);
+            float y = 100f + (i == 2 ? shown[0].rect.sizeDelta.y + PanelGap : 0f);
+            shown[i].rect.anchoredPosition = new Vector2(x, y);
+        }
+    }
+
+    void Fill(HudPanel panel, List<int> ids)
+    {
+        panel.count = ids.Count;
+        for (int i = 0; i < ids.Count; i++)
         {
             GameObject rowGo = new GameObject("Row", typeof(RectTransform));
             RectTransform rr = rowGo.GetComponent<RectTransform>();
-            rr.SetParent(hud, false);
+            rr.SetParent(panel.rect, false);
             rr.anchorMin = new Vector2(0f, 1f);
             rr.anchorMax = new Vector2(1f, 1f);
             rr.pivot = new Vector2(0.5f, 1f);
             rr.offsetMin = new Vector2(HudPad, 0f);
             rr.offsetMax = new Vector2(-HudPad, 0f);
             rr.sizeDelta = new Vector2(rr.sizeDelta.x, HudRowHeight);
-            rr.anchoredPosition = new Vector2(rr.anchoredPosition.x, -HudPad + 6f - i * HudRowHeight);
+            rr.anchoredPosition = new Vector2(rr.anchoredPosition.x, -HudPad - TitleHeight + 8f - i * HudRowHeight);
 
-            HudRow row = new HudRow { id = equipped[i] };
-            row.name = RowText(rr, 22f, new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.TopLeft);
-            row.info = RowText(rr, 17f, new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.TopRight);
+            HudRow row = new HudRow { id = ids[i] };
+            row.name = RowText(rr, 20f, new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.TopLeft);
+            row.info = RowText(rr, 16f, new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.TopRight);
 
             GameObject bar = new GameObject("Cooldown", typeof(RectTransform), typeof(Image));
             RectTransform br = bar.GetComponent<RectTransform>();
@@ -1244,7 +1711,7 @@ public class SpecialAbilities : MonoBehaviour
             br.anchorMin = new Vector2(0f, 0f);
             br.anchorMax = new Vector2(1f, 0f);
             br.pivot = new Vector2(0.5f, 0f);
-            br.sizeDelta = new Vector2(0f, 8f);
+            br.sizeDelta = new Vector2(0f, 7f);
             br.anchoredPosition = new Vector2(0f, 12f);
             row.bar = bar.GetComponent<Image>();
             row.bar.sprite = barFillSprite;
@@ -1253,9 +1720,8 @@ public class SpecialAbilities : MonoBehaviour
             row.bar.raycastTarget = false;
             hudRows.Add(row);
         }
-
-        hud.sizeDelta = new Vector2(hud.sizeDelta.x, HudPad * 2f - 6f + equipped.Count * HudRowHeight);
-        hud.gameObject.SetActive(equipped.Count > 0);
+        panel.rect.sizeDelta = new Vector2(PanelWidth, HudPad * 2f + TitleHeight - 8f + ids.Count * HudRowHeight);
+        panel.rect.gameObject.SetActive(ids.Count > 0);
     }
 
     TextMeshProUGUI RowText(RectTransform parent, float size, Color color, TextAlignmentOptions align)
@@ -1280,21 +1746,68 @@ public class SpecialAbilities : MonoBehaviour
 
     void UpdateHud()
     {
-        if (hud == null) return;
+        if (weaponPanel == null) return;
 
         foreach (HudRow row in hudRows)
         {
-            SpecialDef def = abilities[row.id];
-            row.name.text = def.name + (IsEvolved(row.id) ? "+" : "");
-
             float fill = 1f;
             string info;
+            if (row.id == PistolRow)
+            {
+                // 기본 권총: 권총 탄창과 장전 상태
+                bool inHand = !WeaponActive;
+                row.name.text = "기본 권총";
+                if (player.reload > 0f)
+                {
+                    fill = Mathf.Clamp01(player.reload / Mathf.Max(0.01f, player.reloadTime));
+                    info = "장전 중";
+                }
+                else
+                {
+                    fill = player.MaxBullet > 0 ? player.NowBullet / (float)player.MaxBullet : 1f;
+                    info = player.NowBullet + "/" + player.MaxBullet;
+                }
+                if (inHand) info = "사용 중 · " + info;
+                row.name.color = inHand ? Color.white : new Color(0.96f, 0.83f, 0.47f);
+                row.info.text = info;
+                row.bar.fillAmount = fill;
+                row.bar.color = inHand ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.55f, 0.5f, 0.45f);
+                continue;
+            }
+
+            SpecialDef def = abilities[row.id];
+            row.name.text = def.name + (IsEvolved(row.id) ? "+" : "");
+            bool highlight = false;
             if (def.kind == SpecialKind.Weapon)
             {
                 bool inHand = CurrentWeapon == row.id;
-                info = inHand ? "사용 중 · [Q] 교체" : "[Q] 교체";
-                fill = inHand ? 1f : 0f;
-                if (row.id == FlameId && inHand) fill = 1f - heat;
+                highlight = inHand;
+                if (row.id == FlameId)
+                {
+                    fill = 1f - heat;
+                    info = overheated ? "과열" : "열기 " + Mathf.RoundToInt(heat * 100f) + "%";
+                }
+                else if (row.id == ScytheId)
+                {
+                    info = activeScythe == null ? "준비" : "회수 중";
+                    fill = activeScythe == null ? 1f : 0f;
+                }
+                else
+                {
+                    WeaponAmmo a = Ammo(row.id);
+                    if (a.Reloading)
+                    {
+                        fill = 1f - (a.reloadEnd - Time.time) / BaseReload(row.id);
+                        info = "장전 중";
+                    }
+                    else
+                    {
+                        fill = a.ammo / (float)Mathf.Max(1, MagSize(row.id));
+                        info = a.ammo + "/" + MagSize(row.id);
+                    }
+                }
+                if (inHand) info = "사용 중 · " + info;
+                row.bar.color = inHand ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.55f, 0.5f, 0.45f);
             }
             else if (def.kind == SpecialKind.Skill)
             {
@@ -1303,23 +1816,25 @@ public class SpecialAbilities : MonoBehaviour
                 float left = CooldownUntil(row.id) - Time.time;
                 float length = cooldownLength.TryGetValue(row.id, out float l) ? l : 1f;
                 fill = left > 0f ? 1f - left / length : 1f;
-                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + "초" : "[" + key + "] 사용 가능";
+                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + "초" : "[" + key + "] 준비";
                 if (row.id == SoulBurstId) info += " · 영혼 " + souls;
+                row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
             }
             else
             {
-                info = "패시브";
+                info = "";
                 if (row.id == UndyingId)
                 {
                     int left = UndyingMaxUses - undyingUses;
-                    info = left > 0 ? "부활 대기 " + left : "사용함";
+                    info = left > 0 ? "부활 " + left : "사용함";
+                    fill = left > 0 ? 1f : 0f;
                 }
+                row.bar.color = new Color(0.6f, 0.85f, 1f);
             }
             row.info.text = info;
             bool flash = rowFlashUntil.TryGetValue(row.id, out float until) && Time.time < until;
-            row.name.color = flash ? Color.white : new Color(0.96f, 0.83f, 0.47f);
+            row.name.color = flash || highlight ? Color.white : new Color(0.96f, 0.83f, 0.47f);
             row.bar.fillAmount = fill;
-            row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
         }
     }
 }
@@ -1490,11 +2005,21 @@ public class Homing : MonoBehaviour
     public float turnSpeed = 360f;
     Bullet bullet;
 
+    float trail;
+
     void Start() => bullet = GetComponent<Bullet>();
 
     void Update()
     {
         if (bullet == null) return;
+        // 보랏빛 꼬리
+        trail += Time.deltaTime;
+        if (trail >= 0.03f && SpecialAbilities.GlowSprite != null)
+        {
+            trail = 0f;
+            GameObject t = SpecialAbilities.MakeSprite("SeekerTrail", SpecialAbilities.GlowSprite, transform.position, 0.06f, new Color(0.75f, 0.5f, 1f, 0.55f), "Effect", 4);
+            t.AddComponent<FadeOut>().duration = 0.3f;
+        }
         Transform target = Specials.NearestEnemy(transform.position, 20f);
         if (target == null) return;
         Vector2 want = ((Vector2)(target.position - transform.position)).normalized;
@@ -1767,6 +2292,41 @@ public class FadeOut : MonoBehaviour
         float k = Mathf.Clamp01(t / duration);
         sr.color = new Color(c.r, c.g, c.b, c.a * (1f - k));
         transform.localScale = s * (0.8f + 0.4f * k);
+        if (k >= 1f) Destroy(gameObject);
+    }
+}
+
+// 계속 회전
+public class Spin : MonoBehaviour
+{
+    public float speed = 360f;
+    void Update() => transform.Rotate(0f, 0f, speed * Time.deltaTime);
+}
+
+// 선이 가늘어지며 사라짐
+public class LineFade : MonoBehaviour
+{
+    public float duration = 0.2f;
+    float t;
+    LineRenderer lr;
+    Color a, b;
+    float w0, w1;
+
+    void Start()
+    {
+        lr = GetComponent<LineRenderer>();
+        a = lr.startColor; b = lr.endColor;
+        w0 = lr.startWidth; w1 = lr.endWidth;
+    }
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / duration);
+        lr.startColor = new Color(a.r, a.g, a.b, a.a * (1f - k));
+        lr.endColor = new Color(b.r, b.g, b.b, b.a * (1f - k));
+        lr.startWidth = w0 * (1f - k * 0.5f);
+        lr.endWidth = w1 * (1f - k * 0.5f);
         if (k >= 1f) Destroy(gameObject);
     }
 }

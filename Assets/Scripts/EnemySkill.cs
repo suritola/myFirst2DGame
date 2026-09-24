@@ -92,12 +92,23 @@ public class EnemySkill : MonoBehaviour
     // 몸이 깜빡이며 기를 모음
     IEnumerator Windup(Color color, float seconds, float speed = 8f)
     {
+        // 몸 주위 빛 + 머리 위 느낌표로 곧 공격한다는 걸 알림
+        GameObject aura = Hostile.Glow != null
+            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.55f), "Effect", 0) : null;
+        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.FloatText(transform.position + Vector3.up * 0.8f * Size, "!", color, 7f, 0f);
         for (float t = 0f; t < seconds; t += Time.deltaTime)
         {
-            if (!Alive) yield break;
-            sr.color = Color.Lerp(enemy.baseColor, color, Mathf.PingPong(Time.time * speed, 1f));
+            if (!Alive) break;
+            float pulse = Mathf.PingPong(Time.time * speed, 1f);
+            sr.color = Color.Lerp(enemy.baseColor, color, pulse);
+            if (aura != null)
+            {
+                aura.transform.position = transform.position;
+                aura.transform.localScale = Vector3.one * Size * Mathf.Lerp(0.25f, 0.45f, t / seconds) * (0.9f + 0.2f * pulse);
+            }
             yield return null;
         }
+        if (aura != null) Destroy(aura);
         if (Alive) sr.color = enemy.baseColor;
     }
 
@@ -352,7 +363,11 @@ public static class Hostile
         if (Glow == null) return;
         GameObject f = SpecialAbilities.MakeSprite("Burst", Glow, pos, radius * 2f / 8f, color, "Effect", 3);
         f.AddComponent<FadeOut>().duration = 0.3f;
-        ShockRing.Spawn(pos, radius * 0.3f, radius * 1.1f, 0.3f, color, 0.25f);
+        ShockRing.Spawn(pos, radius * 0.3f, radius * 1.1f, 0.3f, color, 0.3f);
+        ShockRing.Spawn(pos, radius * 0.1f, radius * 0.8f, 0.45f, Color.white, 0.15f);
+        GameObject core = SpecialAbilities.MakeSprite("BurstCore", Glow, pos, radius * 0.8f / 8f, new Color(1f, 1f, 1f, 0.9f), "Effect", 4);
+        core.AddComponent<FadeOut>().duration = 0.12f;
+        for (int i = 0; i < 8; i++) SoulWisp.Spawn(pos, pos + (Vector3)(Random.insideUnitCircle.normalized * radius * 1.6f), color, true);
         if (!fire) return;
         for (int i = 0; i < 10; i++)
         {
@@ -385,7 +400,7 @@ public static class Hostile
     }
 }
 
-// 경고 표시: 시간이 지나며 안쪽이 차오르고 끝나면 사라짐
+// 경고 표시: 굵은 테두리 + 차오르는 안쪽 + 발동 순간까지 좁혀 드는 고리
 public class Telegraph : MonoBehaviour
 {
     float duration;
@@ -396,8 +411,11 @@ public class Telegraph : MonoBehaviour
     Vector3 a, b;
     float width;
     LineRenderer outline;
+    LineRenderer closing;
+    LineRenderer edgeL, edgeR;
     LineRenderer fillLine;
     SpriteRenderer fillDisc;
+    SpriteRenderer glow;
 
     public void InitCircle(float radius, float duration, Color color)
     {
@@ -405,13 +423,17 @@ public class Telegraph : MonoBehaviour
         this.radius = radius;
         this.duration = duration;
         this.color = color;
-        outline = Hostile.NewLine("Outline", color, 0.12f);
-        outline.transform.SetParent(transform, false);
+        outline = Child(Hostile.NewLine("Outline", color, 0.2f, 18));
         outline.loop = true;
         Hostile.SetArc(outline, transform.position, radius, 0f, 354f);
+        closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19));
+        closing.loop = true;
         if (Hostile.Glow != null)
         {
-            GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.45f), "Effect", 1);
+            GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.15f), "Effect", 0);
+            g.transform.SetParent(transform, true);
+            glow = g.GetComponent<SpriteRenderer>();
+            GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.6f), "Effect", 1);
             d.transform.SetParent(transform, true);
             fillDisc = d.GetComponent<SpriteRenderer>();
         }
@@ -424,41 +446,58 @@ public class Telegraph : MonoBehaviour
         this.width = width;
         this.duration = duration;
         this.color = color;
-        outline = Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.18f), width, 1);
-        outline.transform.SetParent(transform, false);
+        outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.22f), width, 1));
         outline.positionCount = 2;
         outline.SetPosition(0, a);
         outline.SetPosition(1, b);
-        fillLine = Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.4f), width * 0.6f, 2);
-        fillLine.transform.SetParent(transform, false);
+        // 양쪽 가장자리 선
+        Vector3 side = Vector3.Cross(b - a, Vector3.forward).normalized * width * 0.5f;
+        edgeL = Child(Hostile.NewLine("Edge", color, 0.1f, 18));
+        edgeR = Child(Hostile.NewLine("Edge", color, 0.1f, 18));
+        edgeL.positionCount = edgeR.positionCount = 2;
+        edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
+        edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
+        fillLine = Child(Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.55f), width * 0.7f, 2));
         fillLine.positionCount = 2;
         fillLine.SetPosition(0, a);
         fillLine.SetPosition(1, a);
+    }
+
+    LineRenderer Child(LineRenderer lr)
+    {
+        lr.transform.SetParent(transform, false);
+        return lr;
     }
 
     void Update()
     {
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
-        float blink = 0.6f + 0.4f * Mathf.PingPong(Time.time * (4f + k * 10f), 1f);
+        float blink = 0.65f + 0.35f * Mathf.PingPong(Time.time * (4f + k * 14f), 1f);
         Color c = new Color(color.r, color.g, color.b, color.a * blink);
 
         if (circle)
         {
             outline.startColor = outline.endColor = c;
-            if (fillDisc != null)
-            {
-                // 빛 스프라이트는 크기 1일 때 지름 약 8칸
-                fillDisc.transform.localScale = Vector3.one * (radius * 2f / 8f) * k;
-            }
+            // 발동 순간에 테두리와 겹치도록 바깥에서 좁혀 들어오는 고리
+            Hostile.SetArc(closing, transform.position, radius * Mathf.Lerp(1.8f, 1f, k), 0f, 354f);
+            closing.startColor = closing.endColor = new Color(1f, 1f, 1f, 0.25f + 0.55f * k);
+            if (fillDisc != null) fillDisc.transform.localScale = Vector3.one * (radius * 2f / 8f) * k;
+            if (glow != null) glow.color = new Color(color.r, color.g, color.b, 0.12f + 0.2f * k * blink);
         }
         else
         {
             fillLine.SetPosition(1, Vector3.Lerp(a, b, k));
-            outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.18f * blink + 0.05f);
+            outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.2f * blink + 0.06f);
+            edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = c;
         }
 
-        if (t >= duration) Destroy(gameObject);
+        if (t >= duration)
+        {
+            // 발동 순간 짧은 섬광
+            if (circle) ShockRing.Spawn(transform.position, radius * 0.9f, radius * 1.15f, 0.18f, Color.white, 0.18f);
+            Destroy(gameObject);
+        }
     }
 }
 
@@ -508,12 +547,36 @@ public class HostileProjectile : MonoBehaviour
     public bool fiery;
     public bool pierceWalls;
     float puff;
+    float trail;
+    SpriteRenderer body;
+    GameObject core;
+
+    void Start()
+    {
+        body = GetComponent<SpriteRenderer>();
+        // 하얀 중심으로 잘 보이게
+        if (Hostile.Glow != null)
+        {
+            core = SpecialAbilities.MakeSprite("Core", Hostile.Glow, transform.position, transform.localScale.x * 0.45f, new Color(1f, 1f, 1f, 0.95f), "Effect", 10);
+            core.transform.SetParent(transform, true);
+        }
+    }
 
     void Update()
     {
         // 시간 왜곡에 같이 느려짐
         transform.position += (Vector3)(dir * speed * EnermyController.GlobalSpeedMultiplier * Time.deltaTime);
         if (spin) transform.Rotate(0f, 0f, 720f * Time.deltaTime);
+
+        // 색깔 꼬리
+        trail += Time.deltaTime;
+        if (!fiery && body != null && Hostile.Glow != null && trail >= 0.05f)
+        {
+            trail = 0f;
+            Color c = body.color;
+            GameObject tr = SpecialAbilities.MakeSprite("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.8f, new Color(c.r, c.g, c.b, 0.5f), "Effect", 8);
+            tr.AddComponent<FadeOut>().duration = 0.25f;
+        }
 
         if (fiery && Hostile.Glow != null)
         {

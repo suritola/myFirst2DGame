@@ -84,7 +84,7 @@ public class LevelShop : MonoBehaviour
         ability_content[4] = "킬 경험치 +10%";
 
         ability_name[5] = "흡혈 스킬";
-        ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP + " -> " + (VampireHeal + bul.getHP) + " )";
+        ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP.ToString("0.#") + " -> " + (VampireHeal + bul.getHP).ToString("0.#") + " )";
 
         ability_name[6] = "멀티 샷";
         ability_content[6] = "한 번에 쏘는 총알이 1발 늘어나지만, 한 발당 피해는 줄어듭니다.\n( "
@@ -110,6 +110,71 @@ public class LevelShop : MonoBehaviour
     {
         setAbilitys();
         UpdateSelectLock();
+
+        // 클릭으로 고른 카드를 스페이스바로 확정
+        if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && Input.GetKeyDown(KeyCode.Space))
+        {
+            int what = pendingSlot == 0 ? first : pendingSlot == 1 ? second : third;
+            pendingSlot = -1;
+            onSelect(what);
+        }
+    }
+
+    // 클릭한 카드 (0~2, -1 = 아직 없음)
+    int pendingSlot = -1;
+    TextMeshProUGUI selectHint;
+
+    Transform CardOf(int slot)
+    {
+        TextMeshProUGUI title = slot == 0 ? FirstTitle : slot == 1 ? SecondTitle : ThirdTitle;
+        if (title == null) return null;
+        Button b = title.GetComponentInParent<Button>();
+        return b != null ? b.transform : title.transform.parent;
+    }
+
+    void PickCard(int slot)
+    {
+        if (!selectReady) return;
+        pendingSlot = slot;
+        RefreshCards();
+    }
+
+    // 고른 카드는 커지고 금빛, 아래 안내 글자도 바뀜
+    void RefreshCards()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Transform card = CardOf(i);
+            if (card == null) continue;
+            bool on = i == pendingSlot;
+            card.localScale = Vector3.one * (on ? 1.08f : 1f);
+            if (card.TryGetComponent(out Image img)) img.color = on ? new Color(1f, 0.88f, 0.55f) : Color.white;
+        }
+
+        if (selectHint == null && LvshopPanel != null)
+        {
+            GameObject go = new GameObject("SelectHint", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform r = go.GetComponent<RectTransform>();
+            r.SetParent(LvshopPanel.transform, false);
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+            r.sizeDelta = new Vector2(1000f, 50f);
+            r.anchoredPosition = new Vector2(0f, 70f);
+            selectHint = go.GetComponent<TextMeshProUGUI>();
+            if (FirstTitle != null)
+            {
+                selectHint.font = FirstTitle.font;
+                selectHint.fontSharedMaterial = FirstTitle.fontSharedMaterial;
+            }
+            selectHint.fontSize = 30f;
+            selectHint.alignment = TextAlignmentOptions.Center;
+            selectHint.raycastTarget = false;
+        }
+        if (selectHint != null)
+        {
+            string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
+            selectHint.color = picked != null ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.92f, 0.88f, 0.8f);
+            selectHint.text = picked != null ? "[Space] 확정 : " + picked : "카드를 클릭해 고른 뒤 [Space]로 확정";
+        }
     }
 
     // 사격하던 클릭이 열리자마자 카드를 누르지 않도록:
@@ -166,6 +231,8 @@ public class LevelShop : MonoBehaviour
         LvshopPanel.SetActive(true);
         LockSelection();
         UpdateLvShopContent();
+        pendingSlot = -1;
+        RefreshCards();
         
 
     }
@@ -212,7 +279,7 @@ public class LevelShop : MonoBehaviour
     const int MinSkillPoint = 10;
 
     static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
-    const int VampireHeal = 1;
+    const float VampireHeal = 0.4f;
     const int VampireMaxLevel = 3;
     const float DefStep = 0.12f;            // 단단한 신체 1회당 받는 피해 감소
     const int DefMaxLevel = 3;
@@ -262,7 +329,7 @@ public class LevelShop : MonoBehaviour
                 break;
             case 5:
                 summary = "스킬로 맞힌 적 1명당 체력을 회복합니다.";
-                current = "회복량: 적 1명당 " + bul.getHP;
+                current = "회복량: 적 1명당 " + bul.getHP.ToString("0.#");
                 break;
             case 6:
                 summary = "한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다.";
@@ -294,21 +361,10 @@ public class LevelShop : MonoBehaviour
         return summary + "\n\n<color=#F5D478>현재 " + current + "</color>";
     }
 
-    public void onFirstButton()
-    {
-        onSelect(first);
-        Debug.Log(first);
-    }
-    public void onSecondButton()
-    {
-        onSelect(second);
-        Debug.Log(second);
-    }
-    public void onThirdButton()
-    {
-        onSelect(third);
-        Debug.Log(third);
-    }
+    // 카드를 누르면 고르기만 하고, 확정은 스페이스바
+    public void onFirstButton() => PickCard(0);
+    public void onSecondButton() => PickCard(1);
+    public void onThirdButton() => PickCard(2);
     void SetCardIcon(Image target, int id)
     {
         if (target == null || abilityHUD == null) return;
@@ -321,6 +377,8 @@ public class LevelShop : MonoBehaviour
     {
         if (!selectReady) return;
         selectReady = false;
+        pendingSlot = -1;
+        RefreshCards();
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();

@@ -39,7 +39,7 @@ public class BossSkills : MonoBehaviour
         if (boss.Enraged && Time.time >= nextSpecial)
         {
             nextSpecial = Time.time + 16f;
-            string name = kind == 0 ? "리치 왕이 죽음의 소용돌이를 부른다!" : "지옥의 군주가 십자 불길을 내뿜는다!";
+            string name = kind == 0 ? "리치 왕이 망자의 의식을 시작한다!" : "지옥의 군주가 십자 불길을 내뿜는다!";
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
             StartCoroutine(Run(kind == 0 ? DeathVortex() : HellCross()));
             return;
@@ -133,24 +133,147 @@ public class BossSkills : MonoBehaviour
         Hostile.Play("crack", 0.6f, 1.3f);
     }
 
-    // 특수: 죽음의 소용돌이 - 회전하는 세 줄기 영혼탄 (5초)
+    // 특수: 망자의 의식
+    // 1) 떠오르며 룬 고리를 그리고 영혼을 빨아들임  2) 영혼 등불 넷이 돌며 나선 탄막
+    // 3) 등불이 모여들며 경고 원이 차오르고 대폭발 + 사방 탄막
     IEnumerator DeathVortex()
     {
-        Hostile.Circle(transform.position, 4f, 1f, Curse);
-        yield return Windup(Curse, 1f);
-        float angle = Random.Range(0f, 360f);
-        float spin = Random.value < 0.5f ? 70f : -70f;
-        for (float t = 0f; t < 5f && Alive; t += 0.12f)
+        Vector3 home = transform.position;
+        Color cyan = Soul;
+        Color violet = Curse;
+
+        // ---------------- 1. 의식 준비 (1.4초)
+        LineRenderer runeIn = Hostile.NewLine("RuneRing", violet, 0.14f, 2);
+        LineRenderer runeOut = Hostile.NewLine("RuneRing", cyan, 0.1f, 2);
+        GameObject aura = Hostile.Glow != null ? SpecialAbilities.MakeSprite("LichAura", Hostile.Glow, home, 0.2f, new Color(0.6f, 0.35f, 1f, 0.5f), "Effect", 1) : null;
+        Hostile.Play("shimmer", 0.9f, 0.5f);
+        Hostile.Play("pulse", 0.8f, 0.6f);
+        float spin = 0f;
+        for (float t = 0f; t < 1.4f && Alive; t += Time.deltaTime)
         {
-            for (int arm = 0; arm < 3; arm++)
-            {
-                float a = (angle + arm * 120f) * Mathf.Deg2Rad;
-                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 8f, 14f, 0.5f, Curse, 0.13f, 5f);
-            }
-            angle += spin * 0.12f;
-            if (Mathf.Repeat(t, 0.6f) < 0.12f) Hostile.Play("whoosh", 0.25f, 1.6f);
-            yield return new WaitForSeconds(0.12f);
+            float k = t / 1.4f;
+            spin += 90f * Time.deltaTime;
+            DrawRunes(runeIn, runeOut, home, 3.2f * k, 5.2f * k, spin, 0.9f);
+            transform.position = home + Vector3.up * Mathf.Sin(k * Mathf.PI * 0.5f) * 0.8f;
+            if (aura != null) aura.transform.localScale = Vector3.one * Mathf.Lerp(0.2f, 1.1f, k);
+            if (Random.value < 0.5f) SoulWisp.Spawn(home + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(7f, 11f)), home, Random.value < 0.5f ? cyan : violet);
+            sr.color = Color.Lerp(Color.white, violet, Mathf.PingPong(Time.time * 8f, 1f));
+            yield return null;
         }
+
+        // ---------------- 2. 영혼 등불 (5초)
+        Sprite lanternSprite = SpecialAbilities.SwirlSprite != null ? SpecialAbilities.SwirlSprite : Hostile.Glow;
+        GameObject[] lanterns = new GameObject[4];
+        for (int i = 0; i < lanterns.Length; i++)
+            lanterns[i] = SpecialAbilities.MakeSprite("SoulLantern", lanternSprite, home, 0.55f, i % 2 == 0 ? cyan : violet, "Effect", 11);
+        Hostile.Play("chime", 0.8f, 0.7f);
+
+        float orbit = Random.Range(0f, 360f);
+        float dirSign = Random.value < 0.5f ? 1f : -1f;
+        float fireTimer = 0f, bossTimer = 0f, spiral = 0f;
+        for (float t = 0f; t < 5f && Alive; t += Time.deltaTime)
+        {
+            orbit += 55f * dirSign * Time.deltaTime;
+            spin += 60f * Time.deltaTime;
+            DrawRunes(runeIn, runeOut, home, 3.2f, 5.2f, spin, 0.6f + 0.3f * Mathf.Sin(Time.time * 6f));
+            transform.position = home + Vector3.up * (0.8f + Mathf.Sin(Time.time * 2.5f) * 0.25f);
+            if (aura != null) aura.transform.localScale = Vector3.one * (1.1f + Mathf.Sin(Time.time * 5f) * 0.1f);
+            sr.color = Color.Lerp(Color.white, violet, 0.35f + 0.25f * Mathf.Sin(Time.time * 6f));
+
+            for (int i = 0; i < lanterns.Length; i++)
+            {
+                float a = (orbit + i * 90f) * Mathf.Deg2Rad;
+                lanterns[i].transform.position = home + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 4.5f;
+                lanterns[i].transform.Rotate(0f, 0f, -360f * Time.deltaTime);
+                lanterns[i].transform.localScale = Vector3.one * (0.55f + Mathf.Sin(Time.time * 9f + i) * 0.06f);
+            }
+
+            // 등불마다 바깥쪽으로 비껴 나가는 탄 (나선 모양)
+            fireTimer += Time.deltaTime;
+            if (fireTimer >= 0.2f)
+            {
+                fireTimer = 0f;
+                for (int i = 0; i < lanterns.Length; i++)
+                {
+                    float a = (orbit + i * 90f + 35f * dirSign) * Mathf.Deg2Rad;
+                    Hostile.Shoot(lanterns[i].transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 7f, 14f, 0.5f, i % 2 == 0 ? cyan : violet, 0.13f, 5f);
+                }
+                Hostile.Play("pew", 0.15f, 1.8f);
+            }
+            // 보스 본체: 느리고 굵은 세 갈래 나선
+            bossTimer += Time.deltaTime;
+            if (bossTimer >= 0.35f)
+            {
+                bossTimer = 0f;
+                spiral += 23f * -dirSign;
+                for (int arm = 0; arm < 3; arm++)
+                {
+                    float a = (spiral + arm * 120f) * Mathf.Deg2Rad;
+                    Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 5f, 16f, 0.75f, new Color(0.85f, 0.7f, 1f), 0.22f, 7f);
+                }
+            }
+            yield return null;
+        }
+
+        // ---------------- 3. 대폭발 (등불이 모여들고 원이 차오름)
+        const float blastRadius = 7f;
+        if (Alive) Hostile.Circle(home, blastRadius, 1.1f, violet);
+        Hostile.Play("hum", 0.8f, 0.6f);
+        Vector3[] from = new Vector3[lanterns.Length];
+        for (int i = 0; i < lanterns.Length; i++) from[i] = lanterns[i].transform.position;
+        for (float t = 0f; t < 1.1f && Alive; t += Time.deltaTime)
+        {
+            float k = t / 1.1f;
+            for (int i = 0; i < lanterns.Length; i++)
+            {
+                lanterns[i].transform.position = Vector3.Lerp(from[i], home, k * k);
+                lanterns[i].transform.localScale = Vector3.one * Mathf.Lerp(0.55f, 0.9f, k);
+            }
+            DrawRunes(runeIn, runeOut, home, 3.2f * (1f - k * 0.7f), 5.2f * (1f - k * 0.7f), spin += 240f * Time.deltaTime, 1f);
+            sr.color = Color.Lerp(Color.white, Color.white * 0.4f + violet * 0.6f, Mathf.PingPong(Time.time * (6f + k * 20f), 1f));
+            yield return null;
+        }
+
+        foreach (GameObject l in lanterns) if (l != null) Destroy(l);
+        Destroy(runeIn.gameObject);
+        Destroy(runeOut.gameObject);
+        if (aura != null) Destroy(aura);
+        transform.position = home;
+        if (!Alive) yield break;
+
+        Hostile.HitCircle(home, blastRadius, 26f);
+        Hostile.Burst(home, blastRadius, violet);
+        ShockRing.Spawn(home, 1f, blastRadius * 1.6f, 0.6f, cyan, 0.5f);
+        ShockRing.Spawn(home, 0.5f, blastRadius * 1.1f, 0.45f, Color.white, 0.3f);
+        for (int i = 0; i < 28; i++)
+        {
+            float a = i * (360f / 28f) * Mathf.Deg2Rad;
+            Hostile.Shoot(home, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 10f, 15f, 0.55f, i % 2 == 0 ? cyan : violet, 0.15f, 5f);
+        }
+        for (int i = 0; i < 16; i++) SoulWisp.Spawn(home, home + (Vector3)(Random.insideUnitCircle.normalized * 9f), Random.value < 0.5f ? cyan : violet, true);
+        Hostile.Play("boom", 1f, 0.6f);
+        Hostile.Play("chime", 0.7f, 0.5f);
+        Hostile.Shake(0.5f);
+    }
+
+    // 두 겹의 룬 고리: 안쪽은 끊긴 점선처럼, 바깥은 반대로 회전
+    static void DrawRunes(LineRenderer inner, LineRenderer outer, Vector3 center, float r1, float r2, float spin, float alpha)
+    {
+        const int seg = 60;
+        inner.positionCount = seg + 1;
+        outer.positionCount = seg + 1;
+        for (int i = 0; i <= seg; i++)
+        {
+            float k = i / (float)seg * Mathf.PI * 2f;
+            // 안쪽 고리는 여섯 번 출렁이는 룬 모양
+            float wobble = 1f + 0.08f * Mathf.Sin(k * 6f + spin * Mathf.Deg2Rad * 2f);
+            float a1 = k + spin * Mathf.Deg2Rad;
+            float a2 = k - spin * Mathf.Deg2Rad * 0.6f;
+            inner.SetPosition(i, center + new Vector3(Mathf.Cos(a1), Mathf.Sin(a1)) * r1 * wobble);
+            outer.SetPosition(i, center + new Vector3(Mathf.Cos(a2), Mathf.Sin(a2)) * r2);
+        }
+        inner.startColor = inner.endColor = new Color(0.75f, 0.4f, 1f, alpha);
+        outer.startColor = outer.endColor = new Color(0.55f, 0.95f, 1f, alpha * 0.8f);
     }
 
     // ================================================================= 지옥의 군주
@@ -321,5 +444,39 @@ public class BossSkills : MonoBehaviour
             beams[i].SetPosition(0, transform.position);
             beams[i].SetPosition(1, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length);
         }
+    }
+}
+
+// 영혼 조각: 한 점으로 빨려 들어가거나(수렴) 퍼져 나가며 사라짐
+public class SoulWisp : MonoBehaviour
+{
+    Vector3 from, to;
+    float t, duration;
+    SpriteRenderer sr;
+    Color color;
+
+    public static void Spawn(Vector3 from, Vector3 to, Color color, bool burst = false)
+    {
+        if (Hostile.Glow == null) return;
+        GameObject go = SpecialAbilities.MakeSprite("SoulWisp", Hostile.Glow, from, 0.07f, color, "Effect", 10);
+        SoulWisp w = go.AddComponent<SoulWisp>();
+        w.from = from;
+        w.to = to;
+        w.duration = burst ? Random.Range(0.4f, 0.7f) : Random.Range(0.5f, 0.8f);
+        w.sr = go.GetComponent<SpriteRenderer>();
+        w.color = color;
+    }
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / duration);
+        float ease = k * k;
+        // 살짝 휘어서 날아감
+        Vector3 side = Vector3.Cross(to - from, Vector3.forward).normalized * Mathf.Sin(k * Mathf.PI) * 1.2f;
+        transform.position = Vector3.Lerp(from, to, ease) + side;
+        transform.localScale = Vector3.one * Mathf.Lerp(0.07f, 0.03f, k);
+        sr.color = new Color(color.r, color.g, color.b, color.a * Mathf.Sin(k * Mathf.PI));
+        if (k >= 1f) Destroy(gameObject);
     }
 }

@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
 
     public bool blood;
 
-    public int getHP = 0;
+    public float getHP = 0f;
 
     public int multiShot = 1;
 
@@ -164,10 +164,14 @@ public class PlayerController : MonoBehaviour
     // 탄약 표시 대신 보여줄 글자 (과열, 충전 등)
     [HideInInspector] public string ammoTextOverride;
 
-    public bool CanShoot => !isSkillUsing && !isReloading && NowBullet > 0;
+    public bool CanShoot => !IsSkillUsing && !isReloading && NowBullet > 0;
+    // 총알 한 발이 채우는 스킬 게이지 비율
+    public const float GaugeRate = 0.35f;
     // 메뉴로 게임이 멈췄는지 (타겟팅 스킬의 느린 시간은 멈춘 것이 아님)
     public static bool IsPaused => Time.timeScale == 0f;
-    public bool IsSkillUsing => isSkillUsing;
+    // 타겟팅 스킬 사용 중 + 끝난 뒤 자동 연사 중 (이때는 직접 쏠 수 없음)
+    public bool IsSkillUsing => isSkillUsing || isVolleying;
+    private bool isVolleying;
     public Camera MainCamera => mainCamera;
 
     private float nextTargetTime = 0f;
@@ -263,7 +267,8 @@ public class PlayerController : MonoBehaviour
         // 재장전 입력
         // =========================
 
-        if (Input.GetKeyDown(KeyCode.R)) if (NowBullet < MaxBullet) StartCoroutine(Reload());
+        bool holdingSpecial = special != null && special.WeaponActive;
+        if (Input.GetKeyDown(KeyCode.R) && !holdingSpecial) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
         // 이동 입력
@@ -297,13 +302,13 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool specialWeapon = special != null && special.WeaponActive;
-        if (!specialWeapon && Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
+        if (!specialWeapon && Input.GetMouseButtonDown(0) && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작
         // =========================
 
-        if (Input.GetMouseButtonDown(1) && !isSkillUsing && !isReloading)
+        if (Input.GetMouseButtonDown(1) && !IsSkillUsing && !isReloading)
         {
             if (skillGauge != null && skillGauge.IsFull()) StartSkill();
         }
@@ -466,7 +471,7 @@ void Shoot()
         faceLockUntil = Time.time + faceShotTime;
     }
 
-    public Bullet CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill, float knockBackRate = 1f)
+    public Bullet CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, float blood, bool isSkill, float knockBackRate = 1f)
     {
         if (bulletPrefab == null) return null;
 
@@ -482,7 +487,8 @@ void Shoot()
             bullet.damage = damage;
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
-            bullet.skillCharge = knockBackRate;
+            // 스킬 게이지는 화염 방사기 기준으로 천천히 참
+            bullet.skillCharge = knockBackRate * GaugeRate;
         }
 
         return bullet;
@@ -596,6 +602,17 @@ void Shoot()
 
     IEnumerator ShootTargets()
     {
+        isVolleying = true;
+
+        // 특수 무기를 들고 있으면 그 무기다운 일제 사격
+        if (special != null && special.WeaponActive)
+        {
+            yield return StartCoroutine(special.WeaponVolley(targets, skillDamage, getHP));
+            targets.Clear();
+            isVolleying = false;
+            yield break;
+        }
+
         foreach (EnermyController target in targets)
         {
             if (target == null) continue;
@@ -619,6 +636,7 @@ void Shoot()
         }
 
         targets.Clear();
+        isVolleying = false;
     }
 
     // =====================================

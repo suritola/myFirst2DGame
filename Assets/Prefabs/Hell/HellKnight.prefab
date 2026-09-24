@@ -192,7 +192,7 @@ MonoBehaviour:
   skill: 8
   skillCooldown: 0
   hp: {fileID: 6036257255657790500, guid: d7c3f9893125632478c48242ce8ab55f, type: 3}
-  chanceofHP: 20
+  chanceofHP: 10
   contactDamage: 24
   expReward: 85
   coinDrop: 5

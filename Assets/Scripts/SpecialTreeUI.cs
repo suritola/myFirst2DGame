@@ -32,6 +32,7 @@ public class SpecialTreeUI : MonoBehaviour
 
     readonly List<Image> nodeFrames = new List<Image>();
     readonly List<TextMeshProUGUI> nodeTags = new List<TextMeshProUGUI>();
+    readonly List<GameObject> nodeBadges = new List<GameObject>();
     readonly List<TooltipTrigger> nodeTips = new List<TooltipTrigger>();
     TextMeshProUGUI detailName, detailKind, detailText;
     Button confirm;
@@ -197,13 +198,26 @@ public class SpecialTreeUI : MonoBehaviour
         tip.title = def.name + "  · " + KindName(def.kind);
         tip.body = def.description;
 
-        // 노드 위 작은 표시 (보유 / 진화 완료)
-        TextMeshProUGUI tag = Text(r, "", 17f, Owned, new Vector2(0f, size * 0.5f + 12f), new Vector2(160f, 24f), TextAlignmentOptions.Center);
+        // 노드 안쪽 아래의 작은 배지 (진화 가능 / 진화 완료) - 위아래 노드의 이름과 겹치지 않게 틀 안에 둠
+        GameObject badge = new GameObject("Badge", typeof(RectTransform), typeof(Image));
+        RectTransform br = badge.GetComponent<RectTransform>();
+        br.SetParent(r, false);
+        br.anchorMin = br.anchorMax = new Vector2(0.5f, 0.5f);
+        br.sizeDelta = new Vector2(84f, 22f);
+        br.anchoredPosition = new Vector2(0f, -size * 0.5f + 14f);
+        Image bimg = badge.GetComponent<Image>();
+        bimg.sprite = headerSprite;
+        bimg.type = Image.Type.Sliced;
+        bimg.color = new Color(0.25f, 0.2f, 0.3f, 0.95f);
+        bimg.raycastTarget = false;
+        TextMeshProUGUI tag = Text(br, "", 14f, Owned, Vector2.zero, new Vector2(80f, 20f), TextAlignmentOptions.Center);
+        badge.SetActive(false);
 
-        while (nodeFrames.Count <= id) { nodeFrames.Add(null); nodeTags.Add(null); nodeTips.Add(null); }
+        while (nodeFrames.Count <= id) { nodeFrames.Add(null); nodeTags.Add(null); nodeTips.Add(null); nodeBadges.Add(null); }
         nodeFrames[id] = frame;
         nodeTags[id] = tag;
         nodeTips[id] = tip;
+        nodeBadges[id] = badge;
     }
 
     TextMeshProUGUI Text(RectTransform parent, string text, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align)
@@ -328,7 +342,8 @@ public class SpecialTreeUI : MonoBehaviour
         {
             if (nodeFrames[i] == null) continue;
             nodeFrames[i].color = picked.Contains(i) ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : Color.white;
-            nodeTags[i].text = IsMaxed(i) ? "진화 완료" : IsOwned(i) ? (picked.Contains(i) ? "진화!" : "보유 · 진화 가능") : "";
+            nodeTags[i].text = IsMaxed(i) ? "진화 완료" : IsOwned(i) ? (picked.Contains(i) ? "진화!" : "진화 가능") : "";
+            nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
             nodeTags[i].color = picked.Contains(i) ? Selected : Owned;
             nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
                 ? "진화: " + SpecialAbilities.EvolveTexts[i]

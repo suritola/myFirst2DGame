@@ -31,6 +31,12 @@ public class StageManager : MonoBehaviour
 
     public int[] chosenSpecials = new int[0];
 
+    [Header("신전 문 강제 입장")]
+    public float portalTimeLimit = 30f;     // 보스를 잡은 뒤 이 시간이 지나면 자동으로 들어감
+    public float portalPullTime = 8f;       // 마지막 이 시간 동안 문 쪽으로 점점 세게 끌려감
+    TextMeshProUGUI countdownText;
+    LineRenderer portalGuide;
+
     [Header("특수 능력 포인트 (2장 중간 보스 보상)")]
     public int specialPoints = 0;
     public KeyCode upgradeKey = KeyCode.T;
@@ -121,9 +127,10 @@ public class StageManager : MonoBehaviour
     void OnUpgradeConfirm(int[] ids)
     {
         List<int> fresh = new List<int>();
+        int evolvedCount = 0;
         foreach (int id in ids)
         {
-            if (specials.Has(id)) specials.Evolve(id);
+            if (specials.Has(id)) specials.Evolve(id, evolvedCount++);
             else fresh.Add(id);
         }
         if (fresh.Count > 0) specials.Equip(fresh);
@@ -215,6 +222,7 @@ public class StageManager : MonoBehaviour
         {
             if (portal != null) portal.SetActive(true);
             ShowBanner("신전 문이 열렸다!\n문으로 들어가세요", 3f);
+            StartCoroutine(PortalCountdown());
         }
         else
         {
@@ -264,6 +272,85 @@ public class StageManager : MonoBehaviour
         yield return Fade(1f, 0f, 0.8f);
         ShowBanner("2장 · 불타는 지옥", 2.5f);
         transitioning = false;
+    }
+
+    // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장
+    IEnumerator PortalCountdown()
+    {
+        if (portal == null || player == null) yield break;
+        EnsureCountdownUI();
+        // 포탈 판정 상자(문 아래쪽) 위치
+        Vector3 target = portal.transform.position + new Vector3(0f, -3.8f, 0f);
+        float left = portalTimeLimit;
+        float wisp = 0f;
+
+        while (left > 0f && CurrentStage == 0 && !transitioning)
+        {
+            left -= Time.deltaTime;            // 멈춘 동안에는 줄지 않음
+            bool urgent = left <= portalPullTime;
+
+            countdownText.gameObject.SetActive(true);
+            countdownText.text = urgent
+                ? "지옥의 문이 당신을 끌어당긴다!  " + Mathf.CeilToInt(left)
+                : "신전 문으로 들어가세요  " + Mathf.CeilToInt(left) + "초";
+            countdownText.color = urgent ? Color.Lerp(new Color(1f, 0.35f, 0.3f), Color.white, Mathf.PingPong(Time.unscaledTime * 4f, 1f)) : Gold;
+
+            // 플레이어 → 문 안내선
+            portalGuide.enabled = true;
+            portalGuide.SetPosition(0, player.position);
+            portalGuide.SetPosition(1, target);
+            float a = urgent ? 0.5f + 0.3f * Mathf.Sin(Time.time * 10f) : 0.25f + 0.1f * Mathf.Sin(Time.time * 3f);
+            portalGuide.startColor = new Color(1f, 0.8f, 0.4f, a);
+            portalGuide.endColor = new Color(1f, 0.55f, 0.2f, a * 0.3f);
+
+            if (urgent && Time.timeScale > 0f)
+            {
+                // 점점 강해지는 끌어당김 (마지막엔 이동 속도보다 강함)
+                float k = 1f - left / portalPullTime;
+                float pull = Mathf.Lerp(3f, 26f, k * k);
+                player.position = Vector3.MoveTowards(player.position, target, pull * Time.deltaTime);
+
+                wisp += Time.deltaTime;
+                if (wisp >= 0.05f)
+                {
+                    wisp = 0f;
+                    SoulWisp.Spawn(player.position + (Vector3)(Random.insideUnitCircle * 3f), target, new Color(1f, 0.6f, 0.25f, 0.9f));
+                }
+            }
+            yield return null;
+        }
+
+        countdownText.gameObject.SetActive(false);
+        portalGuide.enabled = false;
+        if (CurrentStage == 0 && !transitioning) EnterPortal();
+    }
+
+    void EnsureCountdownUI()
+    {
+        if (countdownText == null)
+        {
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            GameObject go = new GameObject("PortalCountdown", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform r = go.GetComponent<RectTransform>();
+            r.SetParent(canvas.transform, false);
+            if (banner != null) r.SetSiblingIndex(banner.transform.GetSiblingIndex());
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+            r.sizeDelta = new Vector2(1100f, 64f);
+            r.anchoredPosition = new Vector2(0f, -150f);
+            countdownText = go.GetComponent<TextMeshProUGUI>();
+            if (specialTree != null && specialTree.font != null) countdownText.font = specialTree.font;
+            if (specialTree != null && specialTree.fontMaterial != null) countdownText.fontSharedMaterial = specialTree.fontMaterial;
+            countdownText.fontSize = 42f;
+            countdownText.alignment = TextAlignmentOptions.Center;
+            countdownText.raycastTarget = false;
+        }
+        if (portalGuide == null)
+        {
+            portalGuide = Hostile.NewLine("PortalGuide", Gold, 0.18f, 3);
+            portalGuide.positionCount = 2;
+            portalGuide.endWidth = 0.05f;
+            portalGuide.enabled = false;
+        }
     }
 
     // 스킬 트리에서 능력을 확정했을 때 (능력 번호)
