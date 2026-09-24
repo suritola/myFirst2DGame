@@ -723,6 +723,17 @@ void Shoot()
 
     public bool IsInvincible => Time.time < invincibleUntil;
 
+    // 피격 연출: 화면 가장자리 붉은 번쩍임, 흔들림, 머리 위 피해 숫자
+    void ShowHurt(float taken)
+    {
+        DamageFlash.Show(0.45f + taken / Mathf.Max(1f, PlayerMaxHealth) * 2.5f);
+        if (SpecialAbilities.SharedFx != null)
+        {
+            SpecialAbilities.SharedFx.Shake(0.2f + Mathf.Min(0.3f, taken / 60f), 0.15f);
+            SpecialAbilities.SharedFx.FloatText(transform.position, "-" + Mathf.CeilToInt(taken), new Color(1f, 0.3f, 0.28f), 5f, 0f);
+        }
+    }
+
     // 피해를 받았으면 true, 무적이라 무시됐으면 false
     public bool TryHit(float amount)
     {
@@ -739,10 +750,12 @@ void Shoot()
         {
             PlayerHealth = Mathf.Max(1f, special.UndyingReviveHealth(PlayerMaxHealth));
             invincibleUntil = Time.time + 3f;
+            DamageFlash.Show(1f);
             return true;
         }
 
         PlayerHealth -= taken;
+        ShowHurt(taken);
         special?.OnPlayerHurt();
 
         if (PlayerHealth <= 0)
