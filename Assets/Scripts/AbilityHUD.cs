@@ -67,8 +67,8 @@ public class AbilityHUD : MonoBehaviour
     string AbilityDescription(int id)
     {
         if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
-        if (levelShop == null || id >= levelShop.ability_content.Length) return "";
-        return levelShop.ability_content[id];
+        if (levelShop == null) return "";
+        return levelShop.GetAbilityTooltip(id);
     }
 
     Slot CreateSlot(int id, int index)
