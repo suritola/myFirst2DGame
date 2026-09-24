@@ -13,7 +13,9 @@ public class Bullet : MonoBehaviour
 
     public int blood = 0;
 
-    
+    // 스킬로 쏜 총알은 스킬 게이지를 채우지 않음
+    public bool isSkill = false;
+
     PlayerController playerC;
 
     private Vector2 dir;
@@ -89,7 +91,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null) skillGauge.AddSkillPoint(1);
+                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(1);
             }
 
 
@@ -118,7 +120,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null) skillGauge.AddSkillPoint(1);
+                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(1);
             }
 
 

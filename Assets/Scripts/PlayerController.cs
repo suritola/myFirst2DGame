@@ -166,6 +166,11 @@ public class PlayerController : MonoBehaviour
 
     private Camera mainCamera;
 
+    // 사격 후 잠깐 동안 쏜 방향을 바라봄
+    public float faceShotTime = 0.35f;
+
+    private float faceLockUntil = 0f;
+
     // =====================================
     // 시작
     // =====================================
@@ -243,7 +248,7 @@ public class PlayerController : MonoBehaviour
         // 플레이어 방향
         // =========================
 
-        if (spriteRenderer != null)
+        if (spriteRenderer != null && Time.time >= faceLockUntil)
         {
             if (move.x < 0 && !spriteRenderer.flipX) spriteRenderer.flipX = true;
 
@@ -365,22 +370,18 @@ void Shoot()
         Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = 0;
 
-        if (spriteRenderer != null)
-        {
-            if (transform.position.x < mousePosition.x) spriteRenderer.flipX = false;
-            else spriteRenderer.flipX = true;
-        }
+        FaceTowards(mousePosition);
 
         if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound);
 
-        Vector3 startPosition = transform.position + new Vector3(0.5f, -0.5f, 0);
+        Vector3 startPosition = transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
 
         Vector2 direction = (mousePosition - startPosition).normalized;
 
         // 멀티샷 퍼지는 각도
         float spreadAngle = 10f;
 
-        if (multiShot == 1) CreateBullet(startPosition, direction, damage, pene, 0);
+        if (multiShot == 1) CreateBullet(startPosition, direction, damage, pene, 0, false);
         else
         {
             int shotCount = multiShot;
@@ -393,7 +394,7 @@ void Shoot()
 
                 Vector2 shotDirection = Quaternion.Euler(0, 0, angle) * direction;
 
-                CreateBullet(startPosition, shotDirection, damage, pene, 0);
+                CreateBullet(startPosition, shotDirection, damage, pene, 0, false);
             }
         }
     }
@@ -404,7 +405,16 @@ void Shoot()
     // 총알 생성
     // =====================================
 
-    void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood)
+    // 잠깐 동안 목표 방향을 바라보게 함 (이동 입력보다 우선)
+    void FaceTowards(Vector3 worldPos)
+    {
+        if (spriteRenderer == null) return;
+
+        spriteRenderer.flipX = worldPos.x < transform.position.x;
+        faceLockUntil = Time.time + faceShotTime;
+    }
+
+    void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill)
     {
         if (bulletPrefab == null) return;
 
@@ -418,6 +428,7 @@ void Shoot()
             bullet.pene = penes;
             bullet.blood = blood;
             bullet.damage = Mathf.RoundToInt(damage);
+            bullet.isSkill = isSkill;
         }
 
     }
@@ -534,9 +545,11 @@ void Shoot()
             {
                 if (target == null) break;
 
+                FaceTowards(target.transform.position);
+
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound);
 
-                CreateBullet(startPosition, direction, skillDamage, pene, getHP);
+                CreateBullet(startPosition, direction, skillDamage, pene, getHP, true);
 
                 yield return new WaitForSeconds(shootDelay);
             }
