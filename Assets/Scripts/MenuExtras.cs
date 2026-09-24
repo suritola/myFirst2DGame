@@ -213,7 +213,10 @@ public static class SettingsUI
                 GameSettings.Language = (Loc.Lang)lang;
                 Highlight(langButtons);
             }, 26f);
-            b.GetComponentInChildren<TMP_Text>().text = Loc.LangNames[i];     // 언어 이름은 각 언어로 그대로
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            label.text = Loc.LangNames[i];     // 언어 이름은 각 언어로 그대로
+            TMP_FontAsset native = Loc.NativeFont((Loc.Lang)i);
+            if (native != null) label.font = native;   // 기본 폰트엔 일본어 · 중국어 글자가 없음
             langButtons.Add(b);
         }
         Highlight(langButtons);
@@ -313,7 +316,7 @@ public static class TutorialUI
             ("스킬 게이지", "시간이 지나면 차고, 적을 처치하면 잠깐 더 빨리 찹니다"),
             ("우클릭", "게이지가 가득 차면 필살기를 씁니다"),
             ("조준형", "누르고 있으면 시간이 느려지며 적을 조준, 떼면 발동"),
-            ("즉발형", "산탄총 · 저격총 · 쌍권총 · 화염 · 유탄은 누르는 즉시 발동"),
+            ("즉발형", "산탄총 · 쌍권총 · 유탄은 누르는 즉시 발동"),
         }),
         ("성장", "fx_prompt", new[]
         {

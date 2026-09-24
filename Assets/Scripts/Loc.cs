@@ -45,7 +45,7 @@ public static class Loc
         // 이미 떠 있는 글자들도 다시 그리게
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
-            if (t.font != null && t.font.fallbackFontAssetTable != null)
+            if (t.font != null && t.font != jp && t.font != sc && t.font.fallbackFontAssetTable != null)
             {
                 t.font.fallbackFontAssetTable.Remove(jp);
                 t.font.fallbackFontAssetTable.Remove(sc);
@@ -53,6 +53,14 @@ public static class Loc
             }
             t.havePropertiesChanged = true;
         }
+    }
+
+    // 설정 창의 언어 이름처럼 현재 언어와 상관없이 그 언어 글자로 보여야 할 때 (한국어 · 영어는 null = 기본 폰트)
+    public static TMP_FontAsset NativeFont(Lang lang)
+    {
+        if (lang == Lang.Japanese) return jp ??= MakeFont("Fonts/NotoSansJP-Bold");
+        if (lang == Lang.Chinese) return sc ??= MakeFont("Fonts/NotoSansSC-Bold");
+        return null;
     }
 
     static TMP_FontAsset MakeFont(string path)

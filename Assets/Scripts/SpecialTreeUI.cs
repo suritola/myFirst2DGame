@@ -346,7 +346,7 @@ public class SpecialTreeUI : MonoBehaviour
             nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
             nodeTags[i].color = picked.Contains(i) ? Selected : Owned;
             nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
-                ? Loc.T("진화: ") + SpecialAbilities.EvolveTexts[i]
+                ? Loc.T("진화: ") + Loc.T(SpecialAbilities.EvolveTexts[i])
                 : specials.abilities[i].description;
         }
 
@@ -379,7 +379,7 @@ public class SpecialTreeUI : MonoBehaviour
         bool evolving = IsOwned(id) && !IsMaxed(id);
         detailName.text = Loc.T(def.name) + (evolving ? Loc.T(" → 진화") : "");
         detailKind.text = KindName(def.kind) + (picked.Contains(id) ? Loc.T("  (선택됨)") : IsMaxed(id) ? Loc.T("  (진화 완료)") : "");
-        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + SpecialAbilities.EvolveTexts[id] : Loc.T(def.description);
+        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + Loc.T(SpecialAbilities.EvolveTexts[id]) : Loc.T(def.description);
         detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
     }
 

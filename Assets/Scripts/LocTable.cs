@@ -354,7 +354,7 @@ public static class LocTable
         { "조준형", L("Aimed", "照準型", "瞄准型") },
         { "누르고 있으면 시간이 느려지며 적을 조준, 떼면 발동", L("Hold to slow time and mark enemies, release to fire", "押し続けると時間が遅くなり敵を狙い、離すと発動", "按住时时间变慢并锁定敌人，松开释放") },
         { "즉발형", L("Instant", "即発型", "瞬发型") },
-        { "산탄총 · 저격총 · 쌍권총 · 화염 · 유탄은 누르는 즉시 발동", L("Shotgun · Sniper · Twin Pistols · Flame · Grenade fire instantly", "ショットガン・スナイパー・二丁拳銃・火炎・グレネードは押した瞬間に発動", "霰弹枪 · 狙击枪 · 双枪 · 火焰 · 榴弹按下即释放") },
+        { "산탄총 · 쌍권총 · 유탄은 누르는 즉시 발동", L("Shotgun · Twin Pistols · Grenade fire instantly", "ショットガン・二丁拳銃・グレネードは押した瞬間に発動", "霰弹枪 · 双枪 · 榴弹按下即释放") },
         { "성장", L("Growth", "成長", "成长") },
         { "레벨업", L("Level Up", "レベルアップ", "升级") },
         { "카드를 클릭해 고르고 Space로 확정", L("Click a card and press Space to confirm", "カードをクリックして選び、Spaceで決定", "点击卡牌选择，按Space确认") },
