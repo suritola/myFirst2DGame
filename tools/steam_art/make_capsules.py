@@ -101,9 +101,9 @@ def characters(canvas, w, h, has_title):
         bx = [int(w * 0.62), int(w * 0.42), int(w * 0.52)]
         by = [base_y - int(boss_scale * CELL * 0.55), base_y - int(boss_scale * CELL * 0.35), base_y + int(scale * 4)]
     else:
-        px = int(w * (0.06 if has_title else 0.18))
+        px = int(w * (0.06 if has_title else 0.34))
         paste(canvas, player, px, base_y)
-        right = w - int(w * (0.04 if has_title else 0.16))
+        right = w - int(w * (0.04 if has_title else 0.06))
         step = int(boss_scale * CELL * 0.62)
         bx = [right - boss_scale * CELL - step * 2, right - boss_scale * CELL - step, right - boss_scale * CELL]
         by = [base_y - int(boss_scale * 6), base_y - int(boss_scale * 3), base_y + int(scale * 2)]
@@ -131,12 +131,13 @@ def split_title(title, tall):
     return [" ".join(words[:best]), " ".join(words[best:])]
 
 
-def draw_title(canvas, title, w, h, top, height, one_line=False):
+def draw_title(canvas, title, w, h, top, height, one_line=False, lines=None, font=None):
     tall = h > w
-    lines = [title] if one_line else split_title(title, tall or len(title) > 14)
+    if lines is None:
+        lines = [title] if one_line else split_title(title, tall or len(title) > 14)
     line_h = height / len(lines)
     d = ImageDraw.Draw(canvas)
-    font = fit_font(max(lines, key=len), w * 0.9, line_h * 0.82)
+    font = font or fit_font(max(lines, key=len), w * 0.9, line_h * 0.82)
     outline = max(2, font.size // 12)
     y = top
     for line in lines:
@@ -165,9 +166,27 @@ def make(name, w, h, has_title, title):
 
 
 def make_logo(title, w=1280, h=720):
-    logo = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    draw_title(logo, title, w, h, h * 0.1, h * 0.8)
-    return logo.crop(logo.getbbox())
+    # Steam 라이브러리 로고 규격: 가로 1280 또는 세로 720, 배경 투명 PNG
+    words = title.split()
+    lines = [" ".join(words[:len(words) // 2]), " ".join(words[len(words) // 2:])] if len(words) > 1 else [title]
+    font = fit_font(max(lines, key=len), w - 40, h)
+    parts = []
+    for line in lines:
+        c = Image.new("RGBA", (w * 2, h), (0, 0, 0, 0))
+        draw_title(c, line, w * 2, h, 0, h, lines=[line], font=font)
+        parts.append(c.crop(c.getbbox()))
+    gap = font.size // 8
+    art = Image.new("RGBA", (max(p.width for p in parts), sum(p.height for p in parts) + gap * (len(parts) - 1)), (0, 0, 0, 0))
+    y = 0
+    for p in parts:
+        art.alpha_composite(p, ((art.width - p.width) // 2, y))
+        y += p.height + gap
+    if art.width > w or art.height > h:
+        s = min(w / art.width, h / art.height)
+        art = art.resize((int(art.width * s), int(art.height * s)), Image.LANCZOS)
+    logo = Image.new("RGBA", (w, art.height), (0, 0, 0, 0))
+    logo.alpha_composite(art, ((w - art.width) // 2, 0))
+    return logo
 
 
 def make_icon(grid=23):
