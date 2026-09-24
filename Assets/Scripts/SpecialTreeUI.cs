@@ -14,27 +14,32 @@ public class SpecialTreeUI : MonoBehaviour
     public TMP_FontAsset font;
     public Material fontMaterial;
 
+    [Header("포인트")]
+    public int points = 3;              // 고를 수 있는 능력 수
+
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color LineColor = new Color(0.78f, 0.55f, 0.25f, 0.8f);
     static readonly Color Selected = new Color(1f, 0.85f, 0.4f);
 
     SpecialAbilities specials;
-    System.Action<int> onConfirm;
+    System.Action<int[]> onConfirm;
     bool built;
-    int selected = -1;
+    readonly List<int> picked = new List<int>();
+    int viewing = -1;                   // 설명창에 보이는 노드
 
     readonly List<Image> nodeFrames = new List<Image>();
     TextMeshProUGUI detailName, detailKind, detailText;
     Button confirm;
     TextMeshProUGUI confirmText;
 
-    public void Open(SpecialAbilities specials, System.Action<int> onConfirm)
+    public void Open(SpecialAbilities specials, System.Action<int[]> onConfirm)
     {
         this.specials = specials;
         this.onConfirm = onConfirm;
         if (!built) Build();
-        Select(-1);
+        picked.Clear();
+        View(-1, null);
         gameObject.SetActive(true);
     }
 
@@ -155,7 +160,7 @@ public class SpecialTreeUI : MonoBehaviour
         cb.pressedColor = new Color(0.72f, 0.62f, 0.48f);
         cb.selectedColor = Color.white;
         b.colors = cb;
-        b.onClick.AddListener(() => Select(id));
+        b.onClick.AddListener(() => Toggle(id));
 
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
         tip.title = def.name + "  · " + KindName(def.kind);
@@ -218,33 +223,55 @@ public class SpecialTreeUI : MonoBehaviour
         cb.highlightedColor = new Color(1f, 0.9f, 0.62f);
         cb.disabledColor = new Color(0.45f, 0.42f, 0.48f, 0.8f);
         confirm.colors = cb;
-        confirm.onClick.AddListener(() => { if (selected >= 0) onConfirm?.Invoke(selected); });
-        confirmText = Text(brt, "이 능력 선택", 28f, Gold, Vector2.zero, new Vector2(210f, 60f), TextAlignmentOptions.Center);
+        confirm.onClick.AddListener(() => { if (picked.Count >= points) onConfirm?.Invoke(picked.ToArray()); });
+        confirmText = Text(brt, "", 26f, Gold, Vector2.zero, new Vector2(210f, 60f), TextAlignmentOptions.Center);
     }
 
-    void Select(int id)
+    // 노드를 누르면 선택/해제 (포인트 안에서)
+    void Toggle(int id)
     {
-        selected = id;
+        string note = null;
+        if (picked.Contains(id))
+        {
+            picked.Remove(id);
+            note = "선택을 취소했습니다.";
+        }
+        else if (picked.Count < points)
+        {
+            picked.Add(id);
+        }
+        else
+        {
+            note = "포인트를 모두 썼습니다. 다른 능력을 먼저 취소하세요.";
+        }
+        View(id, note);
+    }
+
+    void View(int id, string note)
+    {
+        viewing = id;
         for (int i = 0; i < nodeFrames.Count; i++)
-            if (nodeFrames[i] != null) nodeFrames[i].color = i == id ? Selected : Color.white;
+            if (nodeFrames[i] != null) nodeFrames[i].color = picked.Contains(i) ? Selected : Color.white;
+
+        int left = points - picked.Count;
+        bool ready = left <= 0;
+        confirm.interactable = ready;
+        confirmText.color = ready ? Gold : new Color(0.6f, 0.56f, 0.62f);
+        confirmText.text = ready ? "선택 완료" : "남은 포인트 " + left;
 
         if (id < 0)
         {
-            detailName.text = "능력을 고르세요";
-            detailKind.text = "노드를 눌러 자세히 보기";
-            detailText.text = "지옥에서 쓸 특수 능력 하나를 고릅니다. 무기는 Q로 기본 권총과 바꿔 쓰고, 스킬은 E(또는 Space)로 사용합니다.";
-            confirm.interactable = false;
-            confirmText.color = new Color(0.6f, 0.56f, 0.62f);
+            detailName.text = "능력 " + points + "개를 고르세요";
+            detailKind.text = "포인트 " + points + "개 · 노드를 눌러 선택";
+            detailText.text = "무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.";
             return;
         }
 
         SpecialDef def = specials.abilities[id];
         detailName.text = def.name;
-        detailKind.text = KindName(def.kind);
-        detailText.text = def.description;
-        confirm.interactable = true;
-        confirmText.color = Gold;
+        detailKind.text = KindName(def.kind) + (picked.Contains(id) ? "  (선택됨)" : "");
+        detailText.text = note != null ? def.description + "\n<color=#ff9d8a>" + note + "</color>" : def.description;
     }
 
-    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? "무기 · Q로 교체" : k == SpecialKind.Skill ? "스킬 · E로 사용" : "패시브 · 항상 적용";
+    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? "무기 · Q로 교체" : k == SpecialKind.Skill ? "스킬 · E/F/Space" : "패시브 · 항상 적용";
 }

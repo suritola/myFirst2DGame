@@ -28,12 +28,12 @@ public class StageManager : MonoBehaviour
     public GameObject banner;               // 화면 중앙 알림
     public TextMeshProUGUI bannerText;
 
-    public int chosenSpecial = -1;
+    public int[] chosenSpecials = new int[0];
 
     public int CurrentStage { get; private set; }
 
     bool transitioning;
-    int pendingPick = -1;
+    int[] pendingPicks;
 
     void Awake()
     {
@@ -87,13 +87,13 @@ public class StageManager : MonoBehaviour
         yield return Fade(0f, 1f, 0.7f);
 
         // 특수 능력 선택 (전체 화면 스킬 트리)
-        pendingPick = -1;
+        pendingPicks = null;
         specialPanel.SetActive(true);
         if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
         SetFade(0f);
-        while (pendingPick < 0) yield return null;
-        chosenSpecial = pendingPick;
-        if (specials != null) specials.Equip(chosenSpecial);
+        while (pendingPicks == null) yield return null;
+        chosenSpecials = pendingPicks;
+        if (specials != null) specials.Equip(chosenSpecials);
         TooltipUI.Hide();
         SetFade(1f);
         specialPanel.SetActive(false);
@@ -116,9 +116,9 @@ public class StageManager : MonoBehaviour
     }
 
     // 스킬 트리에서 능력을 확정했을 때 (능력 번호)
-    public void OnPickSpecial(int index)
+    public void OnPickSpecial(int[] ids)
     {
-        pendingPick = index;
+        pendingPicks = ids;
     }
 
     public void ShowBanner(string text, float seconds)

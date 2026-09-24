@@ -35,17 +35,25 @@ public class SpecialAbilities : MonoBehaviour
     public TMP_FontAsset font;
     public Material fontMaterial;
 
-    public int Equipped { get; private set; } = -1;
-    public SpecialDef Current => Equipped >= 0 ? abilities[Equipped] : null;
+    // 고른 능력들 (최대 3개)
+    readonly List<int> equipped = new List<int>();
+    readonly List<int> weapons = new List<int>();
+    readonly List<int> skills = new List<int>();
+    public IReadOnlyList<int> EquippedIds => equipped;
 
-    // 무기: Q로 기본 권총과 교체
-    public bool WeaponActive => Equipped >= 0 && abilities[Equipped].kind == SpecialKind.Weapon && weaponOut;
-    bool weaponOut = true;
+    // 스킬 키: 고른 순서대로 E, F, Space
+    static readonly KeyCode[] SkillKeys = { KeyCode.E, KeyCode.F, KeyCode.Space };
+    static readonly string[] SkillKeyNames = { "E", "F", "Space" };
+
+    // 무기: Q로 기본 권총 → 무기1 → 무기2 순서로 교체 (-1 = 기본 권총)
+    int weaponIndex = -1;
+    public bool WeaponActive => weaponIndex >= 0 && weaponIndex < weapons.Count;
+    int CurrentWeapon => WeaponActive ? weapons[weaponIndex] : -1;
 
     PlayerController player;
     float nextFire;
-    float cooldownUntil;
-    float cooldownLength = 1f;
+    readonly Dictionary<int, float> cooldownUntil = new Dictionary<int, float>();
+    readonly Dictionary<int, float> cooldownLength = new Dictionary<int, float>();
     int souls;
     bool undyingUsed;
     float heat;
@@ -57,11 +65,16 @@ public class SpecialAbilities : MonoBehaviour
     readonly Dictionary<Collider2D, float> orbHitTimes = new Dictionary<Collider2D, float>();
     Material lineMaterial;
 
-    // HUD
+    // HUD: 고른 능력마다 한 줄
+    class HudRow
+    {
+        public int id;
+        public TextMeshProUGUI name;
+        public TextMeshProUGUI info;
+        public Image bar;
+    }
     RectTransform hud;
-    TextMeshProUGUI hudName;
-    TextMeshProUGUI hudInfo;
-    Image hudBar;
+    readonly List<HudRow> hudRows = new List<HudRow>();
 
     void Awake()
     {
@@ -86,42 +99,48 @@ public class SpecialAbilities : MonoBehaviour
         EnermyController.Decoy = null;
     }
 
-    public void Equip(int id)
+    public void Equip(IEnumerable<int> ids)
     {
-        Equipped = id;
-        weaponOut = true;
-        cooldownUntil = 0f;
-        if (id == OrbsId) SpawnOrbs(3);
-        if (hud != null) hud.gameObject.SetActive(true);
+        foreach (int id in ids)
+        {
+            if (id < 0 || id >= abilities.Length || equipped.Contains(id)) continue;
+            equipped.Add(id);
+            if (abilities[id].kind == SpecialKind.Weapon) weapons.Add(id);
+            if (abilities[id].kind == SpecialKind.Skill) skills.Add(id);
+            if (id == OrbsId) SpawnOrbs(3);
+        }
+        // 무기를 골랐다면 바로 꺼내 들고 시작
+        weaponIndex = weapons.Count > 0 ? 0 : -1;
+        RebuildHudRows();
     }
 
-    public bool Has(int id) => Equipped == id;
+    public bool Has(int id) => equipped.Contains(id);
 
     // ================================================================= update
     void Update()
     {
-        if (player == null || Equipped < 0 || Time.timeScale == 0f) { UpdateHud(); return; }
+        if (player == null || equipped.Count == 0 || Time.timeScale == 0f) { UpdateHud(); return; }
 
-        SpecialDef def = abilities[Equipped];
-
-        if (def.kind == SpecialKind.Weapon)
+        if (weapons.Count > 0)
         {
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                weaponOut = !weaponOut;
+                // 기본 권총(-1) → 무기1 → 무기2 → 기본 권총 ...
+                weaponIndex = weaponIndex + 1 >= weapons.Count ? -1 : weaponIndex + 1;
                 sniperCharge = -1f;
             }
             player.ammoTextOverride = null;
-            if (weaponOut) UpdateWeapon();
-        }
-        else if (def.kind == SpecialKind.Skill)
-        {
-            if ((Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space)) && Time.time >= cooldownUntil && !player.IsSkillUsing)
-                UseSkill();
+            if (WeaponActive) UpdateWeapon();
         }
 
-        if (Equipped == OrbsId) UpdateOrbs();
-        if (Equipped != FlameId) heat = 0f;
+        for (int i = 0; i < skills.Count && i < SkillKeys.Length; i++)
+        {
+            int id = skills[i];
+            if (Input.GetKeyDown(SkillKeys[i]) && Time.time >= CooldownUntil(id) && !player.IsSkillUsing) UseSkill(id);
+        }
+
+        if (Has(OrbsId)) UpdateOrbs();
+        if (CurrentWeapon != FlameId) heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
 
         UpdateHud();
     }
@@ -144,7 +163,7 @@ public class SpecialAbilities : MonoBehaviour
         bool held = Input.GetMouseButton(0) && !OverUI;
         bool up = Input.GetMouseButtonUp(0);
 
-        switch (Equipped)
+        switch (CurrentWeapon)
         {
             case ShotgunId:
                 if (down && Ready()) FireShotgun();
@@ -331,30 +350,32 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     // ================================================================= skills
-    void UseSkill()
+    void UseSkill(int id)
     {
-        switch (Equipped)
+        switch (id)
         {
-            case DashId: StartCoroutine(Dash()); StartCooldown(3f); break;
-            case FireZoneId: SpawnZone(MouseWorld(), 3f, 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f)); StartCooldown(12f); break;
-            case TimeWarpId: StartCoroutine(TimeWarp()); StartCooldown(20f); break;
-            case PactId: StartCoroutine(Pact()); StartCooldown(25f); break;
+            case DashId: StartCoroutine(Dash()); StartCooldown(id, 3f); break;
+            case FireZoneId: SpawnZone(MouseWorld(), 3f, 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f)); StartCooldown(id, 12f); break;
+            case TimeWarpId: StartCoroutine(TimeWarp()); StartCooldown(id, 20f); break;
+            case PactId: StartCoroutine(Pact()); StartCooldown(id, 25f); break;
             case SoulBurstId:
                 if (souls < 5) return;
                 Explode(player.transform.position, 7f, Damage * (1.5f + souls * 0.25f), 3f, new Color(0.6f, 0.95f, 1f, 0.9f));
                 souls = 0;
-                StartCooldown(5f);
+                StartCooldown(id, 5f);
                 break;
-            case SkeletonsId: SummonSkeletons(3); StartCooldown(15f); break;
-            case MirrorId: StartCoroutine(Mirror()); StartCooldown(12f); break;
-            case HookId: Hook(); StartCooldown(4f); break;
+            case SkeletonsId: SummonSkeletons(3); StartCooldown(id, 15f); break;
+            case MirrorId: StartCoroutine(Mirror()); StartCooldown(id, 12f); break;
+            case HookId: Hook(); StartCooldown(id, 4f); break;
         }
     }
 
-    void StartCooldown(float seconds)
+    float CooldownUntil(int id) => cooldownUntil.TryGetValue(id, out float t) ? t : 0f;
+
+    void StartCooldown(int id, float seconds)
     {
-        cooldownLength = seconds;
-        cooldownUntil = Time.time + seconds;
+        cooldownLength[id] = seconds;
+        cooldownUntil[id] = Time.time + seconds;
     }
 
     IEnumerator Dash()
@@ -508,14 +529,14 @@ public class SpecialAbilities : MonoBehaviour
     // 플레이어가 맞았을 때 (복수의 가시)
     public void OnPlayerHurt()
     {
-        if (Equipped != ThornsId || player == null) return;
+        if (!Has(ThornsId) || player == null) return;
         Explode(player.transform.position, 4f, Damage * 3f, 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
 
     // 불사의 맹세: 한 판에 한 번
     public bool TryUndying()
     {
-        if (Equipped != UndyingId || undyingUsed) return false;
+        if (!Has(UndyingId) || undyingUsed) return false;
         undyingUsed = true;
         Flash(player.transform.position, 6f, new Color(1f, 0.9f, 0.5f, 0.8f), 0.6f);
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner("불사의 맹세가 발동했다!", 2f);
@@ -523,7 +544,7 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     // 탄창 저주: 탄창의 마지막 한 발
-    public bool IsLastBulletCursed(int bulletsBeforeShot) => Equipped == CurseId && bulletsBeforeShot == 1;
+    public bool IsLastBulletCursed(int bulletsBeforeShot) => Has(CurseId) && bulletsBeforeShot == 1;
 
     public void CurseBullet(Bullet b, bool cursed)
     {
@@ -536,7 +557,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void OnEnemyKilled(Vector3 pos)
     {
-        if (Equipped == SoulBurstId) souls = Mathf.Min(40, souls + 1);
+        if (Has(SoulBurstId)) souls = Mathf.Min(40, souls + 1);
     }
 
     // ================================================================= shared effects
@@ -639,46 +660,77 @@ public class SpecialAbilities : MonoBehaviour
         hud.anchorMin = hud.anchorMax = new Vector2(1f, 0f);
         hud.pivot = new Vector2(1f, 0f);
         hud.anchoredPosition = new Vector2(-336f, 24f);
-        hud.sizeDelta = new Vector2(330f, 104f);
+        hud.sizeDelta = new Vector2(360f, 104f);
         Image bg = go.GetComponent<Image>();
         bg.sprite = panelSprite;
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = false;
 
-        hudName = HudText("Name", 26f, new Color(0.96f, 0.83f, 0.47f), 16f);
-        hudInfo = HudText("Info", 20f, new Color(0.92f, 0.88f, 0.80f), -12f);
-
-        GameObject bar = new GameObject("Cooldown", typeof(RectTransform), typeof(Image));
-        RectTransform br = bar.GetComponent<RectTransform>();
-        br.SetParent(hud, false);
-        br.anchorMin = new Vector2(0f, 0f);
-        br.anchorMax = new Vector2(1f, 0f);
-        br.offsetMin = new Vector2(28f, 20f);
-        br.offsetMax = new Vector2(-28f, 28f);
-        hudBar = bar.GetComponent<Image>();
-        hudBar.sprite = barFillSprite;
-        hudBar.type = Image.Type.Filled;
-        hudBar.fillMethod = Image.FillMethod.Horizontal;
-        hudBar.raycastTarget = false;
-
         hud.gameObject.SetActive(false);
     }
 
-    TextMeshProUGUI HudText(string name, float size, Color color, float y)
+    const float HudPad = 24f;
+    const float HudRowHeight = 50f;
+
+    // 고른 능력 수만큼 줄을 만들고 패널 높이를 맞춤
+    void RebuildHudRows()
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        if (hud == null) return;
+        foreach (HudRow row in hudRows) Destroy(row.name.transform.parent.gameObject);
+        hudRows.Clear();
+
+        for (int i = 0; i < equipped.Count; i++)
+        {
+            GameObject rowGo = new GameObject("Row", typeof(RectTransform));
+            RectTransform rr = rowGo.GetComponent<RectTransform>();
+            rr.SetParent(hud, false);
+            rr.anchorMin = new Vector2(0f, 1f);
+            rr.anchorMax = new Vector2(1f, 1f);
+            rr.pivot = new Vector2(0.5f, 1f);
+            rr.offsetMin = new Vector2(HudPad, 0f);
+            rr.offsetMax = new Vector2(-HudPad, 0f);
+            rr.sizeDelta = new Vector2(rr.sizeDelta.x, HudRowHeight);
+            rr.anchoredPosition = new Vector2(rr.anchoredPosition.x, -HudPad + 6f - i * HudRowHeight);
+
+            HudRow row = new HudRow { id = equipped[i] };
+            row.name = RowText(rr, 22f, new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.TopLeft);
+            row.info = RowText(rr, 17f, new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.TopRight);
+
+            GameObject bar = new GameObject("Cooldown", typeof(RectTransform), typeof(Image));
+            RectTransform br = bar.GetComponent<RectTransform>();
+            br.SetParent(rr, false);
+            br.anchorMin = new Vector2(0f, 0f);
+            br.anchorMax = new Vector2(1f, 0f);
+            br.pivot = new Vector2(0.5f, 0f);
+            br.sizeDelta = new Vector2(0f, 8f);
+            br.anchoredPosition = new Vector2(0f, 12f);
+            row.bar = bar.GetComponent<Image>();
+            row.bar.sprite = barFillSprite;
+            row.bar.type = Image.Type.Filled;
+            row.bar.fillMethod = Image.FillMethod.Horizontal;
+            row.bar.raycastTarget = false;
+            hudRows.Add(row);
+        }
+
+        hud.sizeDelta = new Vector2(hud.sizeDelta.x, HudPad * 2f - 6f + equipped.Count * HudRowHeight);
+        hud.gameObject.SetActive(equipped.Count > 0);
+    }
+
+    TextMeshProUGUI RowText(RectTransform parent, float size, Color color, TextAlignmentOptions align)
+    {
+        GameObject go = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform r = go.GetComponent<RectTransform>();
-        r.SetParent(hud, false);
-        r.anchorMin = new Vector2(0f, 0.5f);
-        r.anchorMax = new Vector2(1f, 0.5f);
-        r.offsetMin = new Vector2(28f, y - 16f);
-        r.offsetMax = new Vector2(-28f, y + 16f);
+        r.SetParent(parent, false);
+        r.anchorMin = Vector2.zero;
+        r.anchorMax = Vector2.one;
+        r.offsetMin = Vector2.zero;
+        r.offsetMax = Vector2.zero;
         TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
         if (font != null) t.font = font;
         if (fontMaterial != null) t.fontSharedMaterial = fontMaterial;
         t.fontSize = size;
         t.color = color;
-        t.alignment = TextAlignmentOptions.Left;
+        t.alignment = align;
         t.enableWordWrapping = false;
         t.raycastTarget = false;
         return t;
@@ -686,33 +738,41 @@ public class SpecialAbilities : MonoBehaviour
 
     void UpdateHud()
     {
-        if (hud == null || Equipped < 0) return;
-        SpecialDef def = abilities[Equipped];
-        hudName.text = def.name;
+        if (hud == null) return;
 
-        float fill = 1f;
-        string info;
-        if (def.kind == SpecialKind.Weapon)
+        foreach (HudRow row in hudRows)
         {
-            info = weaponOut ? "[Q] 기본 권총으로 교체" : "[Q] " + def.name + " 꺼내기";
-            fill = weaponOut ? 1f : 0f;
-            if (Equipped == FlameId) fill = 1f - heat;
+            SpecialDef def = abilities[row.id];
+            row.name.text = def.name;
+
+            float fill = 1f;
+            string info;
+            if (def.kind == SpecialKind.Weapon)
+            {
+                bool inHand = CurrentWeapon == row.id;
+                info = inHand ? "사용 중 · [Q] 교체" : "[Q] 교체";
+                fill = inHand ? 1f : 0f;
+                if (row.id == FlameId && inHand) fill = 1f - heat;
+            }
+            else if (def.kind == SpecialKind.Skill)
+            {
+                int slot = skills.IndexOf(row.id);
+                string key = slot >= 0 && slot < SkillKeyNames.Length ? SkillKeyNames[slot] : "?";
+                float left = CooldownUntil(row.id) - Time.time;
+                float length = cooldownLength.TryGetValue(row.id, out float l) ? l : 1f;
+                fill = left > 0f ? 1f - left / length : 1f;
+                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + "초" : "[" + key + "] 사용 가능";
+                if (row.id == SoulBurstId) info += " · 영혼 " + souls;
+            }
+            else
+            {
+                info = "패시브";
+                if (row.id == UndyingId) info = undyingUsed ? "사용함" : "부활 대기";
+            }
+            row.info.text = info;
+            row.bar.fillAmount = fill;
+            row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
         }
-        else if (def.kind == SpecialKind.Skill)
-        {
-            float left = cooldownUntil - Time.time;
-            fill = left > 0f ? 1f - left / cooldownLength : 1f;
-            info = left > 0f ? "[E] 재사용 " + left.ToString("0.0") + "초" : "[E] 사용 가능";
-            if (Equipped == SoulBurstId) info += "  · 영혼 " + souls;
-        }
-        else
-        {
-            info = "패시브 · 항상 적용";
-            if (Equipped == UndyingId) info = undyingUsed ? "이번 판에 사용함" : "패시브 · 1회 부활 대기";
-        }
-        hudInfo.text = info;
-        hudBar.fillAmount = fill;
-        hudBar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
     }
 }
 
