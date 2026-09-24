@@ -120,6 +120,7 @@ public class EnemySkill : MonoBehaviour
     IEnumerator Leap(PlayerController p)
     {
         Vector3 target = Hostile.ClampArena(p.transform.position);
+        if (Hostile.IsWall(target)) yield break;
         float r = 1.8f * Size;
         Hostile.Circle(target, r, 0.65f, Danger);
         yield return Windup(Danger, 0.65f);
@@ -358,6 +359,14 @@ public static class Hostile
             Vector2 v = Random.insideUnitCircle.normalized * Random.Range(radius * 2f, radius * 4f);
             FlameParticle.Spawn(Glow, pos, v, Random.Range(0.35f, 0.55f), 0.05f, Random.Range(0.3f, 0.5f), false);
         }
+    }
+
+    // 반지름 안에 벽(구조물)이 있는지
+    public static bool WallNear(Vector3 pos, float radius)
+    {
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, radius))
+            if (!c.isTrigger && c.CompareTag("Wall")) return true;
+        return false;
     }
 
     // 벽(맵 테두리, 구조물)인지

@@ -23,12 +23,12 @@ public class EnemySpawner : MonoBehaviour
 
     [Header("스폰 위치")]
     // 적이 생성될 수 있는 맵 안쪽 범위 (벽 안쪽에서 조금 띄움)
-    public Vector2 spawnAreaMin = new Vector2(-38f, -27f);
-    public Vector2 spawnAreaMax = new Vector2(39f, 21f);
+    public Vector2 spawnAreaMin = new Vector2(-52f, -36f);
+    public Vector2 spawnAreaMax = new Vector2(53f, 29f);
     // 플레이어와 최소 이만큼 떨어진 곳에만 생성
-    public float minSpawnDistance = 12f;
+    public float minSpawnDistance = 14f;
     // 보스가 나오는 신전 문 위치
-    public Vector2 bossSpawnPoint = new Vector2(0.5f, 24f);
+    public Vector2 bossSpawnPoint = new Vector2(0.5f, 32f);
 
     // 보스를 쓰러뜨렸을 때 (스테이지 번호)
     public System.Action<int> onBossDefeated;
@@ -243,7 +243,7 @@ public class EnemySpawner : MonoBehaviour
         Vector3 fallback = Vector3.zero;
         bool hasFallback = false;
 
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 40; i++)
         {
             Vector3 pos = new Vector3(
                 Random.Range(spawnAreaMin.x, spawnAreaMax.x),
@@ -251,6 +251,8 @@ public class EnemySpawner : MonoBehaviour
                 0);
 
             if (Vector2.Distance(pos, playerPos) < minSpawnDistance) continue;
+            // 구조물이나 용암 호수 안에는 만들지 않음
+            if (Hostile.WallNear(pos, 1.5f)) continue;
 
             if (cam == null) return pos;
 

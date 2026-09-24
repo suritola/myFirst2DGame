@@ -133,8 +133,8 @@ public class EnermyController : MonoBehaviour
 
             Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;
 
-            // 구조물에 막히면 벽을 따라 미끄러짐
-            if (Blocked(transform.position + step))
+            // 구조물에 막히면 벽을 따라 미끄러짐 (이미 끼어 있으면 빠져나오도록 그대로 이동)
+            if (!Blocked(transform.position) && Blocked(transform.position + step))
             {
                 Vector3 alongX = new Vector3(step.x, 0f, 0f);
                 Vector3 alongY = new Vector3(0f, step.y, 0f);
