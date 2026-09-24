@@ -85,7 +85,9 @@ public class Shop : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.P)) ToggleShop();
+        // 특수 능력 화면이 열려 있으면 상점을 열지 않음
+        bool specialOpen = StageManager.Instance != null && StageManager.Instance.IsMenuOpen;
+        if (Input.GetKeyDown(KeyCode.P) && !specialOpen) ToggleShop();
     }
 
 
@@ -262,7 +264,7 @@ public class Shop : MonoBehaviour
 
     static string PerSecond(float interval) => (1f / interval).ToString("0.0");
 
-    void UpdateShopText()
+    public void UpdateShopText()
     {
         if (coind == null || playerControllerd == null) return;
 

@@ -40,6 +40,18 @@ public class SpecialAbilities : MonoBehaviour
     readonly List<int> weapons = new List<int>();
     readonly List<int> skills = new List<int>();
     public IReadOnlyList<int> EquippedIds => equipped;
+    public IReadOnlyList<int> Weapons => weapons;
+    public int SkillCount => skills.Count;
+    public const int MaxSkills = 3;
+
+    // 진화한 능력: 특수 능력 포인트로 이미 가진 능력을 한 번 더 고르면 진화
+    readonly HashSet<int> evolved = new HashSet<int>();
+    public bool IsEvolved(int id) => evolved.Contains(id);
+
+    // 무기 강화 (2장 상점): 무기마다 [피해, 속도, 특성] 단계
+    public const int StatDamage = 0, StatRate = 1, StatTrait = 2;
+    public static readonly int[] WeaponStatMax = { 5, 5, 3 };
+    readonly Dictionary<int, int[]> weaponLevels = new Dictionary<int, int[]>();
 
     // 스킬 키: 고른 순서대로 E, F, Space
     static readonly KeyCode[] SkillKeys = { KeyCode.E, KeyCode.F, KeyCode.Space };
@@ -55,7 +67,7 @@ public class SpecialAbilities : MonoBehaviour
     readonly Dictionary<int, float> cooldownUntil = new Dictionary<int, float>();
     readonly Dictionary<int, float> cooldownLength = new Dictionary<int, float>();
     int souls;
-    bool undyingUsed;
+    int undyingUses;
     float heat;
     bool overheated;
     float sniperCharge = -1f;
@@ -133,6 +145,7 @@ public class SpecialAbilities : MonoBehaviour
 
     public void Equip(IEnumerable<int> ids)
     {
+        bool hadWeapons = weapons.Count > 0;
         foreach (int id in ids)
         {
             if (id < 0 || id >= abilities.Length || equipped.Contains(id)) continue;
@@ -141,12 +154,100 @@ public class SpecialAbilities : MonoBehaviour
             if (abilities[id].kind == SpecialKind.Skill) skills.Add(id);
             if (id == OrbsId) SpawnOrbs(3);
         }
-        // 무기를 골랐다면 바로 꺼내 들고 시작
-        weaponIndex = weapons.Count > 0 ? 0 : -1;
+        // 처음 무기를 골랐다면 바로 꺼내 들고 시작 (이미 들고 있던 무기는 그대로)
+        if (!hadWeapons) weaponIndex = weapons.Count > 0 ? 0 : -1;
         RebuildHudRows();
     }
 
     public bool Has(int id) => equipped.Contains(id);
+
+    // ================================================================= evolution
+    public void Evolve(int id)
+    {
+        if (!equipped.Contains(id) || evolved.Contains(id)) return;
+        evolved.Add(id);
+        if (id == OrbsId) SpawnOrbs(2);
+
+        if (fx != null)
+        {
+            fx.Play("pulse", 0.9f, 0.9f);
+            fx.Play("chime", 0.8f, 1.1f);
+            if (player != null) fx.FloatText(player.transform.position, abilities[id].name + " 진화!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
+        }
+        if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
+    }
+
+    // 진화 효과 설명 (ID 순서)
+    public static readonly string[] EvolveTexts =
+    {
+        "사거리 +2, 부채꼴이 넓어지고 피해 320%. 맞은 적이 불탑니다.",
+        "충전 시간 0.8초. 완충 사격이 맞은 곳에서 폭발합니다.",
+        "두 총구에서 동시에 발사합니다 (탄약 소모는 그대로).",
+        "열이 40% 덜 오르고 불길 화상 피해가 강해집니다.",
+        "한 번에 유도탄 2발을 쏩니다.",
+        "번개가 7번 튀고, 튈 때 피해가 덜 줄어듭니다.",
+        "낫이 더 커지고 더 멀리 날아가며 피해 220%.",
+        "폭발 후 작은 용암탄 3개로 흩어집니다.",
+        "쿨타임 1.8초. 도착 지점에서 충격파가 터집니다.",
+        "장판이 더 넓고 6초 동안 지속됩니다. 쿨타임 9초.",
+        "적이 75% 느려지고 7초 동안 지속됩니다.",
+        "체력을 잃지 않고 12초 동안 지속됩니다.",
+        "영혼 3개부터 쓸 수 있고 폭발 범위가 넓어집니다.",
+        "해골 5마리를 부르고 쿨타임 10초.",
+        "분신이 5초 동안 남고 사라질 때 폭발합니다.",
+        "쿨타임 2초, 갈고리 피해 300%.",
+        "영혼이 5개로 늘고 피해가 강해집니다.",
+        "반격 범위와 피해가 크게 늘어납니다.",
+        "탄창의 마지막 두 발이 저주탄이 됩니다.",
+        "두 번 부활하고, 부활할 때 체력 50%로 일어납니다.",
+    };
+
+    // ================================================================= weapon upgrades (shop)
+    public int WeaponLevel(int id, int stat) => weaponLevels.TryGetValue(id, out int[] l) ? l[stat] : 0;
+
+    public bool UpgradeWeapon(int id, int stat)
+    {
+        if (!weapons.Contains(id) || WeaponLevel(id, stat) >= WeaponStatMax[stat]) return false;
+        if (!weaponLevels.ContainsKey(id)) weaponLevels[id] = new int[3];
+        weaponLevels[id][stat]++;
+        if (fx != null)
+        {
+            fx.Play("clank", 0.6f, 1.2f);
+            fx.Play("chime", 0.4f, 1.4f);
+        }
+        return true;
+    }
+
+    float WeaponDamageMul(int id) => 1f + 0.15f * WeaponLevel(id, StatDamage);
+    float WeaponRateMul(int id) => Mathf.Pow(0.9f, WeaponLevel(id, StatRate));
+    int Trait(int id) => WeaponLevel(id, StatTrait);
+
+    // 무기별 특성 강화 이름과 한 단계 효과
+    public static string TraitName(int id) => id switch
+    {
+        ShotgunId => "사거리",
+        SniperId => "충전 속도",
+        DualId => "관통",
+        FlameId => "냉각",
+        SeekerId => "관통",
+        ChainId => "연쇄",
+        ScytheId => "낫 크기",
+        GrenadeId => "폭발 범위",
+        _ => "특성",
+    };
+
+    public static string TraitStep(int id) => id switch
+    {
+        ShotgunId => "사거리 +1",
+        SniperId => "충전 시간 -15%",
+        DualId => "관통 +1",
+        FlameId => "열 발생 -20%",
+        SeekerId => "관통 +1",
+        ChainId => "연쇄 +1",
+        ScytheId => "크기·거리 +15%",
+        GrenadeId => "범위 +0.6",
+        _ => "",
+    };
 
     // ================================================================= update
     void Update()
@@ -199,6 +300,8 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     float Damage => player.damage * player.damageMultiplier;
+    // 들고 있는 무기의 강화가 반영된 피해
+    float WDamage => Damage * WeaponDamageMul(CurrentWeapon);
     float Interval(float mul) => player.ShootSpeed * mul / player.fireRateMultiplier;
     bool OverUI => UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
 
@@ -247,7 +350,7 @@ public class SpecialAbilities : MonoBehaviour
                     // 떨어질 지점과 폭발 범위
                     Vector3 land = GrenadeLanding();
                     fx.SetLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
-                    fx.SetRing(previewRing, land, 3.5f, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
+                    fx.SetRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
                     if (down && Ready()) FireGrenade();
                 }
                 break;
@@ -257,6 +360,8 @@ public class SpecialAbilities : MonoBehaviour
     bool Ready() => player.CanShoot && Time.time >= nextFire;
 
     Vector2 AimDir() => ((Vector2)(MouseWorld() - player.MuzzlePosition)).normalized;
+
+    float GrenadeRadius => 3.5f + 0.6f * Trait(GrenadeId);
 
     Vector3 GrenadeLanding()
     {
@@ -279,7 +384,7 @@ public class SpecialAbilities : MonoBehaviour
             chargeGlow = MakeSprite("SniperCharge", glowSprite, muzzle, 0.05f, new Color(0.5f, 0.95f, 1f, 0.8f), "Effect", 6);
         }
 
-        float k = sniperCharge >= 0f ? sniperCharge / 1.2f : 0f;
+        float k = sniperCharge >= 0f ? sniperCharge / SniperChargeTime : 0f;
         bool full = k >= 1f;
         Color lineColor = sniperCharge < 0f ? new Color(0.5f, 0.95f, 1f, 0.35f)
             : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
@@ -289,7 +394,7 @@ public class SpecialAbilities : MonoBehaviour
 
         if (sniperCharge < 0f) return;
 
-        sniperCharge = Mathf.Min(1.2f, sniperCharge + Time.deltaTime);
+        sniperCharge = Mathf.Min(SniperChargeTime, sniperCharge + Time.deltaTime);
         player.ammoTextOverride = full ? "완충!" : "충전 " + Mathf.RoundToInt(k * 100f) + "%";
         fx.StartLoop("hum", 0.5f, 0.7f + 0.9f * k);
 
@@ -315,6 +420,7 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     const float SniperLineLength = 40f;
+    float SniperChargeTime => (IsEvolved(SniperId) ? 0.8f : 1.2f) * (1f - 0.15f * Trait(SniperId));
 
     void CancelSniperCharge()
     {
@@ -329,7 +435,7 @@ public class SpecialAbilities : MonoBehaviour
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
         start = player.MuzzlePosition;
-        nextFire = Time.time + Interval(intervalMul);
+        nextFire = Time.time + Interval(intervalMul) * WeaponRateMul(CurrentWeapon);
         cursed = IsLastBulletCursed(player.NowBullet);
         player.NowBullet = Mathf.Max(0, player.NowBullet - ammoCost);
         if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound);
@@ -349,13 +455,14 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     // 총알 없이 앞쪽 부채꼴 안의 적을 즉시 타격하는 근거리 폭발
-    const float ShotgunRange = 6f;
-    const float ShotgunHalfAngle = 30f;
+    float ShotgunRange => 6f + Trait(ShotgunId) + (IsEvolved(ShotgunId) ? 2f : 0f);
+    float ShotgunHalfAngle => IsEvolved(ShotgunId) ? 40f : 30f;
 
     void FireShotgun()
     {
         Vector2 dir = BeginShot(1.4f, 1, out Vector3 start, out bool cursed);
-        float dmg = Damage * 2.5f * (cursed ? 3f : 1f);
+        bool evo = IsEvolved(ShotgunId);
+        float dmg = WDamage * (evo ? 3.2f : 2.5f) * (cursed ? 3f : 1f);
         bool hitAny = false;
 
         foreach (Collider2D c in Physics2D.OverlapCircleAll(start, ShotgunRange))
@@ -365,6 +472,7 @@ public class SpecialAbilities : MonoBehaviour
             if (Vector2.Angle(dir, to) > ShotgunHalfAngle) continue;
 
             Specials.Damage(c.gameObject, dmg, to.normalized, 2.5f);
+            if (evo) Burn.Apply(c.gameObject, WDamage * 0.5f, 2f);
             hitAny = true;
             if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
         }
@@ -392,7 +500,13 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!player.CanShoot) return;
         Vector2 dir = BeginShot(1.8f, 1, out Vector3 start, out bool cursed);
-        Shot(start, dir, Damage * Mathf.Lerp(1.5f, 3f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
+        Bullet b = Shot(start, dir, WDamage * Mathf.Lerp(1.5f, 3f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
+        // 진화: 완충 사격이 맞은 곳마다 폭발
+        if (b != null && charge >= 1f && IsEvolved(SniperId))
+        {
+            float boom = WDamage * 1.5f;
+            b.onHitEnemy += (bullet, col) => Explode(col.transform.position, 3f, boom, 1.5f, new Color(0.5f, 0.95f, 1f, 0.85f));
+        }
         fx.Play("crack", 0.7f + 0.3f * charge, 1.2f - 0.3f * charge);
         fx.Shake(0.15f + 0.25f * charge, 0.12f);
     }
@@ -401,10 +515,15 @@ public class SpecialAbilities : MonoBehaviour
     {
         dualToggle = !dualToggle;
         Vector2 dir = BeginShot(0.5f, dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
-        Vector3 side = new Vector3(-dir.y, dir.x) * (dualToggle ? 0.35f : -0.35f);
+        Vector3 side = new Vector3(-dir.y, dir.x) * 0.35f;
         fx.Play("pew", 0.35f, dualToggle ? 1f : 1.15f);
-        Flash(start + side, 0.9f, new Color(1f, 0.85f, 0.5f, 0.8f), 0.06f);
-        Shot(start + side, dir, Damage * 0.55f, player.pene, 0.6f, cursed, new Color(1f, 0.85f, 0.5f), 1f, 1f, 0.6f);
+        int pene = player.pene + Trait(DualId);
+        // 진화: 양쪽 총구에서 동시에
+        foreach (float s in IsEvolved(DualId) ? new[] { 1f, -1f } : new[] { dualToggle ? 1f : -1f })
+        {
+            Flash(start + side * s, 0.9f, new Color(1f, 0.85f, 0.5f, 0.8f), 0.06f);
+            Shot(start + side * s, dir, WDamage * 0.55f, pene, 0.6f, cursed, new Color(1f, 0.85f, 0.5f), 1f, 1f, 0.6f);
+        }
     }
 
     void UpdateFlame(bool held)
@@ -444,15 +563,15 @@ public class SpecialAbilities : MonoBehaviour
             Vector3 start = player.MuzzlePosition;
             Vector2 aim = ((Vector2)(target - start)).normalized;
             Vector2 dir = Quaternion.Euler(0, 0, Random.Range(-8f, 8f)) * aim;
-            nextFire = Time.time + 0.07f / player.fireRateMultiplier;
+            nextFire = Time.time + 0.07f / player.fireRateMultiplier * WeaponRateMul(FlameId);
 
             // 실제 피해는 보이지 않는 판정용 탄이 담당
-            Bullet b = Shot(start, dir, Damage * 0.25f, 99, 0.2f, false, new Color(1f, 0.55f, 0.15f, 0.9f), 0.2f, 1.6f, 0.05f);
+            Bullet b = Shot(start, dir, WDamage * 0.25f, 99, 0.2f, false, new Color(1f, 0.55f, 0.15f, 0.9f), 0.2f, 1.6f, 0.05f);
             if (b != null)
             {
                 b.lifetime = 0.35f;
                 if (b.TryGetComponent(out SpriteRenderer hitboxSr)) hitboxSr.enabled = false;
-                float burnDps = Damage * 0.3f;
+                float burnDps = WDamage * (IsEvolved(FlameId) ? 0.5f : 0.3f);
                 b.onHitEnemy += (bullet, col) => Burn.Apply(col.gameObject, burnDps, 2f);
             }
 
@@ -468,7 +587,7 @@ public class SpecialAbilities : MonoBehaviour
                 FlameParticle.SpawnEmber(glowSprite, start, v);
             }
 
-            heat += 0.035f;
+            heat += 0.035f * (1f - 0.2f * Trait(FlameId)) * (IsEvolved(FlameId) ? 0.6f : 1f);
             if (heat >= 1f)
             {
                 heat = 1f;
@@ -489,20 +608,28 @@ public class SpecialAbilities : MonoBehaviour
     void FireSeeker()
     {
         Vector2 dir = BeginShot(0.9f, 1, out Vector3 start, out bool cursed);
-        Bullet b = Shot(start, dir, Damage * 0.7f, 1, 0.5f, cursed, new Color(0.7f, 0.5f, 1f), 0.3f, 1.2f, 0.8f);
         fx.Play("whoosh", 0.4f, 1.6f);
-        if (b != null) b.gameObject.AddComponent<Homing>().turnSpeed = 360f;
+        // 진화: 양옆으로 두 발
+        int count = IsEvolved(SeekerId) ? 2 : 1;
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 d = count == 1 ? dir : (Vector2)(Quaternion.Euler(0, 0, i == 0 ? -14f : 14f) * dir);
+            Bullet b = Shot(start, d, WDamage * 0.7f, 1 + Trait(SeekerId), 0.5f, cursed, new Color(0.7f, 0.5f, 1f), 0.3f, 1.2f, 0.8f);
+            if (b != null) b.gameObject.AddComponent<Homing>().turnSpeed = 360f;
+        }
     }
 
     void FireChain()
     {
         Vector2 dir = BeginShot(1f, 1, out Vector3 start, out bool cursed);
-        Bullet b = Shot(start, dir, Damage, 1, 1f, cursed, new Color(0.6f, 0.9f, 1f));
+        Bullet b = Shot(start, dir, WDamage, 1, 1f, cursed, new Color(0.6f, 0.9f, 1f));
         fx.Play("pew", 0.35f, 0.8f);
         if (b != null)
         {
-            float dmg = Damage;
-            b.onHitEnemy += (bullet, col) => ChainLightning(col.transform.position, col, dmg * 0.8f, 4);
+            float dmg = WDamage;
+            bool evo = IsEvolved(ChainId);
+            int jumps = (evo ? 7 : 4) + Trait(ChainId);
+            b.onHitEnemy += (bullet, col) => ChainLightning(col.transform.position, col, dmg * 0.8f, jumps, evo ? 0.9f : 0.8f);
         }
     }
 
@@ -510,11 +637,15 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
-        Bullet b = Shot(player.MuzzlePosition, ((Vector2)(target - player.MuzzlePosition)).normalized, Damage * 1.5f, 9999, 1.2f, false,
-                        new Color(0.75f, 0.45f, 1f), 0f, 2.5f, 0.3f);
+        bool evo = IsEvolved(ScytheId);
+        float grow = 1f + 0.15f * Trait(ScytheId);
+        Bullet b = Shot(player.MuzzlePosition, ((Vector2)(target - player.MuzzlePosition)).normalized, WDamage * (evo ? 2.2f : 1.5f), 9999, 1.2f, false,
+                        new Color(0.75f, 0.45f, 1f), 0f, (evo ? 3.5f : 2.5f) * grow, 0.3f);
         if (b == null) return;
         b.lifetime = 5f;
         Scythe s = b.gameObject.AddComponent<Scythe>();
+        s.distance = (evo ? 16f : 12f) * grow;
+        s.outTime = 0.45f * WeaponRateMul(ScytheId);
         s.owner = player.transform;
         s.direction = ((Vector2)(target - player.MuzzlePosition)).normalized;
         activeScythe = b.gameObject;
@@ -530,7 +661,9 @@ public class SpecialAbilities : MonoBehaviour
         Grenade gr = g.AddComponent<Grenade>();
         gr.owner = this;
         gr.target = target;
-        gr.damage = Damage * 2f * (cursed ? 3f : 1f);
+        gr.damage = WDamage * 2f * (cursed ? 3f : 1f);
+        gr.radius = GrenadeRadius;
+        gr.cluster = IsEvolved(GrenadeId);
     }
 
     // ================================================================= skills
@@ -573,7 +706,7 @@ public class SpecialAbilities : MonoBehaviour
                 }
                 break;
             case FireZoneId:
-                fx.SetRing(previewRing, mouse, 3f, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
+                fx.SetRing(previewRing, mouse, FireZoneRadius, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
                 break;
             case HookId:
                 {
@@ -587,14 +720,18 @@ public class SpecialAbilities : MonoBehaviour
         }
     }
 
+    float FireZoneRadius => IsEvolved(FireZoneId) ? 4.5f : 3f;
+    int SoulsNeeded => IsEvolved(SoulBurstId) ? 3 : 5;
+
     void UseSkill(int id)
     {
+        bool evo = IsEvolved(id);
         switch (id)
         {
-            case DashId: StartCoroutine(Dash()); StartCooldown(id, 3f); fx.Play("whoosh", 0.9f, 1.2f); break;
+            case DashId: StartCoroutine(Dash()); StartCooldown(id, evo ? 1.8f : 3f); fx.Play("whoosh", 0.9f, 1.2f); break;
             case FireZoneId:
-                SpawnZone(MouseWorld(), 3f, 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
-                StartCooldown(id, 12f);
+                SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
+                StartCooldown(id, evo ? 9f : 12f);
                 fx.Play("boom", 0.5f, 0.8f);
                 fx.Play("crackle", 0.8f);
                 break;
@@ -611,19 +748,19 @@ public class SpecialAbilities : MonoBehaviour
                 fx.FloatText(player.transform.position, "희생의 계약! 공격력 2배", new Color(1f, 0.3f, 0.3f), 5f, 0f);
                 break;
             case SoulBurstId:
-                if (souls < 5)
+                if (souls < SoulsNeeded)
                 {
                     fx.Play("buzz", 0.6f);
-                    fx.FloatText(player.transform.position, "영혼 부족 " + souls + "/5", new Color(0.7f, 0.66f, 0.72f), 4.5f, 0.4f);
+                    fx.FloatText(player.transform.position, "영혼 부족 " + souls + "/" + SoulsNeeded, new Color(0.7f, 0.66f, 0.72f), 4.5f, 0.4f);
                     return;
                 }
-                Explode(player.transform.position, 7f, Damage * (1.5f + souls * 0.25f), 3f, new Color(0.6f, 0.95f, 1f, 0.9f));
+                Explode(player.transform.position, evo ? 10f : 7f, Damage * (1.5f + souls * 0.25f), 3f, new Color(0.6f, 0.95f, 1f, 0.9f));
                 souls = 0;
                 StartCooldown(id, 5f);
                 break;
             case SkeletonsId:
-                SummonSkeletons(3);
-                StartCooldown(id, 15f);
+                SummonSkeletons(evo ? 5 : 3);
+                StartCooldown(id, evo ? 10f : 15f);
                 fx.Play("shimmer", 0.8f, 1.2f);
                 fx.FloatText(player.transform.position, "해골 소환!", new Color(0.6f, 0.95f, 1f), 4.5f, 0f);
                 break;
@@ -632,7 +769,7 @@ public class SpecialAbilities : MonoBehaviour
                 StartCooldown(id, 12f);
                 fx.Play("shimmer", 0.8f, 1.6f);
                 break;
-            case HookId: Hook(); StartCooldown(id, 4f); fx.Play("clank", 0.8f); break;
+            case HookId: Hook(); StartCooldown(id, evo ? 2f : 4f); fx.Play("clank", 0.8f); break;
         }
     }
 
@@ -665,14 +802,14 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!Has(CurseId)) return;
         int now = player.NowBullet;
-        if (now == 1 && lastBullets != 1)
+        if (IsLastBulletCursed(now) && !IsLastBulletCursed(lastBullets))
         {
             fx.Play("pulse", 0.6f, 1.6f);
             fx.FloatText(player.transform.position, "저주탄 장전!", new Color(1f, 0.3f, 0.3f), 4.5f, 0f);
         }
         lastBullets = now;
 
-        bool show = now == 1 && !WeaponActive;
+        bool show = IsLastBulletCursed(now) && !WeaponActive;
         if (show && curseGlow == null) curseGlow = MakeSprite("CurseGlow", glowSprite, player.MuzzlePosition, 0.18f, new Color(1f, 0.2f, 0.2f, 0.8f), "Effect", 6);
         if (!show && curseGlow != null) Destroy(curseGlow);
         if (curseGlow != null)
@@ -728,26 +865,31 @@ public class SpecialAbilities : MonoBehaviour
             yield return null;
         }
         player.transform.position = end;
+        // 진화: 도착 지점 충격파
+        if (IsEvolved(DashId)) Explode(end, 2.5f, Damage * 1.5f, 2f, new Color(0.5f, 0.95f, 1f, 0.85f));
     }
 
     IEnumerator TimeWarp()
     {
-        EnermyController.GlobalSpeedMultiplier = 0.5f;
-        timeWarpUntil = Time.time + 5f;
+        bool evo = IsEvolved(TimeWarpId);
+        float duration = evo ? 7f : 5f;
+        EnermyController.GlobalSpeedMultiplier = evo ? 0.25f : 0.5f;
+        timeWarpUntil = Time.time + duration;
         Flash(player.transform.position, 12f, new Color(0.5f, 0.8f, 1f, 0.5f), 0.5f);
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(duration);
         EnermyController.GlobalSpeedMultiplier = 1f;
     }
 
     IEnumerator Pact()
     {
-        player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.2f);
+        bool evo = IsEvolved(PactId);
+        if (!evo) player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.2f);
         player.damageMultiplier = 2f;
         player.fireRateMultiplier = 1.5f;
         if (pactAura != null) Destroy(pactAura);
         pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, new Color(1f, 0.15f, 0.2f, 0.45f), "Background", 8);
         Flash(player.transform.position, 5f, new Color(1f, 0.15f, 0.2f, 0.7f), 0.4f);
-        yield return new WaitForSeconds(8f);
+        yield return new WaitForSeconds(evo ? 12f : 8f);
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
         if (pactAura != null) Destroy(pactAura);
@@ -762,9 +904,12 @@ public class SpecialAbilities : MonoBehaviour
         decoy.GetComponent<SpriteRenderer>().flipX = body.flipX;
         EnermyController.Decoy = decoy.transform;
         player.bodyAlpha = 0.4f;
-        yield return new WaitForSeconds(3f);
+        bool evo = IsEvolved(MirrorId);
+        yield return new WaitForSeconds(evo ? 5f : 3f);
         EnermyController.Decoy = null;
         player.bodyAlpha = 1f;
+        // 진화: 분신이 사라지며 폭발
+        if (evo && decoy != null) Explode(decoy.transform.position, 4f, Damage * 3f, 2.5f, new Color(0.55f, 0.9f, 1f, 0.9f));
         Destroy(decoy);
     }
 
@@ -777,7 +922,7 @@ public class SpecialAbilities : MonoBehaviour
         if (enemy != null)
         {
             DrawLine(from, enemy.transform.position, new Color(0.8f, 0.1f, 0.15f), 0.2f);
-            Specials.Damage(enemy.gameObject, Damage * 1.5f, Vector3.zero, 0f);
+            Specials.Damage(enemy.gameObject, Damage * (IsEvolved(HookId) ? 3f : 1.5f), Vector3.zero, 0f);
             if (enemy.CompareTag("enermy")) StartCoroutine(Pull(enemy.transform, from + (Vector3)dir * 2.5f));
         }
         else
@@ -878,7 +1023,7 @@ public class SpecialAbilities : MonoBehaviour
                     lastOrbSound = Time.time;
                     fx.Play("pew", 0.18f, 2f);
                 }
-                Specials.Damage(c.gameObject, Damage * 0.8f, (c.transform.position - player.transform.position).normalized, 0.8f);
+                Specials.Damage(c.gameObject, Damage * (IsEvolved(OrbsId) ? 1.2f : 0.8f), (c.transform.position - player.transform.position).normalized, 0.8f);
             }
         }
     }
@@ -889,14 +1034,15 @@ public class SpecialAbilities : MonoBehaviour
         if (!Has(ThornsId) || player == null) return;
         fx.Play("boom", 0.6f, 1.4f);
         fx.FloatText(player.transform.position, "가시 반격!", new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
-        Explode(player.transform.position, 4f, Damage * 3f, 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
+        bool evo = IsEvolved(ThornsId);
+        Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
 
     // 불사의 맹세: 한 판에 한 번
     public bool TryUndying()
     {
-        if (!Has(UndyingId) || undyingUsed) return false;
-        undyingUsed = true;
+        if (!Has(UndyingId) || undyingUses >= UndyingMaxUses) return false;
+        undyingUses++;
         fx.Play("pulse", 1f, 0.6f);
         fx.Play("chime", 1f, 0.7f);
         fx.Shake(0.4f, 0.3f);
@@ -905,8 +1051,13 @@ public class SpecialAbilities : MonoBehaviour
         return true;
     }
 
-    // 탄창 저주: 탄창의 마지막 한 발
-    public bool IsLastBulletCursed(int bulletsBeforeShot) => Has(CurseId) && bulletsBeforeShot == 1;
+    int UndyingMaxUses => IsEvolved(UndyingId) ? 2 : 1;
+
+    // 부활할 때 체력 (진화하면 절반)
+    public float UndyingReviveHealth(float maxHealth) => IsEvolved(UndyingId) ? maxHealth * 0.5f : 1f;
+
+    // 탄창 저주: 탄창의 마지막 한 발 (진화하면 두 발)
+    public bool IsLastBulletCursed(int bulletsBeforeShot) => Has(CurseId) && bulletsBeforeShot >= 1 && bulletsBeforeShot <= (IsEvolved(CurseId) ? 2 : 1);
 
     public void CurseBullet(Bullet b, bool cursed)
     {
@@ -921,7 +1072,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!Has(SoulBurstId)) return;
         souls = Mathf.Min(40, souls + 1);
-        if (souls == 5)
+        if (souls == SoulsNeeded)
         {
             fx.Play("chime", 0.5f, 1.3f);
             fx.FloatText(player.transform.position, "영혼 폭발 준비", new Color(0.55f, 0.95f, 1f), 4.5f, 0f);
@@ -954,7 +1105,7 @@ public class SpecialAbilities : MonoBehaviour
         dz.tickDamage = tickDamage;
     }
 
-    void ChainLightning(Vector3 from, Collider2D first, float damage, int jumps)
+    void ChainLightning(Vector3 from, Collider2D first, float damage, int jumps, float falloff = 0.8f)
     {
         fx.Play("zap", 0.5f, Random.Range(0.9f, 1.1f));
         HashSet<Collider2D> hit = new HashSet<Collider2D> { first };
@@ -974,7 +1125,7 @@ public class SpecialAbilities : MonoBehaviour
             DrawLine(current, next.transform.position, new Color(0.6f, 0.9f, 1f), 0.15f);
             Specials.Damage(next.gameObject, damage, Vector3.zero, 0f);
             current = next.transform.position;
-            damage *= 0.8f;
+            damage *= falloff;
         }
     }
 
@@ -1122,7 +1273,7 @@ public class SpecialAbilities : MonoBehaviour
         foreach (HudRow row in hudRows)
         {
             SpecialDef def = abilities[row.id];
-            row.name.text = def.name;
+            row.name.text = def.name + (IsEvolved(row.id) ? "+" : "");
 
             float fill = 1f;
             string info;
@@ -1146,7 +1297,11 @@ public class SpecialAbilities : MonoBehaviour
             else
             {
                 info = "패시브";
-                if (row.id == UndyingId) info = undyingUsed ? "사용함" : "부활 대기";
+                if (row.id == UndyingId)
+                {
+                    int left = UndyingMaxUses - undyingUses;
+                    info = left > 0 ? "부활 대기 " + left : "사용함";
+                }
             }
             row.info.text = info;
             bool flash = rowFlashUntil.TryGetValue(row.id, out float until) && Time.time < until;
@@ -1382,6 +1537,9 @@ public class Grenade : MonoBehaviour
     public SpecialAbilities owner;
     public Vector3 target;
     public float damage;
+    public float radius = 3.5f;
+    public bool cluster;        // 진화: 폭발 후 작은 용암탄 3개로 흩어짐
+    public bool mini;           // 흩어진 작은 용암탄 (장판 없음)
     public float flightTime = 0.5f;
     Vector3 start;
     float t;
@@ -1397,8 +1555,23 @@ public class Grenade : MonoBehaviour
         transform.position = p;
         if (k >= 1f)
         {
-            owner.Explode(target, 3.5f, damage, 1.5f, new Color(1f, 0.45f, 0.1f, 0.9f));
-            owner.SpawnZone(target, 2.5f, 2.5f, damage * 0.25f, new Color(1f, 0.35f, 0.05f, 0.7f));
+            owner.Explode(target, radius, damage, 1.5f, new Color(1f, 0.45f, 0.1f, 0.9f));
+            if (!mini) owner.SpawnZone(target, radius * 0.7f, 2.5f, damage * 0.25f, new Color(1f, 0.35f, 0.05f, 0.7f));
+            if (cluster)
+            {
+                SpriteRenderer sr = GetComponent<SpriteRenderer>();
+                for (int i = 0; i < 3; i++)
+                {
+                    GameObject g = SpecialAbilities.MakeSprite("LavaShard", sr.sprite, target, transform.localScale.x * 0.6f, sr.color, "Effect", 5);
+                    Grenade m = g.AddComponent<Grenade>();
+                    m.owner = owner;
+                    m.target = target + (Vector3)(Quaternion.Euler(0, 0, i * 120f + Random.Range(-20f, 20f)) * Vector2.right * Random.Range(2.5f, 4f));
+                    m.damage = damage * 0.5f;
+                    m.radius = radius * 0.6f;
+                    m.mini = true;
+                    m.flightTime = 0.35f;
+                }
+            }
             Destroy(gameObject);
         }
     }

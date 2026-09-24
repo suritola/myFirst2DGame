@@ -727,7 +727,7 @@ void Shoot()
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())
         {
-            PlayerHealth = 1f;
+            PlayerHealth = Mathf.Max(1f, special.UndyingReviveHealth(PlayerMaxHealth));
             invincibleUntil = Time.time + 3f;
             return true;
         }

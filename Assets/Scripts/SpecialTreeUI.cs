@@ -21,6 +21,8 @@ public class SpecialTreeUI : MonoBehaviour
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color LineColor = new Color(0.78f, 0.55f, 0.25f, 0.8f);
     static readonly Color Selected = new Color(1f, 0.85f, 0.4f);
+    static readonly Color Owned = new Color(0.6f, 0.85f, 1f);
+    static readonly Color Maxed = new Color(0.55f, 0.5f, 0.58f);
 
     SpecialAbilities specials;
     System.Action<int[]> onConfirm;
@@ -29,19 +31,48 @@ public class SpecialTreeUI : MonoBehaviour
     int viewing = -1;                   // 설명창에 보이는 노드
 
     readonly List<Image> nodeFrames = new List<Image>();
+    readonly List<TextMeshProUGUI> nodeTags = new List<TextMeshProUGUI>();
+    readonly List<TooltipTrigger> nodeTips = new List<TooltipTrigger>();
     TextMeshProUGUI detailName, detailKind, detailText;
     Button confirm;
     TextMeshProUGUI confirmText;
+    GameObject closeButton;
 
+    // 게임 중 강화 모드: 특수 능력 포인트로 새 능력을 배우거나 가진 능력을 진화
+    bool upgradeMode;
+    int pointsNow;
+    System.Action onCancel;
+
+    // 지옥 입장 때: 포인트를 모두 써야 확정
     public void Open(SpecialAbilities specials, System.Action<int[]> onConfirm)
+    {
+        upgradeMode = false;
+        pointsNow = points;
+        onCancel = null;
+        Show(specials, onConfirm);
+    }
+
+    // 중간 보스 보상: 포인트 안에서 원하는 만큼 쓰고, 닫아서 나중에 써도 됨
+    public void OpenUpgrade(SpecialAbilities specials, int points, System.Action<int[]> onConfirm, System.Action onCancel)
+    {
+        upgradeMode = true;
+        pointsNow = points;
+        this.onCancel = onCancel;
+        Show(specials, onConfirm);
+    }
+
+    void Show(SpecialAbilities specials, System.Action<int[]> onConfirm)
     {
         this.specials = specials;
         this.onConfirm = onConfirm;
         if (!built) Build();
         picked.Clear();
+        closeButton.SetActive(upgradeMode);
         View(-1, null);
         gameObject.SetActive(true);
     }
+
+    bool CanConfirm => upgradeMode ? picked.Count > 0 : picked.Count >= pointsNow;
 
     // ================================================================= layout
     void Build()
@@ -166,8 +197,13 @@ public class SpecialTreeUI : MonoBehaviour
         tip.title = def.name + "  · " + KindName(def.kind);
         tip.body = def.description;
 
-        while (nodeFrames.Count <= id) nodeFrames.Add(null);
+        // 노드 위 작은 표시 (보유 / 진화 완료)
+        TextMeshProUGUI tag = Text(r, "", 17f, Owned, new Vector2(0f, size * 0.5f + 12f), new Vector2(160f, 24f), TextAlignmentOptions.Center);
+
+        while (nodeFrames.Count <= id) { nodeFrames.Add(null); nodeTags.Add(null); nodeTips.Add(null); }
         nodeFrames[id] = frame;
+        nodeTags[id] = tag;
+        nodeTips[id] = tip;
     }
 
     TextMeshProUGUI Text(RectTransform parent, string text, float size, Color color, Vector2 pos, Vector2 box, TextAlignmentOptions align)
@@ -223,8 +259,38 @@ public class SpecialTreeUI : MonoBehaviour
         cb.highlightedColor = new Color(1f, 0.9f, 0.62f);
         cb.disabledColor = new Color(0.45f, 0.42f, 0.48f, 0.8f);
         confirm.colors = cb;
-        confirm.onClick.AddListener(() => { if (picked.Count >= points) onConfirm?.Invoke(picked.ToArray()); });
+        confirm.onClick.AddListener(() => { if (CanConfirm) onConfirm?.Invoke(picked.ToArray()); });
         confirmText = Text(brt, "", 26f, Gold, Vector2.zero, new Vector2(210f, 60f), TextAlignmentOptions.Center);
+
+        // 강화 모드에서만: 포인트를 아껴 두고 닫기
+        closeButton = new GameObject("Close", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform crt = closeButton.GetComponent<RectTransform>();
+        crt.SetParent(root, false);
+        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
+        crt.sizeDelta = new Vector2(170f, 62f);
+        crt.anchoredPosition = new Vector2(840f, 470f);
+        Image cimg = closeButton.GetComponent<Image>();
+        cimg.sprite = headerSprite;
+        cimg.type = Image.Type.Sliced;
+        Button close = closeButton.GetComponent<Button>();
+        ColorBlock ccb = close.colors;
+        ccb.highlightedColor = new Color(1f, 0.9f, 0.62f);
+        close.colors = ccb;
+        close.onClick.AddListener(() => onCancel?.Invoke());
+        Text(crt, "닫기", 24f, Parch, Vector2.zero, new Vector2(150f, 50f), TextAlignmentOptions.Center);
+        closeButton.SetActive(false);
+    }
+
+    bool IsOwned(int id) => upgradeMode && specials.Has(id);
+    bool IsMaxed(int id) => IsOwned(id) && specials.IsEvolved(id);
+
+    // 새로 고른 스킬까지 합쳐 스킬 칸(E·F·Space)이 가득 찼는지
+    bool SkillSlotsFull()
+    {
+        int count = specials.SkillCount;
+        foreach (int p in picked)
+            if (!specials.Has(p) && specials.abilities[p].kind == SpecialKind.Skill) count++;
+        return count >= SpecialAbilities.MaxSkills;
     }
 
     // 노드를 누르면 선택/해제 (포인트 안에서)
@@ -236,7 +302,15 @@ public class SpecialTreeUI : MonoBehaviour
             picked.Remove(id);
             note = "선택을 취소했습니다.";
         }
-        else if (picked.Count < points)
+        else if (IsMaxed(id))
+        {
+            note = "이미 진화한 능력입니다.";
+        }
+        else if (upgradeMode && !specials.Has(id) && specials.abilities[id].kind == SpecialKind.Skill && SkillSlotsFull())
+        {
+            note = "스킬 칸(E · F · Space)이 가득 찼습니다. 가진 스킬을 진화시켜 보세요.";
+        }
+        else if (picked.Count < pointsNow)
         {
             picked.Add(id);
         }
@@ -251,26 +325,47 @@ public class SpecialTreeUI : MonoBehaviour
     {
         viewing = id;
         for (int i = 0; i < nodeFrames.Count; i++)
-            if (nodeFrames[i] != null) nodeFrames[i].color = picked.Contains(i) ? Selected : Color.white;
+        {
+            if (nodeFrames[i] == null) continue;
+            nodeFrames[i].color = picked.Contains(i) ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : Color.white;
+            nodeTags[i].text = IsMaxed(i) ? "진화 완료" : IsOwned(i) ? (picked.Contains(i) ? "진화!" : "보유 · 진화 가능") : "";
+            nodeTags[i].color = picked.Contains(i) ? Selected : Owned;
+            nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
+                ? "진화: " + SpecialAbilities.EvolveTexts[i]
+                : specials.abilities[i].description;
+        }
 
-        int left = points - picked.Count;
-        bool ready = left <= 0;
+        int left = pointsNow - picked.Count;
+        bool ready = CanConfirm;
         confirm.interactable = ready;
         confirmText.color = ready ? Gold : new Color(0.6f, 0.56f, 0.62f);
-        confirmText.text = ready ? "선택 완료" : "남은 포인트 " + left;
+        confirmText.text = upgradeMode
+            ? (ready ? "강화 완료" : "포인트 " + left)
+            : (ready ? "선택 완료" : "남은 포인트 " + left);
 
         if (id < 0)
         {
-            detailName.text = "능력 " + points + "개를 고르세요";
-            detailKind.text = "포인트 " + points + "개 · 노드를 눌러 선택";
-            detailText.text = "무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.";
+            if (upgradeMode)
+            {
+                detailName.text = "특수 능력 포인트 " + pointsNow;
+                detailKind.text = "새 능력을 배우거나 가진 능력을 진화";
+                detailText.text = "파란 테두리는 이미 가진 능력입니다. 한 번 더 고르면 진화해서 더 강해집니다. 남은 포인트는 아껴 두었다가 나중에 써도 됩니다.";
+            }
+            else
+            {
+                detailName.text = "능력 " + pointsNow + "개를 고르세요";
+                detailKind.text = "포인트 " + pointsNow + "개 · 노드를 눌러 선택";
+                detailText.text = "무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.";
+            }
             return;
         }
 
         SpecialDef def = specials.abilities[id];
-        detailName.text = def.name;
-        detailKind.text = KindName(def.kind) + (picked.Contains(id) ? "  (선택됨)" : "");
-        detailText.text = note != null ? def.description + "\n<color=#ff9d8a>" + note + "</color>" : def.description;
+        bool evolving = IsOwned(id) && !IsMaxed(id);
+        detailName.text = def.name + (evolving ? " → 진화" : "");
+        detailKind.text = KindName(def.kind) + (picked.Contains(id) ? "  (선택됨)" : IsMaxed(id) ? "  (진화 완료)" : "");
+        string body = evolving || IsMaxed(id) ? "<color=#9fd8ff>진화</color>  " + SpecialAbilities.EvolveTexts[id] : def.description;
+        detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
     }
 
     static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? "무기 · Q로 교체" : k == SpecialKind.Skill ? "스킬 · E/F/Space" : "패시브 · 항상 적용";

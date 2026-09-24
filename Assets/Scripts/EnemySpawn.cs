@@ -33,6 +33,18 @@ public class EnemySpawner : MonoBehaviour
     // 보스를 쓰러뜨렸을 때 (스테이지 번호)
     public System.Action<int> onBossDefeated;
 
+    [Header("중간 보스 (2장부터, 페이즈가 오를 때마다)")]
+    public int midBossFromStage = 1;
+    public float midBossHpMultiplier = 12f;
+    public float midBossDamageMultiplier = 1.5f;
+    public float midBossScale = 1.8f;
+    public Color midBossColor = new Color(1f, 0.72f, 0.5f);
+    // 중간 보스가 나왔을 때 / 쓰러졌을 때
+    public System.Action onMidBossSpawned;
+    public System.Action onMidBossDefeated;
+    int midBossPhase = 1;
+    int midBossCount = 0;
+
     PlayerController playerC;
     bossbar bossbar;
 
@@ -119,6 +131,52 @@ public class EnemySpawner : MonoBehaviour
             if (killedEnemy >= Stage.phases[i].killsToEnter) phase = i + 1;
         }
         paze = phase;
+
+        if (stageIndex >= midBossFromStage && phase > midBossPhase)
+        {
+            midBossPhase = phase;
+            SpawnMidBoss();
+        }
+    }
+
+    // 지금 페이즈에 나오는 적 중 하나를 크고 단단하게 만들어 소환 (처치하면 특수 능력 포인트)
+    void SpawnMidBoss()
+    {
+        var candidates = new System.Collections.Generic.List<GameObject>();
+        for (int i = 0; i < Stage.enemies.Length; i++)
+            if (Weight(Phase.weights, i) > 0f && Stage.enemies[i] != null) candidates.Add(Stage.enemies[i]);
+        if (candidates.Count == 0) return;
+        // 체력이 높은 순으로, 나올 때마다 다른 종류
+        candidates.Sort((a, b) => HpOf(b).CompareTo(HpOf(a)));
+        GameObject prefab = candidates[midBossCount % candidates.Count];
+        midBossCount++;
+
+        if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
+        GameObject go = Instantiate(prefab, GetSpawnPosition(playerC.transform.position), Quaternion.identity);
+        go.name = "MidBoss_" + prefab.name;
+        go.transform.localScale *= midBossScale;
+        spawnedEnemys++;
+
+        EnermyController e = go.GetComponent<EnermyController>();
+        if (e != null)
+        {
+            e.setEnemyHP = Mathf.RoundToInt(e.setEnemyHP * midBossHpMultiplier);
+            e.contactDamage *= midBossDamageMultiplier;
+            e.expReward *= 8;
+            e.coinDrop = Mathf.Max(8, e.coinDrop * 6);
+            e.knockBackTaken *= 0.15f;
+            e.chanceofHP = 100;
+            e.survivesContact = true;
+            e.baseColor = midBossColor;
+            e.onKilled += () => onMidBossDefeated?.Invoke();
+        }
+        onMidBossSpawned?.Invoke();
+    }
+
+    static int HpOf(GameObject prefab)
+    {
+        EnermyController e = prefab.GetComponent<EnermyController>();
+        return e != null ? e.setEnemyHP : 0;
     }
 
     // 비율에 따라 적 종류를 고름 (비율이 없는 적은 나오지 않음)
@@ -170,6 +228,7 @@ public class EnemySpawner : MonoBehaviour
         stageIndex = Mathf.Clamp(index, 0, stages.Length - 1);
         killedEnemy = 0;
         paze = 1;
+        midBossPhase = 1;
         bossSpawned = false;
         bossCleared = false;
         spawnedEnemys = 0;

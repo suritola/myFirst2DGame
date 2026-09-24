@@ -41,6 +41,14 @@ public class EnermyController : MonoBehaviour
     // 다른 적과 겹친 만큼 밀어내는 속도 (초당)
     public float separationSpeed = 4f;
 
+    [Header("중간 보스")]
+    // 닿아도 자폭하지 않고 계속 싸움
+    public bool survivesContact = false;
+    // 평소 몸 색 (피격 후 이 색으로 돌아옴)
+    public Color baseColor = Color.white;
+    // 이 적이 처치됐을 때
+    public System.Action onKilled;
+
     public bool IsDead => isDead;
 
     // 시간 왜곡 (적 전체 감속)
@@ -65,6 +73,7 @@ public class EnermyController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
+        spriteRenderer.color = baseColor;
 
         // 머리 위 체력바
         EnemyHealthBar.Attach(this, spriteRenderer);
@@ -187,7 +196,7 @@ public class EnermyController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         // 죽지 않았을 때만 원래 색으로
-        if (!isDead) spriteRenderer.color = Color.white;
+        if (!isDead) spriteRenderer.color = baseColor;
     }
     PlayerController playerC;
     
@@ -197,7 +206,8 @@ public class EnermyController : MonoBehaviour
 
         isDead = true;
         if (a == 1) Killed?.Invoke(transform.position);
-        spriteRenderer.color = Color.white;
+        if (a == 1) onKilled?.Invoke();
+        spriteRenderer.color = baseColor;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음
         if (bodyCollider != null) bodyCollider.enabled = false;
@@ -284,7 +294,7 @@ public class EnermyController : MonoBehaviour
         if (isDead || !collision.CompareTag("Player")) return;
 
         PlayerController target = collision.GetComponent<PlayerController>();
-        if (target != null && target.TryHit(contactDamage)) Die(0);
+        if (target != null && target.TryHit(contactDamage) && !survivesContact) Die(0);
     }
 
 
