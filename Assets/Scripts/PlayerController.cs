@@ -100,8 +100,10 @@ public class PlayerController : MonoBehaviour
 
     public float targetRange = 8f;
 
-    // 타겟팅 스킬로 조준할 수 있는 최대 적 수
+    // 타겟팅 스킬로 조준할 수 있는 기본 적 수 (스킬 강화 상점에서 늘어남)
     public int maxTargets = 6;
+    Color baseEffectColor;
+    bool effectColorSaved;
 
     // 코인 자석 (레벨업 능력): 이 거리 안의 코인을 끌어옴
     [HideInInspector] public float coinMagnetRange = 0f;
@@ -353,6 +355,7 @@ public class PlayerController : MonoBehaviour
                 FindNextTarget();
                 nextTargetTime = Time.unscaledTime + targetInterval;
             }
+            special?.UpdateAim(targets, Mathf.Clamp01(NowCharge / MaxCharge));
         }
 
         // =========================
@@ -546,6 +549,16 @@ void Shoot()
 
         nextTargetTime = Time.unscaledTime;
 
+        // 화면 색은 들고 있는 무기 색, 조준 연출도 무기마다 다름
+        if (skillEffectPanel != null)
+        {
+            if (!effectColorSaved) { baseEffectColor = skillEffectPanel.color; effectColorSaved = true; }
+            Color tint = special != null && special.WeaponActive ? Color.Lerp(baseEffectColor, special.AimTint, 0.6f) : baseEffectColor;
+            tint.a = skillEffectPanel.color.a;
+            skillEffectPanel.color = tint;
+        }
+        special?.BeginAim();
+
         StartCoroutine(FadeScreen(screenFadeAlpha));
 
         Time.timeScale = Skill_setTime;
@@ -557,8 +570,9 @@ void Shoot()
 
     void FindNextTarget()
     {
-        // 한 번에 조준할 수 있는 적 수 (상점에서 6 → 12)
-        if (targets.Count >= maxTargets) return;
+        // 한 번에 조준할 수 있는 적 수 (스킬 강화로 늘어남)
+        int limit = special != null ? special.MaxTargets(maxTargets) : maxTargets;
+        if (targets.Count >= limit) return;
 
         Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,targetRange);
 
@@ -587,7 +601,13 @@ void Shoot()
 
         targets.Add(closestEnemy);
 
-        if (targetMarkPrefab != null)
+        // 특수 무기를 들고 있으면 무기다운 표식 (범위형 무기는 표식 없음)
+        if (special != null && special.WeaponActive)
+        {
+            GameObject weaponMark = special.MarkTarget(closestEnemy.transform);
+            if (weaponMark != null) targetMarks.Add(weaponMark);
+        }
+        else if (targetMarkPrefab != null)
         {
             GameObject mark = Instantiate(targetMarkPrefab, closestEnemy.transform.position, Quaternion.identity);
             TargetMark targetMark = mark.GetComponent<TargetMark>();
@@ -618,6 +638,7 @@ void Shoot()
         foreach (GameObject mark in targetMarks) if (mark != null) Destroy(mark);
 
         targetMarks.Clear();
+        special?.EndAim();
 
         StartCoroutine(ShootTargets());
 
@@ -659,7 +680,7 @@ void Shoot()
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound);
 
-                CreateBullet(startPosition, direction, skillDamage, pene, getHP, true);
+                CreateBullet(startPosition, direction, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
 
                 yield return new WaitForSeconds(shootDelay);
             }

@@ -83,6 +83,8 @@ public class StageManager : MonoBehaviour
         BuildUpgradeButton();
         // 2장 상점의 무기 강화 창
         gameObject.AddComponent<WeaponUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
+        // 상점의 필살기(스킬) 강화 창
+        gameObject.AddComponent<SkillUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
     }
 
     void Update()

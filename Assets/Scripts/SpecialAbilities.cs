@@ -354,7 +354,7 @@ public class SpecialAbilities : MonoBehaviour
     public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
     {
         int id = CurrentWeapon;
-        float dmg = baseDamage * WeaponDamageMul(id);
+        float dmg = baseDamage * WeaponDamageMul(id) * UltPower(id);
         Color c = WeaponColor(id);
         fx.FloatText(player.transform.position, VolleyName(id) + "!", c, 6f, 0f);
         fx.Play("pulse", 0.6f, 1.4f);
@@ -364,7 +364,7 @@ public class SpecialAbilities : MonoBehaviour
         {
             case ShotgunId:
                 // 지옥불 포격: 마우스 쪽으로 거대한 부채꼴 폭발 3연발
-                for (int blast = 0; blast < 3; blast++)
+                for (int blast = 0; blast < 3 + UltTrait(id); blast++)
                 {
                     Vector3 start = player.MuzzlePosition;
                     Vector2 dir = AimDir();
@@ -392,7 +392,7 @@ public class SpecialAbilities : MonoBehaviour
             case SniperId:
                 // 관통 레일건: 충전 뒤 화면을 가로지르는 굵은 광선 (조준한 적이 많을수록 강함)
                 {
-                    float power = 1.5f + 0.25f * alive.Count;
+                    float wide = 1f + 0.3f * UltTrait(id);
                     FxAnim aim = null;
                     fx.StartLoop("hum", 0.6f, 1f);
                     for (float t = 0f; t < 0.5f; t += Time.deltaTime)
@@ -407,12 +407,19 @@ public class SpecialAbilities : MonoBehaviour
                     if (aim != null) Destroy(aim.gameObject);
                     Vector3 from = player.MuzzlePosition;
                     Vector3 to = from + (Vector3)(AimDir() * 45f);
-                    Fx.Beam(from, to, 2.4f, c, 0.4f, 16);
-                    Fx.Beam(from, to, 0.8f, Color.white, 0.3f, 17);
+                    Fx.Beam(from, to, 2.4f * wide, c, 0.4f, 16);
+                    Fx.Beam(from, to, 0.8f * wide, Color.white, 0.3f, 17);
+                    // 광선 위의 적이 많을수록 강함
+                    List<Collider2D> onLine = new List<Collider2D>();
                     foreach (Collider2D col in Physics2D.OverlapCircleAll((from + to) * 0.5f, 23f))
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
-                        if (Hostile.DistanceToSegment(col.transform.position, from, to) > 1.5f) continue;
+                        if (Hostile.DistanceToSegment(col.transform.position, from, to) > 1.5f * wide) continue;
+                        onLine.Add(col);
+                    }
+                    float power = 1.5f + 0.25f * onLine.Count;
+                    foreach (Collider2D col in onLine)
+                    {
                         Specials.Damage(col.gameObject, dmg * power, (to - from).normalized, 2f);
                         Fx.Play("fx_spark", col.transform.position, 2f, c, 20f);
                     }
@@ -426,7 +433,7 @@ public class SpecialAbilities : MonoBehaviour
                 // 총알 폭풍: 1.6초 동안 두 줄기 나선으로 사방 난사 (움직이며 쓸 수 있음)
                 {
                     float angle = Random.Range(0f, 360f);
-                    for (float t = 0f; t < 1.6f; t += 0.04f)
+                    for (float t = 0f; t < 1.6f + 0.4f * UltTrait(id); t += 0.04f)
                     {
                         for (int arm = 0; arm < 2; arm++)
                         {
@@ -451,6 +458,7 @@ public class SpecialAbilities : MonoBehaviour
                     FireTornado ft = go.AddComponent<FireTornado>();
                     ft.owner = this;
                     ft.damage = dmg * 0.25f;
+                    ft.life = 4f + 1.5f * UltTrait(id);
                     fx.Play("ignite", 1f, 0.7f);
                     fx.Play("flame", 0.8f, 0.8f);
                 }
@@ -464,6 +472,7 @@ public class SpecialAbilities : MonoBehaviour
                     sw.owner = player.transform;
                     sw.targets = alive;
                     sw.damage = dmg * 0.45f;
+                    sw.count = 5 + UltTrait(id);
                     sw.color = c;
                     fx.Play("shimmer", 0.8f, 1.3f);
                 }
@@ -472,9 +481,10 @@ public class SpecialAbilities : MonoBehaviour
             case ChainId:
                 // 뇌운: 2.5초 동안 하늘에서 번개가 조준한 적들에게 연달아 떨어짐
                 {
-                    FxAnim cloud = Fx.Play("fx_cloud", player.transform.position + Vector3.up * 6f, 12f, new Color(0.35f, 0.4f, 0.55f, 0.8f), 3f, 0f, 25, true, 2.6f);
+                    float storm = 2.5f + 0.8f * UltTrait(id);
+                    FxAnim cloud = Fx.Play("fx_cloud", player.transform.position + Vector3.up * 6f, 12f, new Color(0.35f, 0.4f, 0.55f, 0.8f), 3f, 0f, 25, true, storm + 0.1f);
                     if (cloud != null) cloud.follow = player.transform;
-                    for (float t = 0f; t < 2.5f; t += 0.15f)
+                    for (float t = 0f; t < storm; t += 0.15f)
                     {
                         alive.RemoveAll(e => !Alive(e));
                         Transform target = alive.Count > 0 ? alive[Random.Range(0, alive.Count)].transform
@@ -538,7 +548,7 @@ public class SpecialAbilities : MonoBehaviour
                     Vector3 start = player.transform.position;
                     Vector2 dir = AimDir();
                     Vector2 side = new Vector2(-dir.y, dir.x);
-                    for (int row = 1; row <= 6; row++)
+                    for (int row = 1; row <= GrenadeRows; row++)
                     {
                         for (int col = -1; col <= 1; col++)
                         {
@@ -605,6 +615,70 @@ public class SpecialAbilities : MonoBehaviour
         aura.transform.SetParent(b.transform, true);
         aura.transform.localScale = Vector3.one * (worldSize * 0.3f / s);
     }
+
+    // ================================================================= 필살기 강화 (스킬 강화 상점) · 조준 화면
+    public const int PistolUlt = -1;
+    public const int UltPowerStat = 0, UltTraitStat = 1;
+    public static readonly int[] UltStatMax = { 5, 3 };
+    readonly Dictionary<int, int[]> ultLevels = new Dictionary<int, int[]>();
+
+    public int UltLevel(int weapon, int stat) => ultLevels.TryGetValue(weapon, out int[] l) ? l[stat] : 0;
+    public float UltPower(int weapon) => 1f + 0.2f * UltLevel(weapon, UltPowerStat);
+    int UltTrait(int weapon) => UltLevel(weapon, UltTraitStat);
+
+    public bool UpgradeUlt(int weapon, int stat)
+    {
+        if (UltLevel(weapon, stat) >= UltStatMax[stat]) return false;
+        if (!ultLevels.ContainsKey(weapon)) ultLevels[weapon] = new int[2];
+        ultLevels[weapon][stat]++;
+        if (fx != null) { fx.Play("chime", 0.5f, 1.2f); fx.Play("pulse", 0.4f, 1.5f); }
+        return true;
+    }
+
+    public static string UltName(int weapon) => weapon == PistolUlt ? "일제 사격" : VolleyName(weapon);
+
+    public static string UltTraitName(int weapon) => weapon switch
+    {
+        PistolUlt => "타겟 수", ScytheId => "타겟 수", SeekerId => "영혼 구슬", ShotgunId => "포격 횟수",
+        SniperId => "광선 굵기", DualId => "지속 시간", FlameId => "회오리 지속", ChainId => "뇌운 지속", GrenadeId => "폭격 줄",
+        _ => "특성",
+    };
+
+    public static string UltTraitStep(int weapon) => weapon switch
+    {
+        PistolUlt => "+2마리", ScytheId => "+2마리", SeekerId => "+1개", ShotgunId => "+1회", SniperId => "+30%",
+        DualId => "+0.4초", FlameId => "+1.5초", ChainId => "+0.8초", GrenadeId => "+2줄",
+        _ => "",
+    };
+
+    // 조준할 수 있는 적 수: 권총 · 낫은 강화로 늘어남
+    public int MaxTargets(int baseCount)
+    {
+        int w = WeaponActive ? CurrentWeapon : PistolUlt;
+        return w == PistolUlt || w == ScytheId ? baseCount + 2 * UltTrait(w) : baseCount;
+    }
+
+    public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);
+
+    // 조준 화면 (WeaponAim)이 쓰는 값들
+    public Transform PlayerTransform => player.transform;
+    public Vector3 MouseWorldPos => MouseWorld();
+    public Vector2 AimDirection => AimDir();
+    public Vector3 PlayerMuzzle => player.MuzzlePosition;
+    public static Color ColorOf(int id) => WeaponColor(id);
+    // 타겟팅 중 화면 색 (무기 색)
+    public Color AimTint => WeaponActive ? WeaponColor(CurrentWeapon) : new Color(1f, 0.9f, 0.6f);
+
+    WeaponAim aim;
+    public void BeginAim()
+    {
+        if (!WeaponActive) return;
+        if (aim == null) aim = new WeaponAim(this);
+        aim.Begin(CurrentWeapon);
+    }
+    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && WeaponActive) aim.Update(targets, charge); }
+    public void EndAim() { if (aim != null) aim.End(); }
+    public GameObject MarkTarget(Transform target) => aim != null && WeaponActive ? aim.MarkTarget(target) : null;
 
     // ================================================================= evolution
     // order: 한 번에 여러 개를 진화할 때 알림 글자를 위로 쌓는 순서
@@ -1130,6 +1204,8 @@ public class SpecialAbilities : MonoBehaviour
     // 스킬 키: 쿨타임 중이면 경고, 조준형은 누르고 있는 동안 미리보기 후 떼면 사용
     void HandleSkillKey(int id, KeyCode key)
     {
+        // 상점 제단 앞에서는 Space가 상점 열기
+        if (key == KeyCode.Space && ShopStall.PlayerNear) return;
         if (Input.GetKeyDown(key))
         {
             float left = CooldownUntil(id) - Time.time;
@@ -2467,19 +2543,23 @@ public class SoulSwarm : MonoBehaviour
     public float damage;
     public Color color = Color.white;
     public float life = 4f;
-    const int Count = 5;
-    readonly FxAnim[] orbs = new FxAnim[Count];
-    readonly Transform[] chasing = new Transform[Count];
-    readonly float[] dashT = new float[Count];
+    public int count = 5;
+    int Count => count;
+    FxAnim[] orbs;
+    Transform[] chasing;
+    float[] dashT;
     float age, next;
     int turn;
 
     void Start()
     {
+        orbs = new FxAnim[Count];
+        chasing = new Transform[Count];
+        dashT = new float[Count];
         for (int i = 0; i < Count; i++) orbs[i] = Fx.Play("fx_orb", owner.position, 1.1f, color, 12f, 0f, 18, true, life);
     }
 
-    Vector3 Home(int i) => owner.position + (Vector3)(Quaternion.Euler(0, 0, age * 200f + i * 72f) * Vector2.right * 2.2f);
+    Vector3 Home(int i) => owner.position + (Vector3)(Quaternion.Euler(0, 0, age * 200f + i * 360f / Count) * Vector2.right * 2.2f);
 
     Transform PickTarget()
     {
