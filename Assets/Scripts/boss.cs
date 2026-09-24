@@ -98,7 +98,7 @@ public class bosss : MonoBehaviour
             Fx.Play("fx_puddle", clone.transform.position, 3f, new Color(0.55f, 1f, 0.35f), 12f);
         }
         Fx.Play("fx_shock", transform.position, 9f, new Color(0.55f, 1f, 0.35f), 16f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? "킹 슬라임이 둘로 갈라졌다!" : "슬라임이 또 갈라진다!", 2f);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? Loc.T("킹 슬라임이 둘로 갈라졌다!") : Loc.T("슬라임이 또 갈라진다!"), 2f);
     }
     public bool IsDead => isDead;
 

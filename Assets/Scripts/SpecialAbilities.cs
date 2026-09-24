@@ -245,7 +245,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!UsesAmmo(id)) return null;
         WeaponAmmo a = Ammo(id);
-        if (a.Reloading) return "장전 중" + new string('.', (int)(Time.unscaledTime / 0.3f) % 3 + 1);
+        if (a.Reloading) return Loc.T("장전 중") + new string('.', (int)(Time.unscaledTime / 0.3f) % 3 + 1);
         return a.ammo + " / " + MagSize(id);
     }
 
@@ -340,15 +340,15 @@ public class SpecialAbilities : MonoBehaviour
     // 우클릭 타겟팅 스킬: 들고 있는 무기마다 전혀 다른 형식의 필살기
     static string VolleyName(int id) => id switch
     {
-        ShotgunId => "지옥불 포격",
-        SniperId => "관통 레일건",
-        DualId => "총알 폭풍",
-        FlameId => "화염 회오리",
-        SeekerId => "영혼 떼",
-        ChainId => "뇌운",
-        ScytheId => "죽음의 춤",
-        GrenadeId => "용암 융단폭격",
-        _ => "일제 사격",
+        ShotgunId => Loc.T("지옥불 포격"),
+        SniperId => Loc.T("관통 레일건"),
+        DualId => Loc.T("총알 폭풍"),
+        FlameId => Loc.T("화염 회오리"),
+        SeekerId => Loc.T("영혼 떼"),
+        ChainId => Loc.T("뇌운"),
+        ScytheId => Loc.T("죽음의 춤"),
+        GrenadeId => Loc.T("용암 융단폭격"),
+        _ => Loc.T("일제 사격"),
     };
 
     public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
@@ -401,8 +401,8 @@ public class SpecialAbilities : MonoBehaviour
                     for (float t = 0f; t < 0.5f; t += Time.deltaTime)
                     {
                         Vector3 m = player.MuzzlePosition;
-                        if (aim != null) Destroy(aim.gameObject);
-                        aim = Fx.Beam(m, m + (Vector3)(AimDir() * 45f), 0.2f + t * 0.6f, new Color(c.r, c.g, c.b, 0.6f), 0.1f);
+                        // 충전 중에는 화면 끝까지 닿는 점선 조준선
+                        fx.SetLine(aimLine, m, m + (Vector3)(AimDir() * ScreenEdgeDistance(m, AimDir())), new Color(c.r, c.g, c.b, 0.5f + t), 0.1f + t * 0.3f);
                         Fx.Play("fx_orb", m, 0.8f + t * 2f, c, 20f);
                         yield return null;
                     }
@@ -659,19 +659,19 @@ public class SpecialAbilities : MonoBehaviour
         return true;
     }
 
-    public static string UltName(int weapon) => weapon == PistolUlt ? "일제 사격" : VolleyName(weapon);
+    public static string UltName(int weapon) => weapon == PistolUlt ? Loc.T("일제 사격") : VolleyName(weapon);
 
     public static string UltTraitName(int weapon) => weapon switch
     {
-        PistolUlt => "타겟 수", ScytheId => "타겟 수", SeekerId => "영혼 구슬", ShotgunId => "포격 횟수",
-        SniperId => "광선 굵기", DualId => "지속 시간", FlameId => "회오리 지속", ChainId => "뇌운 지속", GrenadeId => "폭격 줄",
-        _ => "특성",
+        PistolUlt => Loc.T("타겟 수"), ScytheId => Loc.T("타겟 수"), SeekerId => Loc.T("영혼 구슬"), ShotgunId => Loc.T("포격 횟수"),
+        SniperId => Loc.T("광선 굵기"), DualId => Loc.T("지속 시간"), FlameId => Loc.T("회오리 지속"), ChainId => Loc.T("뇌운 지속"), GrenadeId => Loc.T("폭격 줄"),
+        _ => Loc.T("특성"),
     };
 
     public static string UltTraitStep(int weapon) => weapon switch
     {
-        PistolUlt => "+2마리", ScytheId => "+2마리", SeekerId => "+1개", ShotgunId => "+1회", SniperId => "+30%",
-        DualId => "+0.4초", FlameId => "+1.5초", ChainId => "+0.8초", GrenadeId => "+2줄",
+        PistolUlt => Loc.T("+2마리"), ScytheId => Loc.T("+2마리"), SeekerId => Loc.T("+1개"), ShotgunId => Loc.T("+1회"), SniperId => "+30%",
+        DualId => Loc.T("+0.4초"), FlameId => Loc.T("+1.5초"), ChainId => Loc.T("+0.8초"), GrenadeId => Loc.T("+2줄"),
         _ => "",
     };
 
@@ -720,7 +720,7 @@ public class SpecialAbilities : MonoBehaviour
         {
             fx.Play("pulse", 0.9f, 0.9f);
             fx.Play("chime", 0.8f, 1.1f);
-            if (player != null) fx.FloatText(player.transform.position + Vector3.up * (1.4f * order), abilities[id].name + " 진화!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
+            if (player != null) fx.FloatText(player.transform.position + Vector3.up * (1.4f * order), Loc.T(abilities[id].name) + Loc.T(" 진화!"), new Color(1f, 0.85f, 0.4f), 6f, 0f);
         }
         if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
     }
@@ -728,26 +728,26 @@ public class SpecialAbilities : MonoBehaviour
     // 진화 효과 설명 (ID 순서)
     public static readonly string[] EvolveTexts =
     {
-        "사거리 +2, 부채꼴이 넓어지고 피해 320%. 맞은 적이 불탑니다.",
-        "충전 시간 0.8초. 완충 사격이 맞은 곳에서 폭발합니다.",
-        "두 총구에서 동시에 발사합니다 (탄약 소모는 그대로).",
-        "열이 40% 덜 오르고 불길 화상 피해가 강해집니다.",
-        "한 번에 유도탄 2발을 쏩니다.",
-        "번개가 7번 튀고, 튈 때 피해가 덜 줄어듭니다.",
-        "낫이 더 커지고 더 멀리 날아가며 피해 220%.",
-        "폭발 후 작은 용암탄 3개로 흩어집니다.",
-        "쿨타임 1.8초. 도착 지점에서 충격파가 터집니다.",
-        "장판이 더 넓고 6초 동안 지속됩니다. 쿨타임 9초.",
-        "적이 75% 느려지고 7초 동안 지속됩니다.",
-        "체력을 잃지 않고 12초 동안 지속됩니다.",
-        "영혼 3개부터 쓸 수 있고 폭발 범위가 넓어집니다.",
-        "해골 5마리를 부르고 쿨타임 10초.",
-        "분신이 5초 동안 남고 사라질 때 폭발합니다.",
-        "쿨타임 2초, 갈고리 피해 300%.",
-        "영혼이 5개로 늘고 피해가 강해집니다.",
-        "반격 범위와 피해가 크게 늘어납니다.",
-        "탄창의 마지막 두 발이 저주탄이 됩니다.",
-        "두 번 부활하고, 부활할 때 체력 50%로 일어납니다.",
+        Loc.T("사거리 +2, 부채꼴이 넓어지고 피해 320%. 맞은 적이 불탑니다."),
+        Loc.T("충전 시간 0.8초. 완충 사격이 맞은 곳에서 폭발합니다."),
+        Loc.T("두 총구에서 동시에 발사합니다 (탄약 소모는 그대로)."),
+        Loc.T("열이 40% 덜 오르고 불길 화상 피해가 강해집니다."),
+        Loc.T("한 번에 유도탄 2발을 쏩니다."),
+        Loc.T("번개가 7번 튀고, 튈 때 피해가 덜 줄어듭니다."),
+        Loc.T("낫이 더 커지고 더 멀리 날아가며 피해 220%."),
+        Loc.T("폭발 후 작은 용암탄 3개로 흩어집니다."),
+        Loc.T("쿨타임 1.8초. 도착 지점에서 충격파가 터집니다."),
+        Loc.T("장판이 더 넓고 6초 동안 지속됩니다. 쿨타임 9초."),
+        Loc.T("적이 75% 느려지고 7초 동안 지속됩니다."),
+        Loc.T("체력을 잃지 않고 12초 동안 지속됩니다."),
+        Loc.T("영혼 3개부터 쓸 수 있고 폭발 범위가 넓어집니다."),
+        Loc.T("해골 5마리를 부르고 쿨타임 10초."),
+        Loc.T("분신이 5초 동안 남고 사라질 때 폭발합니다."),
+        Loc.T("쿨타임 2초, 갈고리 피해 300%."),
+        Loc.T("영혼이 5개로 늘고 피해가 강해집니다."),
+        Loc.T("반격 범위와 피해가 크게 늘어납니다."),
+        Loc.T("탄창의 마지막 두 발이 저주탄이 됩니다."),
+        Loc.T("두 번 부활하고, 부활할 때 체력 50%로 일어납니다."),
     };
 
     // ================================================================= weapon upgrades (shop)
@@ -776,27 +776,27 @@ public class SpecialAbilities : MonoBehaviour
     // 무기별 특성 강화 이름과 한 단계 효과
     public static string TraitName(int id) => id switch
     {
-        ShotgunId => "사거리",
-        SniperId => "충전 속도",
-        DualId => "관통",
-        FlameId => "냉각",
-        SeekerId => "관통",
-        ChainId => "연쇄",
-        ScytheId => "낫 크기",
-        GrenadeId => "폭발 범위",
-        _ => "특성",
+        ShotgunId => Loc.T("사거리"),
+        SniperId => Loc.T("충전 속도"),
+        DualId => Loc.T("관통"),
+        FlameId => Loc.T("냉각"),
+        SeekerId => Loc.T("관통"),
+        ChainId => Loc.T("연쇄"),
+        ScytheId => Loc.T("낫 크기"),
+        GrenadeId => Loc.T("폭발 범위"),
+        _ => Loc.T("특성"),
     };
 
     public static string TraitStep(int id) => id switch
     {
-        ShotgunId => "사거리 +1",
-        SniperId => "충전 시간 -15%",
-        DualId => "관통 +1",
-        FlameId => "열 발생 -20%",
-        SeekerId => "관통 +1",
-        ChainId => "연쇄 +1",
-        ScytheId => "크기·거리 +15%",
-        GrenadeId => "범위 +0.6",
+        ShotgunId => Loc.T("사거리 +1"),
+        SniperId => Loc.T("충전 시간 -15%"),
+        DualId => Loc.T("관통 +1"),
+        FlameId => Loc.T("열 발생 -20%"),
+        SeekerId => Loc.T("관통 +1"),
+        ChainId => Loc.T("연쇄 +1"),
+        ScytheId => Loc.T("크기·거리 +15%"),
+        GrenadeId => Loc.T("범위 +0.6"),
         _ => "",
     };
 
@@ -825,7 +825,7 @@ public class SpecialAbilities : MonoBehaviour
                 flameWasFiring = false;
                 fx.StopLoop();
                 fx.Play("clank", 0.5f, 1.4f);
-                fx.FloatText(player.transform.position, WeaponActive ? abilities[CurrentWeapon].name : "기본 권총", new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
+                fx.FloatText(player.transform.position, WeaponActive ? Loc.T(abilities[CurrentWeapon].name) : Loc.T("기본 권총"), new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
             }
             UpdateWeaponReloads();
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
@@ -896,7 +896,7 @@ public class SpecialAbilities : MonoBehaviour
                 if (activeScythe == null)
                     fx.SetLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
                 if (down && activeScythe == null && !player.IsSkillUsing) FireScythe();
-                player.ammoTextOverride = activeScythe == null ? "낫 준비" : "낫 회수 중";
+                player.ammoTextOverride = activeScythe == null ? Loc.T("낫 준비") : Loc.T("낫 회수 중");
                 break;
             case GrenadeId:
                 {
@@ -942,13 +942,12 @@ public class SpecialAbilities : MonoBehaviour
         Color lineColor = sniperCharge < 0f ? new Color(0.5f, 0.95f, 1f, 0.35f)
             : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
             : new Color(0.5f, 0.95f, 1f, 0.4f + 0.5f * k);
-        // 마우스 거리와 상관없이 조준 방향으로 길게
-        fx.SetLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * SniperLineLength), lineColor, sniperCharge < 0f ? 0.08f : 0.08f + 0.1f * k);
-
+        // 발사 버튼을 누르고 있는 동안만, 화면 끝까지 닿는 점선 조준선
         if (sniperCharge < 0f) return;
+        fx.SetLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * ScreenEdgeDistance(muzzle, AimDir())), lineColor, 0.08f + 0.1f * k);
 
         sniperCharge = Mathf.Min(SniperChargeTime, sniperCharge + Time.deltaTime);
-        player.ammoTextOverride = full ? "완충!" : "충전 " + Mathf.RoundToInt(k * 100f) + "%";
+        player.ammoTextOverride = full ? Loc.T("완충!") : Loc.T("충전 ") + Mathf.RoundToInt(k * 100f) + "%";
         fx.StartLoop("hum", 0.5f, 0.7f + 0.9f * k);
 
         if (chargeGlow != null)
@@ -973,6 +972,21 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     const float SniperLineLength = 40f;
+
+    // 화면 가장자리까지의 거리 (조준선을 화면 끝까지 그릴 때)
+    float ScreenEdgeDistance(Vector3 from, Vector2 dir)
+    {
+        Camera cam = player.MainCamera;
+        if (cam == null) return SniperLineLength;
+        float h = cam.orthographicSize, w = h * cam.aspect;
+        Vector3 c = cam.transform.position;
+        float t = 500f;
+        if (dir.x > 0.0001f) t = Mathf.Min(t, (c.x + w - from.x) / dir.x);
+        else if (dir.x < -0.0001f) t = Mathf.Min(t, (c.x - w - from.x) / dir.x);
+        if (dir.y > 0.0001f) t = Mathf.Min(t, (c.y + h - from.y) / dir.y);
+        else if (dir.y < -0.0001f) t = Mathf.Min(t, (c.y - h - from.y) / dir.y);
+        return Mathf.Max(1f, t);
+    }
     float SniperChargeTime => (IsEvolved(SniperId) ? 0.8f : 1.2f) * (1f - 0.15f * Trait(SniperId));
 
     void CancelSniperCharge()
@@ -1092,7 +1106,7 @@ public class SpecialAbilities : MonoBehaviour
         {
             overheated = false;
             fx.Play("chime", 0.4f, 1.2f);
-            fx.FloatText(player.transform.position, "냉각 완료", new Color(0.5f, 0.95f, 1f));
+            fx.FloatText(player.transform.position, Loc.T("냉각 완료"), new Color(0.5f, 0.95f, 1f));
         }
         bool firing = held && !overheated && !player.IsSkillUsing;
 
@@ -1154,7 +1168,7 @@ public class SpecialAbilities : MonoBehaviour
                 overheated = true;
                 fx.StopLoop();
                 fx.Play("hiss", 0.9f);
-                fx.FloatText(player.transform.position, "과열!", new Color(1f, 0.35f, 0.25f), 6f);
+                fx.FloatText(player.transform.position, Loc.T("과열!"), new Color(1f, 0.35f, 0.25f), 6f);
             }
         }
         else if (!firing)
@@ -1162,7 +1176,7 @@ public class SpecialAbilities : MonoBehaviour
             // 쏘지 않을 때만 식음
             heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
         }
-        player.ammoTextOverride = overheated ? "과열!" : "열기 " + Mathf.RoundToInt(heat * 100f) + "%";
+        player.ammoTextOverride = overheated ? Loc.T("과열!") : Loc.T("열기 ") + Mathf.RoundToInt(heat * 100f) + "%";
     }
 
     void FireSeeker()
@@ -1241,7 +1255,7 @@ public class SpecialAbilities : MonoBehaviour
             if (left > 0f)
             {
                 fx.Play("buzz", 0.6f);
-                fx.FloatText(player.transform.position, abilities[id].name + " " + left.ToString("0.0") + "초", new Color(0.7f, 0.66f, 0.72f), 4f, 0.4f);
+                fx.FloatText(player.transform.position, Loc.T(abilities[id].name) + " " + left.ToString("0.0") + Loc.T("초"), new Color(0.7f, 0.66f, 0.72f), 4f, 0.4f);
                 return;
             }
             if (player.IsSkillUsing) return;
@@ -1309,19 +1323,19 @@ public class SpecialAbilities : MonoBehaviour
                 StartCoroutine(TimeWarp());
                 StartCooldown(id, 20f);
                 fx.Play("shimmer", 0.9f, 0.6f);
-                fx.FloatText(player.transform.position, "시간 왜곡!", new Color(0.55f, 0.85f, 1f), 5f, 0f);
+                fx.FloatText(player.transform.position, Loc.T("시간 왜곡!"), new Color(0.55f, 0.85f, 1f), 5f, 0f);
                 break;
             case PactId:
                 StartCoroutine(Pact());
                 StartCooldown(id, 25f);
                 fx.Play("pulse", 1f, 0.8f);
-                fx.FloatText(player.transform.position, "희생의 계약! 공격력 2배", new Color(1f, 0.3f, 0.3f), 5f, 0f);
+                fx.FloatText(player.transform.position, Loc.T("희생의 계약! 공격력 2배"), new Color(1f, 0.3f, 0.3f), 5f, 0f);
                 break;
             case SoulBurstId:
                 if (souls < SoulsNeeded)
                 {
                     fx.Play("buzz", 0.6f);
-                    fx.FloatText(player.transform.position, "영혼 부족 " + souls + "/" + SoulsNeeded, new Color(0.7f, 0.66f, 0.72f), 4.5f, 0.4f);
+                    fx.FloatText(player.transform.position, Loc.T("영혼 부족 ") + souls + "/" + SoulsNeeded, new Color(0.7f, 0.66f, 0.72f), 4.5f, 0.4f);
                     return;
                 }
                 Explode(player.transform.position, evo ? 10f : 7f, Damage * (1.5f + souls * 0.25f), 3f, new Color(0.6f, 0.95f, 1f, 0.9f));
@@ -1332,7 +1346,7 @@ public class SpecialAbilities : MonoBehaviour
                 SummonSkeletons(evo ? 5 : 3);
                 StartCooldown(id, evo ? 10f : 15f);
                 fx.Play("shimmer", 0.8f, 1.2f);
-                fx.FloatText(player.transform.position, "해골 소환!", new Color(0.6f, 0.95f, 1f), 4.5f, 0f);
+                fx.FloatText(player.transform.position, Loc.T("해골 소환!"), new Color(0.6f, 0.95f, 1f), 4.5f, 0f);
                 break;
             case MirrorId:
                 StartCoroutine(Mirror());
@@ -1375,7 +1389,7 @@ public class SpecialAbilities : MonoBehaviour
         if (IsLastBulletCursed(now) && !IsLastBulletCursed(lastBullets))
         {
             fx.Play("pulse", 0.6f, 1.6f);
-            fx.FloatText(player.transform.position, "저주탄 장전!", new Color(1f, 0.3f, 0.3f), 4.5f, 0f);
+            fx.FloatText(player.transform.position, Loc.T("저주탄 장전!"), new Color(1f, 0.3f, 0.3f), 4.5f, 0f);
         }
         lastBullets = now;
 
@@ -1478,7 +1492,7 @@ public class SpecialAbilities : MonoBehaviour
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
         if (pactAura != null) Destroy(pactAura);
-        fx.FloatText(player.transform.position, "계약 종료", new Color(0.7f, 0.66f, 0.72f), 4f, 0f);
+        fx.FloatText(player.transform.position, Loc.T("계약 종료"), new Color(0.7f, 0.66f, 0.72f), 4f, 0f);
     }
 
     IEnumerator Mirror()
@@ -1627,7 +1641,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!Has(ThornsId) || player == null) return;
         fx.Play("boom", 0.6f, 1.4f);
-        fx.FloatText(player.transform.position, "가시 반격!", new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
+        fx.FloatText(player.transform.position, Loc.T("가시 반격!"), new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
         bool evo = IsEvolved(ThornsId);
         Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
@@ -1641,7 +1655,7 @@ public class SpecialAbilities : MonoBehaviour
         fx.Play("chime", 1f, 0.7f);
         fx.Shake(0.4f, 0.3f);
         Flash(player.transform.position, 6f, new Color(1f, 0.9f, 0.5f, 0.8f), 0.6f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner("불사의 맹세가 발동했다!", 2f);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("불사의 맹세가 발동했다!"), 2f);
         return true;
     }
 
@@ -1669,7 +1683,7 @@ public class SpecialAbilities : MonoBehaviour
         if (souls == SoulsNeeded)
         {
             fx.Play("chime", 0.5f, 1.3f);
-            fx.FloatText(player.transform.position, "영혼 폭발 준비", new Color(0.55f, 0.95f, 1f), 4.5f, 0f);
+            fx.FloatText(player.transform.position, Loc.T("영혼 폭발 준비"), new Color(0.55f, 0.95f, 1f), 4.5f, 0f);
         }
     }
 
@@ -1791,9 +1805,9 @@ public class SpecialAbilities : MonoBehaviour
     {
         Canvas canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null) return;
-        weaponPanel = NewPanel(canvas, "WeaponSlot", "무기  [Q] 교체  [R] 장전");
-        skillPanel = NewPanel(canvas, "SkillSlot", "스킬");
-        passivePanel = NewPanel(canvas, "PassiveSlot", "패시브");
+        weaponPanel = NewPanel(canvas, "WeaponSlot", Loc.T("무기  [Q] 교체  [R] 장전"));
+        skillPanel = NewPanel(canvas, "SkillSlot", Loc.T("스킬"));
+        passivePanel = NewPanel(canvas, "PassiveSlot", Loc.T("패시브"));
         hud = weaponPanel.rect;
     }
 
@@ -1936,18 +1950,18 @@ public class SpecialAbilities : MonoBehaviour
             {
                 // 기본 권총: 권총 탄창과 장전 상태
                 bool inHand = !WeaponActive;
-                row.name.text = "기본 권총";
+                row.name.text = Loc.T("기본 권총");
                 if (player.reload > 0f)
                 {
                     fill = Mathf.Clamp01(player.reload / Mathf.Max(0.01f, player.reloadTime));
-                    info = "장전 중";
+                    info = Loc.T("장전 중");
                 }
                 else
                 {
                     fill = player.MaxBullet > 0 ? player.NowBullet / (float)player.MaxBullet : 1f;
                     info = player.NowBullet + "/" + player.MaxBullet;
                 }
-                if (inHand) info = "사용 중 · " + info;
+                if (inHand) info = Loc.T("사용 중 · ") + info;
                 row.name.color = inHand ? Color.white : new Color(0.96f, 0.83f, 0.47f);
                 row.info.text = info;
                 row.bar.fillAmount = fill;
@@ -1956,7 +1970,7 @@ public class SpecialAbilities : MonoBehaviour
             }
 
             SpecialDef def = abilities[row.id];
-            row.name.text = def.name + (IsEvolved(row.id) ? "+" : "");
+            row.name.text = Loc.T(def.name) + (IsEvolved(row.id) ? "+" : "");
             bool highlight = false;
             if (def.kind == SpecialKind.Weapon)
             {
@@ -1965,11 +1979,11 @@ public class SpecialAbilities : MonoBehaviour
                 if (row.id == FlameId)
                 {
                     fill = 1f - heat;
-                    info = overheated ? "과열" : "열기 " + Mathf.RoundToInt(heat * 100f) + "%";
+                    info = overheated ? Loc.T("과열") : Loc.T("열기 ") + Mathf.RoundToInt(heat * 100f) + "%";
                 }
                 else if (row.id == ScytheId)
                 {
-                    info = activeScythe == null ? "준비" : "회수 중";
+                    info = activeScythe == null ? Loc.T("준비") : Loc.T("회수 중");
                     fill = activeScythe == null ? 1f : 0f;
                 }
                 else
@@ -1978,7 +1992,7 @@ public class SpecialAbilities : MonoBehaviour
                     if (a.Reloading)
                     {
                         fill = 1f - (a.reloadEnd - Time.time) / BaseReload(row.id);
-                        info = "장전 중";
+                        info = Loc.T("장전 중");
                     }
                     else
                     {
@@ -1986,7 +2000,7 @@ public class SpecialAbilities : MonoBehaviour
                         info = a.ammo + "/" + MagSize(row.id);
                     }
                 }
-                if (inHand) info = "사용 중 · " + info;
+                if (inHand) info = Loc.T("사용 중 · ") + info;
                 row.bar.color = inHand ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.55f, 0.5f, 0.45f);
             }
             else if (def.kind == SpecialKind.Skill)
@@ -1996,8 +2010,8 @@ public class SpecialAbilities : MonoBehaviour
                 float left = CooldownUntil(row.id) - Time.time;
                 float length = cooldownLength.TryGetValue(row.id, out float l) ? l : 1f;
                 fill = left > 0f ? 1f - left / length : 1f;
-                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + "초" : "[" + key + "] 준비";
-                if (row.id == SoulBurstId) info += " · 영혼 " + souls;
+                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + Loc.T("초") : "[" + key + Loc.T("] 준비");
+                if (row.id == SoulBurstId) info += Loc.T(" · 영혼 ") + souls;
                 row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
             }
             else
@@ -2006,7 +2020,7 @@ public class SpecialAbilities : MonoBehaviour
                 if (row.id == UndyingId)
                 {
                     int left = UndyingMaxUses - undyingUses;
-                    info = left > 0 ? "부활 " + left : "사용함";
+                    info = left > 0 ? Loc.T("부활 ") + left : Loc.T("사용함");
                     fill = left > 0 ? 1f : 0f;
                 }
                 row.bar.color = new Color(0.6f, 0.85f, 1f);

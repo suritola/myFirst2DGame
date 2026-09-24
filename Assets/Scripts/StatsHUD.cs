@@ -29,7 +29,7 @@ public class StatsHUD : MonoBehaviour
     RectTransform panelRect;
     RectTransform arrowRect;
 
-    static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도" };
+    static readonly string[] Labels = { Loc.T("공격력"), Loc.T("방어력"), Loc.T("공격 속도"), Loc.T("재장전"), Loc.T("이동 속도") };
 
     PlayerController player;
     TextMeshProUGUI[] values;
@@ -80,8 +80,8 @@ public class StatsHUD : MonoBehaviour
         button.onClick.AddListener(Toggle);
 
         TooltipTrigger tip = tab.AddComponent<TooltipTrigger>();
-        tip.title = "능력치";
-        tip.body = "눌러서 능력치 창을 열고 닫습니다.";
+        tip.title = Loc.T("능력치");
+        tip.body = Loc.T("눌러서 능력치 창을 열고 닫습니다.");
 
         GameObject arrow = new GameObject("Arrow", typeof(RectTransform), typeof(Image));
         arrowRect = arrow.GetComponent<RectTransform>();
@@ -190,9 +190,9 @@ public class StatsHUD : MonoBehaviour
         values[1].text = (player.def * 100f).ToString("0") + "%";
 
         // 공격 속도: 초당 발사 수
-        values[2].text = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + "/초";
+        values[2].text = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");
 
-        values[3].text = player.reloadTime.ToString("0.0") + "초";
+        values[3].text = player.reloadTime.ToString("0.0") + Loc.T("초");
 
         // 이동 속도: 시작 속도 대비
         values[4].text = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");

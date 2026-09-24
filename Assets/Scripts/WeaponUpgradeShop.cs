@@ -65,7 +65,7 @@ public class WeaponUpgradeShop : MonoBehaviour
 
         // 상점 오른쪽 위 탭
         tab = NewButton(shopRoot, "WeaponUpgradeTab", new Vector2(430f, 330f), new Vector2(230f, 62f), style.headerSprite, OpenPanel);
-        tabText = Text((RectTransform)tab.transform, "무기 강화", 26f, Gold, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
+        tabText = Text((RectTransform)tab.transform, Loc.T("무기 강화"), 26f, Gold, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
         tab.SetActive(false);
 
         // 기본 상점 위를 덮는 창
@@ -80,13 +80,13 @@ public class WeaponUpgradeShop : MonoBehaviour
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = true;            // 아래 상점 버튼이 눌리지 않게
 
-        Text(pr, "무기 강화", 44f, Gold, new Vector2(0f, 330f), new Vector2(600f, 60f), TextAlignmentOptions.Center);
+        Text(pr, Loc.T("무기 강화"), 44f, Gold, new Vector2(0f, 330f), new Vector2(600f, 60f), TextAlignmentOptions.Center);
         coinText = Text(pr, "", 28f, Parch, new Vector2(0f, 272f), new Vector2(700f, 40f), TextAlignmentOptions.Center);
-        Text(pr, "무기마다 따로 강화됩니다 (권총 강화와 별개) · 피해 +15% · 연사 +10% · 탄창 +25% · 특성은 무기마다 다름", 20f, Dim,
+        Text(pr, Loc.T("무기마다 따로 강화됩니다 (권총 강화와 별개) · 피해 +15% · 연사 +10% · 탄창 +25% · 특성은 무기마다 다름"), 20f, Dim,
              new Vector2(0f, -340f), new Vector2(1000f, 32f), TextAlignmentOptions.Center);
 
         GameObject back = NewButton(pr, "Back", new Vector2(430f, 330f), new Vector2(230f, 62f), style.headerSprite, ClosePanel);
-        Text((RectTransform)back.transform, "상점으로", 24f, Parch, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
+        Text((RectTransform)back.transform, Loc.T("상점으로"), 24f, Parch, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
 
         GameObject rows = new GameObject("Rows", typeof(RectTransform));
         rowsRoot = rows.GetComponent<RectTransform>();
@@ -147,10 +147,10 @@ public class WeaponUpgradeShop : MonoBehaviour
             iimg.raycastTarget = false;
 
             // 이름 (진화하면 +)
-            Text(rowsRoot, def.name + (specials.IsEvolved(id) ? "+" : ""), 24f, Gold, new Vector2(-335f, y), new Vector2(200f, h), TextAlignmentOptions.Left);
+            Text(rowsRoot, Loc.T(def.name) + (specials.IsEvolved(id) ? "+" : ""), 24f, Gold, new Vector2(-335f, y), new Vector2(200f, h), TextAlignmentOptions.Left);
 
             // 강화 버튼 3개
-            string[] names = { "피해", "연사", "탄창", SpecialAbilities.TraitName(id) };
+            string[] names = { Loc.T("피해"), Loc.T("연사"), Loc.T("탄창"), SpecialAbilities.TraitName(id) };
             string[] steps = { "+15%", "+10%", "+25%", SpecialAbilities.TraitStep(id) };
             for (int stat = 0; stat < 4; stat++)
             {
@@ -162,9 +162,9 @@ public class WeaponUpgradeShop : MonoBehaviour
                 bool maxed = lv >= max || none;
                 GameObject b = NewButton(rowsRoot, "Upgrade", new Vector2(-130f + 190f * s, y), new Vector2(180f, h), style.headerSprite, () => Buy(id, s));
                 b.GetComponent<Button>().interactable = !maxed;
-                string label = none ? names[s] + "\n<color=#a39aa8>해당 없음</color>"
+                string label = none ? names[s] + Loc.T("\n<color=#a39aa8>해당 없음</color>")
                     : names[s] + "  Lv " + lv + "/" + max + "\n"
-                      + (maxed ? "<color=#a39aa8>최대</color>" : steps[s] + " · <color=#f5d478>" + Price(s, lv) + "</color>");
+                      + (maxed ? Loc.T("<color=#a39aa8>최대</color>") : steps[s] + " · <color=#f5d478>" + Price(s, lv) + "</color>");
                 Text((RectTransform)b.transform, label, 20f, maxed ? Dim : Parch, Vector2.zero, new Vector2(166f, h - 8f), TextAlignmentOptions.Center);
             }
         }
@@ -197,7 +197,7 @@ public class WeaponUpgradeShop : MonoBehaviour
         int coins = coin != null ? coin.coins : 0;
         bool warn = Time.unscaledTime < warnUntil;
         coinText.color = warn ? Warn : Parch;
-        coinText.text = warn ? "코인이 부족합니다 (" + coins + ")" : "코인 : " + coins;
+        coinText.text = warn ? Loc.T("코인이 부족합니다 (") + coins + ")" : Loc.T("코인 : ") + coins;
     }
 
     // ================================================================= helpers

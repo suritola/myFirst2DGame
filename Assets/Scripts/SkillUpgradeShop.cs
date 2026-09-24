@@ -59,7 +59,7 @@ public class SkillUpgradeShop : MonoBehaviour
 
         // 상점 왼쪽 위 탭 (오른쪽 위는 무기 강화)
         tab = NewButton(shopRoot, "SkillUpgradeTab", new Vector2(-430f, 330f), new Vector2(230f, 62f), style.headerSprite, OpenPanel);
-        tabText = Text((RectTransform)tab.transform, "스킬 강화", 26f, Gold, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
+        tabText = Text((RectTransform)tab.transform, Loc.T("스킬 강화"), 26f, Gold, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
         tab.SetActive(false);
 
         panel = new GameObject("SkillUpgradePanel", typeof(RectTransform), typeof(Image));
@@ -73,13 +73,13 @@ public class SkillUpgradeShop : MonoBehaviour
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = true;
 
-        Text(pr, "스킬 강화", 44f, Gold, new Vector2(0f, 330f), new Vector2(600f, 60f), TextAlignmentOptions.Center);
+        Text(pr, Loc.T("스킬 강화"), 44f, Gold, new Vector2(0f, 330f), new Vector2(600f, 60f), TextAlignmentOptions.Center);
         coinText = Text(pr, "", 28f, Parch, new Vector2(0f, 272f), new Vector2(700f, 40f), TextAlignmentOptions.Center);
-        Text(pr, "우클릭 필살기를 무기마다 따로 강화합니다 · 위력 +20% · 특성은 무기마다 다름", 20f, Dim,
+        Text(pr, Loc.T("우클릭 필살기를 무기마다 따로 강화합니다 · 위력 +20% · 특성은 무기마다 다름"), 20f, Dim,
              new Vector2(0f, -340f), new Vector2(1000f, 32f), TextAlignmentOptions.Center);
 
         GameObject back = NewButton(pr, "Back", new Vector2(-430f, 330f), new Vector2(230f, 62f), style.headerSprite, ClosePanel);
-        Text((RectTransform)back.transform, "상점으로", 24f, Parch, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
+        Text((RectTransform)back.transform, Loc.T("상점으로"), 24f, Parch, Vector2.zero, new Vector2(210f, 50f), TextAlignmentOptions.Center);
 
         GameObject rows = new GameObject("Rows", typeof(RectTransform));
         rowsRoot = rows.GetComponent<RectTransform>();
@@ -141,11 +141,11 @@ public class SkillUpgradeShop : MonoBehaviour
             iimg.preserveAspect = true;
             iimg.raycastTarget = false;
 
-            string weaponName = id == SpecialAbilities.PistolUlt ? "기본 권총" : specials.abilities[id].name;
+            string weaponName = id == SpecialAbilities.PistolUlt ? Loc.T("기본 권총") : Loc.T(specials.abilities[id].name);
             Text(rowsRoot, weaponName + "\n<color=#f5d478><size=80%>" + SpecialAbilities.UltName(id) + "</size></color>", 24f, Parch,
                  new Vector2(-300f, y), new Vector2(260f, h), TextAlignmentOptions.Left);
 
-            string[] names = { "위력", SpecialAbilities.UltTraitName(id) };
+            string[] names = { Loc.T("위력"), SpecialAbilities.UltTraitName(id) };
             string[] steps = { "+20%", SpecialAbilities.UltTraitStep(id) };
             for (int stat = 0; stat < 2; stat++)
             {
@@ -156,7 +156,7 @@ public class SkillUpgradeShop : MonoBehaviour
                 GameObject b = NewButton(rowsRoot, "Upgrade", new Vector2(100f + 290f * s, y), new Vector2(270f, h), style.headerSprite, () => Buy(id, s));
                 b.GetComponent<Button>().interactable = !maxed;
                 string label = names[s] + "  Lv " + lv + "/" + max + "\n"
-                    + (maxed ? "<color=#a39aa8>최대</color>" : steps[s] + " · <color=#f5d478>" + Price(s, lv) + " 코인</color>");
+                    + (maxed ? Loc.T("<color=#a39aa8>최대</color>") : steps[s] + " · <color=#f5d478>" + Price(s, lv) + Loc.T(" 코인</color>"));
                 Text((RectTransform)b.transform, label, 21f, maxed ? Dim : Parch, Vector2.zero, new Vector2(250f, h - 8f), TextAlignmentOptions.Center);
             }
         }
@@ -186,7 +186,7 @@ public class SkillUpgradeShop : MonoBehaviour
         int coins = coin != null ? coin.coins : 0;
         bool warn = Time.unscaledTime < warnUntil;
         coinText.color = warn ? Warn : Parch;
-        coinText.text = warn ? "코인이 부족합니다 (" + coins + ")" : "코인 : " + coins;
+        coinText.text = warn ? Loc.T("코인이 부족합니다 (") + coins + ")" : Loc.T("코인 : ") + coins;
     }
 
     // ================================================================= helpers

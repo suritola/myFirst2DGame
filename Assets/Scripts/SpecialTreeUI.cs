@@ -83,14 +83,14 @@ public class SpecialTreeUI : MonoBehaviour
 
         // 뿌리
         Vector2 rootPos = new Vector2(0f, 255f);
-        Node(root, rootPos, 104f, rootIcon, "지옥의 문", -1);
+        Node(root, rootPos, 104f, rootIcon, Loc.T("지옥의 문"), -1);
 
         // 갈래 (x = 줄기 위치, 두 열의 x)
         var branches = new[]
         {
-            (kind: SpecialKind.Weapon, name: "무기  [Q] 교체", x: -630f, cols: new[] { -760f, -500f }),
-            (kind: SpecialKind.Passive, name: "패시브  항상 적용", x: 0f, cols: new[] { -130f, 130f }),
-            (kind: SpecialKind.Skill, name: "스킬  [E] 사용", x: 630f, cols: new[] { 500f, 760f }),
+            (kind: SpecialKind.Weapon, name: Loc.T("무기  [Q] 교체"), x: -630f, cols: new[] { -760f, -500f }),
+            (kind: SpecialKind.Passive, name: Loc.T("패시브  항상 적용"), x: 0f, cols: new[] { -130f, 130f }),
+            (kind: SpecialKind.Skill, name: Loc.T("스킬  [E] 사용"), x: 630f, cols: new[] { 500f, 760f }),
         };
         float[] rows = { 60f, -55f, -170f, -285f };
         const float headerY = 160f;
@@ -117,7 +117,7 @@ public class SpecialTreeUI : MonoBehaviour
                 float x = br.cols[n % 2];
                 Line(root, new Vector2(br.x, y), new Vector2(x, y));
                 SpecialDef def = specials.abilities[ids[n]];
-                Node(root, new Vector2(x, y), 88f, def.icon, def.name, ids[n]);
+                Node(root, new Vector2(x, y), 88f, def.icon, Loc.T(def.name), ids[n]);
             }
         }
 
@@ -195,8 +195,8 @@ public class SpecialTreeUI : MonoBehaviour
         b.onClick.AddListener(() => Toggle(id));
 
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
-        tip.title = def.name + "  · " + KindName(def.kind);
-        tip.body = def.description;
+        tip.title = Loc.T(def.name) + "  · " + KindName(def.kind);
+        tip.body = Loc.T(def.description);
 
         // 노드 안쪽 아래의 작은 배지 (진화 가능 / 진화 완료) - 위아래 노드의 이름과 겹치지 않게 틀 안에 둠
         GameObject badge = new GameObject("Badge", typeof(RectTransform), typeof(Image));
@@ -291,7 +291,7 @@ public class SpecialTreeUI : MonoBehaviour
         ccb.highlightedColor = new Color(1f, 0.9f, 0.62f);
         close.colors = ccb;
         close.onClick.AddListener(() => onCancel?.Invoke());
-        Text(crt, "닫기", 24f, Parch, Vector2.zero, new Vector2(150f, 50f), TextAlignmentOptions.Center);
+        Text(crt, Loc.T("닫기"), 24f, Parch, Vector2.zero, new Vector2(150f, 50f), TextAlignmentOptions.Center);
         closeButton.SetActive(false);
     }
 
@@ -314,15 +314,15 @@ public class SpecialTreeUI : MonoBehaviour
         if (picked.Contains(id))
         {
             picked.Remove(id);
-            note = "선택을 취소했습니다.";
+            note = Loc.T("선택을 취소했습니다.");
         }
         else if (IsMaxed(id))
         {
-            note = "이미 진화한 능력입니다.";
+            note = Loc.T("이미 진화한 능력입니다.");
         }
         else if (upgradeMode && !specials.Has(id) && specials.abilities[id].kind == SpecialKind.Skill && SkillSlotsFull())
         {
-            note = "스킬 칸(E · F · Space)이 가득 찼습니다. 가진 스킬을 진화시켜 보세요.";
+            note = Loc.T("스킬 칸(E · F · Space)이 가득 찼습니다. 가진 스킬을 진화시켜 보세요.");
         }
         else if (picked.Count < pointsNow)
         {
@@ -330,7 +330,7 @@ public class SpecialTreeUI : MonoBehaviour
         }
         else
         {
-            note = "포인트를 모두 썼습니다. 다른 능력을 먼저 취소하세요.";
+            note = Loc.T("포인트를 모두 썼습니다. 다른 능력을 먼저 취소하세요.");
         }
         View(id, note);
     }
@@ -342,11 +342,11 @@ public class SpecialTreeUI : MonoBehaviour
         {
             if (nodeFrames[i] == null) continue;
             nodeFrames[i].color = picked.Contains(i) ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : Color.white;
-            nodeTags[i].text = IsMaxed(i) ? "진화 완료" : IsOwned(i) ? (picked.Contains(i) ? "진화!" : "진화 가능") : "";
+            nodeTags[i].text = IsMaxed(i) ? Loc.T("진화 완료") : IsOwned(i) ? (picked.Contains(i) ? Loc.T("진화!") : Loc.T("진화 가능")) : "";
             nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
             nodeTags[i].color = picked.Contains(i) ? Selected : Owned;
             nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
-                ? "진화: " + SpecialAbilities.EvolveTexts[i]
+                ? Loc.T("진화: ") + SpecialAbilities.EvolveTexts[i]
                 : specials.abilities[i].description;
         }
 
@@ -355,33 +355,33 @@ public class SpecialTreeUI : MonoBehaviour
         confirm.interactable = ready;
         confirmText.color = ready ? Gold : new Color(0.6f, 0.56f, 0.62f);
         confirmText.text = upgradeMode
-            ? (ready ? "강화 완료" : "포인트 " + left)
-            : (ready ? "선택 완료" : "남은 포인트 " + left);
+            ? (ready ? Loc.T("강화 완료") : Loc.T("포인트 ") + left)
+            : (ready ? Loc.T("선택 완료") : Loc.T("남은 포인트 ") + left);
 
         if (id < 0)
         {
             if (upgradeMode)
             {
-                detailName.text = "특수 능력 포인트 " + pointsNow;
-                detailKind.text = "새 능력을 배우거나 가진 능력을 진화";
-                detailText.text = "파란 테두리는 이미 가진 능력입니다. 한 번 더 고르면 진화해서 더 강해집니다. 남은 포인트는 아껴 두었다가 나중에 써도 됩니다.";
+                detailName.text = Loc.T("특수 능력 포인트 ") + pointsNow;
+                detailKind.text = Loc.T("새 능력을 배우거나 가진 능력을 진화");
+                detailText.text = Loc.T("파란 테두리는 이미 가진 능력입니다. 한 번 더 고르면 진화해서 더 강해집니다. 남은 포인트는 아껴 두었다가 나중에 써도 됩니다.");
             }
             else
             {
-                detailName.text = "능력 " + pointsNow + "개를 고르세요";
-                detailKind.text = "포인트 " + pointsNow + "개 · 노드를 눌러 선택";
-                detailText.text = "무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.";
+                detailName.text = Loc.T("능력 ") + pointsNow + Loc.T("개를 고르세요");
+                detailKind.text = Loc.T("포인트 ") + pointsNow + Loc.T("개 · 노드를 눌러 선택");
+                detailText.text = Loc.T("무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.");
             }
             return;
         }
 
         SpecialDef def = specials.abilities[id];
         bool evolving = IsOwned(id) && !IsMaxed(id);
-        detailName.text = def.name + (evolving ? " → 진화" : "");
-        detailKind.text = KindName(def.kind) + (picked.Contains(id) ? "  (선택됨)" : IsMaxed(id) ? "  (진화 완료)" : "");
-        string body = evolving || IsMaxed(id) ? "<color=#9fd8ff>진화</color>  " + SpecialAbilities.EvolveTexts[id] : def.description;
+        detailName.text = Loc.T(def.name) + (evolving ? Loc.T(" → 진화") : "");
+        detailKind.text = KindName(def.kind) + (picked.Contains(id) ? Loc.T("  (선택됨)") : IsMaxed(id) ? Loc.T("  (진화 완료)") : "");
+        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + SpecialAbilities.EvolveTexts[id] : Loc.T(def.description);
         detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
     }
 
-    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? "무기 · Q로 교체" : k == SpecialKind.Skill ? "스킬 · E/F/Space" : "패시브 · 항상 적용";
+    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? Loc.T("무기 · Q로 교체") : k == SpecialKind.Skill ? Loc.T("스킬 · E/F/Space") : Loc.T("패시브 · 항상 적용");
 }

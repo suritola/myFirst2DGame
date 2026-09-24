@@ -84,7 +84,7 @@ public class ShopStall : MonoBehaviour
             sr.color = left < 3f && Mathf.PingPong(Time.time * 6f, 1f) < 0.5f ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
         }
         if (glow != null) glow.transform.localScale = Vector3.one * (0.45f + Mathf.Sin(Time.time * 4f) * 0.05f);
-        label.text = "상점  " + Mathf.CeilToInt(left);
+        label.text = Loc.T("상점  ") + Mathf.CeilToInt(left);
 
         // 가까이 오면 안내가 나타나고, Space로 상점 열기
         PlayerController p = Hostile.Player;
@@ -132,7 +132,7 @@ public class ShopStall : MonoBehaviour
             promptText.font = shop.priceTextInput.font;
             promptText.fontSharedMaterial = shop.priceTextInput.fontSharedMaterial;
         }
-        promptText.text = "상점 열기";
+        promptText.text = Loc.T("상점 열기");
         promptText.fontSize = 5f;
         promptText.color = new Color(0.96f, 0.83f, 0.47f);
         promptText.alignment = TextAlignmentOptions.Center;

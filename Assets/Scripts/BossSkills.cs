@@ -40,7 +40,7 @@ public class BossSkills : MonoBehaviour
         if (boss.Enraged && Time.time >= nextSpecial)
         {
             nextSpecial = Time.time + 16f;
-            string name = kind == 0 ? "리치 왕이 망자의 의식을 시작한다!" : kind == 1 ? "지옥의 군주가 십자 불길을 내뿜는다!" : "킹 슬라임이 미친 듯이 뛰어오른다!";
+            string name = kind == 0 ? Loc.T("리치 왕이 망자의 의식을 시작한다!") : kind == 1 ? Loc.T("지옥의 군주가 십자 불길을 내뿜는다!") : Loc.T("킹 슬라임이 미친 듯이 뛰어오른다!");
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
             StartCoroutine(Run(kind == 0 ? DeathVortex() : kind == 1 ? HellCross() : SlimeFrenzy()));
             return;

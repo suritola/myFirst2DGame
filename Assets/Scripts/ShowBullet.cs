@@ -31,7 +31,7 @@ public class ShowBullet : MonoBehaviour
         {
             // 0.3초마다 점이 하나씩 늘어나는 장전 표시
             order = (int)(Time.unscaledTime / 0.3f) % 3 + 1;
-            TextInput.text = "장전 중" + new string('.', order);
+            TextInput.text = Loc.T("장전 중") + new string('.', order);
         }
 
     }

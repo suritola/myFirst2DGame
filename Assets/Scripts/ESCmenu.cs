@@ -27,6 +27,8 @@ public class ESCmenu : MonoBehaviour
         bool skillUsing = player != null && player.IsSkillUsing;
         if (Input.GetKeyDown(KeyCode.Escape) && (!skillUsing || isEscOpen))
         {
+            // 설정 창이 열려 있으면 먼저 닫음
+            if (SettingsUI.IsOpen) { SettingsUI.Close(); return; }
             if (isShopOpen)
             {
                 shop.isShopOpen = false;

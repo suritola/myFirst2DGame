@@ -69,7 +69,8 @@ public class TooltipUI : MonoBehaviour
 
     public static void Show(string title, string body)
     {
-        if (Instance != null) Instance.ShowInternal(title, body);
+        // 씬에 적힌 툴팁 문장도 현재 언어로
+        if (Instance != null) Instance.ShowInternal(Loc.T(title), Loc.T(body));
     }
 
     public static void Hide()

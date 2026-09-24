@@ -100,7 +100,7 @@ public class StageManager : MonoBehaviour
                 upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
                 upgradeGlowImage.color = new Color(1f, 0.72f, 0.3f, 0.3f + 0.45f * pulse);
                 upgradeText.color = Color.Lerp(Gold, Color.white, pulse);
-                upgradeText.text = "특수 강화 [" + upgradeKey + "]   포인트 " + specialPoints;
+                upgradeText.text = Loc.T("특수 강화 [") + upgradeKey + Loc.T("]   포인트 ") + specialPoints;
             }
         }
         if (show && Input.GetKeyDown(upgradeKey)) OpenUpgrade();
@@ -109,13 +109,13 @@ public class StageManager : MonoBehaviour
     // ================================================================= 특수 능력 포인트
     void OnMidBossSpawned()
     {
-        ShowBanner("중간 보스 등장!\n쓰러뜨리면 특수 능력 포인트 +1", 3f);
+        ShowBanner(Loc.T("중간 보스 등장!\n쓰러뜨리면 특수 능력 포인트 +1"), 3f);
     }
 
     void OnMidBossDefeated()
     {
         specialPoints++;
-        ShowBanner("특수 능력 포인트 +1!\n[" + upgradeKey + "] 또는 아래 버튼으로 강화", 3f);
+        ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + upgradeKey + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
     }
 
     public void OpenUpgrade()
@@ -226,18 +226,18 @@ public class StageManager : MonoBehaviour
         if (stage == 0)
         {
             if (portal != null) portal.SetActive(true);
-            ShowBanner("신전 문이 열렸다!\n문으로 들어가세요", 3f);
+            ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
             StartCoroutine(PortalCountdown());
         }
         else if (stage == 1)
         {
             if (portal != null) portal.SetActive(true);
-            ShowBanner("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다", 3.5f);
+            ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
             StartCoroutine(PortalCountdown());
         }
         else
         {
-            ShowBanner("킹 슬라임을 쓰러뜨렸다!\n모든 스테이지 클리어!", 6f);
+            ShowBanner(Loc.T("킹 슬라임을 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f);
         }
     }
 
@@ -270,7 +270,7 @@ public class StageManager : MonoBehaviour
 
         Time.timeScale = 1f;
         yield return Fade(1f, 0f, 0.8f);
-        ShowBanner("3장 · 초원\n특수 능력 포인트 +2", 3f);
+        ShowBanner(Loc.T("3장 · 초원\n특수 능력 포인트 +2"), 3f);
         transitioning = false;
     }
 
@@ -307,7 +307,7 @@ public class StageManager : MonoBehaviour
 
         Time.timeScale = 1f;
         yield return Fade(1f, 0f, 0.8f);
-        ShowBanner("2장 · 불타는 지옥", 2.5f);
+        ShowBanner(Loc.T("2장 · 불타는 지옥"), 2.5f);
         transitioning = false;
     }
 
@@ -329,8 +329,8 @@ public class StageManager : MonoBehaviour
 
             countdownText.gameObject.SetActive(true);
             countdownText.text = urgent
-                ? "지옥의 문이 당신을 끌어당긴다!  " + Mathf.CeilToInt(left)
-                : "신전 문으로 들어가세요  " + Mathf.CeilToInt(left) + "초";
+                ? Loc.T("지옥의 문이 당신을 끌어당긴다!  ") + Mathf.CeilToInt(left)
+                : Loc.T("신전 문으로 들어가세요  ") + Mathf.CeilToInt(left) + Loc.T("초");
             countdownText.color = urgent ? Color.Lerp(new Color(1f, 0.35f, 0.3f), Color.white, Mathf.PingPong(Time.unscaledTime * 4f, 1f)) : Gold;
 
             // 플레이어 → 문 안내선

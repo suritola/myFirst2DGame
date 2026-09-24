@@ -105,7 +105,7 @@ public class Shop : MonoBehaviour
             if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
         }
         ShopStall.Spawn(this, at);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner("떠돌이 상점이 나타났다!\n10초 안에 다가가 [Space]", 2.2f);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [Space]"), 2.2f);
     }
 
     // 제단에 다가갔을 때 (열렸으면 true)
@@ -277,7 +277,7 @@ public class Shop : MonoBehaviour
 
         for (int countdown = 1; countdown > 0; countdown--)
         {
-            if (pauseText != null) pauseText.text = "일시정지 " + countdown + "초";
+            if (pauseText != null) pauseText.text = Loc.T("일시정지 ") + countdown + Loc.T("초");
 
             // Time.timeScale = 0이어도 시간이 흐름
             yield return new WaitForSecondsRealtime(1f);
@@ -298,7 +298,7 @@ public class Shop : MonoBehaviour
     // 상점 텍스트 갱신
     // =====================================
 
-    string PriceText(int price, bool maxed) => maxed ? "최대" : "구매\n" + price + " 코인";
+    string PriceText(int price, bool maxed) => maxed ? Loc.T("최대") : Loc.T("구매\n") + price + Loc.T(" 코인");
 
     static string PerSecond(float interval) => (1f / interval).ToString("0.0");
 
@@ -309,21 +309,21 @@ public class Shop : MonoBehaviour
         coins = coind.coins;
         moveSpeed = playerControllerd.speed;
         showedSpeed = 1f / ShootSpeed;
-        if (mycoins != null) mycoins.text = "코인 : " + coins;
+        if (mycoins != null) mycoins.text = Loc.T("코인 : ") + coins;
 
 
         // 공격력
         if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);
         if (statTextInput != null)
         {
-            statTextInput.text = "총알 공격력\n" + damage.ToString("0.##") + " -> " + (damage + damageStep).ToString("0.##");
+            statTextInput.text = Loc.T("총알 공격력\n") + damage.ToString("0.##") + " -> " + (damage + damageStep).ToString("0.##");
 
             // 멀티샷 중이면 실제 한 발당 피해도 함께 표시
             int shots = playerControllerd.multiShot;
             if (shots > 1)
             {
                 float rate = playerControllerd.MultiShotDamageRate(shots);
-                statTextInput.text += "  (" + shots + "발, 발당 " + (damage * rate).ToString("0.##")
+                statTextInput.text += "  (" + shots + Loc.T("발, 발당 ") + (damage * rate).ToString("0.##")
                     + " -> " + ((damage + damageStep) * rate).ToString("0.##") + ")";
             }
         }
@@ -333,8 +333,8 @@ public class Shop : MonoBehaviour
         if (statTextInput2 != null)
         {
             statTextInput2.text = ShootSpeedMaxed
-                ? "공격 속도\n초당 " + PerSecond(ShootSpeed) + "발 (최대)"
-                : "공격 속도 (초당)\n" + PerSecond(ShootSpeed) + " -> " + PerSecond(Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier)) + "발";
+                ? Loc.T("공격 속도\n초당 ") + PerSecond(ShootSpeed) + Loc.T("발 (최대)")
+                : Loc.T("공격 속도 (초당)\n") + PerSecond(ShootSpeed) + " -> " + PerSecond(Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier)) + Loc.T("발");
         }
 
         // 재장전 속도
@@ -342,8 +342,8 @@ public class Shop : MonoBehaviour
         if (statTextInput3 != null)
         {
             statTextInput3.text = ReloadMaxed
-                ? "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 (최대)"
-                : "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 -> " + Mathf.Max(minReloadTime, ReloadSpeed - reloadStep).ToString("0.0") + "초";
+                ? Loc.T("재장전 속도\n") + ReloadSpeed.ToString("0.0") + Loc.T("초 (최대)")
+                : Loc.T("재장전 속도\n") + ReloadSpeed.ToString("0.0") + Loc.T("초 -> ") + Mathf.Max(minReloadTime, ReloadSpeed - reloadStep).ToString("0.0") + Loc.T("초");
         }
 
         // 탄창
@@ -351,8 +351,8 @@ public class Shop : MonoBehaviour
         if (statTextInput4 != null)
         {
             statTextInput4.text = MaxBulletMaxed
-                ? "최대 탄창\n" + MaxBullet + "발 (최대)"
-                : "최대 탄창\n" + MaxBullet + " -> " + (MaxBullet + 1) + "발";
+                ? Loc.T("최대 탄창\n") + MaxBullet + Loc.T("발 (최대)")
+                : Loc.T("최대 탄창\n") + MaxBullet + " -> " + (MaxBullet + 1) + Loc.T("발");
         }
 
         // 이동 속도
@@ -360,8 +360,8 @@ public class Shop : MonoBehaviour
         if (statTextInput5 != null)
         {
             statTextInput5.text = MoveSpeedMaxed
-                ? "이동 속도\n" + moveSpeed.ToString("0.0") + " (최대)"
-                : "이동 속도\n" + moveSpeed.ToString("0.0") + " -> " + (moveSpeed * moveSpeedMultiplier).ToString("0.0");
+                ? Loc.T("이동 속도\n") + moveSpeed.ToString("0.0") + Loc.T(" (최대)")
+                : Loc.T("이동 속도\n") + moveSpeed.ToString("0.0") + " -> " + (moveSpeed * moveSpeedMultiplier).ToString("0.0");
         }
     }
 }
