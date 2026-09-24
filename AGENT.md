@@ -5,6 +5,11 @@
 ## 규칙
 
 1. 커밋 메시지는 무조건 한글로 작성한다.
+2. 커밋 전에 `Assets/` 아래 게임 스크립트에 에디터 전용 코드가 없는지 확인한다.
+   - `using UnityEditor...`(예: `using static UnityEditor.Experimental.GraphView.GraphView;`)는 빌드를 실패시킨다. IDE 자동완성이 몰래 추가하는 경우가 많다.
+   - `using System.Drawing;`도 쓰지 않는다 (빌드에서 참조되지 않고, `UnityEngine.Color`와 이름이 겹친다).
+   - 에디터 코드가 꼭 필요하면 `Assets/**/Editor/` 폴더에 두거나 `#if UNITY_EDITOR ... #endif`로 감싼다.
+   - 확인 명령: `git grep -nE "using UnityEditor|UnityEditor\.|System\.Drawing" -- "Assets/*.cs" ":!Assets/**/Editor/**"`
 
 ## 주의 사항
 
