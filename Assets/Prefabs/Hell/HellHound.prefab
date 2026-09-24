@@ -184,16 +184,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 13
-  setEnemyHP: 14
+  setEnemyHP: 30
   EnemyHealth: 0
   KilledEnemy: 0
   coin: {fileID: 3721139401337131225, guid: 4396825abc2ee134baa6fdebf0551e35, type: 3}
   separationSpeed: 6
   hp: {fileID: 6036257255657790500, guid: d7c3f9893125632478c48242ce8ab55f, type: 3}
   chanceofHP: 10
-  contactDamage: 10
+  contactDamage: 14
   expReward: 40
   coinDrop: 2
   dashInterval: 3
   dashDuration: 0.5
-  dashSpeedMultiplier: 2.4
+  dashSpeedMultiplier: 2.6
