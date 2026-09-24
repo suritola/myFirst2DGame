@@ -273,7 +273,19 @@ public class Shop : MonoBehaviour
 
         // 공격력
         if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);
-        if (statTextInput != null) statTextInput.text = "총알 공격력\n" + damage + " -> " + (damage + 1);
+        if (statTextInput != null)
+        {
+            statTextInput.text = "총알 공격력\n" + damage + " -> " + (damage + 1);
+
+            // 멀티샷 중이면 실제 한 발당 피해도 함께 표시
+            int shots = playerControllerd.multiShot;
+            if (shots > 1)
+            {
+                float rate = playerControllerd.MultiShotDamageRate(shots);
+                statTextInput.text += "  (" + shots + "발, 발당 " + (damage * rate).ToString("0.##")
+                    + " -> " + ((damage + 1) * rate).ToString("0.##") + ")";
+            }
+        }
 
         // 공격 속도 (초당 발사 수)
         if (priceTextInput2 != null) priceTextInput2.text = PriceText(ShootSpeedPrice, ShootSpeedMaxed);

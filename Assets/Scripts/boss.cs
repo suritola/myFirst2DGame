@@ -5,7 +5,7 @@ public class bosss : MonoBehaviour
 {
     public float speed = 0.2f;
     public int setEnemyHP = 300;
-    public int EnemyHealth;
+    public float EnemyHealth;
 
 
     private Transform player;
@@ -43,7 +43,7 @@ public class bosss : MonoBehaviour
         if (isDead) return;
 
         bossbar.MaxHealth = setEnemyHP;
-        bossbar.NowHealth = EnemyHealth;
+        bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
 
         if (player == null) return;
 
@@ -67,7 +67,7 @@ public class bosss : MonoBehaviour
         if (!isDead && player != null) transform.Translate(move * speed * Time.fixedDeltaTime);
     }
 
-    public void TakeDamage(int damage, float knockBack, Vector3 dir)
+    public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
         if (isDead) return;
 

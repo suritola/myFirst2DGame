@@ -58,6 +58,16 @@ public class PlayerController : MonoBehaviour
 
     public int multiShot = 1;
 
+    // 멀티샷 발사 수별 한 발당 피해 비율 (1발 100%, 2발 70%, 3발 55% ...)
+    // 전부 맞히면 총 피해는 100% / 140% / 165% / 180% / 200%
+    public float[] multiShotDamageRates = { 1f, 0.7f, 0.55f, 0.45f, 0.4f };
+
+    public float MultiShotDamageRate(int shots)
+    {
+        if (multiShotDamageRates == null || multiShotDamageRates.Length == 0) return 1f;
+        return multiShotDamageRates[Mathf.Clamp(shots - 1, 0, multiShotDamageRates.Length - 1)];
+    }
+
     public float knockBack = 0.4f;
 
     // =====================================
@@ -381,7 +391,9 @@ void Shoot()
         // 멀티샷 퍼지는 각도
         float spreadAngle = 10f;
 
-        if (multiShot == 1) CreateBullet(startPosition, direction, damage, pene, 0, false);
+        float bulletDamage = damage * MultiShotDamageRate(multiShot);
+
+        if (multiShot == 1) CreateBullet(startPosition, direction, bulletDamage, pene, 0, false);
         else
         {
             int shotCount = multiShot;
@@ -394,7 +406,7 @@ void Shoot()
 
                 Vector2 shotDirection = Quaternion.Euler(0, 0, angle) * direction;
 
-                CreateBullet(startPosition, shotDirection, damage, pene, 0, false);
+                CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false);
             }
         }
     }
@@ -427,7 +439,7 @@ void Shoot()
             bullet.Dir = direction;
             bullet.pene = penes;
             bullet.blood = blood;
-            bullet.damage = Mathf.RoundToInt(damage);
+            bullet.damage = damage;
             bullet.isSkill = isSkill;
         }
 

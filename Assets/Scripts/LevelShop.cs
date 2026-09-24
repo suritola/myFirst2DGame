@@ -81,7 +81,9 @@ public class LevelShop : MonoBehaviour
         ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP + " -> " + (VampireHeal + bul.getHP) + " )";
 
         ability_name[6] = "멀티 샷";
-        ability_content[6] = "멀티샷 +1";
+        ability_content[6] = "한 번에 쏘는 총알이 1발 늘어나지만, 한 발당 피해는 줄어듭니다.\n( "
+            + bul.multiShot + "발 " + Percent(bul.MultiShotDamageRate(bul.multiShot)) + " -> "
+            + (bul.multiShot + 1) + "발 " + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)) + " )";
 
         ability_name[7] = "밀어내기";
         ability_content[7] = "총알이 적을 밀어내는 효과 +60% ";
@@ -152,6 +154,8 @@ public class LevelShop : MonoBehaviour
     SkillGauge skill;
 
     const int MinSkillPoint = 5;
+
+    static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
     const int VampireHeal = 2;
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
@@ -195,8 +199,9 @@ public class LevelShop : MonoBehaviour
                 current = "회복량: 적 1명당 " + bul.getHP;
                 break;
             case 6:
-                summary = "한 번에 여러 발을 부채꼴로 발사합니다.";
-                current = "발사 수: " + bul.multiShot + "발 (최대 5발)";
+                summary = "한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다.";
+                current = "발사 수: " + bul.multiShot + "발 (최대 5발)\n현재 한 발당 피해: "
+                    + Percent(bul.MultiShotDamageRate(bul.multiShot));
                 break;
             case 7:
                 summary = "총알이 적을 더 멀리 밀어냅니다.";

@@ -5,7 +5,7 @@ public class EnermyController : MonoBehaviour
 {
     public float speed = 2f;
     public int setEnemyHP = 10;
-    public int EnemyHealth;
+    public float EnemyHealth;
 
 
     private Transform player;
@@ -126,7 +126,7 @@ public class EnermyController : MonoBehaviour
         return Vector2.ClampMagnitude(push, 1.5f);
     }
 
-    public void TakeDamage(int damage, float knockBack, Vector3 dir)
+    public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
         if (isDead) return;
 

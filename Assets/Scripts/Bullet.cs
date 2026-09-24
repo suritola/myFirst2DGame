@@ -6,7 +6,7 @@ public class Bullet : MonoBehaviour
 
     // 일반 총알은 1
     // 스킬 총알은 500
-    public int damage = 1;
+    public float damage = 1f;
 
     //관통 개수
     public int pene = 1;
@@ -77,7 +77,7 @@ public class Bullet : MonoBehaviour
             if (enemy != null)
             {
                 // 적에게 데미지
-                if (enemy.EnemyHealth < 1) return;
+                if (enemy.EnemyHealth <= 0f) return;
 
                 enemy.TakeDamage(damage, playerC.knockBack, dir);
                 remainPene--;
@@ -106,7 +106,7 @@ public class Bullet : MonoBehaviour
             if (enemy != null)
             {
                 // 적에게 데미지
-                if (enemy.EnemyHealth < 1) return;
+                if (enemy.EnemyHealth <= 0f) return;
 
                 enemy.TakeDamage(damage, playerC.knockBack, dir);
                 remainPene--;
