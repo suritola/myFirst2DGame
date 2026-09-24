@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - bullet
+  - enermy
+  - Wall
+  - coin
+  - HPitem
+  - boss
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - walls
+  - Water
+  - UI
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 80102729
+    locked: 0
+  - name: Character
+    uniqueID: 3182541143
+    locked: 0
+  - name: Effect
+    uniqueID: 1157756807
+    locked: 0
+  - name: HitScan
+    uniqueID: 3463825159
+    locked: 0
+  - name: TargetMark
+    uniqueID: 57574349
+    locked: 0
+  - name: HPpack
+    uniqueID: 279074905
+    locked: 0
