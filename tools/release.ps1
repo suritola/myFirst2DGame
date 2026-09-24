@@ -63,12 +63,12 @@ if ($p.ExitCode -ne 0 -or -not (Get-ChildItem $OutDir -Filter *.exe -ErrorAction
 
 # ---------------------------------------------------------------- 압축 (디버그 파일 제외)
 Get-ChildItem $OutDir -Directory -Filter "*DoNotShip*" | Remove-Item -Recurse -Force
-$zip = Join-Path $Work "MyFirstGame-$Version-Windows.zip"
+$zip = Join-Path $Work "GunSaver-$Version-Windows.zip"
 if (Test-Path $zip) { Remove-Item -Force $zip }
 Compress-Archive -Path (Join-Path $OutDir "*") -DestinationPath $zip
 Write-Host ("압축 완료: {0:N1} MB" -f ((Get-Item $zip).Length / 1MB))
 
 # ---------------------------------------------------------------- 업로드
-& $Gh release create $Version $zip -R $Repo --title "민근이의 첫번째 게임 $Version" --notes $notes
+& $Gh release create $Version $zip -R $Repo --title "Gun Saver $Version" --notes $notes
 if ($LASTEXITCODE -ne 0) { throw "Release 업로드 실패" }
 Write-Host "완료: https://github.com/$Repo/releases/tag/$Version"

@@ -9,7 +9,6 @@ public static class LocTable
     public static readonly Dictionary<string, string[]> Entries = new Dictionary<string, string[]>
     {
         // ================================================================= 메뉴 · 설정 · 튜토리얼
-        { "민근이의 첫번째 게임", L("Mingeun's First Game", "ミングンの初めてのゲーム", "敏根的第一款游戏") },
         { "게임 시작", L("Start Game", "ゲーム開始", "开始游戏") },
         { "게임 종료", L("Quit Game", "ゲーム終了", "退出游戏") },
         { "튜토리얼", L("Tutorial", "チュートリアル", "教程") },
