@@ -199,6 +199,8 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        EnermyController.Killed += HealOnKill;
+
         needEXP = 100f;
         isShop = 0;
 
@@ -242,6 +244,10 @@ public class PlayerController : MonoBehaviour
 
         // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
         needEXP = 50 + level * 50;
+
+        // 생명의 샘: 초당 체력 회복
+        if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)
+            PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + regenPerSecond * Time.deltaTime);
 
         // =========================
         // 재장전 입력
@@ -646,6 +652,22 @@ void Shoot()
     // 플레이어 피격
     // =====================================
     public float def = 0f;
+
+    [Header("회복")]
+    // 초당 체력 회복 (생명의 샘)
+    public float regenPerSecond = 0f;
+    // 적 처치 시 체력 회복 (피의 굶주림)
+    public float healOnKill = 0f;
+
+    void HealOnKill(Vector3 pos)
+    {
+        if (healOnKill > 0f && PlayerHealth > 0f) PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + healOnKill);
+    }
+
+    void OnDestroy()
+    {
+        EnermyController.Killed -= HealOnKill;
+    }
 
     int dropCoin;
     private void OnTriggerEnter2D(Collider2D collision)

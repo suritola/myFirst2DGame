@@ -79076,6 +79076,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 32f668bc2510b39e858336dc57f5aa87, type: 3}
   - {fileID: 21300000, guid: f25b45685d16776e4cda74eaeeae5af9, type: 3}
   - {fileID: 21300000, guid: d435be91dccf23d5fa0343616db7b495, type: 3}
+  - {fileID: 21300000, guid: 94174311f0534d04b5c0c9024e77a701, type: 3}
+  - {fileID: 21300000, guid: db631e0c10fbb21ae659e339b67bc374, type: 3}
   slotSprite: {fileID: 21300000, guid: 500df843feb3ce112dbf36a8670e2f89, type: 3}
   font: {fileID: 11400000, guid: 8c93cfbcb0b288c4692c7513feca2012, type: 2}
   fontMaterial: {fileID: 2100000, guid: b7e1f0c2a4d34c6f9a0e5d1c2b3a4f51, type: 2}

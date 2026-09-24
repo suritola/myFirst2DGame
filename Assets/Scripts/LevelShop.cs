@@ -42,8 +42,14 @@ public class LevelShop : MonoBehaviour
     void Start()
     {
 
-        Total_abilitys = 10;
-        remaining_abilitys = 10;
+        Total_abilitys = AbilityCount;
+        remaining_abilitys = AbilityCount;
+
+        // 씬에 저장된 배열은 10칸이라 새 능력 수에 맞게 늘림
+        System.Array.Resize(ref ability_name, AbilityCount);
+        System.Array.Resize(ref ability_content, AbilityCount);
+        System.Array.Resize(ref ability_selected, AbilityCount);
+        System.Array.Resize(ref ability_level, AbilityCount);
 
         bul = FindFirstObjectByType<PlayerController>();
         lv = FindFirstObjectByType<Level>();
@@ -93,6 +99,12 @@ public class LevelShop : MonoBehaviour
 
         ability_name[9] = "단단한 신체";
         ability_content[9] = "받는 피해를 30% 감소시킵니다.";
+
+        ability_name[10] = "생명의 샘";
+        ability_content[10] = "시간이 지나면 체력이 조금씩 회복됩니다.\n( 초당 " + bul.regenPerSecond.ToString("0.#") + " -> " + (bul.regenPerSecond + RegenStep).ToString("0.#") + " )";
+
+        ability_name[11] = "피의 굶주림";
+        ability_content[11] = "적을 처치할 때마다 체력을 회복합니다.\n( 처치당 " + bul.healOnKill.ToString("0") + " -> " + (bul.healOnKill + HealOnKillStep).ToString("0") + " )";
     }
     void Update()
     {
@@ -160,6 +172,11 @@ public class LevelShop : MonoBehaviour
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.3f;
+    const int AbilityCount = 12;
+    const float RegenStep = 0.5f;       // 생명의 샘 1회당 초당 회복량
+    const int RegenMaxLevel = 4;
+    const float HealOnKillStep = 1f;    // 피의 굶주림 1회당 처치 회복량
+    const int HealOnKillMaxLevel = 3;
     const float KnockBackGrowth = 1.25f;
     const int KnockBackMaxLevel = 3;
 
@@ -216,6 +233,14 @@ public class LevelShop : MonoBehaviour
             case 9:
                 summary = "적에게 받는 피해가 줄어듭니다.";
                 current = "받는 피해 감소: " + (bul.def * 100f).ToString("0") + "%";
+                break;
+            case 10:
+                summary = "시간이 지나면 체력이 조금씩 회복됩니다.";
+                current = "초당 회복: " + bul.regenPerSecond.ToString("0.#") + " (" + ability_level[10] + "/" + RegenMaxLevel + ")";
+                break;
+            case 11:
+                summary = "적을 처치할 때마다 체력을 회복합니다.";
+                current = "처치당 회복: " + bul.healOnKill.ToString("0") + " (" + ability_level[11] + "/" + HealOnKillMaxLevel + ")";
                 break;
         }
 
@@ -283,6 +308,16 @@ public class LevelShop : MonoBehaviour
         {
             bul.def += 0.3f;
             if (bul.def >= 0.6f) ability_selected[9] = true;
+        }
+        if (what == 10)
+        {
+            bul.regenPerSecond += RegenStep;
+            if (ability_level[10] >= RegenMaxLevel) ability_selected[10] = true;
+        }
+        if (what == 11)
+        {
+            bul.healOnKill += HealOnKillStep;
+            if (ability_level[11] >= HealOnKillMaxLevel) ability_selected[11] = true;
         }
     }
     
