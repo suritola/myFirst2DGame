@@ -109,6 +109,49 @@ public class LevelShop : MonoBehaviour
     void Update()
     {
         setAbilitys();
+        UpdateSelectLock();
+    }
+
+    // 사격하던 클릭이 열리자마자 카드를 누르지 않도록:
+    // 창이 열리고 잠깐 지난 뒤 마우스 버튼을 한 번 떼야 고를 수 있음
+    const float SelectDelay = 0.6f;
+    float openedAt;
+    bool selectReady;
+    CanvasGroup cardGroup;
+
+    void LockSelection()
+    {
+        openedAt = Time.unscaledTime;
+        selectReady = false;
+        if (cardGroup == null && LvshopPanel != null)
+        {
+            cardGroup = LvshopPanel.GetComponent<CanvasGroup>();
+            if (cardGroup == null) cardGroup = LvshopPanel.AddComponent<CanvasGroup>();
+        }
+        if (cardGroup != null)
+        {
+            cardGroup.interactable = false;
+            cardGroup.alpha = 0.6f;
+        }
+    }
+
+    void UpdateSelectLock()
+    {
+        if (selectReady || LvshopPanel == null || !LvshopPanel.activeInHierarchy) return;
+
+        float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
+        if (cardGroup != null) cardGroup.alpha = Mathf.Lerp(0.6f, 1f, t);
+
+        bool mouseHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1);
+        if (t >= 1f && !mouseHeld)
+        {
+            selectReady = true;
+            if (cardGroup != null)
+            {
+                cardGroup.interactable = true;
+                cardGroup.alpha = 1f;
+            }
+        }
     }
     private bool showLv;
     public GameObject LvUpPanel;
@@ -121,6 +164,7 @@ public class LevelShop : MonoBehaviour
     {
         
         LvshopPanel.SetActive(true);
+        LockSelection();
         UpdateLvShopContent();
         
 
@@ -272,6 +316,8 @@ public class LevelShop : MonoBehaviour
 
     void onSelect(int what)
     {
+        if (!selectReady) return;
+        selectReady = false;
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
