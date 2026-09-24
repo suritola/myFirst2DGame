@@ -7,7 +7,7 @@ public class SkillGauge : MonoBehaviour
     public Image gaugeImage;
 
     [Header("스킬 포인트")]
-    public int SkillPoint = 0;
+    public float SkillPoint = 0f;
     public int MaxSkillPoint = 10;
 
     void Start()
@@ -22,13 +22,11 @@ public class SkillGauge : MonoBehaviour
         UpdateGauge();
     }
 
-    public void AddSkillPoint(int amount)
+    public void AddSkillPoint(float amount)
     {
         SkillPoint += amount;
 
         SkillPoint = Mathf.Clamp(SkillPoint, 0, MaxSkillPoint);
-
-        Debug.Log("현재 SkillPoint: " + SkillPoint);
 
         UpdateGauge();
     }

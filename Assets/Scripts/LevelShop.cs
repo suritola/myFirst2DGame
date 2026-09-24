@@ -75,7 +75,7 @@ public class LevelShop : MonoBehaviour
         ability_content[3] = "스킬을 사용하는 동안 타겟이 된 적이 더 느려집니다. \n( 속도 -20% )";
 
         ability_name[4] = "더 많은 경험치";
-        ability_content[4] = "킬 경험치 +20%";
+        ability_content[4] = "킬 경험치 +10%";
 
         ability_name[5] = "흡혈 스킬";
         ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP + " -> " + (VampireHeal + bul.getHP) + " )";
@@ -89,7 +89,7 @@ public class LevelShop : MonoBehaviour
         ability_content[7] = "총알이 적을 밀어내는 효과 +25%\n( 최대 " + KnockBackMaxLevel + "번 )";
 
         ability_name[8] = "강철같은 심장";
-        ability_content[8] = "체력을 즉시 모두 회복하며, 최대 체력이 30% 증가합니다.";
+        ability_content[8] = "체력을 즉시 모두 회복하며, 최대 체력이 20% 증가합니다.";
 
         ability_name[9] = "단단한 신체";
         ability_content[9] = "받는 피해를 30% 감소시킵니다.";
@@ -153,7 +153,7 @@ public class LevelShop : MonoBehaviour
 
     SkillGauge skill;
 
-    const int MinSkillPoint = 5;
+    const int MinSkillPoint = 10;
 
     static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
     const int VampireHeal = 2;
@@ -262,7 +262,7 @@ public class LevelShop : MonoBehaviour
             if (skill.MaxSkillPoint <= MinSkillPoint) ability_selected[2] = true;
         }
         if (what == 3) bul.Skill_setTime *= 0.8f;
-        if (what == 4) lv.bonusEXP += 0.2f;
+        if (what == 4) lv.bonusEXP += 0.1f;
         if (what == 5) bul.getHP += VampireHeal;
         if (what == 6)
         {
@@ -276,7 +276,7 @@ public class LevelShop : MonoBehaviour
         }
         if (what == 8)
         {
-            bul.PlayerMaxHealth = (int)(bul.PlayerMaxHealth * 1.3);
+            bul.PlayerMaxHealth = Mathf.Round(bul.PlayerMaxHealth * 1.2f);
             bul.PlayerHealth = bul.PlayerMaxHealth;
         }
         if (what == 9)

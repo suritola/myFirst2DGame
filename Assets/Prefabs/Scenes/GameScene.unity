@@ -2431,6 +2431,7 @@ RectTransform:
   - {fileID: 1344090227}
   - {fileID: 1912693570}
   - {fileID: 1359206445}
+  - {fileID: 910000163}
   - {fileID: 910000021}
   - {fileID: 317068621}
   - {fileID: 1288467826}
@@ -4776,7 +4777,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gaugeImage: {fileID: 1351379409}
   SkillPoint: 0
-  MaxSkillPoint: 12
+  MaxSkillPoint: 25
 --- !u!114 &1351379409
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -79296,3 +79297,102 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   title: "\uD0C0\uAC9F\uD305 \uC2A4\uD0AC"
   body: "\uAC8C\uC774\uC9C0\uAC00 \uAC00\uB4DD \uCC28\uBA74 \uC6B0\uD074\uB9AD\uC744 \uB204\uB974\uACE0 \uC788\uB294 \uB3D9\uC548 \uC2DC\uAC04\uC774 \uB290\uB824\uC9C0\uBA70 \uC8FC\uBCC0 \uC801\uC744 \uCC28\uB840\uB85C \uC870\uC900\uD569\uB2C8\uB2E4.\n\uBC84\uD2BC\uC744 \uB5BC\uBA74 \uC870\uC900\uD55C \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC77C\uC81C \uC0AC\uACA9!\n\n\uC77C\uBC18 \uC0AC\uACA9\uC73C\uB85C \uC801\uC744 \uB9DE\uD788\uBA74 \uAC8C\uC774\uC9C0\uAC00 \uCC39\uB2C8\uB2E4."
+--- !u!1 &910000162
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910000163}
+  - component: {fileID: 910000164}
+  - component: {fileID: 910000165}
+  - component: {fileID: 910000166}
+  m_Layer: 5
+  m_Name: StatsPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &910000163
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000162}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 747586923}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -24, y: 140}
+  m_SizeDelta: {x: 300, y: 222}
+  m_Pivot: {x: 1, y: 0}
+--- !u!222 &910000164
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000162}
+  m_CullTransparentMesh: 1
+--- !u!114 &910000165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 1e7c9e0913223161c8d86848688f3355, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!114 &910000166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edaf9d5572308da345de4891e58d119e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  icons:
+  - {fileID: 21300000, guid: 504041733e953349d70fc0d81ca543aa, type: 3}
+  - {fileID: 21300000, guid: d435be91dccf23d5fa0343616db7b495, type: 3}
+  - {fileID: 21300000, guid: 11e7001f878569b87c16f95a19af62c5, type: 3}
+  - {fileID: 21300000, guid: 12bb6622a054e3273bd7d2215e5628a5, type: 3}
+  - {fileID: 21300000, guid: e9a5d1df009ee0f484c88751d897c21d, type: 3}
+  font: {fileID: 11400000, guid: 8c93cfbcb0b288c4692c7513feca2012, type: 2}
+  fontMaterial: {fileID: 2100000, guid: b7e1f0c2a4d34c6f9a0e5d1c2b3a4f51, type: 2}
+  rowHeight: 34
+  padding: 26
+  refreshInterval: 0.2

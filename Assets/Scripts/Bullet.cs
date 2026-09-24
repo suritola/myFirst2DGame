@@ -16,6 +16,9 @@ public class Bullet : MonoBehaviour
     // 스킬로 쏜 총알은 스킬 게이지를 채우지 않음
     public bool isSkill = false;
 
+    // 적을 맞혔을 때 스킬 게이지가 차는 양 (멀티샷이면 발당 비율만큼)
+    public float skillCharge = 1f;
+
     // 맞은 적을 밀어내는 거리 (쏠 때 플레이어가 정해 줌)
     public float knockBack = 0.3f;
 
@@ -94,7 +97,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(1);
+                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(skillCharge);
             }
 
 
@@ -123,7 +126,7 @@ public class Bullet : MonoBehaviour
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
-                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(1);
+                if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(skillCharge);
             }
 
 

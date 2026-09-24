@@ -442,6 +442,7 @@ void Shoot()
             bullet.damage = damage;
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
+            bullet.skillCharge = knockBackRate;
         }
 
     }

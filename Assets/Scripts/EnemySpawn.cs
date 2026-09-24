@@ -20,6 +20,14 @@ public class EnemySpawner : MonoBehaviour
     // 동시에 살아 있을 수 있는 최대 적 수
     public int[] maxAliveByPhase = { 8, 12, 16 };
     // 이 수만큼 처치하면 다음 페이즈 / 보스
+    // 페이즈별 등장 비율 (해골, 구울, 망령) - 이전 적도 계속 나오고 상위 적 비율이 높아짐
+    public Vector3[] spawnWeightsByPhase =
+    {
+        new Vector3(100f, 0f, 0f),
+        new Vector3(45f, 55f, 0f),
+        new Vector3(25f, 35f, 40f),
+    };
+
     public int phase2Kills = 20;
     public int phase3Kills = 40;
     public int bossKills = 60;
@@ -89,9 +97,7 @@ public class EnemySpawner : MonoBehaviour
             Vector3 randomPosition = GetSpawnPosition(playerC.transform.position);
 
             // 적 생성
-            if (paze == 1) Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-            else if (paze == 2) Instantiate(enemy2Prefab, randomPosition, Quaternion.identity);
-            else if (paze == 3) Instantiate(enemy3Prefab, randomPosition, Quaternion.identity);
+            Instantiate(PickEnemyForPhase(), randomPosition, Quaternion.identity);
 
             if (killedEnemy >= phase2Kills) paze = 2;
             if (killedEnemy >= phase3Kills) paze = 3;
@@ -107,6 +113,15 @@ public class EnemySpawner : MonoBehaviour
         {
             SummonMinions(here, 3);
         }
+    }
+
+    GameObject PickEnemyForPhase()
+    {
+        Vector3 w = spawnWeightsByPhase[Mathf.Min(PhaseIndex, spawnWeightsByPhase.Length - 1)];
+        float roll = Random.Range(0f, w.x + w.y + w.z);
+        if (roll < w.x) return enemyPrefab;
+        if (roll < w.x + w.y) return enemy2Prefab;
+        return enemy3Prefab;
     }
 
     // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
