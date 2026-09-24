@@ -30,6 +30,9 @@ public class EnermyController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
+
+        // 머리 위 체력바
+        EnemyHealthBar.Attach(this, spriteRenderer);
     }
 
     void Update()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LevelShop : MonoBehaviour
 {
@@ -25,6 +26,14 @@ public class LevelShop : MonoBehaviour
     public string[] ability_name = new string[10];
     public string[] ability_content = new string[10];
     public bool[] ability_selected = new bool[10];
+    // 능력별로 몇 번 선택했는지 (HUD의 Lv 표시)
+    public int[] ability_level = new int[10];
+
+    [Header("능력 아이콘 표시")]
+    public AbilityHUD abilityHUD;
+    public Image FirstIcon;
+    public Image SecondIcon;
+    public Image ThirdIcon;
 
     PlayerController bul;
     Level lv;
@@ -133,6 +142,10 @@ public class LevelShop : MonoBehaviour
         ThirdTitle.text = ability_name[third];
         ThirdAbility.text = ability_content[third];
 
+        SetCardIcon(FirstIcon, first);
+        SetCardIcon(SecondIcon, second);
+        SetCardIcon(ThirdIcon, third);
+
         Time.timeScale = 0f;
     }
 
@@ -153,11 +166,22 @@ public class LevelShop : MonoBehaviour
         onSelect(third);
         Debug.Log(third);
     }
+    void SetCardIcon(Image target, int id)
+    {
+        if (target == null || abilityHUD == null) return;
+
+        Sprite icon = abilityHUD.GetIcon(id);
+        if (icon != null) target.sprite = icon;
+    }
+
     void onSelect(int what)
     {
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
+
+        ability_level[what]++;
+        if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
         if (what == 0) bul.pene++;
         if (what == 1) bul.bonusCoin++;
         if (what == 2) skill.MaxSkillPoint = (int) (skill.MaxSkillPoint * 0.8f);
