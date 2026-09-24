@@ -111,6 +111,24 @@ public class SpecialFeedback : MonoBehaviour
         Make("whoosh", 0.35f, (t, d, r) => { wlow += (Noise(r) - wlow) * 0.15f; return wlow * 1.6f * Mathf.Sin(Mathf.PI * t / d); });
         // 불 타는 소리 (1초 반복)
         Make("crackle", 1f, (t, d, r) => { float n = Noise(r); return (r.NextDouble() < 0.004 ? n : n * 0.12f) * 0.8f; });
+        // 화염 방사 (1초 반복): 낮게 울리는 불길 + 딱딱 튀는 소리
+        float roar = 0f, roar2 = 0f;
+        Make("flame", 1f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            roar += (n - roar) * 0.04f;          // 낮은 굉음
+            roar2 += (n - roar2) * 0.35f;        // 쉬익거리는 바람
+            float pop = r.NextDouble() < 0.006 ? Noise(r) * 0.8f : 0f;
+            float swell = 0.85f + 0.15f * Sin(3f, t);
+            return (roar * 2.4f + roar2 * 0.35f) * swell + pop;
+        });
+        // 점화 화악 (소리가 빠르게 커졌다 잦아듦)
+        float ign = 0f;
+        Make("ignite", 0.4f, (t, d, r) =>
+        {
+            ign += (Noise(r) - ign) * Mathf.Lerp(0.05f, 0.3f, t / d);
+            return ign * 2f * Mathf.Min(1f, t / 0.05f) * Decay(t, d, 1.5f);
+        });
         // 과열 치익
         Make("hiss", 0.6f, (t, d, r) => Noise(r) * 0.35f * Decay(t, d, 1.2f));
         // 신비로운 화음 (마법)

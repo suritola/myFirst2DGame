@@ -76,6 +76,8 @@ public class SpecialAbilities : MonoBehaviour
     GameObject pactAura;        // 희생의 계약 붉은 기운
     GameObject curseGlow;       // 저주탄 장전 표시
     bool chargeFullPlayed;
+    bool flameWasFiring;
+    GameObject flameMuzzle;
     int aimingSkill = -1;       // 누르고 있는 조준형 스킬
     int lastBullets = -1;
     float lastOrbSound;
@@ -112,6 +114,7 @@ public class SpecialAbilities : MonoBehaviour
         lineMaterial = new Material(Shader.Find("Sprites/Default"));
         BuildHud();
 
+        Burn.FireSprite = glowSprite;
         fx = gameObject.AddComponent<SpecialFeedback>();
         fx.Init(font, fontMaterial);
         aimLine = fx.NewLine("AimLine", true);
@@ -166,6 +169,8 @@ public class SpecialAbilities : MonoBehaviour
                 // 기본 권총(-1) → 무기1 → 무기2 → 기본 권총 ...
                 weaponIndex = weaponIndex + 1 >= weapons.Count ? -1 : weaponIndex + 1;
                 CancelSniperCharge();
+                if (flameMuzzle != null) Destroy(flameMuzzle);
+                flameWasFiring = false;
                 fx.StopLoop();
                 fx.Play("clank", 0.5f, 1.4f);
                 fx.FloatText(player.transform.position, WeaponActive ? abilities[CurrentWeapon].name : "기본 권총", new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
@@ -279,7 +284,8 @@ public class SpecialAbilities : MonoBehaviour
         Color lineColor = sniperCharge < 0f ? new Color(0.5f, 0.95f, 1f, 0.35f)
             : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
             : new Color(0.5f, 0.95f, 1f, 0.4f + 0.5f * k);
-        fx.SetLine(aimLine, muzzle, mouse, lineColor, sniperCharge < 0f ? 0.08f : 0.08f + 0.1f * k);
+        // 마우스 거리와 상관없이 조준 방향으로 길게
+        fx.SetLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * SniperLineLength), lineColor, sniperCharge < 0f ? 0.08f : 0.08f + 0.1f * k);
 
         if (sniperCharge < 0f) return;
 
@@ -307,6 +313,8 @@ public class SpecialAbilities : MonoBehaviour
             CancelSniperCharge();
         }
     }
+
+    const float SniperLineLength = 40f;
 
     void CancelSniperCharge()
     {
@@ -408,22 +416,58 @@ public class SpecialAbilities : MonoBehaviour
             fx.FloatText(player.transform.position, "냉각 완료", new Color(0.5f, 0.95f, 1f));
         }
         bool firing = held && !overheated && !player.IsSkillUsing;
-        if (firing) fx.StartLoop("crackle", 0.9f, 1f);
+
+        // 켤 때 점화음, 뿜는 동안 불길 소리 (열이 오를수록 조금 높아짐)
+        if (firing && !flameWasFiring) fx.Play("ignite", 0.9f);
+        if (firing) fx.StartLoop("flame", 0.95f, 0.9f + heat * 0.25f);
         else fx.StopLoop();
+        flameWasFiring = firing;
+
+        // 총구 불빛
+        if (firing && flameMuzzle == null)
+            flameMuzzle = MakeSprite("FlameMuzzle", glowSprite, player.MuzzlePosition, 0.12f, new Color(1f, 0.6f, 0.2f, 0.9f), "Effect", 7);
+        if (!firing && flameMuzzle != null) Destroy(flameMuzzle);
+        if (flameMuzzle != null)
+        {
+            flameMuzzle.transform.position = player.MuzzlePosition;
+            flameMuzzle.transform.localScale = Vector3.one * Random.Range(0.1f, 0.16f);
+        }
+
+        // 과열 중에는 총구에서 연기
+        if (overheated && Random.value < Time.deltaTime * 10f)
+            FlameParticle.Spawn(glowSprite, player.MuzzlePosition, Vector2.up * Random.Range(1.5f, 3f) + Random.insideUnitCircle, 0.9f, 0.08f, 0.35f, true);
+
         if (firing && Time.time >= nextFire)
         {
             Vector3 target = MouseWorld();
             player.FaceTowards(target);
             Vector3 start = player.MuzzlePosition;
-            Vector2 dir = Quaternion.Euler(0, 0, Random.Range(-8f, 8f)) * ((Vector2)(target - start)).normalized;
+            Vector2 aim = ((Vector2)(target - start)).normalized;
+            Vector2 dir = Quaternion.Euler(0, 0, Random.Range(-8f, 8f)) * aim;
             nextFire = Time.time + 0.07f / player.fireRateMultiplier;
+
+            // 실제 피해는 보이지 않는 판정용 탄이 담당
             Bullet b = Shot(start, dir, Damage * 0.25f, 99, 0.2f, false, new Color(1f, 0.55f, 0.15f, 0.9f), 0.2f, 1.6f, 0.05f);
             if (b != null)
             {
                 b.lifetime = 0.35f;
+                if (b.TryGetComponent(out SpriteRenderer hitboxSr)) hitboxSr.enabled = false;
                 float burnDps = Damage * 0.3f;
                 b.onHitEnemy += (bullet, col) => Burn.Apply(col.gameObject, burnDps, 2f);
             }
+
+            // 퍼져 나가는 불꽃과 불티
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 v = (Vector2)(Quaternion.Euler(0, 0, Random.Range(-14f, 14f)) * aim) * Random.Range(22f, 32f);
+                FlameParticle.Spawn(glowSprite, start + (Vector3)(aim * 0.3f), v, Random.Range(0.35f, 0.5f), 0.05f, Random.Range(0.45f, 0.7f), false);
+            }
+            if (Random.value < 0.6f)
+            {
+                Vector2 v = (Vector2)(Quaternion.Euler(0, 0, Random.Range(-25f, 25f)) * aim) * Random.Range(12f, 24f);
+                FlameParticle.SpawnEmber(glowSprite, start, v);
+            }
+
             heat += 0.035f;
             if (heat >= 1f)
             {
@@ -991,9 +1035,10 @@ public class SpecialAbilities : MonoBehaviour
         hud.SetParent(canvas.transform, false);
         Transform ammo = canvas.transform.Find("AmmoPanel");
         if (ammo != null) hud.SetSiblingIndex(ammo.GetSiblingIndex() + 1);
-        hud.anchorMin = hud.anchorMax = new Vector2(1f, 0f);
-        hud.pivot = new Vector2(1f, 0f);
-        hud.anchoredPosition = new Vector2(-336f, 24f);
+        // 왼쪽 아래, 레벨 명판 위 (경험치 바를 가리지 않게)
+        hud.anchorMin = hud.anchorMax = new Vector2(0f, 0f);
+        hud.pivot = new Vector2(0f, 0f);
+        hud.anchoredPosition = new Vector2(24f, 100f);
         hud.sizeDelta = new Vector2(360f, 104f);
         Image bg = go.GetComponent<Image>();
         bg.sprite = panelSprite;
@@ -1148,9 +1193,13 @@ public static class Specials
 // 불타는 적: 초당 피해
 public class Burn : MonoBehaviour
 {
+    public static Sprite FireSprite;
+
     public float dps;
     public float until;
     float tick;
+    float puff;
+    GameObject flame;
 
     public static void Apply(GameObject target, float dps, float duration)
     {
@@ -1161,15 +1210,110 @@ public class Burn : MonoBehaviour
         b.until = Time.time + duration;
     }
 
+    void Start()
+    {
+        // 몸에서 타오르는 불빛
+        if (FireSprite != null)
+            flame = SpecialAbilities.MakeSprite("BurnFlame", FireSprite, transform.position, 0.3f, new Color(1f, 0.5f, 0.15f, 0.7f), "Effect", 2);
+    }
+
     void Update()
     {
         if (Time.time > until) { Destroy(this); return; }
+
+        if (flame != null)
+        {
+            flame.transform.position = transform.position + new Vector3(0f, 0.3f, 0f);
+            flame.transform.localScale = Vector3.one * Random.Range(0.26f, 0.36f);
+        }
+        puff += Time.deltaTime;
+        if (puff >= 0.1f && FireSprite != null)
+        {
+            puff = 0f;
+            FlameParticle.Spawn(FireSprite, transform.position + (Vector3)(Random.insideUnitCircle * 0.8f),
+                                new Vector2(Random.Range(-0.5f, 0.5f), Random.Range(3f, 5f)), 0.45f, 0.04f, 0.28f, false);
+        }
+
         tick += Time.deltaTime;
         if (tick >= 0.25f)
         {
             tick = 0f;
             Specials.Damage(gameObject, dps * 0.25f, Vector3.zero, 0f);
         }
+    }
+
+    void OnDestroy()
+    {
+        if (flame != null) Destroy(flame);
+    }
+}
+
+// 불꽃 입자: 흰노랑 → 주황 → 빨강 → 연기로 변하며 커지고 느려짐
+public class FlameParticle : MonoBehaviour
+{
+    Vector2 velocity;
+    float life;
+    float age;
+    float startScale;
+    float endScale;
+    bool smoke;
+    bool ember;
+    SpriteRenderer sr;
+
+    public static void Spawn(Sprite sprite, Vector3 pos, Vector2 velocity, float life, float startScale, float endScale, bool smoke)
+    {
+        GameObject go = SpecialAbilities.MakeSprite(smoke ? "Smoke" : "Flame", sprite, pos, startScale, Color.white, "Effect", smoke ? 1 : 4);
+        FlameParticle p = go.AddComponent<FlameParticle>();
+        p.velocity = velocity;
+        p.life = life;
+        p.startScale = startScale;
+        p.endScale = endScale;
+        p.smoke = smoke;
+        p.sr = go.GetComponent<SpriteRenderer>();
+        p.Tint(0f);
+    }
+
+    public static void SpawnEmber(Sprite sprite, Vector3 pos, Vector2 velocity)
+    {
+        GameObject go = SpecialAbilities.MakeSprite("Ember", sprite, pos, 0.025f, new Color(1f, 0.9f, 0.5f), "Effect", 5);
+        FlameParticle p = go.AddComponent<FlameParticle>();
+        p.velocity = velocity;
+        p.life = Random.Range(0.4f, 0.7f);
+        p.startScale = p.endScale = 0.025f;
+        p.ember = true;
+        p.sr = go.GetComponent<SpriteRenderer>();
+    }
+
+    void Tint(float k)
+    {
+        if (smoke)
+        {
+            sr.color = new Color(0.3f, 0.27f, 0.28f, 0.55f * (1f - k));
+            return;
+        }
+        Color c;
+        if (k < 0.2f) c = Color.Lerp(new Color(1f, 0.97f, 0.75f), new Color(1f, 0.75f, 0.25f), k / 0.2f);
+        else if (k < 0.55f) c = Color.Lerp(new Color(1f, 0.75f, 0.25f), new Color(1f, 0.42f, 0.1f), (k - 0.2f) / 0.35f);
+        else if (k < 0.8f) c = Color.Lerp(new Color(1f, 0.42f, 0.1f), new Color(0.75f, 0.15f, 0.08f), (k - 0.55f) / 0.25f);
+        else c = Color.Lerp(new Color(0.75f, 0.15f, 0.08f), new Color(0.25f, 0.2f, 0.2f), (k - 0.8f) / 0.2f);
+        c.a = k < 0.8f ? 0.85f : 0.85f * (1f - (k - 0.8f) / 0.2f);
+        sr.color = c;
+    }
+
+    void Update()
+    {
+        age += Time.deltaTime;
+        float k = Mathf.Clamp01(age / life);
+        // 앞으로 나가다 점점 느려지고, 끝에서는 위로 떠오름
+        velocity *= 1f - Mathf.Min(1f, Time.deltaTime * (ember ? 1.5f : 4f));
+        if (smoke || k > 0.6f) velocity.y += Time.deltaTime * 4f;
+        transform.position += (Vector3)(velocity * Time.deltaTime);
+        transform.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, Mathf.Sqrt(k));
+
+        if (ember) sr.color = new Color(1f, Random.Range(0.6f, 0.95f), 0.4f, 1f - k);
+        else Tint(k);
+
+        if (k >= 1f) Destroy(gameObject);
     }
 }
 
