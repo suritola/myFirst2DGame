@@ -139,6 +139,80 @@ public class SpecialFeedback : MonoBehaviour
         Make("thump", 0.18f, (t, d, r) => Sin(Mathf.Lerp(160f, 60f, t / d), t) * Decay(t, d, 2f) * 0.8f);
         // 낮은 울림 (희생)
         Make("pulse", 0.7f, (t, d, r) => (Sin(70f, t) * 0.7f + Sin(140f, t) * 0.3f) * Mathf.Sin(Mathf.PI * t / d) * 0.8f);
+
+        // ---------------- 강렬한 소리 (총성 · 필살기)
+        // 권총 총성 "탕": 날카로운 파열 + 짧은 저음 킥 + 잔향
+        float gl = 0f;
+        Make("gunshot", 0.32f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            gl += (n - gl) * 0.25f;
+            float crack = n * Decay(t, 0.025f, 1.5f) * 1.2f;
+            float body = gl * 1.6f * Decay(t, 0.12f, 2f);
+            float kick = Sin(Mathf.Lerp(180f, 50f, Mathf.Clamp01(t / 0.08f)), t) * Decay(t, 0.14f, 2f) * 0.9f;
+            float tail = gl * 0.35f * Decay(t, d, 3f);
+            return crack + body + kick + tail;
+        });
+        // 산탄총 "쾅": 더 두껍고 긴 굉음
+        float sl = 0f, sl2 = 0f;
+        Make("shotgun", 0.7f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            sl += (n - sl) * 0.12f; sl2 += (n - sl2) * 0.03f;
+            float crack = n * Decay(t, 0.04f, 1.2f) * 1.1f;
+            float kick = Sin(Mathf.Lerp(120f, 35f, Mathf.Clamp01(t / 0.15f)), t) * Decay(t, 0.3f, 1.8f) * 1.1f;
+            return crack + sl * 1.8f * Decay(t, 0.25f, 2f) + sl2 * 2.5f * Decay(t, d, 2f) + kick;
+        });
+        // 큰 폭발: 긴 저음 굉음 + 파편
+        float bl = 0f, bl2 = 0f;
+        Make("bigboom", 1.2f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            bl += (n - bl) * 0.05f; bl2 += (n - bl2) * 0.012f;
+            float debris = r.NextDouble() < 0.01 ? Noise(r) * Decay(t, d, 1f) * 0.6f : 0f;
+            float kick = Sin(Mathf.Lerp(90f, 28f, Mathf.Clamp01(t / 0.3f)), t) * Decay(t, 0.6f, 1.5f) * 1.2f;
+            return n * Decay(t, 0.05f, 1.2f) + bl * 2.2f * Decay(t, 0.5f, 1.5f) + bl2 * 3.5f * Decay(t, d, 1.5f) + kick + debris;
+        });
+        // 레일건 충전 (0.5초): 올라가는 전자음
+        Make("railcharge", 0.55f, (t, d, r) =>
+        {
+            float f = Mathf.Lerp(200f, 1800f, t / d);
+            return (Sin(f, t) * 0.4f + Sin(f * 1.5f, t) * 0.2f + Noise(r) * 0.1f * t / d) * Mathf.Min(1f, t / 0.05f);
+        });
+        // 레일건 발사: 강한 전기 파열 + 긴 윙
+        Make("railgun", 1f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            float zap = (n * 0.8f + Mathf.Sign(Sin(1600f - 1200f * t, t)) * 0.5f) * Decay(t, 0.25f, 1.5f);
+            float boom = Sin(Mathf.Lerp(110f, 40f, t), t) * Decay(t, 0.5f, 1.5f);
+            float ring = Sin(3200f, t) * 0.15f * Decay(t, d, 2f);
+            return zap + boom + ring;
+        });
+        // 천둥: 찢어지는 파열 + 구르는 저음
+        float th = 0f, th2 = 0f;
+        Make("thunder", 1.3f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            th += (n - th) * 0.2f; th2 += (n - th2) * 0.01f;
+            float crack = (th * 1.8f) * Decay(t, 0.18f, 1.2f) * (0.6f + 0.4f * Mathf.Sign(Sin(23f, t)));
+            return crack + th2 * 4f * Decay(t, d, 1.2f) * (0.7f + 0.3f * Sin(3f, t));
+        });
+        // 금속 베기 "슈악": 바람 + 쇳소리
+        float sw = 0f;
+        Make("slash", 0.35f, (t, d, r) =>
+        {
+            sw += (Noise(r) - sw) * 0.4f;
+            float metal = (Sin(2400f, t) + Sin(3700f, t) * 0.6f) * 0.25f * Decay(t, d, 2.5f);
+            return sw * 1.4f * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / (d * 0.6f))) + metal;
+        });
+        // 회오리 굉음 (1초 반복)
+        float ro = 0f, ro2 = 0f;
+        Make("roar", 1f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            ro += (n - ro) * 0.02f; ro2 += (n - ro2) * 0.2f;
+            return (ro * 4f + ro2 * 0.4f) * (0.75f + 0.25f * Sin(4f, t));
+        });
     }
 
     // ================================================================= lines

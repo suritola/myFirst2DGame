@@ -382,9 +382,12 @@ public class SpecialAbilities : MonoBehaviour
                             Vector2 d = Quaternion.Euler(0, 0, i * half / 2.2f) * dir;
                             Fx.Play("fx_explosion", start + (Vector3)(d * range * k / 3.4f), 2.2f + k * 0.9f, Color.white, 14f + Random.Range(0f, 6f));
                         }
-                    Fx.Play("fx_shock", start, 5f, c, 20f);
-                    fx.Play("boom", 1f, 1.1f - blast * 0.1f);
-                    fx.Shake(0.4f, 0.15f);
+                    Fx.Play("fx_shock", start, 7f, c, 20f);
+                    Fx.Play("fx_explosion", start + (Vector3)(dir * 2f), 5f, Color.white, 18f);
+                    Fx.Play("fx_muzzle", start + (Vector3)(dir * 0.8f), 4f, c, 20f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg, 16);
+                    fx.Play("shotgun", 1f, 0.9f - blast * 0.05f);
+                    fx.Play("bigboom", 0.6f, 1.3f);
+                    fx.Shake(0.55f, 0.18f);
                     yield return new WaitForSeconds(0.28f);
                 }
                 break;
@@ -394,7 +397,7 @@ public class SpecialAbilities : MonoBehaviour
                 {
                     float wide = 1f + 0.3f * UltTrait(id);
                     FxAnim aim = null;
-                    fx.StartLoop("hum", 0.6f, 1f);
+                    fx.Play("railcharge", 0.9f, 1f);
                     for (float t = 0f; t < 0.5f; t += Time.deltaTime)
                     {
                         Vector3 m = player.MuzzlePosition;
@@ -403,7 +406,6 @@ public class SpecialAbilities : MonoBehaviour
                         Fx.Play("fx_orb", m, 0.8f + t * 2f, c, 20f);
                         yield return null;
                     }
-                    fx.StopLoop();
                     if (aim != null) Destroy(aim.gameObject);
                     Vector3 from = player.MuzzlePosition;
                     Vector3 to = from + (Vector3)(AimDir() * 45f);
@@ -423,9 +425,13 @@ public class SpecialAbilities : MonoBehaviour
                         Specials.Damage(col.gameObject, dmg * power, (to - from).normalized, 2f);
                         Fx.Play("fx_spark", col.transform.position, 2f, c, 20f);
                     }
-                    Fx.Play("fx_shock", from, 4f, c, 22f);
-                    fx.Play("crack", 1f, 0.7f);
-                    fx.Shake(0.5f, 0.2f);
+                    Fx.Play("fx_shock", from, 6f, c, 22f);
+                    for (float k = 4f; k < 45f; k += 5f)
+                        Fx.Play("fx_shock", from + (to - from).normalized * k, 3.5f * wide, c, 18f + k * 0.3f);
+                    Fx.Play("fx_explosion", to - (to - from).normalized * 2f, 4f, Color.white, 16f);
+                    fx.Play("railgun", 1f, 1f);
+                    fx.Play("crack", 0.8f, 0.6f);
+                    fx.Shake(0.7f, 0.25f);
                 }
                 break;
 
@@ -444,7 +450,8 @@ public class SpecialAbilities : MonoBehaviour
                             Fx.Play("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }
                         angle += 22f;
-                        if (Mathf.Repeat(t, 0.12f) < 0.04f) fx.Play("pew", 0.3f, Random.Range(0.9f, 1.2f));
+                        fx.Play("gunshot", 0.35f, Random.Range(0.95f, 1.25f));
+                        if (Mathf.Repeat(t, 0.2f) < 0.04f) fx.Shake(0.12f, 0.05f);
                         yield return new WaitForSeconds(0.04f);
                     }
                 }
@@ -459,8 +466,12 @@ public class SpecialAbilities : MonoBehaviour
                     ft.owner = this;
                     ft.damage = dmg * 0.25f;
                     ft.life = 4f + 1.5f * UltTrait(id);
-                    fx.Play("ignite", 1f, 0.7f);
-                    fx.Play("flame", 0.8f, 0.8f);
+                    fx.Play("ignite", 1f, 0.6f);
+                    fx.Play("bigboom", 0.7f, 0.8f);
+                    fx.Play("roar", 1f, 0.9f);
+                    Fx.Play("fx_explosion", go.transform.position, 6f, Color.white, 14f);
+                    Fx.Play("fx_shock", go.transform.position, 9f, new Color(1f, 0.5f, 0.15f), 16f);
+                    fx.Shake(0.4f, 0.2f);
                 }
                 break;
 
@@ -474,7 +485,9 @@ public class SpecialAbilities : MonoBehaviour
                     sw.damage = dmg * 0.45f;
                     sw.count = 5 + UltTrait(id);
                     sw.color = c;
-                    fx.Play("shimmer", 0.8f, 1.3f);
+                    fx.Play("shimmer", 1f, 1.1f);
+                    fx.Play("pulse", 0.8f, 1.3f);
+                    Fx.Play("fx_soulburst", player.transform.position, 6f, Color.white, 16f);
                 }
                 break;
 
@@ -497,8 +510,10 @@ public class SpecialAbilities : MonoBehaviour
                             Specials.Damage(target.gameObject, dmg * 0.5f, Vector3.zero, 0f);
                             Collider2D col = target.GetComponent<Collider2D>();
                             if (col != null) ChainLightning(at, col, dmg * 0.25f, 1);
+                            fx.Play("thunder", 0.7f, Random.Range(0.9f, 1.2f));
                             fx.Play("zap", 0.5f, Random.Range(0.8f, 1.1f));
-                            fx.Shake(0.1f, 0.06f);
+                            Fx.Play("fx_explosion", at, 2.5f, new Color(0.7f, 0.9f, 1f), 22f);
+                            fx.Shake(0.25f, 0.08f);
                         }
                         yield return new WaitForSeconds(0.15f);
                     }
@@ -535,7 +550,10 @@ public class SpecialAbilities : MonoBehaviour
                         foreach (Collider2D col in Physics2D.OverlapCircleAll(t.transform.position, 2.5f))
                             if (col.CompareTag("enermy") || col.CompareTag("boss"))
                                 Specials.Damage(col.gameObject, dmg * 1.2f, (col.transform.position - to).normalized, 1.5f);
-                        fx.Play("whoosh", 0.7f, 1.3f);
+                        fx.Play("slash", 1f, Random.Range(0.9f, 1.15f));
+                        Fx.Play("fx_slash", t.transform.position, 7f, Color.white, 34f, Random.Range(0f, 360f), 17);
+                        Fx.Play("fx_soulburst", t.transform.position, 3f, Color.white, 22f);
+                        fx.Shake(0.2f, 0.06f);
                         yield return new WaitForSeconds(0.12f);
                     }
                     Fx.Play("fx_soulburst", player.transform.position, 4f, Color.white, 18f);
@@ -575,6 +593,8 @@ public class SpecialAbilities : MonoBehaviour
         }
         if (rock != null) Destroy(rock.gameObject);
         Explode(at, 2f, damage, 1.2f, new Color(1f, 0.45f, 0.1f, 0.9f));
+        Fx.Play("fx_explosion", at, 5f, Color.white, 16f);
+        if (Random.value < 0.4f) fx.Play("bigboom", 0.5f, Random.Range(0.9f, 1.2f));
     }
 
     // 지그재그 번개 선
@@ -607,13 +627,17 @@ public class SpecialAbilities : MonoBehaviour
     void AttachScytheVisual(Bullet b, float worldSize)
     {
         if (b.TryGetComponent(out SpriteRenderer bulletSr)) bulletSr.enabled = false;
-        float s = Mathf.Max(0.01f, b.transform.lossyScale.x);
-        GameObject blade = MakeSprite("ScytheBlade", ScytheSprite, b.transform.position, 1f, Color.white, "Effect", 8);
+        // 총알 프리팹은 가로 3.3 · 세로 -0.02 로 납작해서, 축마다 따로 되돌려야 제 모양이 나옴
+        Vector3 ls = b.transform.lossyScale;
+        float sx = Mathf.Abs(ls.x) < 0.0001f ? 1f : ls.x, sy = Mathf.Abs(ls.y) < 0.0001f ? 1f : ls.y;
+        GameObject blade = MakeSprite("ScytheBlade", ScytheSprite, b.transform.position, 1f, Color.white, "Effect", 12);
         blade.transform.SetParent(b.transform, true);
-        blade.transform.localScale = Vector3.one * (worldSize / s);
-        GameObject aura = MakeSprite("ScytheGlow", glowSprite, b.transform.position, 1f, new Color(0.7f, 0.4f, 1f, 0.35f), "Effect", 7);
+        blade.transform.localRotation = Quaternion.identity;
+        blade.transform.localScale = new Vector3(worldSize / sx, worldSize / sy, 1f);
+        GameObject aura = MakeSprite("ScytheGlow", glowSprite, b.transform.position, 1f, new Color(0.7f, 0.4f, 1f, 0.5f), "Effect", 11);
         aura.transform.SetParent(b.transform, true);
-        aura.transform.localScale = Vector3.one * (worldSize * 0.3f / s);
+        aura.transform.localRotation = Quaternion.identity;
+        aura.transform.localScale = new Vector3(worldSize * 0.35f / sx, worldSize * 0.35f / sy, 1f);
     }
 
     // ================================================================= 필살기 강화 (스킬 강화 상점) · 조준 화면
@@ -659,6 +683,10 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);
+
+    // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
+    public bool IsInstantUlt => WeaponActive && (CurrentWeapon == ShotgunId || CurrentWeapon == SniperId || CurrentWeapon == DualId
+                                                  || CurrentWeapon == FlameId || CurrentWeapon == GrenadeId);
 
     // 조준 화면 (WeaponAim)이 쓰는 값들
     public Transform PlayerTransform => player.transform;
@@ -1009,7 +1037,7 @@ public class SpecialAbilities : MonoBehaviour
             if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
         }
 
-        fx.Play("boom", 0.8f, 1.25f);
+        fx.Play("shotgun", 0.9f, 1.05f);
         fx.Shake(0.3f, 0.14f);
 
         // 부채꼴을 따라 불꽃이 퍼지는 연출
@@ -1048,7 +1076,7 @@ public class SpecialAbilities : MonoBehaviour
         dualToggle = !dualToggle;
         Vector2 dir = BeginShot(dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
         Vector3 side = new Vector3(-dir.y, dir.x) * 0.35f;
-        fx.Play("pew", 0.35f, dualToggle ? 1f : 1.15f);
+        fx.Play("gunshot", 0.45f, dualToggle ? 1.05f : 1.2f);
         int pene = player.pene + Trait(DualId);
         // 진화: 양쪽 총구에서 동시에
         foreach (float s in IsEvolved(DualId) ? new[] { 1f, -1f } : new[] { dualToggle ? 1f : -1f })
@@ -1155,7 +1183,8 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         Bullet b = Shot(start, dir, WDamage, 1, 1f, cursed, new Color(0.6f, 0.9f, 1f));
-        fx.Play("pew", 0.35f, 0.8f);
+        fx.Play("zap", 0.5f, 0.9f);
+        fx.Play("gunshot", 0.3f, 1.4f);
         if (b != null)
         {
             float dmg = WDamage;

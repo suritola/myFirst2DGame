@@ -328,7 +328,12 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1) && !IsSkillUsing && !isReloading)
         {
-            if (skillGauge != null && skillGauge.IsFull()) StartSkill();
+            if (skillGauge != null && skillGauge.IsFull())
+            {
+                // 조준이 필요 없는 필살기는 누르자마자 발동 (줌 · 감속 없음)
+                if (special != null && special.IsInstantUlt) StartCoroutine(InstantUlt());
+                else StartSkill();
+            }
         }
 
         // =========================
@@ -507,6 +512,7 @@ void Shoot()
             bullet.damage = damage;
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
+            newBullet.AddComponent<BulletGlow>();
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참
             bullet.skillCharge = knockBackRate * GaugeRate;
         }
@@ -650,6 +656,15 @@ void Shoot()
     // =====================================
     // 타겟들에게 순서대로 발사
     // =====================================
+
+    IEnumerator InstantUlt()
+    {
+        isVolleying = true;
+        skillGauge.ResetSkillPoint();
+        FaceTowards(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+        yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(), damage * 5f, 0f));
+        isVolleying = false;
+    }
 
     IEnumerator ShootTargets()
     {
