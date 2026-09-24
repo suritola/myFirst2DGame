@@ -14,6 +14,7 @@ param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [Text.Encoding]::UTF8     # 한글 메시지가 깨지지 않게
 
 $Project = Split-Path $PSScriptRoot -Parent
 $Config = Get-Content (Join-Path $PSScriptRoot "steam\steam-config.json") -Raw | ConvertFrom-Json
@@ -93,7 +94,7 @@ $appVdf = Join-Path $ScriptDir "app_build_$($Config.appId).vdf"
 
 # ---------------------------------------------------------------- 업로드 (Steam Guard 코드를 물어볼 수 있음)
 Write-Host "steamcmd 로 업로드합니다. 처음에는 비밀번호와 Steam Guard 코드를 물어봅니다."
-& $Config.steamcmd +login $Config.steamUser +run_app_build "`"$appVdf`"" +quit
+& $Config.steamcmd +login $Config.steamUser +run_app_build $appVdf +quit
 if ($LASTEXITCODE -ne 0) { throw "steamcmd 업로드 실패 (종료 코드 $LASTEXITCODE)" }
 if ($Preview) { Write-Host "미리보기 완료 (실제로 올리지 않음)" }
 else { Write-Host "완료: Steamworks → 앱 관리 → SteamPipe → 빌드 에서 기본(default) 브랜치로 설정하세요" }
