@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,7 +16,7 @@ public class HPpack : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // =========================
-        // ÈúÆÑ Ãæµ¹
+        // ííŒ© ì¶©ëŒ
         // =========================
 
         if (collision.CompareTag("Player"))

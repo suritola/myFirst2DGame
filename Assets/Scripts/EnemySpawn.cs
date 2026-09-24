@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -13,17 +13,17 @@ public class EnemySpawner : MonoBehaviour
     public bool bossSpawned = false;
     public int spawnedEnemys = 0;
 
-    public float spawnTime = 5f; // nÀÇ ÃÊ±â°ª = 5ÃÊ
+    public float spawnTime = 5f; // nì˜ ì´ˆê¸°ê°’ = 5ì´ˆ
 
     void Start()
     {
-        // °ÔÀÓ ½ÃÀÛ ½Ã Àû 1¸¶¸® »ı¼º
+        // ê²Œì„ ì‹œì‘ ì‹œ ì  1ë§ˆë¦¬ ìƒì„±
         SpawnEnemy(false,transform.position);
         bossbar = FindFirstObjectByType<bossbar>();
         bossSpawned = false;
         boss1Cleared = false;
 
-        // 5ÃÊ¸¶´Ù Àû »ı¼º
+        // 5ì´ˆë§ˆë‹¤ ì  ìƒì„±
         InvokeRepeating("spawnNormalEnemy", spawnTime, spawnTime);
         InvokeRepeating("clear", 30, 30);
     }
@@ -52,7 +52,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (!boss)
         {
-            // ·£´ıÇÑ À§Ä¡ »ı¼º
+            // ëœë¤í•œ ìœ„ì¹˜ ìƒì„±
             spawnedEnemys++;
             playerC = FindFirstObjectByType<PlayerController>();
 
@@ -64,7 +64,7 @@ public class EnemySpawner : MonoBehaviour
 
             Vector3 randomPosition = new Vector3(playerC.transform.position.x + randomX, playerC.transform.position.y + randomY, 0);
 
-            // Àû »ı¼º
+            // ì  ìƒì„±
             if (paze == 1) Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
             else if (paze == 2) Instantiate(enemy2Prefab, randomPosition, Quaternion.identity);
             else if (paze == 3) Instantiate(enemy3Prefab, randomPosition, Quaternion.identity);
@@ -81,7 +81,7 @@ public class EnemySpawner : MonoBehaviour
         }
         else
         {
-            // Àû »ı¼º
+            // ì  ìƒì„±
             Instantiate(enemyPrefab, here, Quaternion.identity);
             Instantiate(enemy2Prefab, here, Quaternion.identity);
             Instantiate(enemy3Prefab, here, Quaternion.identity);

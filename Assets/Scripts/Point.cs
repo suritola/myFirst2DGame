@@ -1,4 +1,4 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 
 public class Point : MonoBehaviour
@@ -18,7 +18,7 @@ public class Point : MonoBehaviour
 
         UpdatePointText();
 
-        Debug.Log("ÇöÀç Á¡¼ö: " + points);
+        Debug.Log("í˜„ì¬ ì ìˆ˜: " + points);
     }
 
     void UpdatePointText()

@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 public class bosss : MonoBehaviour
@@ -25,10 +25,10 @@ public class bosss : MonoBehaviour
     {
         EnemyHealth = setEnemyHP;
 
-        // ÇÃ·¹ÀÌ¾î Ã£±â
+        // í”Œë ˆì´ì–´ ì°¾ê¸°
         player = FindFirstObjectByType<PlayerController>().transform;
 
-        // ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+        // ì»´í¬ë„ŒíŠ¸ ê°€ì ¸ì˜¤ê¸°
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
@@ -37,7 +37,7 @@ public class bosss : MonoBehaviour
     bossbar bossbar;
     void Update()
     {
-        // Á×¾úÀ¸¸é ¾Æ¹«°Íµµ ÇÏÁö ¾ÊÀ½
+        // ì£½ì—ˆìœ¼ë©´ ì•„ë¬´ê²ƒë„ í•˜ì§€ ì•ŠìŒ
         if (isDead) return;
 
         bossbar.MaxHealth = setEnemyHP;
@@ -45,23 +45,23 @@ public class bosss : MonoBehaviour
 
         if (player == null) return;
 
-        // Àû ¡æ ÇÃ·¹ÀÌ¾î ¹æÇâ °è»ê
+        // ì  â†’ í”Œë ˆì´ì–´ ë°©í–¥ ê³„ì‚°
         move = player.position - transform.position;
 
-        // zÃà Á¦°Å
+        // zì¶• ì œê±°
         move.z = 0;
 
-        // ¹æÇâÀÇ ±æÀÌ¸¦ 1·Î ¸ÂÃã
+        // ë°©í–¥ì˜ ê¸¸ì´ë¥¼ 1ë¡œ ë§ì¶¤
         move = move.normalized;
 
-        // ÁÂ¿ì ¹æÇâ º¯°æ
+        // ì¢Œìš° ë°©í–¥ ë³€ê²½
         if (move.x < 0) spriteRenderer.flipX = true;
         else if (move.x > 0) spriteRenderer.flipX = false;
     }
 
     void FixedUpdate()
     {
-        // Á×Áö ¾Ê¾ÒÀ» ¶§¸¸ ÀÌµ¿
+        // ì£½ì§€ ì•Šì•˜ì„ ë•Œë§Œ ì´ë™
         if (!isDead && player != null) transform.Translate(move * speed * Time.fixedDeltaTime);
     }
 
@@ -69,18 +69,18 @@ public class bosss : MonoBehaviour
     {
         if (isDead) return;
 
-        // Ã¼·Â °¨¼Ò
+        // ì²´ë ¥ ê°ì†Œ
         EnemyHealth -= damage;
 
         transform.position += dir * knockBack;
 
-        // ÇÇ°İ ¾Ö´Ï¸ŞÀÌ¼Ç
+        // í”¼ê²© ì• ë‹ˆë©”ì´ì…˜
         //animator.SetTrigger("hit");
 
-        // ÇÇ°İ »ö»ó È¿°ú
+        // í”¼ê²© ìƒ‰ìƒ íš¨ê³¼
         StartCoroutine(HitEffect());
 
-        Debug.Log("Àû Ã¼·Â: " + EnemyHealth);
+        Debug.Log("ì  ì²´ë ¥: " + EnemyHealth);
 
         hitCount++;
         if (hitCount >= 5)
@@ -90,7 +90,7 @@ public class bosss : MonoBehaviour
             hitCount = 0;
         }
 
-        // Ã¼·ÂÀÌ 0 ÀÌÇÏÀÌ¸é »ç¸Á
+        // ì²´ë ¥ì´ 0 ì´í•˜ì´ë©´ ì‚¬ë§
         if (EnemyHealth <= 0) Die(1);
     }
 
@@ -100,7 +100,7 @@ public class bosss : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        // Á×Áö ¾Ê¾ÒÀ» ¶§¸¸ ¿ø·¡ »öÀ¸·Î
+        // ì£½ì§€ ì•Šì•˜ì„ ë•Œë§Œ ì›ë˜ ìƒ‰ìœ¼ë¡œ
         if (!isDead) spriteRenderer.color = Color.white;
     }
     PlayerController playerC;
@@ -156,15 +156,15 @@ public class bosss : MonoBehaviour
     }
 
     public GameObject hp;
-    [Header("ÈúÆÑ")]
+    [Header("ííŒ©")]
     public int chanceofHP = 30;
 
     IEnumerator Death(int a)
     {
-        // Á×À½ ¾Ö´Ï¸ŞÀÌ¼Ç ½Ã°£
+        // ì£½ìŒ ì• ë‹ˆë©”ì´ì…˜ ì‹œê°„
         yield return new WaitForSeconds(1f);
         EnemySpawner enemySpawner = FindFirstObjectByType<EnemySpawner>();
-        // ÃÑ¾Ë¿¡ Á×¾úÀ» ¶§¸¸ ÄÚÀÎ »ı¼º
+        // ì´ì•Œì— ì£½ì—ˆì„ ë•Œë§Œ ì½”ì¸ ìƒì„±
         if (a == 1)
         {
 

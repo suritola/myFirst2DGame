@@ -1,19 +1,19 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class TargetMark : MonoBehaviour
 {
-    [Header("Å¸°Ù")]
+    [Header("íƒ€ê²Ÿ")]
     public Transform target;
 
 
-    [Header("È¸Àü")]
+    [Header("íšŒì „")]
     public float rotationSpeed = 180f;
 
-    [Header("Å©±â")]
+    [Header("í¬ê¸°")]
     public float startScale = 2f;
     public float endScale = 1f;
 
-    [Header("»ö»ó")]
+    [Header("ìƒ‰ìƒ")]
     public Color weakColor = Color.gray;
 
     private SpriteRenderer spriteRenderer;
@@ -32,7 +32,7 @@ public class TargetMark : MonoBehaviour
 
         if (spriteRenderer != null) normalColor = spriteRenderer.color;
 
-        // Ã³À½¿¡´Â 200%
+        // ì²˜ìŒì—ëŠ” 200%
         transform.localScale = Vector3.one * startScale;
     }
 
@@ -44,7 +44,7 @@ public class TargetMark : MonoBehaviour
             return;
         }
 
-        // ÀûÀ» µû¶ó°¨
+        // ì ì„ ë”°ë¼ê°
         transform.position = target.position;
 
         if (enemy == null) enemy = target.GetComponent<EnermyController>();
@@ -54,44 +54,44 @@ public class TargetMark : MonoBehaviour
         if (enemy == null || player == null) return;
 
         // =====================================
-        // µ¥¹ÌÁö°¡ ¾ÆÁ÷ ºÎÁ·ÇÑ »óÅÂ
+        // ë°ë¯¸ì§€ê°€ ì•„ì§ ë¶€ì¡±í•œ ìƒíƒœ
         // =====================================
 
         if (!damageEnough)
         {
-            // È¸»ö
+            // íšŒìƒ‰
             if (spriteRenderer != null) spriteRenderer.color = weakColor;
 
-            // ÇöÀç µ¥¹ÌÁö / Àû Ã¼·Â ºñÀ²
+            // í˜„ì¬ ë°ë¯¸ì§€ / ì  ì²´ë ¥ ë¹„ìœ¨
             float damageRatio = player.skillDamage / enemy.EnemyHealth;
 
-            // 0 ~ 1 »çÀÌ·Î Á¦ÇÑ
+            // 0 ~ 1 ì‚¬ì´ë¡œ ì œí•œ
             damageRatio = Mathf.Clamp01(damageRatio);
 
-            // µ¥¹ÌÁö ºñÀ²¿¡ µû¶ó Å©±â °áÁ¤
+            // ë°ë¯¸ì§€ ë¹„ìœ¨ì— ë”°ë¼ í¬ê¸° ê²°ì •
             float currentScale = Mathf.Lerp(startScale,endScale,damageRatio);
 
             transform.localScale = Vector3.one * currentScale;
 
-            // µ¥¹ÌÁö°¡ ÃæºĞÇØÁ³´ÂÁö È®ÀÎ
+            // ë°ë¯¸ì§€ê°€ ì¶©ë¶„í•´ì¡ŒëŠ”ì§€ í™•ì¸
             if (player.skillDamage >= enemy.EnemyHealth)
             {
                 damageEnough = true;
 
-                // ÇöÀç Å©±â¿¡¼­ ¸ØÃã
+                // í˜„ì¬ í¬ê¸°ì—ì„œ ë©ˆì¶¤
                 if (spriteRenderer != null) spriteRenderer.color = normalColor;
             }
 
-            // ¾ÆÁ÷ ºÎÁ·ÇÏ¸é È¸ÀüÇÏÁö ¾ÊÀ½
+            // ì•„ì§ ë¶€ì¡±í•˜ë©´ íšŒì „í•˜ì§€ ì•ŠìŒ
             if (!damageEnough) return;
         }
 
         // =====================================
-        // µ¥¹ÌÁö°¡ ÃæºĞÇØÁø ÀÌÈÄ
+        // ë°ë¯¸ì§€ê°€ ì¶©ë¶„í•´ì§„ ì´í›„
         // =====================================
 
-        // ÇöÀç Å©±â ±×´ë·Î À¯Áö
-        // È¸Àü¸¸ ½ÃÀÛ
+        // í˜„ì¬ í¬ê¸° ê·¸ëŒ€ë¡œ ìœ ì§€
+        // íšŒì „ë§Œ ì‹œì‘
         transform.Rotate(Vector3.forward,rotationSpeed * Time.unscaledDeltaTime);
     }
 

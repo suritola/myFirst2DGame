@@ -1,14 +1,14 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
     public float speed = 10f;
 
-    // ÀÏ¹İ ÃÑ¾ËÀº 1
-    // ½ºÅ³ ÃÑ¾ËÀº 500
+    // ì¼ë°˜ ì´ì•Œì€ 1
+    // ìŠ¤í‚¬ ì´ì•Œì€ 500
     public int damage = 1;
 
-    //°üÅë °³¼ö
+    //ê´€í†µ ê°œìˆ˜
     public int pene = 1;
 
     public int blood = 0;
@@ -24,7 +24,7 @@ public class Bullet : MonoBehaviour
         {
             dir = value.normalized;
 
-            // ÃÑ¾ËÀÌ ³¯¾Æ°¡´Â ¹æÇâÀ» ¹Ù¶óº¸µµ·Ï È¸Àü
+            // ì´ì•Œì´ ë‚ ì•„ê°€ëŠ” ë°©í–¥ì„ ë°”ë¼ë³´ë„ë¡ íšŒì „
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
             transform.rotation = Quaternion.Euler(0, 0, angle);
@@ -52,7 +52,7 @@ public class Bullet : MonoBehaviour
     )
     {
         // =========================
-        // º®¿¡ ¸ÂÀ¸¸é »èÁ¦
+        // ë²½ì— ë§ìœ¼ë©´ ì‚­ì œ
         // =========================
 
         if (collision.CompareTag("Wall"))
@@ -64,7 +64,7 @@ public class Bullet : MonoBehaviour
 
 
         // =========================
-        // Àû¿¡ ¸ÂÀ¸¸é
+        // ì ì— ë§ìœ¼ë©´
         // =========================
 
         if (collision.CompareTag("enermy"))
@@ -74,7 +74,7 @@ public class Bullet : MonoBehaviour
 
             if (enemy != null)
             {
-                // Àû¿¡°Ô µ¥¹ÌÁö
+                // ì ì—ê²Œ ë°ë¯¸ì§€
                 if (enemy.EnemyHealth < 1) return;
 
                 enemy.TakeDamage(damage, playerC.knockBack, dir);
@@ -84,7 +84,7 @@ public class Bullet : MonoBehaviour
 
 
                 // =========================
-                // ½ºÅ³ Æ÷ÀÎÆ® Ãß°¡
+                // ìŠ¤í‚¬ í¬ì¸íŠ¸ ì¶”ê°€
                 // =========================
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
@@ -93,7 +93,7 @@ public class Bullet : MonoBehaviour
             }
 
 
-            // ÃÑ¾Ë »èÁ¦
+            // ì´ì•Œ ì‚­ì œ
             if (remainPene < 1)
             Destroy(gameObject);
         }
@@ -103,7 +103,7 @@ public class Bullet : MonoBehaviour
 
             if (enemy != null)
             {
-                // Àû¿¡°Ô µ¥¹ÌÁö
+                // ì ì—ê²Œ ë°ë¯¸ì§€
                 if (enemy.EnemyHealth < 1) return;
 
                 enemy.TakeDamage(damage, playerC.knockBack, dir);
@@ -113,7 +113,7 @@ public class Bullet : MonoBehaviour
 
 
                 // =========================
-                // ½ºÅ³ Æ÷ÀÎÆ® Ãß°¡
+                // ìŠ¤í‚¬ í¬ì¸íŠ¸ ì¶”ê°€
                 // =========================
 
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
@@ -122,7 +122,7 @@ public class Bullet : MonoBehaviour
             }
 
 
-            // ÃÑ¾Ë »èÁ¦
+            // ì´ì•Œ ì‚­ì œ
             if (remainPene < 1)
                 Destroy(gameObject);
         }

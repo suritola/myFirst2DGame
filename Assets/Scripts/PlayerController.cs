@@ -1,4 +1,4 @@
-
+ï»¿
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,10 +10,10 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 public class PlayerController : MonoBehaviour
 {
     // =====================================
-    // »ç¿îµå
+    // ì‚¬ìš´ë“œ
     // =====================================
 
-    [Header("»ç¿îµå")]
+    [Header("ì‚¬ìš´ë“œ")]
 
     public AudioClip shotSound;
     public AudioClip hitSound;
@@ -22,20 +22,20 @@ public class PlayerController : MonoBehaviour
     public AudioClip getCoin;
 
     // =====================================
-    // ·¹º§ ¼³Á¤
+    // ë ˆë²¨ ì„¤ì •
     // =====================================
 
-    [Header("·¹º§ ¼³Á¤")]
+    [Header("ë ˆë²¨ ì„¤ì •")]
 
     public int level = 1;
     public float nowEXP = 0f;
     public float needEXP;
 
     // =====================================
-    // ±âº» ¼³Á¤
+    // ê¸°ë³¸ ì„¤ì •
     // =====================================
 
-    [Header("±âº» ¼³Á¤")]
+    [Header("ê¸°ë³¸ ì„¤ì •")]
 
     public float speed = 3f;
 
@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
     public int isShop = 0;
     public int bonusCoin = 0;
 
-    [Header("ÀÏ¹İ ¹ß»ç ¼³Á¤")]
+    [Header("ì¼ë°˜ ë°œì‚¬ ì„¤ì •")]
 
     public float ShootSpeed = 0.8f;
 
@@ -61,10 +61,10 @@ public class PlayerController : MonoBehaviour
     public float knockBack = 0.4f;
 
     // =====================================
-    // Åº¾à / ÀçÀåÀü
+    // íƒ„ì•½ / ì¬ì¥ì „
     // =====================================
 
-    [Header("Åº¾à / ÀçÀåÀü")]
+    [Header("íƒ„ì•½ / ì¬ì¥ì „")]
 
     public int MaxBullet = 6;
     public int NowBullet = 6;
@@ -76,19 +76,19 @@ public class PlayerController : MonoBehaviour
     private bool isReloading = false;
 
     // =====================================
-    // Ã¼·Â
+    // ì²´ë ¥
     // =====================================
 
-    [Header("Ã¼·Â")]
+    [Header("ì²´ë ¥")]
 
     public float PlayerMaxHealth = 100f;
     public float PlayerHealth = 100f;
 
     // =====================================
-    // ½ºÅ³ ¼³Á¤
+    // ìŠ¤í‚¬ ì„¤ì •
     // =====================================
 
-    [Header("½ºÅ³ ¼³Á¤")]
+    [Header("ìŠ¤í‚¬ ì„¤ì •")]
 
     public float targetRange = 8f;
 
@@ -113,10 +113,10 @@ public class PlayerController : MonoBehaviour
     public float Skill_setTime = 0.5f;
 
     // =====================================
-    // È­¸é È¿°ú
+    // í™”ë©´ íš¨ê³¼
     // =====================================
 
-    [Header("È­¸é È¿°ú")]
+    [Header("í™”ë©´ íš¨ê³¼")]
 
     public Image skillEffectPanel;
 
@@ -125,23 +125,23 @@ public class PlayerController : MonoBehaviour
     public float screenFadeSpeed = 5f;
 
     // =====================================
-    // Å¸°Ù ¸¶Å©
+    // íƒ€ê²Ÿ ë§ˆí¬
     // =====================================
 
-    [Header("Å¸°Ù ¸¶Å©")]
+    [Header("íƒ€ê²Ÿ ë§ˆí¬")]
 
     public GameObject targetMarkPrefab;
 
     // =====================================
-    // ½ºÅ³ °ÔÀÌÁö
+    // ìŠ¤í‚¬ ê²Œì´ì§€
     // =====================================
 
-    [Header("½ºÅ³ °ÔÀÌÁö")]
+    [Header("ìŠ¤í‚¬ ê²Œì´ì§€")]
 
     public SkillGauge skillGauge;
 
     // =====================================
-    // ³»ºÎ º¯¼ö
+    // ë‚´ë¶€ ë³€ìˆ˜
     // =====================================
 
     private bool isSkillUsing = false;
@@ -167,7 +167,7 @@ public class PlayerController : MonoBehaviour
     private Camera mainCamera;
 
     // =====================================
-    // ½ÃÀÛ
+    // ì‹œì‘
     // =====================================
 
     void Start()
@@ -218,13 +218,13 @@ public class PlayerController : MonoBehaviour
         needEXP = level * 100;
 
         // =========================
-        // ÀçÀåÀü ÀÔ·Â
+        // ì¬ì¥ì „ ì…ë ¥
         // =========================
 
         if (Input.GetKeyDown(KeyCode.R)) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
-        // ÀÌµ¿ ÀÔ·Â
+        // ì´ë™ ì…ë ¥
         // =========================
 
         move = Vector3.zero;
@@ -240,7 +240,7 @@ public class PlayerController : MonoBehaviour
         move = move.normalized;
 
         // =========================
-        // ÇÃ·¹ÀÌ¾î ¹æÇâ
+        // í”Œë ˆì´ì–´ ë°©í–¥
         // =========================
 
         if (spriteRenderer != null)
@@ -251,13 +251,13 @@ public class PlayerController : MonoBehaviour
         }
 
         // =========================
-        // ÁÂÅ¬¸¯ ÀÏ¹İ ¹ß»ç
+        // ì¢Œí´ë¦­ ì¼ë°˜ ë°œì‚¬
         // =========================
 
         if (Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime) Shoot();
 
         // =========================
-        // ¿ìÅ¬¸¯ ½ºÅ³ ½ÃÀÛ
+        // ìš°í´ë¦­ ìŠ¤í‚¬ ì‹œì‘
         // =========================
 
         if (Input.GetMouseButtonDown(1) && !isSkillUsing && !isReloading)
@@ -266,7 +266,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // =========================
-        // ¿ìÅ¬¸¯ À¯Áö Áß
+        // ìš°í´ë¦­ ìœ ì§€ ì¤‘
         // =========================
 
         if (Input.GetMouseButton(1) && isSkillUsing)
@@ -291,19 +291,19 @@ public class PlayerController : MonoBehaviour
         }
 
         // =========================
-        // ¿ìÅ¬¸¯ ÇØÁ¦
+        // ìš°í´ë¦­ í•´ì œ
         // =========================
 
         if (Input.GetMouseButtonUp(1) && isSkillUsing) EndSkill();
 
         // =========================
-        // ÀÚµ¿ ÀçÀåÀü
+        // ìë™ ì¬ì¥ì „
         // =========================
 
         if (NowBullet <= 0 && !isReloading) StartCoroutine(Reload());
 
         // =========================
-        // ¾Ö´Ï¸ŞÀÌ¼Ç
+        // ì• ë‹ˆë©”ì´ì…˜
         // =========================
 
         if (!isSkillUsing && animator != null)
@@ -314,7 +314,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // =====================================
-    // ÀÌµ¿
+    // ì´ë™
     // =====================================
 
     void FixedUpdate()
@@ -323,7 +323,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // =====================================
-    // ÀçÀåÀü
+    // ì¬ì¥ì „
     // =====================================
 
     IEnumerator Reload()
@@ -349,7 +349,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // =====================================
-    // ÀÏ¹İ ÃÑ¾Ë ¹ß»ç
+    // ì¼ë°˜ ì´ì•Œ ë°œì‚¬
     // =====================================
 
 
@@ -377,7 +377,7 @@ void Shoot()
 
         Vector2 direction = (mousePosition - startPosition).normalized;
 
-        // ¸ÖÆ¼¼¦ ÆÛÁö´Â °¢µµ
+        // ë©€í‹°ìƒ· í¼ì§€ëŠ” ê°ë„
         float spreadAngle = 10f;
 
         if (multiShot == 1) CreateBullet(startPosition, direction, damage, pene, 0);
@@ -401,7 +401,7 @@ void Shoot()
 
 
     // =====================================
-    // ÃÑ¾Ë »ı¼º
+    // ì´ì•Œ ìƒì„±
     // =====================================
 
     void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood)
@@ -423,7 +423,7 @@ void Shoot()
     }
 
     // =====================================
-    // ½ºÅ³ ½ÃÀÛ
+    // ìŠ¤í‚¬ ì‹œì‘
     // =====================================
 
     void StartSkill()
@@ -445,7 +445,7 @@ void Shoot()
     }
 
     // =====================================
-    // ÇÑ ¸¶¸®¾¿ Å¸°ÙÆÃ
+    // í•œ ë§ˆë¦¬ì”© íƒ€ê²ŸíŒ…
     // =====================================
 
     void FindNextTarget()
@@ -488,7 +488,7 @@ void Shoot()
     }
 
     // =====================================
-    // ½ºÅ³ Á¾·á
+    // ìŠ¤í‚¬ ì¢…ë£Œ
     // =====================================
 
     void EndSkill()
@@ -517,7 +517,7 @@ void Shoot()
     }
 
     // =====================================
-    // Å¸°Ùµé¿¡°Ô ¼ø¼­´ë·Î ¹ß»ç
+    // íƒ€ê²Ÿë“¤ì—ê²Œ ìˆœì„œëŒ€ë¡œ ë°œì‚¬
     // =====================================
 
     IEnumerator ShootTargets()
@@ -546,7 +546,7 @@ void Shoot()
     }
 
     // =====================================
-    // È­¸é ÆäÀÌµå
+    // í™”ë©´ í˜ì´ë“œ
     // =====================================
 
     IEnumerator FadeScreen(
@@ -568,7 +568,7 @@ void Shoot()
     }
 
     // =====================================
-    // Ä«¸Ş¶ó ÁÜ ¿ø»óº¹±¸
+    // ì¹´ë©”ë¼ ì¤Œ ì›ìƒë³µêµ¬
     // =====================================
 
     IEnumerator ResetZoom()
@@ -583,7 +583,7 @@ void Shoot()
     }
 
     // =====================================
-    // ÇÃ·¹ÀÌ¾î ÇÇ°İ
+    // í”Œë ˆì´ì–´ í”¼ê²©
     // =====================================
     public float def = 0f;
 
@@ -636,7 +636,7 @@ void Shoot()
     }
 
     // =====================================
-    // Å¸°Ù Á¦°Å
+    // íƒ€ê²Ÿ ì œê±°
     // =====================================
 
     void ClearTargets()
@@ -649,7 +649,7 @@ void Shoot()
     }
 
     // =====================================
-    // Å¸°Ù ¹üÀ§ Ç¥½Ã
+    // íƒ€ê²Ÿ ë²”ìœ„ í‘œì‹œ
     // =====================================
 
     private void OnDrawGizmosSelected()

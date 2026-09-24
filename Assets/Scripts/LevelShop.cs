@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -7,15 +7,15 @@ public class LevelShop : MonoBehaviour
 {
     public GameObject LvshopPanel;
 
-    [Header("Ã¹¹øÂ° ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ì²«ë²ˆì§¸ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI FirstTitle;
     public TextMeshProUGUI FirstAbility;
 
-    [Header("µÎ¹øÂ° ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ë‘ë²ˆì§¸ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI SecondTitle;
     public TextMeshProUGUI SecondAbility;
 
-    [Header("¼¼¹øÂ° ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ì„¸ë²ˆì§¸ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI ThirdTitle;
     public TextMeshProUGUI ThirdAbility;
 
@@ -42,7 +42,7 @@ public class LevelShop : MonoBehaviour
         {
             ability_selected[i] = false;
         }
-        //·¹º§¾÷ ´É·Âµé
+        //ë ˆë²¨ì—… ëŠ¥ë ¥ë“¤
         setAbilitys();
         
 
@@ -53,35 +53,35 @@ public class LevelShop : MonoBehaviour
 
     void setAbilitys()
     {
-        ability_name[0] = "°üÅëÇÏ´Â ÃÑ¾Ë";
-        ability_content[0] = "ÃÑ¾ËÀÇ °üÅë·ÂÀÌ Áõ°¡ÇÕ´Ï´Ù \n( °üÅë " + (bul.pene - 1) + " -> " + bul.pene + " )";
+        ability_name[0] = "ê´€í†µí•˜ëŠ” ì´ì•Œ";
+        ability_content[0] = "ì´ì•Œì˜ ê´€í†µë ¥ì´ ì¦ê°€í•©ë‹ˆë‹¤ \n( ê´€í†µ " + (bul.pene - 1) + " -> " + bul.pene + " )";
 
-        ability_name[1] = "ÄÚÀÎÃæ";
-        ability_content[1] = "ÄÚÀÎÀ» ´õ ¸¹ÀÌ È¹µæÇÕ´Ï´Ù.\n( ÄÚÀÎ È¹µæ·® " + ( 1 + bul.bonusCoin) + " -> " + (2 + bul.bonusCoin ) + " )";
+        ability_name[1] = "ì½”ì¸ì¶©";
+        ability_content[1] = "ì½”ì¸ì„ ë” ë§ì´ íšë“í•©ë‹ˆë‹¤.\n( ì½”ì¸ íšë“ëŸ‰ " + ( 1 + bul.bonusCoin) + " -> " + (2 + bul.bonusCoin ) + " )";
 
-        ability_name[2] = "ÀçÈ°¿ë ¿¡³ÊÁö";
-        ability_content[2] = "½ºÅ³ °ÔÀÌÁö°¡ 20% °¨¼ÒÇÕ´Ï´Ù\n( °ÔÀÌÁö -20% )";
+        ability_name[2] = "ì¬í™œìš© ì—ë„ˆì§€";
+        ability_content[2] = "ìŠ¤í‚¬ ê²Œì´ì§€ê°€ 20% ê°ì†Œí•©ë‹ˆë‹¤\n( ê²Œì´ì§€ -20% )";
 
-        ability_name[3] = "³ë·Áº¸´Â ´«ºû";
-        ability_content[3] = "½ºÅ³À» »ç¿ëÇÏ´Â µ¿¾È Å¸°ÙÀÌ µÈ ÀûÀÌ ´õ ´À·ÁÁı´Ï´Ù. \n( ¼Óµµ -20% )";
+        ability_name[3] = "ë…¸ë ¤ë³´ëŠ” ëˆˆë¹›";
+        ability_content[3] = "ìŠ¤í‚¬ì„ ì‚¬ìš©í•˜ëŠ” ë™ì•ˆ íƒ€ê²Ÿì´ ëœ ì ì´ ë” ëŠë ¤ì§‘ë‹ˆë‹¤. \n( ì†ë„ -20% )";
 
-        ability_name[4] = "´õ ¸¹ °æÇèÄ¡";
-        ability_content[4] = "Å³ °æÇèÄ¡ +20%";
+        ability_name[4] = "ë” ë§ ê²½í—˜ì¹˜";
+        ability_content[4] = "í‚¬ ê²½í—˜ì¹˜ +20%";
 
-        ability_name[5] = "ÈíÇ÷ ½ºÅ³";
-        ability_content[5] = "½ºÅ³·Î ¸ÂÃá Àû 1¸í´ç Ã¼·ÂÀ» È¸º¹ÇÕ´Ï´Ù.\n( È¸º¹·® " + bul.getHP + " -> " + (1 + bul.getHP);
+        ability_name[5] = "í¡í˜ˆ ìŠ¤í‚¬";
+        ability_content[5] = "ìŠ¤í‚¬ë¡œ ë§ì¶˜ ì  1ëª…ë‹¹ ì²´ë ¥ì„ íšŒë³µí•©ë‹ˆë‹¤.\n( íšŒë³µëŸ‰ " + bul.getHP + " -> " + (1 + bul.getHP);
 
-        ability_name[6] = "¸ÖÆ¼ ¼¦";
-        ability_content[6] = "¸ÖÆ¼¼¦ +1";
+        ability_name[6] = "ë©€í‹° ìƒ·";
+        ability_content[6] = "ë©€í‹°ìƒ· +1";
 
-        ability_name[7] = "¹Ğ¾î³»±â";
-        ability_content[7] = "ÃÑ¾ËÀÌ ÀûÀ» ¹Ğ¾î³»´Â È¿°ú +60% ";
+        ability_name[7] = "ë°€ì–´ë‚´ê¸°";
+        ability_content[7] = "ì´ì•Œì´ ì ì„ ë°€ì–´ë‚´ëŠ” íš¨ê³¼ +60% ";
 
-        ability_name[8] = "°­Ã¶°°Àº ½ÉÀå";
-        ability_content[8] = "Ã¼·ÂÀ» Áï½Ã ¸ğµÎ È¸º¹ÇÏ¸ç, ÃÖ´ë Ã¼·ÂÀÌ 30% Áõ°¡ÇÕ´Ï´Ù.";
+        ability_name[8] = "ê°•ì² ê°™ì€ ì‹¬ì¥";
+        ability_content[8] = "ì²´ë ¥ì„ ì¦‰ì‹œ ëª¨ë‘ íšŒë³µí•˜ë©°, ìµœëŒ€ ì²´ë ¥ì´ 30% ì¦ê°€í•©ë‹ˆë‹¤.";
 
-        ability_name[9] = "´Ü´ÜÇÑ ½ÅÃ¼";
-        ability_content[9] = "¹Ş´Â ÇÇÇØ¸¦ 20% °¨¼Ò½ÃÅµ´Ï´Ù.";
+        ability_name[9] = "ë‹¨ë‹¨í•œ ì‹ ì²´";
+        ability_content[9] = "ë°›ëŠ” í”¼í•´ë¥¼ 20% ê°ì†Œì‹œí‚µë‹ˆë‹¤.";
     }
     void Update()
     {
@@ -110,24 +110,24 @@ public class LevelShop : MonoBehaviour
     private int first = 0, second = 1, third = 2;
     void UpdateLvShopContent()
     {
-        //Ã¹¹øÂ° ´É·Â ¼±ÅÃ
+        //ì²«ë²ˆì§¸ ëŠ¥ë ¥ ì„ íƒ
         first = Random.Range(0, Total_abilitys);
         while (ability_selected[first]) first = Random.Range(0, Total_abilitys);
 
         FirstTitle.text = ability_name[first];
         FirstAbility.text = ability_content[first];
 
-        //µÎ¹øÂ° ´É·Â ¼±ÅÃ
+        //ë‘ë²ˆì§¸ ëŠ¥ë ¥ ì„ íƒ
         second = Random.Range(0, Total_abilitys);
-        //Ã¹¹øÂ°¿Í °ãÄ¡Áö ¾Ê±â
+        //ì²«ë²ˆì§¸ì™€ ê²¹ì¹˜ì§€ ì•Šê¸°
         while (second == first || ability_selected[second]) second = Random.Range(0, Total_abilitys);
 
         SecondTitle.text = ability_name[second];
         SecondAbility.text = ability_content[second];
 
-        //¼¼¹øÂ° ´É·Â ¼±ÅÃ
+        //ì„¸ë²ˆì§¸ ëŠ¥ë ¥ ì„ íƒ
         third = Random.Range(0, Total_abilitys);
-        //Ã¹¹øÂ°, µÎ¹øÂ°¶û °ãÄ¡Áö ¾Ê±â
+        //ì²«ë²ˆì§¸, ë‘ë²ˆì§¸ë‘ ê²¹ì¹˜ì§€ ì•Šê¸°
         while (third == first || third == second || ability_selected[third]) third = Random.Range(0, Total_abilitys);
 
         ThirdTitle.text = ability_name[third];

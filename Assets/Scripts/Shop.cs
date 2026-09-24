@@ -1,4 +1,4 @@
-
+ï»¿
 using System;
 using System.Collections;
 using TMPro;
@@ -8,32 +8,32 @@ public class Shop : MonoBehaviour
 {
     public GameObject shopPanel;
 
-    [Header("°ø°İ·Â ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ê³µê²©ë ¥ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI priceTextInput;
     public TextMeshProUGUI statTextInput;
 
-    [Header("°ø¼Ó ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ê³µì† ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI priceTextInput2;
     public TextMeshProUGUI statTextInput2;
 
-    [Header("ÀçÀåÀü¼Óµµ ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ì¬ì¥ì „ì†ë„ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI priceTextInput3;
     public TextMeshProUGUI statTextInput3;
 
-    [Header("ÅºÃ¢ ¹öÆ° ÅØ½ºÆ®")]
+    [Header("íƒ„ì°½ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI priceTextInput4;
     public TextMeshProUGUI statTextInput4;
 
-    [Header("ÀÌµ¿¼Óµµ ¹öÆ° ÅØ½ºÆ®")]
+    [Header("ì´ë™ì†ë„ ë²„íŠ¼ í…ìŠ¤íŠ¸")]
     public TextMeshProUGUI priceTextInput5;
     public TextMeshProUGUI statTextInput5;
 
     public TextMeshProUGUI mycoins;
 
-    [Header("ÄÚÀÎ")]
+    [Header("ì½”ì¸")]
     public int coins;
 
-    [Header("½ºÅİ")]
+    [Header("ìŠ¤í…Ÿ")]
     public int damage = 1;
     public float ShootSpeed = 0.8f;
     public float ReloadSpeed = 3f;
@@ -41,7 +41,7 @@ public class Shop : MonoBehaviour
     public float showedSpeed;
     public float moveSpeed;
 
-    [Header("°¡°İ")]
+    [Header("ê°€ê²©")]
     public int damagePrice = 5;
     public int ShootSpeedPrice = 5;
     public int ReloadSpeedPrice = 5;
@@ -53,20 +53,20 @@ public class Shop : MonoBehaviour
     public Coin coind;
     public PlayerController playerControllerd;
 
-    [Header("°ÔÀÓ Àç½ÃÀÛ")]
+    [Header("ê²Œì„ ì¬ì‹œì‘")]
     public GameObject pause;
     public TextMeshProUGUI pauseText;
 
 
     void Start()
     {
-        Debug.Log("Shop ½ÃÀÛ");
+        Debug.Log("Shop ì‹œì‘");
 
         coind = FindFirstObjectByType<Coin>();
         playerControllerd = FindFirstObjectByType<PlayerController>();
 
         if (shopPanel != null) shopPanel.SetActive(false);
-        else Debug.LogError("shopPanelÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+        else Debug.LogError("shopPanelì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
 
         if (pause != null) pause.SetActive(false);
 
@@ -81,7 +81,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // °ø°İ·Â ¾÷±×·¹ÀÌµå
+    // ê³µê²©ë ¥ ì—…ê·¸ë ˆì´ë“œ
     // =====================================
 
     public void OnPressB1()
@@ -107,7 +107,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // °ø¼Ó ¾÷±×·¹ÀÌµå
+    // ê³µì† ì—…ê·¸ë ˆì´ë“œ
     // =====================================
 
     public void OnPressB2()
@@ -135,7 +135,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // ÀçÀåÀü¼Óµµ ¾÷±×·¹ÀÌµå
+    // ì¬ì¥ì „ì†ë„ ì—…ê·¸ë ˆì´ë“œ
     // =====================================
 
     public void OnPressB3()
@@ -163,7 +163,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // ÅºÃ¢ ¾÷±×·¹ÀÌµå
+    // íƒ„ì°½ ì—…ê·¸ë ˆì´ë“œ
     // =====================================
 
     public void OnPressB4()
@@ -208,7 +208,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // »óÁ¡ ¿­±â / ´İ±â
+    // ìƒì  ì—´ê¸° / ë‹«ê¸°
     // =====================================
 
     public bool isPause = false;
@@ -216,7 +216,7 @@ public class Shop : MonoBehaviour
     {
         if (isShopOpen)
         {
-            // »óÁ¡ ´İ±â
+            // ìƒì  ë‹«ê¸°
             isShopOpen = false;
 
             if (shopPanel != null) shopPanel.SetActive(false);
@@ -225,7 +225,7 @@ public class Shop : MonoBehaviour
         }
         else
         {
-            // »óÁ¡ ¿­±â
+            // ìƒì  ì—´ê¸°
             if (isPause) return;
 
             isShopOpen = true;
@@ -242,7 +242,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // °ÔÀÓ Àç½ÃÀÛ Ä«¿îÆ®´Ù¿î
+    // ê²Œì„ ì¬ì‹œì‘ ì¹´ìš´íŠ¸ë‹¤ìš´
     // =====================================
 
     public IEnumerator StartGameCountdown()
@@ -258,9 +258,9 @@ public class Shop : MonoBehaviour
 
         for (int countdown = 1; countdown > 0; countdown--)
         {
-            if (pauseText != null) pauseText.text = "ÀÏ½ÃÁ¤Áö " + countdown + "ÃÊ";
+            if (pauseText != null) pauseText.text = "ì¼ì‹œì •ì§€ " + countdown + "ì´ˆ";
 
-            // Time.timeScale = 0ÀÌ¾îµµ ½Ã°£ÀÌ Èå¸§
+            // Time.timeScale = 0ì´ì–´ë„ ì‹œê°„ì´ íë¦„
             yield return new WaitForSecondsRealtime(1f);
         }
 
@@ -276,7 +276,7 @@ public class Shop : MonoBehaviour
 
 
     // =====================================
-    // »óÁ¡ ÅØ½ºÆ® °»½Å
+    // ìƒì  í…ìŠ¤íŠ¸ ê°±ì‹ 
     // =====================================
 
     void UpdateShopText()
@@ -285,35 +285,35 @@ public class Shop : MonoBehaviour
 
         coins = coind.coins;
         moveSpeed = playerControllerd.speed;
-        if (mycoins != null) mycoins.text = "ÄÚÀÎ : " + coins;
+        if (mycoins != null) mycoins.text = "ì½”ì¸ : " + coins;
 
         // =====================================
-        // ÀÌµ¿¼Óµµ
+        // ì´ë™ì†ë„
         // =====================================
 
-        if (priceTextInput5 != null) priceTextInput5.text = "±¸¸Å\n" + moveSpeedPrice + " ÄÚÀÎ";
+        if (priceTextInput5 != null) priceTextInput5.text = "êµ¬ë§¤\n" + moveSpeedPrice + " ì½”ì¸";
 
         if (statTextInput5 != null)
         {
             float tmp = moveSpeed * 1.05f;
-            statTextInput5.text = "ÀÌµ¿¼Óµµ \n" + moveSpeed + " -> " + tmp;
+            statTextInput5.text = "ì´ë™ì†ë„ \n" + moveSpeed + " -> " + tmp;
         }
 
         // =====================================
-        // °ø°İ·Â
+        // ê³µê²©ë ¥
         // =====================================
 
-        if (priceTextInput != null) priceTextInput.text = "±¸¸Å\n" + damagePrice + " ÄÚÀÎ";
+        if (priceTextInput != null) priceTextInput.text = "êµ¬ë§¤\n" + damagePrice + " ì½”ì¸";
 
         if (statTextInput != null)
         {
             int tmp = damage + 1;
-            statTextInput.text = "ÃÑ¾Ë °ø°İ·Â \n" + damage + " -> " + tmp;
+            statTextInput.text = "ì´ì•Œ ê³µê²©ë ¥ \n" + damage + " -> " + tmp;
         }
 
 
         // =====================================
-        // °ø°İ¼Óµµ
+        // ê³µê²©ì†ë„
         // =====================================
 
         showedSpeed =
@@ -321,7 +321,7 @@ public class Shop : MonoBehaviour
 
         if (showedSpeed < 5)
         {
-            if (priceTextInput2 != null) priceTextInput2.text = "±¸¸Å\n" + ShootSpeedPrice + " ÄÚÀÎ";
+            if (priceTextInput2 != null) priceTextInput2.text = "êµ¬ë§¤\n" + ShootSpeedPrice + " ì½”ì¸";
 
             if (statTextInput2 != null)
             {
@@ -331,51 +331,51 @@ public class Shop : MonoBehaviour
 
                 float nextSpeed = Mathf.Round((1f / tmp2) * 100f) / 100f;
 
-                statTextInput2.text = "°ø°İ ¼Óµµ\n" + currentSpeed + " -> " + nextSpeed;
+                statTextInput2.text = "ê³µê²© ì†ë„\n" + currentSpeed + " -> " + nextSpeed;
             }
         }
         else
         {
-            if (priceTextInput2 != null) priceTextInput2.text = "ÃÖ´ë";
+            if (priceTextInput2 != null) priceTextInput2.text = "ìµœëŒ€";
 
-            if (statTextInput2 != null) statTextInput2.text = "°ø°İ·Â \n5(ÃÖ´ë)";
+            if (statTextInput2 != null) statTextInput2.text = "ê³µê²©ë ¥ \n5(ìµœëŒ€)";
         }
 
 
         // =====================================
-        // ÀçÀåÀü¼Óµµ
+        // ì¬ì¥ì „ì†ë„
         // =====================================
 
         if (ReloadSpeed > 1.5f)
         {
-            if (priceTextInput3 != null) priceTextInput3.text = "±¸¸Å\n" + ReloadSpeedPrice + " ÄÚÀÎ";
+            if (priceTextInput3 != null) priceTextInput3.text = "êµ¬ë§¤\n" + ReloadSpeedPrice + " ì½”ì¸";
 
             if (statTextInput3 != null)
             {
                 float tmp3 = ReloadSpeed - 0.3f;
 
-                statTextInput3.text = "ÀçÀåÀü ¼Óµµ\n" + ReloadSpeed.ToString("0.0") + "ÃÊ -> " + tmp3.ToString("0.0") + "ÃÊ";
+                statTextInput3.text = "ì¬ì¥ì „ ì†ë„\n" + ReloadSpeed.ToString("0.0") + "ì´ˆ -> " + tmp3.ToString("0.0") + "ì´ˆ";
             }
         }
         else
         {
-            if (priceTextInput3 != null) priceTextInput3.text = "ÃÖ´ë";
+            if (priceTextInput3 != null) priceTextInput3.text = "ìµœëŒ€";
 
-            if (statTextInput3 != null) statTextInput3.text = "ÀçÀåÀü ¼Óµµ\n" + ReloadSpeed.ToString("0.0") + "ÃÊ (ÃÖ´ë)";
+            if (statTextInput3 != null) statTextInput3.text = "ì¬ì¥ì „ ì†ë„\n" + ReloadSpeed.ToString("0.0") + "ì´ˆ (ìµœëŒ€)";
         }
 
 
         // =====================================
-        // ÅºÃ¢
+        // íƒ„ì°½
         // =====================================
 
-        if (priceTextInput4 != null) priceTextInput4.text = "±¸¸Å\n" + MaxBulletPrice + " ÄÚÀÎ";
+        if (priceTextInput4 != null) priceTextInput4.text = "êµ¬ë§¤\n" + MaxBulletPrice + " ì½”ì¸";
 
         if (statTextInput4 != null)
         {
             int tmp4 = MaxBullet + 1;
 
-            statTextInput4.text = "ÃÖ´ë ÅºÃ¢\n" + MaxBullet + " -> " + tmp4;
+            statTextInput4.text = "ìµœëŒ€ íƒ„ì°½\n" + MaxBullet + " -> " + tmp4;
         }
     }
 }

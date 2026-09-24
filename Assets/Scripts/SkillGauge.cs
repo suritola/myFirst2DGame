@@ -1,19 +1,19 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 
 public class SkillGauge : MonoBehaviour
 {
-    [Header("½ÇÁ¦·Î ÁÙ¾îµé°í Â÷¿À¸£´Â Image")]
+    [Header("ì‹¤ì œë¡œ ì¤„ì–´ë“¤ê³  ì°¨ì˜¤ë¥´ëŠ” Image")]
     public Image gaugeImage;
 
-    [Header("½ºÅ³ Æ÷ÀÎÆ®")]
+    [Header("ìŠ¤í‚¬ í¬ì¸íŠ¸")]
     public int SkillPoint = 0;
     public int MaxSkillPoint = 10;
 
     void Start()
     {
-        // Inspector¿¡ ¿¬°á ¾È ÇßÀ¸¸é
-        // ÇöÀç ¿ÀºêÁ§Æ®ÀÇ Image¸¦ ÀÚµ¿À¸·Î °¡Á®¿È
+        // Inspectorì— ì—°ê²° ì•ˆ í–ˆìœ¼ë©´
+        // í˜„ì¬ ì˜¤ë¸Œì íŠ¸ì˜ Imageë¥¼ ìë™ìœ¼ë¡œ ê°€ì ¸ì˜´
         if (gaugeImage == null)
         {
             gaugeImage = GetComponent<Image>();
@@ -28,7 +28,7 @@ public class SkillGauge : MonoBehaviour
 
         SkillPoint = Mathf.Clamp(SkillPoint, 0, MaxSkillPoint);
 
-        Debug.Log("ÇöÀç SkillPoint: " + SkillPoint);
+        Debug.Log("í˜„ì¬ SkillPoint: " + SkillPoint);
 
         UpdateGauge();
     }
@@ -50,7 +50,7 @@ public class SkillGauge : MonoBehaviour
     {
         if (gaugeImage == null)
         {
-            Debug.LogWarning("Gauge Image°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogWarning("Gauge Imageê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
             return;
         }
 
@@ -62,6 +62,6 @@ public class SkillGauge : MonoBehaviour
         if (value >= 1) gaugeImage.color = Color.yellow;
         else gaugeImage.color = Color.blue;
 
-        Debug.Log("°ÔÀÌÁö Fill Amount: " + value);
+        Debug.Log("ê²Œì´ì§€ Fill Amount: " + value);
     }
 }
