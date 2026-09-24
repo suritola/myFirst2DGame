@@ -26,7 +26,8 @@ $prevCommit = $null
 $latest = & $Gh release list -R $Repo --limit 1 --json tagName --jq ".[0].tagName" 2>$null
 if ($LASTEXITCODE -eq 0 -and $latest) {
     $prevTag = $latest.Trim()
-    $body = & $Gh release view $prevTag -R $Repo --json body --jq ".body"
+    # 여러 줄 설명은 줄 배열로 오므로 하나로 합침
+    $body = (& $Gh release view $prevTag -R $Repo --json body --jq ".body") -join "`n"
     if ($body -match "소스 커밋: ([0-9a-f]+)") { $prevCommit = $Matches[1] }
 }
 if (-not $Version) {
