@@ -42,6 +42,13 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
+        if (stages == null || stages.Length == 0 || stages[0].enemies == null || stages[0].enemies.Length == 0)
+        {
+            Debug.LogError("EnemySpawner: 스테이지 설정(Stages)이 비어 있습니다. 씬을 저장하지 말고 GameScene을 다시 열어 주세요.", this);
+            enabled = false;
+            return;
+        }
+
         playerC = FindFirstObjectByType<PlayerController>();
         bossbar = FindFirstObjectByType<bossbar>();
 
