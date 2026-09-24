@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 57574349
   m_SortingLayer: 5
   m_SortingOrder: 10
-  m_Sprite: {fileID: 21300000, guid: 07d454b19982e2e4d8b715911dc7fff9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: eebb34d86bf8f34be94d0ad4e0a655db, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -101,4 +101,4 @@ MonoBehaviour:
   rotationSpeed: 180
   startScale: 0.8
   endScale: 0.4
-  weakColor: {r: 0, g: 0, b: 0, a: 1}
+  weakColor: {r: 0.5, g: 0.45, b: 0.58, a: 0.75}
