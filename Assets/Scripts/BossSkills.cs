@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 보스 스킬: 스킬 3개를 번갈아 쓰고, 체력이 절반 아래면 특수 스킬도 씀
@@ -79,21 +80,34 @@ public class BossSkills : MonoBehaviour
     Vector2 DirTo(PlayerController p) => ((Vector2)(p.transform.position - transform.position)).normalized;
 
     // ================================================================= 리치 왕
-    // 영혼 탄막: 사방으로 두 번 퍼지는 영혼탄 (틈 사이로 피함)
+    // 망령의 손아귀: 보스 주변 세 겹의 고리에서 차례로 영혼의 손(가시)이 솟음 (고리 사이로 피함)
     IEnumerator SoulVolley()
     {
-        Hostile.Circle(transform.position, 3f, 0.8f, Soul);
-        yield return Windup(Soul, 0.8f);
-        for (int wave = 0; wave < 2 && Alive; wave++)
+        Vector3 c = transform.position;
+        FxAnim rune = Fx.Play("fx_rune", c, 6f, new Color(0.55f, 0.95f, 1f, 0.8f), 1f, 0f, 1, true, 2.4f);
+        if (rune != null) rune.spin = 90f;
+        yield return Windup(Soul, 0.6f);
+        float[] rings = { 3f, 6f, 9f };
+        for (int w = 0; w < rings.Length && Alive; w++)
         {
-            float offset = wave * 11.25f + Random.Range(0f, 10f);
-            for (int i = 0; i < 16; i++)
+            int n = 6 + w * 4;
+            float offset = Random.Range(0f, 360f);
+            Vector3[] spots = new Vector3[n];
+            for (int i = 0; i < n; i++)
             {
-                float a = (offset + i * 22.5f) * Mathf.Deg2Rad;
-                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 9f, 15f, 0.55f, Soul, 0.14f, 5f);
+                float a = (offset + i * 360f / n) * Mathf.Deg2Rad;
+                spots[i] = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * rings[w];
+                Hostile.Circle(spots[i], 1.3f, 0.7f, Soul);
             }
-            Hostile.Play("whoosh", 0.5f, 1.3f);
-            yield return new WaitForSeconds(0.55f);
+            yield return new WaitForSeconds(0.7f);
+            if (!Alive) yield break;
+            foreach (Vector3 at in spots)
+            {
+                Fx.Play("fx_spike", at + Vector3.up * 0.7f, 2.6f, new Color(0.6f, 0.95f, 1f), 18f);
+                Fx.Play("fx_orb", at, 1f, new Color(0.7f, 0.9f, 1f), 18f);
+                Hostile.HitCircle(at, 1.3f, 15f);
+            }
+            Hostile.Play("crack", 0.5f, 1.2f + w * 0.1f);
         }
     }
 
@@ -116,21 +130,33 @@ public class BossSkills : MonoBehaviour
         Hostile.Play("boom", 0.6f, 1.3f);
     }
 
-    // 뼈 창: 세 갈래 조준선 → 빠른 뼈 창
+    // 뼈 가시 격자: 플레이어 자리에 + 모양, 이어서 × 모양으로 뼈 가시가 솟음
     IEnumerator BoneSpears(PlayerController p)
     {
-        Vector2 dir = DirTo(p);
-        Vector2[] dirs = { Quaternion.Euler(0, 0, -16f) * dir, dir, Quaternion.Euler(0, 0, 16f) * dir };
-        foreach (Vector2 d in dirs) Hostile.Line(transform.position, transform.position + (Vector3)(d * 24f), 1f, 0.75f, new Color(1f, 0.95f, 0.8f, 0.8f));
-        yield return Windup(new Color(1f, 0.95f, 0.8f), 0.75f);
-        if (!Alive) yield break;
-        foreach (Vector2 d in dirs)
+        Vector3 c = p.transform.position;
+        Color bone = new Color(1f, 0.95f, 0.8f, 0.9f);
+        for (int pass = 0; pass < 2 && Alive; pass++)
         {
-            HostileProjectile b = Hostile.Shoot(transform.position, d, 24f, 16f, 0.6f, new Color(0.95f, 0.92f, 0.8f), 0.2f, 2f);
-            b.transform.localScale = new Vector3(0.4f, 0.1f, 1f);
-            b.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+            float tilt = pass == 0 ? 0f : 45f;
+            List<Vector3> spots = new List<Vector3>();
+            for (int arm = 0; arm < 2; arm++)
+            {
+                float a = (tilt + arm * 90f) * Mathf.Deg2Rad;
+                Vector3 d = new Vector3(Mathf.Cos(a), Mathf.Sin(a));
+                Hostile.Line(c - d * 9f, c + d * 9f, 1.5f, 0.8f, bone);
+                for (float k = -8f; k <= 8f; k += 1.6f) spots.Add(c + d * k);
+            }
+            if (pass == 0) yield return Windup(bone, 0.8f);
+            else yield return new WaitForSeconds(0.8f);
+            if (!Alive) yield break;
+            foreach (Vector3 at in spots) Fx.Play("fx_spike", at + Vector3.up * 0.6f, 2.2f, new Color(1f, 0.97f, 0.88f), 20f);
+            PlayerController pl = Hostile.Player;
+            if (pl != null)
+                foreach (Vector3 at in spots)
+                    if (Vector2.Distance(pl.transform.position, at) < 1f) { pl.TryHit(16f); break; }
+            Hostile.Play("crack", 0.7f, 1.1f);
+            Hostile.Shake(0.12f);
         }
-        Hostile.Play("crack", 0.6f, 1.3f);
     }
 
     // 특수: 망자의 의식
@@ -170,7 +196,9 @@ public class BossSkills : MonoBehaviour
 
         float orbit = Random.Range(0f, 360f);
         float dirSign = Random.value < 0.5f ? 1f : -1f;
-        float fireTimer = 0f, bossTimer = 0f, spiral = 0f;
+        // 등불을 잇는 회전 레이저 (보스 → 등불 → 바깥)
+        FxAnim[] beams = new FxAnim[lanterns.Length];
+        float beamHit = 0f;
         for (float t = 0f; t < 5f && Alive; t += Time.deltaTime)
         {
             orbit += 55f * dirSign * Time.deltaTime;
@@ -188,29 +216,27 @@ public class BossSkills : MonoBehaviour
                 lanterns[i].transform.localScale = Vector3.one * (0.55f + Mathf.Sin(Time.time * 9f + i) * 0.06f);
             }
 
-            // 등불마다 바깥쪽으로 비껴 나가는 탄 (나선 모양)
-            fireTimer += Time.deltaTime;
-            if (fireTimer >= 0.2f)
+            // 등불마다 보스에서 뻗어 나가는 레이저 (처음 0.8초는 가는 경고선)
+            bool live = t > 0.8f;
+            for (int i = 0; i < lanterns.Length; i++)
             {
-                fireTimer = 0f;
-                for (int i = 0; i < lanterns.Length; i++)
-                {
-                    float a = (orbit + i * 90f + 35f * dirSign) * Mathf.Deg2Rad;
-                    Hostile.Shoot(lanterns[i].transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 7f, 14f, 0.5f, i % 2 == 0 ? cyan : violet, 0.13f, 5f);
-                }
-                Hostile.Play("pew", 0.15f, 1.8f);
+                Vector3 dir = (lanterns[i].transform.position - home).normalized;
+                Vector3 end = home + dir * 13f;
+                if (beams[i] != null) Destroy(beams[i].gameObject);
+                beams[i] = Fx.Beam(home, end, live ? 1.3f : 0.25f, live ? (i % 2 == 0 ? cyan : violet) : new Color(1f, 1f, 1f, 0.5f), 0.1f);
             }
-            // 보스 본체: 느리고 굵은 세 갈래 나선
-            bossTimer += Time.deltaTime;
-            if (bossTimer >= 0.35f)
+            if (live)
             {
-                bossTimer = 0f;
-                spiral += 23f * -dirSign;
-                for (int arm = 0; arm < 3; arm++)
-                {
-                    float a = (spiral + arm * 120f) * Mathf.Deg2Rad;
-                    Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 5f, 16f, 0.75f, new Color(0.85f, 0.7f, 1f), 0.22f, 7f);
-                }
+                PlayerController pl = Hostile.Player;
+                beamHit -= Time.deltaTime;
+                if (pl != null && beamHit <= 0f)
+                    for (int i = 0; i < lanterns.Length; i++)
+                        if (Hostile.DistanceToSegment(pl.transform.position, home, home + (lanterns[i].transform.position - home).normalized * 13f) < 0.8f)
+                        {
+                            pl.TryHit(14f);
+                            beamHit = 0.3f;
+                            break;
+                        }
             }
             yield return null;
         }
@@ -235,6 +261,7 @@ public class BossSkills : MonoBehaviour
         }
 
         foreach (GameObject l in lanterns) if (l != null) Destroy(l);
+        foreach (FxAnim b in beams) if (b != null) Destroy(b.gameObject);
         Destroy(runeIn.gameObject);
         Destroy(runeOut.gameObject);
         if (aura != null) Destroy(aura);
@@ -245,10 +272,13 @@ public class BossSkills : MonoBehaviour
         Hostile.Burst(home, blastRadius, violet);
         ShockRing.Spawn(home, 1f, blastRadius * 1.6f, 0.6f, cyan, 0.5f);
         ShockRing.Spawn(home, 0.5f, blastRadius * 1.1f, 0.45f, Color.white, 0.3f);
-        for (int i = 0; i < 28; i++)
+        Fx.Play("fx_soulburst", home, blastRadius * 2.4f, Color.white, 14f);
+        // 폭발 뒤 바깥 고리에서 가시가 솟음
+        for (int i = 0; i < 20; i++)
         {
-            float a = i * (360f / 28f) * Mathf.Deg2Rad;
-            Hostile.Shoot(home, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 10f, 15f, 0.55f, i % 2 == 0 ? cyan : violet, 0.15f, 5f);
+            float a = i * 18f * Mathf.Deg2Rad;
+            Vector3 at = home + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (blastRadius + 1.5f);
+            Fx.Play("fx_spike", at + Vector3.up * 0.7f, 2.6f, i % 2 == 0 ? cyan : violet, 16f);
         }
         for (int i = 0; i < 16; i++) SoulWisp.Spawn(home, home + (Vector3)(Random.insideUnitCircle.normalized * 9f), Random.value < 0.5f ? cyan : violet, true);
         Hostile.Play("boom", 1f, 0.6f);
@@ -294,10 +324,12 @@ public class BossSkills : MonoBehaviour
             transform.position = Vector3.Lerp(start, end, t / 0.45f);
             if (Hostile.Glow != null)
                 FlameParticle.Spawn(Hostile.Glow, transform.position + (Vector3)Random.insideUnitCircle, Random.insideUnitCircle * 2f, 0.5f, 0.08f, 0.35f, false);
+            if (Random.value < 0.3f) Fx.Play("fx_explosion", transform.position + (Vector3)(Random.insideUnitCircle * 1.2f), 2.2f, Color.white, 20f);
             if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.4f) hit = p.TryHit(35f);
             yield return null;
         }
         Hostile.Burst(transform.position, 3f, Fire, true);
+        Fx.Play("fx_shock", transform.position, 7f, new Color(1f, 0.55f, 0.2f), 18f);
         Hostile.Shake(0.3f);
     }
 
@@ -320,7 +352,8 @@ public class BossSkills : MonoBehaviour
         const float r = 2.6f;
         Hostile.Circle(spot, r, warn, Fire);
         yield return new WaitForSeconds(warn - 0.4f);
-        GameObject rock = Hostile.Glow != null ? SpecialAbilities.MakeSprite("Meteor", Hostile.Glow, spot + Vector3.up * 10f, 0.25f, Fire, "Effect", 12) : null;
+        FxAnim meteor = Fx.Play("fx_meteor", spot + Vector3.up * 10f, 2.6f, Color.white, 14f, 0f, 12, true, 0.5f);
+        GameObject rock = meteor != null ? meteor.gameObject : null;
         for (float t = 0f; t < 0.4f; t += Time.deltaTime)
         {
             if (rock != null)
@@ -332,6 +365,7 @@ public class BossSkills : MonoBehaviour
         }
         if (rock != null) Destroy(rock);
         Hostile.HitCircle(spot, r, 28f);
+        Fx.Play("fx_explosion", spot, r * 2.6f, Color.white, 16f);
         Hostile.Burst(spot, r, Fire, true);
         Hostile.Play("boom", 0.6f, 0.9f);
         Hostile.Shake(0.15f);
@@ -353,6 +387,7 @@ public class BossSkills : MonoBehaviour
         if (!Alive) yield break;
 
         Hostile.Play("boom", 0.8f, 0.6f);
+        Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
         LineRenderer[] wave = Arcs(gapAt, gapSize, 1f, Fire, 1.2f);
         bool hit = false;
         Vector3 center = transform.position;
@@ -410,11 +445,18 @@ public class BossSkills : MonoBehaviour
         }
 
         Hostile.Play("flame", 0.9f, 0.7f);
-        foreach (LineRenderer b in beams) b.startWidth = b.endWidth = 1.6f;
+        foreach (LineRenderer b in beams) b.startWidth = b.endWidth = 0.6f;
+        FxAnim[] pixelBeams = new FxAnim[4];
+        Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
         for (float t = 0f; t < 5f && Alive; t += Time.deltaTime)
         {
             angle += spin * Time.deltaTime;
             SetBeams(beams, angle, length);
+            for (int i = 0; i < 4; i++)
+            {
+                if (pixelBeams[i] != null) Destroy(pixelBeams[i].gameObject);
+                pixelBeams[i] = Fx.Beam(beams[i].GetPosition(0), beams[i].GetPosition(1), 1.8f, new Color(1f, 0.55f, 0.2f), 0.1f);
+            }
             float flicker = 0.75f + 0.25f * Mathf.Sin(Time.time * 30f);
             foreach (LineRenderer b in beams) b.startColor = b.endColor = new Color(1f, 0.5f * flicker + 0.2f, 0.15f, 0.9f);
 
@@ -433,6 +475,7 @@ public class BossSkills : MonoBehaviour
             yield return null;
         }
         foreach (LineRenderer b in beams) Destroy(b.gameObject);
+        foreach (FxAnim b in pixelBeams) if (b != null) Destroy(b.gameObject);
     }
 
     void SetBeams(LineRenderer[] beams, float angle, float length)

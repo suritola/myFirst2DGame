@@ -533,6 +533,8 @@ public class SpecialAbilities : MonoBehaviour
         lr.startWidth = 0.3f;
         lr.endWidth = 0.15f;
         go.AddComponent<LineFade>().duration = duration;
+        Fx.Bolt(a, b, 1.1f, color, duration + 0.05f);
+        Fx.Play("fx_spark", b, 1.6f, color, 20f);
     }
 
     // 낫 모양 그림을 총알에 붙임 (판정은 총알 그대로)
@@ -831,6 +833,8 @@ public class SpecialAbilities : MonoBehaviour
         nextFire = Time.time + BaseInterval(CurrentWeapon) / player.fireRateMultiplier * WeaponRateMul(CurrentWeapon);
         // 무기마다 자기 탄창을 씀 (권총 탄창과 별개)
         Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
+        Vector2 aimDir = ((Vector2)(target - start)).normalized;
+        Fx.Play("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
         WeaponAmmo mag = Ammo(CurrentWeapon);
         cursed = IsLastBulletCursed(mag.ammo);
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
@@ -1133,6 +1137,9 @@ public class SpecialAbilities : MonoBehaviour
                 DamageZone zone = SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
                 zone.lava = true;
                 ShockRing.Spawn(zone.transform.position, 0.3f, FireZoneRadius * 1.2f, 0.35f, new Color(1f, 0.55f, 0.2f, 0.9f), 0.3f);
+                FxAnim fireRune = Fx.Play("fx_rune", zone.transform.position, FireZoneRadius * 2f, new Color(1f, 0.55f, 0.2f, 0.7f), 1f, 0f, 2, true, evo ? 6f : 4f);
+                if (fireRune != null) fireRune.spin = 45f;
+                Fx.Play("fx_explosion", zone.transform.position, FireZoneRadius * 1.6f, Color.white, 16f);
                 StartCooldown(id, evo ? 9f : 12f);
                 fx.Play("boom", 0.5f, 0.8f);
                 fx.Play("crackle", 0.8f);
@@ -1251,6 +1258,7 @@ public class SpecialAbilities : MonoBehaviour
         Vector3 end = ClampToArena(start + dir * DashDistance);
         player.GrantInvincibility(0.35f);
         ShockRing.Spawn(start, 0.3f, 2.2f, 0.3f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.25f);
+        for (int i = 0; i < 3; i++) Fx.Play("fx_smoke", start + (Vector3)(Random.insideUnitCircle * 0.6f), 1.8f, new Color(0.6f, 0.9f, 1f), 14f);
         SpriteRenderer body = player.GetComponent<SpriteRenderer>();
         int ghosts = 0;
         for (float t = 0f; t < 0.15f; t += Time.deltaTime)
@@ -1269,6 +1277,7 @@ public class SpecialAbilities : MonoBehaviour
         }
         player.transform.position = end;
         ShockRing.Spawn(end, 0.3f, 1.8f, 0.25f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.2f);
+        Fx.Play("fx_shock", end, 4f, new Color(0.55f, 0.95f, 1f), 22f);
         for (int i = 0; i < 6; i++) SoulWisp.Spawn(end, end + (Vector3)(Random.insideUnitCircle.normalized * 2.5f), new Color(0.5f, 0.95f, 1f), true);
         // 진화: 도착 지점 충격파
         if (IsEvolved(DashId)) Explode(end, 2.5f, Damage * 1.5f, 2f, new Color(0.5f, 0.95f, 1f, 0.85f));
@@ -1282,6 +1291,9 @@ public class SpecialAbilities : MonoBehaviour
         timeWarpUntil = Time.time + duration;
         Flash(player.transform.position, 12f, new Color(0.5f, 0.8f, 1f, 0.5f), 0.5f);
         ShockRing.Spawn(player.transform.position, 1f, 14f, 0.7f, new Color(0.55f, 0.85f, 1f, 0.9f), 0.5f);
+        FxAnim clock = Fx.Play("fx_rune", player.transform.position, 12f, new Color(0.55f, 0.85f, 1f, 0.45f), 1f, 0f, 1, true, duration);
+        if (clock != null) { clock.follow = player.transform; clock.spin = -25f; }
+        Fx.Play("fx_shock", player.transform.position, 14f, new Color(0.6f, 0.9f, 1f), 12f);
         ShockRing.Spawn(player.transform.position, 0.5f, 9f, 0.5f, Color.white, 0.2f);
         yield return new WaitForSeconds(duration);
         EnermyController.GlobalSpeedMultiplier = 1f;
@@ -1299,6 +1311,8 @@ public class SpecialAbilities : MonoBehaviour
         for (int i = 0; i < 14; i++)
             SoulWisp.Spawn(player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f), player.transform.position, new Color(1f, 0.2f, 0.25f));
         ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.3f);
+        Fx.Play("fx_shock", player.transform.position, 7f, new Color(1f, 0.25f, 0.3f), 16f);
+        Fx.Play("fx_spark", player.transform.position, 3f, new Color(1f, 0.3f, 0.3f), 14f);
         yield return new WaitForSeconds(evo ? 12f : 8f);
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
@@ -1314,6 +1328,7 @@ public class SpecialAbilities : MonoBehaviour
         decoy.GetComponent<SpriteRenderer>().flipX = body.flipX;
         EnermyController.Decoy = decoy.transform;
         ShockRing.Spawn(decoy.transform.position, 0.3f, 3f, 0.35f, new Color(0.55f, 0.9f, 1f, 0.9f), 0.25f);
+        Fx.Play("fx_soulburst", decoy.transform.position, 3.5f, Color.white, 18f);
         for (int i = 0; i < 8; i++) SoulWisp.Spawn(decoy.transform.position, decoy.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 3f), new Color(0.55f, 0.9f, 1f), true);
         player.bodyAlpha = 0.4f;
         bool evo = IsEvolved(MirrorId);
@@ -1400,6 +1415,7 @@ public class SpecialAbilities : MonoBehaviour
             GameObject s = MakeSprite("AllySkeleton", allySprite, pos, 1f, new Color(0.6f, 0.95f, 1f), "Character", 1);
             s.transform.localScale = Vector3.one * 1.1f;
             Flash(pos, 2.2f, new Color(0.6f, 0.95f, 1f, 0.8f), 0.25f);
+            Fx.Play("fx_soulburst", pos, 3f, Color.white, 18f);
             ShockRing.Spawn(pos, 0.2f, 1.6f, 0.3f, new Color(0.6f, 0.95f, 1f, 0.9f), 0.15f);
             AllySkeleton a = s.AddComponent<AllySkeleton>();
             a.owner = this;
@@ -1507,6 +1523,9 @@ public class SpecialAbilities : MonoBehaviour
         }
         Flash(pos, radius * 2f, color, 0.3f);
         Flash(pos, radius * 0.9f, new Color(1f, 1f, 1f, 0.9f), 0.12f);
+        // 도트 폭발: 따뜻한 색은 화염, 차가운 색은 영혼 폭발
+        Fx.Play(color.r >= color.b ? "fx_explosion" : "fx_soulburst", pos, radius * 2.4f, Color.white, 16f);
+        Fx.Play("fx_shock", pos, radius * 2.6f, color, 20f);
         ShockRing.Spawn(pos, radius * 0.3f, radius * 1.15f, 0.3f, color, 0.3f);
         for (int i = 0; i < Mathf.Clamp(Mathf.RoundToInt(radius * 3f), 4, 16); i++)
             SoulWisp.Spawn(pos, pos + (Vector3)(Random.insideUnitCircle.normalized * radius * 1.5f), color, true);

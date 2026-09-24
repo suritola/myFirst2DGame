@@ -384,7 +384,8 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!isSkillUsing) transform.Translate(move * speed * Time.fixedDeltaTime);
+        float slowMul = Time.time < slowUntil ? slowFactor : 1f;
+        if (!isSkillUsing) transform.Translate(move * speed * slowMul * Time.fixedDeltaTime);
     }
 
     // =====================================
@@ -512,6 +513,16 @@ void Shoot()
 
     // 총구 위치 (바라보는 쪽 손)
     public Vector3 MuzzlePosition => transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
+
+    // 꽃가루 구름 등으로 잠깐 느려짐
+    float slowUntil;
+    float slowFactor = 1f;
+
+    public void Slow(float factor, float seconds)
+    {
+        slowFactor = factor;
+        slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
+    }
 
     public void GrantInvincibility(float seconds)
     {

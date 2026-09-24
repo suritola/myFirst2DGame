@@ -128,7 +128,7 @@ public class EnermyController : MonoBehaviour
                 dir = (move + side * Mathf.Sin(moveTime * zigzagFrequency) * zigzagAmplitude).normalized;
             }
 
-            float currentSpeed = speed * GlobalSpeedMultiplier;
+            float currentSpeed = speed * GlobalSpeedMultiplier * (Time.time < enrageUntil ? enrageMul : 1f);
             if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
 
             Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;
@@ -156,6 +156,16 @@ public class EnermyController : MonoBehaviour
         for (int i = 0; i < n; i++)
             if (!wallHits[i].isTrigger && wallHits[i].CompareTag("Wall")) return true;
         return false;
+    }
+
+    // 울부짖음 등으로 잠깐 빨라짐
+    float enrageUntil;
+    float enrageMul = 1f;
+
+    public void Enrage(float mul, float seconds)
+    {
+        enrageMul = mul;
+        enrageUntil = Time.time + seconds;
     }
 
     // 스킬로 스스로 터졌을 때 (처치로 인정)

@@ -92,8 +92,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                // 흡혈: 맞힌 만큼 회복 (최대 체력은 넘지 않음)
-                if (blood > 0f) playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + blood);
+                Fx.Play("fx_spark", transform.position, 1.2f, Color.white, 26f);
 
 
                 // =========================
@@ -123,8 +122,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                // 흡혈: 맞힌 만큼 회복 (최대 체력은 넘지 않음)
-                if (blood > 0f) playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + blood);
+                Fx.Play("fx_spark", transform.position, 1.2f, Color.white, 26f);
 
 
                 // =========================
