@@ -207,13 +207,40 @@ public class SpecialAbilities : MonoBehaviour
         return b;
     }
 
+    // 총알 없이 앞쪽 부채꼴 안의 적을 즉시 타격하는 근거리 폭발
+    const float ShotgunRange = 6f;
+    const float ShotgunHalfAngle = 30f;
+
     void FireShotgun()
     {
-        Vector2 dir = BeginShot(1.6f, 1, out Vector3 start, out bool cursed);
-        for (int i = 0; i < 5; i++)
+        Vector2 dir = BeginShot(1.4f, 1, out Vector3 start, out bool cursed);
+        float dmg = Damage * 2.5f * (cursed ? 3f : 1f);
+        bool hitAny = false;
+
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(start, ShotgunRange))
         {
-            Vector2 d = Quaternion.Euler(0, 0, -20f + 10f * i) * dir;
-            Shot(start, d, Damage * 0.6f, 1, 2f, cursed, new Color(1f, 0.6f, 0.3f), 0.8f, 1f, 0.3f);
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            Vector2 to = (Vector2)(c.transform.position - start);
+            if (Vector2.Angle(dir, to) > ShotgunHalfAngle) continue;
+
+            Specials.Damage(c.gameObject, dmg, to.normalized, 2.5f);
+            hitAny = true;
+            if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
+        }
+
+        // 부채꼴을 따라 불꽃이 퍼지는 연출
+        for (int i = -2; i <= 2; i++)
+        {
+            Vector2 d = Quaternion.Euler(0, 0, i * ShotgunHalfAngle / 2f) * dir;
+            for (int k = 1; k <= 3; k++)
+                Flash(start + (Vector3)(d * ShotgunRange * k / 3.5f), 1.2f + k * 0.6f, new Color(1f, 0.55f, 0.2f, 0.8f), 0.18f + k * 0.04f);
+        }
+
+        // 스킬 게이지는 맞힌 경우에만 조금 참
+        if (hitAny)
+        {
+            SkillGauge gauge = FindFirstObjectByType<SkillGauge>();
+            if (gauge != null) gauge.AddSkillPoint(1f);
         }
     }
 
