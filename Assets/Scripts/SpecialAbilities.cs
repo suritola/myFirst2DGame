@@ -65,6 +65,27 @@ public class SpecialAbilities : MonoBehaviour
     readonly Dictionary<Collider2D, float> orbHitTimes = new Dictionary<Collider2D, float>();
     Material lineMaterial;
 
+    // 피드백 (소리, 조준 표시, 알림 글자)
+    SpecialFeedback fx;
+    LineRenderer aimLine;       // 조준 점선
+    LineRenderer previewRing;   // 범위 원
+    LineRenderer previewCone;   // 산탄총 부채꼴
+    LineRenderer targetRing;    // 유도탄/갈고리 표적
+    LineRenderer auraRing;      // 시간 왜곡 범위
+    GameObject chargeGlow;      // 저격 충전 빛
+    GameObject pactAura;        // 희생의 계약 붉은 기운
+    GameObject curseGlow;       // 저주탄 장전 표시
+    bool chargeFullPlayed;
+    int aimingSkill = -1;       // 누르고 있는 조준형 스킬
+    int lastBullets = -1;
+    float lastOrbSound;
+    float timeWarpUntil;
+    readonly Dictionary<int, bool> wasReady = new Dictionary<int, bool>();
+    readonly Dictionary<int, float> rowFlashUntil = new Dictionary<int, float>();
+
+    // 누르고 있는 동안 미리보기를 보여주고 떼면 쓰는 스킬
+    static bool IsAimedSkill(int id) => id == DashId || id == FireZoneId || id == HookId;
+
     // HUD: 고른 능력마다 한 줄
     class HudRow
     {
@@ -90,6 +111,14 @@ public class SpecialAbilities : MonoBehaviour
         EnermyController.Killed += OnEnemyKilled;
         lineMaterial = new Material(Shader.Find("Sprites/Default"));
         BuildHud();
+
+        fx = gameObject.AddComponent<SpecialFeedback>();
+        fx.Init(font, fontMaterial);
+        aimLine = fx.NewLine("AimLine", true);
+        previewRing = fx.NewLine("PreviewRing", true);
+        previewCone = fx.NewLine("PreviewCone", true);
+        targetRing = fx.NewLine("TargetRing", false, 21);
+        auraRing = fx.NewLine("AuraRing", true, 19);
     }
 
     void OnDestroy()
@@ -119,7 +148,16 @@ public class SpecialAbilities : MonoBehaviour
     // ================================================================= update
     void Update()
     {
-        if (player == null || equipped.Count == 0 || Time.timeScale == 0f) { UpdateHud(); return; }
+        if (player == null || equipped.Count == 0 || Time.timeScale == 0f)
+        {
+            // 멈춘 동안에는 소리와 표시를 숨김
+            if (fx != null) fx.StopLoop();
+            HidePreviews();
+            UpdateHud();
+            return;
+        }
+
+        HidePreviews();
 
         if (weapons.Count > 0)
         {
@@ -127,21 +165,24 @@ public class SpecialAbilities : MonoBehaviour
             {
                 // 기본 권총(-1) → 무기1 → 무기2 → 기본 권총 ...
                 weaponIndex = weaponIndex + 1 >= weapons.Count ? -1 : weaponIndex + 1;
-                sniperCharge = -1f;
+                CancelSniperCharge();
+                fx.StopLoop();
+                fx.Play("clank", 0.5f, 1.4f);
+                fx.FloatText(player.transform.position, WeaponActive ? abilities[CurrentWeapon].name : "기본 권총", new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
             }
             player.ammoTextOverride = null;
             if (WeaponActive) UpdateWeapon();
         }
 
-        for (int i = 0; i < skills.Count && i < SkillKeys.Length; i++)
-        {
-            int id = skills[i];
-            if (Input.GetKeyDown(SkillKeys[i]) && Time.time >= CooldownUntil(id) && !player.IsSkillUsing) UseSkill(id);
-        }
+        for (int i = 0; i < skills.Count && i < SkillKeys.Length; i++) HandleSkillKey(skills[i], SkillKeys[i]);
+        if (aimingSkill >= 0) ShowSkillPreview(aimingSkill);
 
         if (Has(OrbsId)) UpdateOrbs();
         if (CurrentWeapon != FlameId) heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
 
+        UpdateReadyChimes();
+        UpdateCurseNotice();
+        UpdateAuras();
         UpdateHud();
     }
 
@@ -166,16 +207,12 @@ public class SpecialAbilities : MonoBehaviour
         switch (CurrentWeapon)
         {
             case ShotgunId:
+                // 공격 범위(부채꼴) 표시
+                fx.SetCone(previewCone, player.MuzzlePosition, AimDir(), ShotgunHalfAngle, ShotgunRange, new Color(1f, 0.55f, 0.2f, 0.45f), 0.1f);
                 if (down && Ready()) FireShotgun();
                 break;
             case SniperId:
-                if (down && Ready()) sniperCharge = 0f;
-                if (sniperCharge >= 0f)
-                {
-                    sniperCharge = Mathf.Min(1.2f, sniperCharge + Time.deltaTime);
-                    player.ammoTextOverride = "충전 " + Mathf.RoundToInt(sniperCharge / 1.2f * 100f) + "%";
-                    if (up) { FireSniper(sniperCharge / 1.2f); sniperCharge = -1f; }
-                }
+                UpdateSniper(down, up);
                 break;
             case DualId:
                 if (held && Ready()) FireDual();
@@ -184,22 +221,99 @@ public class SpecialAbilities : MonoBehaviour
                 UpdateFlame(held);
                 break;
             case SeekerId:
-                if (held && Ready()) FireSeeker();
+                {
+                    // 유도탄이 쫓아갈 적 표시
+                    Transform target = Specials.NearestEnemy(MouseWorld(), 20f) ?? Specials.NearestEnemy(player.transform.position, 20f);
+                    if (target != null) fx.SetRing(targetRing, target.position, 1.6f + Mathf.Sin(Time.time * 8f) * 0.15f, new Color(0.75f, 0.5f, 1f, 0.85f), 0.12f);
+                    if (held && Ready()) FireSeeker();
+                }
                 break;
             case ChainId:
                 if (down && Ready()) FireChain();
                 break;
             case ScytheId:
+                if (activeScythe == null)
+                    fx.SetLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
                 if (down && activeScythe == null && !player.IsSkillUsing) FireScythe();
                 player.ammoTextOverride = activeScythe == null ? "낫 준비" : "낫 회수 중";
                 break;
             case GrenadeId:
-                if (down && Ready()) FireGrenade();
+                {
+                    // 떨어질 지점과 폭발 범위
+                    Vector3 land = GrenadeLanding();
+                    fx.SetLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
+                    fx.SetRing(previewRing, land, 3.5f, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
+                    if (down && Ready()) FireGrenade();
+                }
                 break;
         }
     }
 
     bool Ready() => player.CanShoot && Time.time >= nextFire;
+
+    Vector2 AimDir() => ((Vector2)(MouseWorld() - player.MuzzlePosition)).normalized;
+
+    Vector3 GrenadeLanding()
+    {
+        Vector3 start = player.MuzzlePosition;
+        Vector3 target = MouseWorld();
+        if (Vector2.Distance(start, target) > 14f) target = start + (Vector3)(AimDir() * 14f);
+        return target;
+    }
+
+    // 저격총: 점선 조준선은 항상, 누르고 있으면 충전 (빛, 소리, 완충 알림)
+    void UpdateSniper(bool down, bool up)
+    {
+        Vector3 muzzle = player.MuzzlePosition;
+        Vector3 mouse = MouseWorld();
+
+        if (down && Ready())
+        {
+            sniperCharge = 0f;
+            chargeFullPlayed = false;
+            chargeGlow = MakeSprite("SniperCharge", glowSprite, muzzle, 0.05f, new Color(0.5f, 0.95f, 1f, 0.8f), "Effect", 6);
+        }
+
+        float k = sniperCharge >= 0f ? sniperCharge / 1.2f : 0f;
+        bool full = k >= 1f;
+        Color lineColor = sniperCharge < 0f ? new Color(0.5f, 0.95f, 1f, 0.35f)
+            : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
+            : new Color(0.5f, 0.95f, 1f, 0.4f + 0.5f * k);
+        fx.SetLine(aimLine, muzzle, mouse, lineColor, sniperCharge < 0f ? 0.08f : 0.08f + 0.1f * k);
+
+        if (sniperCharge < 0f) return;
+
+        sniperCharge = Mathf.Min(1.2f, sniperCharge + Time.deltaTime);
+        player.ammoTextOverride = full ? "완충!" : "충전 " + Mathf.RoundToInt(k * 100f) + "%";
+        fx.StartLoop("hum", 0.5f, 0.7f + 0.9f * k);
+
+        if (chargeGlow != null)
+        {
+            chargeGlow.transform.position = muzzle;
+            float pulse = full ? 1f + Mathf.Sin(Time.time * 18f) * 0.15f : 1f;
+            chargeGlow.transform.localScale = Vector3.one * Mathf.Lerp(0.05f, 0.28f, k) * pulse;
+            chargeGlow.GetComponent<SpriteRenderer>().color = Color.Lerp(new Color(0.5f, 0.95f, 1f, 0.8f), new Color(1f, 0.85f, 0.3f, 0.95f), k);
+        }
+
+        if (full && !chargeFullPlayed)
+        {
+            chargeFullPlayed = true;
+            fx.Play("ding", 0.8f);
+        }
+
+        if (up)
+        {
+            FireSniper(k);
+            CancelSniperCharge();
+        }
+    }
+
+    void CancelSniperCharge()
+    {
+        sniperCharge = -1f;
+        if (chargeGlow != null) Destroy(chargeGlow);
+        if (fx != null && CurrentWeapon != FlameId) fx.StopLoop();
+    }
 
     // 공통: 발사 준비 (방향, 소리, 탄약, 탄창 저주)
     Vector2 BeginShot(float intervalMul, int ammoCost, out Vector3 start, out bool cursed)
@@ -247,6 +361,9 @@ public class SpecialAbilities : MonoBehaviour
             if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
         }
 
+        fx.Play("boom", 0.8f, 1.25f);
+        fx.Shake(0.3f, 0.14f);
+
         // 부채꼴을 따라 불꽃이 퍼지는 연출
         for (int i = -2; i <= 2; i++)
         {
@@ -268,6 +385,8 @@ public class SpecialAbilities : MonoBehaviour
         if (!player.CanShoot) return;
         Vector2 dir = BeginShot(1.8f, 1, out Vector3 start, out bool cursed);
         Shot(start, dir, Damage * Mathf.Lerp(1.5f, 3f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
+        fx.Play("crack", 0.7f + 0.3f * charge, 1.2f - 0.3f * charge);
+        fx.Shake(0.15f + 0.25f * charge, 0.12f);
     }
 
     void FireDual()
@@ -275,13 +394,23 @@ public class SpecialAbilities : MonoBehaviour
         dualToggle = !dualToggle;
         Vector2 dir = BeginShot(0.5f, dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
         Vector3 side = new Vector3(-dir.y, dir.x) * (dualToggle ? 0.35f : -0.35f);
+        fx.Play("pew", 0.35f, dualToggle ? 1f : 1.15f);
+        Flash(start + side, 0.9f, new Color(1f, 0.85f, 0.5f, 0.8f), 0.06f);
         Shot(start + side, dir, Damage * 0.55f, player.pene, 0.6f, cursed, new Color(1f, 0.85f, 0.5f), 1f, 1f, 0.6f);
     }
 
     void UpdateFlame(bool held)
     {
-        if (overheated && heat <= 0.3f) overheated = false;
-        if (held && !overheated && !player.IsSkillUsing && Time.time >= nextFire)
+        if (overheated && heat <= 0.3f)
+        {
+            overheated = false;
+            fx.Play("chime", 0.4f, 1.2f);
+            fx.FloatText(player.transform.position, "냉각 완료", new Color(0.5f, 0.95f, 1f));
+        }
+        bool firing = held && !overheated && !player.IsSkillUsing;
+        if (firing) fx.StartLoop("crackle", 0.9f, 1f);
+        else fx.StopLoop();
+        if (firing && Time.time >= nextFire)
         {
             Vector3 target = MouseWorld();
             player.FaceTowards(target);
@@ -296,10 +425,18 @@ public class SpecialAbilities : MonoBehaviour
                 b.onHitEnemy += (bullet, col) => Burn.Apply(col.gameObject, burnDps, 2f);
             }
             heat += 0.035f;
-            if (heat >= 1f) { heat = 1f; overheated = true; }
+            if (heat >= 1f)
+            {
+                heat = 1f;
+                overheated = true;
+                fx.StopLoop();
+                fx.Play("hiss", 0.9f);
+                fx.FloatText(player.transform.position, "과열!", new Color(1f, 0.35f, 0.25f), 6f);
+            }
         }
-        else
+        else if (!firing)
         {
+            // 쏘지 않을 때만 식음
             heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
         }
         player.ammoTextOverride = overheated ? "과열!" : "열기 " + Mathf.RoundToInt(heat * 100f) + "%";
@@ -309,6 +446,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector2 dir = BeginShot(0.9f, 1, out Vector3 start, out bool cursed);
         Bullet b = Shot(start, dir, Damage * 0.7f, 1, 0.5f, cursed, new Color(0.7f, 0.5f, 1f), 0.3f, 1.2f, 0.8f);
+        fx.Play("whoosh", 0.4f, 1.6f);
         if (b != null) b.gameObject.AddComponent<Homing>().turnSpeed = 360f;
     }
 
@@ -316,6 +454,7 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector2 dir = BeginShot(1f, 1, out Vector3 start, out bool cursed);
         Bullet b = Shot(start, dir, Damage, 1, 1f, cursed, new Color(0.6f, 0.9f, 1f));
+        fx.Play("pew", 0.35f, 0.8f);
         if (b != null)
         {
             float dmg = Damage;
@@ -335,13 +474,14 @@ public class SpecialAbilities : MonoBehaviour
         s.owner = player.transform;
         s.direction = ((Vector2)(target - player.MuzzlePosition)).normalized;
         activeScythe = b.gameObject;
+        fx.Play("whoosh", 0.7f, 0.9f);
     }
 
     void FireGrenade()
     {
-        Vector2 dir = BeginShot(1.8f, 2, out Vector3 start, out bool cursed);
-        Vector3 target = MouseWorld();
-        if (Vector2.Distance(start, target) > 14f) target = start + (Vector3)(dir * 14f);
+        Vector3 target = GrenadeLanding();
+        BeginShot(1.8f, 2, out Vector3 start, out bool cursed);
+        fx.Play("thump", 0.8f);
         GameObject g = MakeSprite("LavaGrenade", glowSprite, start, 1.2f, new Color(1f, 0.45f, 0.1f), "Effect", 5);
         Grenade gr = g.AddComponent<Grenade>();
         gr.owner = this;
@@ -350,23 +490,105 @@ public class SpecialAbilities : MonoBehaviour
     }
 
     // ================================================================= skills
+    // 스킬 키: 쿨타임 중이면 경고, 조준형은 누르고 있는 동안 미리보기 후 떼면 사용
+    void HandleSkillKey(int id, KeyCode key)
+    {
+        if (Input.GetKeyDown(key))
+        {
+            float left = CooldownUntil(id) - Time.time;
+            if (left > 0f)
+            {
+                fx.Play("buzz", 0.6f);
+                fx.FloatText(player.transform.position, abilities[id].name + " " + left.ToString("0.0") + "초", new Color(0.7f, 0.66f, 0.72f), 4f, 0.4f);
+                return;
+            }
+            if (player.IsSkillUsing) return;
+            if (IsAimedSkill(id)) aimingSkill = id;
+            else UseSkill(id);
+        }
+
+        if (aimingSkill == id && Input.GetKeyUp(key))
+        {
+            aimingSkill = -1;
+            if (Time.time >= CooldownUntil(id) && !player.IsSkillUsing) UseSkill(id);
+        }
+    }
+
+    void ShowSkillPreview(int id)
+    {
+        Vector3 from = player.transform.position;
+        Vector3 mouse = MouseWorld();
+        Vector2 dir = ((Vector2)(mouse - from)).normalized;
+        switch (id)
+        {
+            case DashId:
+                {
+                    Vector3 end = ClampToArena(from + (Vector3)(dir * 6f));
+                    fx.SetLine(aimLine, from, end, new Color(0.5f, 0.95f, 1f, 0.7f), 0.1f);
+                    fx.SetRing(previewRing, end, 0.9f, new Color(0.5f, 0.95f, 1f, 0.8f), 0.1f);
+                }
+                break;
+            case FireZoneId:
+                fx.SetRing(previewRing, mouse, 3f, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
+                break;
+            case HookId:
+                {
+                    HookTarget(from, dir, out Collider2D enemy, out float dist);
+                    Vector3 end = from + (Vector3)(dir * dist);
+                    fx.SetLine(aimLine, from, end, new Color(0.85f, 0.15f, 0.2f, 0.8f), 0.1f);
+                    if (enemy != null) fx.SetRing(targetRing, enemy.transform.position, 1.6f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.14f);
+                    else fx.SetRing(previewRing, end, 0.8f, new Color(0.85f, 0.15f, 0.2f, 0.6f), 0.08f);
+                }
+                break;
+        }
+    }
+
     void UseSkill(int id)
     {
         switch (id)
         {
-            case DashId: StartCoroutine(Dash()); StartCooldown(id, 3f); break;
-            case FireZoneId: SpawnZone(MouseWorld(), 3f, 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f)); StartCooldown(id, 12f); break;
-            case TimeWarpId: StartCoroutine(TimeWarp()); StartCooldown(id, 20f); break;
-            case PactId: StartCoroutine(Pact()); StartCooldown(id, 25f); break;
+            case DashId: StartCoroutine(Dash()); StartCooldown(id, 3f); fx.Play("whoosh", 0.9f, 1.2f); break;
+            case FireZoneId:
+                SpawnZone(MouseWorld(), 3f, 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
+                StartCooldown(id, 12f);
+                fx.Play("boom", 0.5f, 0.8f);
+                fx.Play("crackle", 0.8f);
+                break;
+            case TimeWarpId:
+                StartCoroutine(TimeWarp());
+                StartCooldown(id, 20f);
+                fx.Play("shimmer", 0.9f, 0.6f);
+                fx.FloatText(player.transform.position, "시간 왜곡!", new Color(0.55f, 0.85f, 1f), 5f, 0f);
+                break;
+            case PactId:
+                StartCoroutine(Pact());
+                StartCooldown(id, 25f);
+                fx.Play("pulse", 1f, 0.8f);
+                fx.FloatText(player.transform.position, "희생의 계약! 공격력 2배", new Color(1f, 0.3f, 0.3f), 5f, 0f);
+                break;
             case SoulBurstId:
-                if (souls < 5) return;
+                if (souls < 5)
+                {
+                    fx.Play("buzz", 0.6f);
+                    fx.FloatText(player.transform.position, "영혼 부족 " + souls + "/5", new Color(0.7f, 0.66f, 0.72f), 4.5f, 0.4f);
+                    return;
+                }
                 Explode(player.transform.position, 7f, Damage * (1.5f + souls * 0.25f), 3f, new Color(0.6f, 0.95f, 1f, 0.9f));
                 souls = 0;
                 StartCooldown(id, 5f);
                 break;
-            case SkeletonsId: SummonSkeletons(3); StartCooldown(id, 15f); break;
-            case MirrorId: StartCoroutine(Mirror()); StartCooldown(id, 12f); break;
-            case HookId: Hook(); StartCooldown(id, 4f); break;
+            case SkeletonsId:
+                SummonSkeletons(3);
+                StartCooldown(id, 15f);
+                fx.Play("shimmer", 0.8f, 1.2f);
+                fx.FloatText(player.transform.position, "해골 소환!", new Color(0.6f, 0.95f, 1f), 4.5f, 0f);
+                break;
+            case MirrorId:
+                StartCoroutine(Mirror());
+                StartCooldown(id, 12f);
+                fx.Play("shimmer", 0.8f, 1.6f);
+                break;
+            case HookId: Hook(); StartCooldown(id, 4f); fx.Play("clank", 0.8f); break;
         }
     }
 
@@ -376,6 +598,67 @@ public class SpecialAbilities : MonoBehaviour
     {
         cooldownLength[id] = seconds;
         cooldownUntil[id] = Time.time + seconds;
+        wasReady[id] = false;
+    }
+
+    // 쿨타임이 끝나면 알림음과 HUD 반짝임
+    void UpdateReadyChimes()
+    {
+        foreach (int id in skills)
+        {
+            bool ready = Time.time >= CooldownUntil(id);
+            if (ready && wasReady.TryGetValue(id, out bool before) && !before)
+            {
+                fx.Play("chime", 0.45f);
+                rowFlashUntil[id] = Time.time + 0.5f;
+            }
+            wasReady[id] = ready;
+        }
+    }
+
+    // 탄창 저주: 마지막 한 발이 장전되면 알림과 붉은 빛
+    void UpdateCurseNotice()
+    {
+        if (!Has(CurseId)) return;
+        int now = player.NowBullet;
+        if (now == 1 && lastBullets != 1)
+        {
+            fx.Play("pulse", 0.6f, 1.6f);
+            fx.FloatText(player.transform.position, "저주탄 장전!", new Color(1f, 0.3f, 0.3f), 4.5f, 0f);
+        }
+        lastBullets = now;
+
+        bool show = now == 1 && !WeaponActive;
+        if (show && curseGlow == null) curseGlow = MakeSprite("CurseGlow", glowSprite, player.MuzzlePosition, 0.18f, new Color(1f, 0.2f, 0.2f, 0.8f), "Effect", 6);
+        if (!show && curseGlow != null) Destroy(curseGlow);
+        if (curseGlow != null)
+        {
+            curseGlow.transform.position = player.MuzzlePosition;
+            curseGlow.transform.localScale = Vector3.one * (0.16f + Mathf.Sin(Time.time * 10f) * 0.04f);
+        }
+    }
+
+    // 지속형 스킬 표시 (시간 왜곡 범위, 희생의 계약 기운)
+    void UpdateAuras()
+    {
+        if (Time.time < timeWarpUntil)
+            fx.SetRing(auraRing, player.transform.position, 6f + Mathf.Sin(Time.time * 4f) * 0.4f, new Color(0.5f, 0.8f, 1f, 0.45f), 0.12f);
+        else
+            SpecialFeedback.Hide(auraRing);
+
+        if (pactAura != null)
+        {
+            pactAura.transform.position = player.transform.position + new Vector3(0f, -0.8f, 0f);
+            pactAura.transform.localScale = Vector3.one * (0.75f + Mathf.Sin(Time.time * 6f) * 0.08f);
+        }
+    }
+
+    void HidePreviews()
+    {
+        SpecialFeedback.Hide(aimLine);
+        SpecialFeedback.Hide(previewRing);
+        SpecialFeedback.Hide(previewCone);
+        SpecialFeedback.Hide(targetRing);
     }
 
     IEnumerator Dash()
@@ -384,9 +667,20 @@ public class SpecialAbilities : MonoBehaviour
         Vector3 dir = (MouseWorld() - start).normalized;
         Vector3 end = ClampToArena(start + dir * 6f);
         player.GrantInvincibility(0.35f);
+        SpriteRenderer body = player.GetComponent<SpriteRenderer>();
+        int ghosts = 0;
         for (float t = 0f; t < 0.15f; t += Time.deltaTime)
         {
             player.transform.position = Vector3.Lerp(start, end, t / 0.15f);
+            // 잔상
+            if (body != null && t >= ghosts * 0.035f)
+            {
+                ghosts++;
+                GameObject g = MakeSprite("DashGhost", body.sprite, player.transform.position, 1f, new Color(0.5f, 0.95f, 1f, 0.5f), "Character", -1);
+                g.transform.localScale = player.transform.lossyScale;
+                g.GetComponent<SpriteRenderer>().flipX = body.flipX;
+                g.AddComponent<FadeOut>().duration = 0.25f;
+            }
             yield return null;
         }
         player.transform.position = end;
@@ -395,6 +689,7 @@ public class SpecialAbilities : MonoBehaviour
     IEnumerator TimeWarp()
     {
         EnermyController.GlobalSpeedMultiplier = 0.5f;
+        timeWarpUntil = Time.time + 5f;
         Flash(player.transform.position, 12f, new Color(0.5f, 0.8f, 1f, 0.5f), 0.5f);
         yield return new WaitForSeconds(5f);
         EnermyController.GlobalSpeedMultiplier = 1f;
@@ -405,10 +700,14 @@ public class SpecialAbilities : MonoBehaviour
         player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.2f);
         player.damageMultiplier = 2f;
         player.fireRateMultiplier = 1.5f;
+        if (pactAura != null) Destroy(pactAura);
+        pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, new Color(1f, 0.15f, 0.2f, 0.45f), "Background", 8);
         Flash(player.transform.position, 5f, new Color(1f, 0.15f, 0.2f, 0.7f), 0.4f);
         yield return new WaitForSeconds(8f);
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
+        if (pactAura != null) Destroy(pactAura);
+        fx.FloatText(player.transform.position, "계약 종료", new Color(0.7f, 0.66f, 0.72f), 4f, 0f);
     }
 
     IEnumerator Mirror()
@@ -429,24 +728,9 @@ public class SpecialAbilities : MonoBehaviour
     {
         Vector3 from = player.transform.position;
         Vector2 dir = ((Vector2)(MouseWorld() - from)).normalized;
-        const float range = 14f;
+        float wallDist = HookTarget(from, dir, out Collider2D enemy, out _);
 
-        Collider2D enemy = null;
-        float enemyDist = range;
-        float wallDist = range;
-        foreach (RaycastHit2D hit in Physics2D.CircleCastAll(from, 0.6f, dir, range))
-        {
-            if (hit.collider.CompareTag("enermy") || hit.collider.CompareTag("boss"))
-            {
-                if (hit.distance < enemyDist) { enemyDist = hit.distance; enemy = hit.collider; }
-            }
-            else if (hit.collider.CompareTag("Wall") && hit.distance < wallDist && hit.distance > 0.1f)
-            {
-                wallDist = hit.distance;
-            }
-        }
-
-        if (enemy != null && enemyDist < wallDist)
+        if (enemy != null)
         {
             DrawLine(from, enemy.transform.position, new Color(0.8f, 0.1f, 0.15f), 0.2f);
             Specials.Damage(enemy.gameObject, Damage * 1.5f, Vector3.zero, 0f);
@@ -458,6 +742,30 @@ public class SpecialAbilities : MonoBehaviour
             DrawLine(from, from + (Vector3)dir * wallDist, new Color(0.8f, 0.1f, 0.15f), 0.2f);
             StartCoroutine(PullPlayer(end));
         }
+    }
+
+    const float HookRange = 14f;
+
+    // 갈고리가 걸릴 대상: 벽보다 가까운 첫 적 (없으면 null). 반환값 = 벽까지 거리
+    float HookTarget(Vector3 from, Vector2 dir, out Collider2D enemy, out float reach)
+    {
+        enemy = null;
+        float enemyDist = HookRange;
+        float wallDist = HookRange;
+        foreach (RaycastHit2D hit in Physics2D.CircleCastAll(from, 0.6f, dir, HookRange))
+        {
+            if (hit.collider.CompareTag("enermy") || hit.collider.CompareTag("boss"))
+            {
+                if (hit.distance < enemyDist) { enemyDist = hit.distance; enemy = hit.collider; }
+            }
+            else if (hit.collider.CompareTag("Wall") && hit.distance < wallDist && hit.distance > 0.1f)
+            {
+                wallDist = hit.distance;
+            }
+        }
+        if (enemy != null && enemyDist >= wallDist) enemy = null;
+        reach = enemy != null ? enemyDist : wallDist;
+        return wallDist;
     }
 
     IEnumerator Pull(Transform target, Vector3 to)
@@ -521,6 +829,11 @@ public class SpecialAbilities : MonoBehaviour
                 if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                 if (orbHitTimes.TryGetValue(c, out float last) && Time.time - last < 0.5f) continue;
                 orbHitTimes[c] = Time.time;
+                if (Time.time - lastOrbSound > 0.15f)
+                {
+                    lastOrbSound = Time.time;
+                    fx.Play("pew", 0.18f, 2f);
+                }
                 Specials.Damage(c.gameObject, Damage * 0.8f, (c.transform.position - player.transform.position).normalized, 0.8f);
             }
         }
@@ -530,6 +843,8 @@ public class SpecialAbilities : MonoBehaviour
     public void OnPlayerHurt()
     {
         if (!Has(ThornsId) || player == null) return;
+        fx.Play("boom", 0.6f, 1.4f);
+        fx.FloatText(player.transform.position, "가시 반격!", new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
         Explode(player.transform.position, 4f, Damage * 3f, 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
 
@@ -538,6 +853,9 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (!Has(UndyingId) || undyingUsed) return false;
         undyingUsed = true;
+        fx.Play("pulse", 1f, 0.6f);
+        fx.Play("chime", 1f, 0.7f);
+        fx.Shake(0.4f, 0.3f);
         Flash(player.transform.position, 6f, new Color(1f, 0.9f, 0.5f, 0.8f), 0.6f);
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner("불사의 맹세가 발동했다!", 2f);
         return true;
@@ -557,7 +875,13 @@ public class SpecialAbilities : MonoBehaviour
 
     void OnEnemyKilled(Vector3 pos)
     {
-        if (Has(SoulBurstId)) souls = Mathf.Min(40, souls + 1);
+        if (!Has(SoulBurstId)) return;
+        souls = Mathf.Min(40, souls + 1);
+        if (souls == 5)
+        {
+            fx.Play("chime", 0.5f, 1.3f);
+            fx.FloatText(player.transform.position, "영혼 폭발 준비", new Color(0.55f, 0.95f, 1f), 4.5f, 0f);
+        }
     }
 
     // ================================================================= shared effects
@@ -570,6 +894,11 @@ public class SpecialAbilities : MonoBehaviour
             Specials.Damage(c.gameObject, damage, dir, knock);
         }
         Flash(pos, radius * 2f, color, 0.3f);
+        if (fx != null)
+        {
+            fx.Play("boom", Mathf.Clamp(radius / 5f, 0.3f, 0.9f), Mathf.Clamp(1.6f - radius * 0.12f, 0.8f, 1.5f));
+            if (radius >= 3f) fx.Shake(0.12f + radius * 0.03f, 0.12f);
+        }
     }
 
     public void SpawnZone(Vector3 pos, float radius, float duration, float tickDamage, Color color)
@@ -583,6 +912,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void ChainLightning(Vector3 from, Collider2D first, float damage, int jumps)
     {
+        fx.Play("zap", 0.5f, Random.Range(0.9f, 1.1f));
         HashSet<Collider2D> hit = new HashSet<Collider2D> { first };
         Vector3 current = from;
         for (int j = 0; j < jumps; j++)
@@ -644,7 +974,11 @@ public class SpecialAbilities : MonoBehaviour
         return new Vector3(Mathf.Clamp(p.x, sp.spawnAreaMin.x, sp.spawnAreaMax.x), Mathf.Clamp(p.y, sp.spawnAreaMin.y, sp.spawnAreaMax.y + 1.5f), 0f);
     }
 
-    public void ScytheReturned() => activeScythe = null;
+    public void ScytheReturned()
+    {
+        activeScythe = null;
+        if (fx != null && CurrentWeapon == ScytheId) fx.Play("clank", 0.5f);
+    }
 
     // ================================================================= HUD (탄약 패널 왼쪽)
     void BuildHud()
@@ -770,6 +1104,8 @@ public class SpecialAbilities : MonoBehaviour
                 if (row.id == UndyingId) info = undyingUsed ? "사용함" : "부활 대기";
             }
             row.info.text = info;
+            bool flash = rowFlashUntil.TryGetValue(row.id, out float until) && Time.time < until;
+            row.name.color = flash ? Color.white : new Color(0.96f, 0.83f, 0.47f);
             row.bar.fillAmount = fill;
             row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
         }
