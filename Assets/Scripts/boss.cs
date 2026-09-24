@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class bosss : MonoBehaviour
@@ -49,6 +50,56 @@ public class bosss : MonoBehaviour
     EnemySpawner spawner;
 
     public bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
+
+    // 킹 슬라임 (bossKind 2): 쓰러질 때마다 분열 (1마리 → 2마리 → 3마리)
+    [HideInInspector] public int slimeGen = 1;
+    static readonly List<bosss> slimes = new List<bosss>();
+    static int gen2Deaths;
+    static int gen3Spawned;
+    const int Gen2Hp = 1100;
+    const int Gen3Hp = 500;
+    bool IsSlime => bossKind == 2;
+
+    // 남은 체력 합계 (아직 분열하지 않은 몫 포함)
+    static int SlimeRemaining()
+    {
+        int sum = 0;
+        bool gen1Alive = false;
+        foreach (bosss s in slimes)
+        {
+            if (s == null || s.isDead) continue;
+            sum += Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
+            if (s.slimeGen == 1) gen1Alive = true;
+        }
+        if (gen1Alive) sum += 2 * Gen2Hp;
+        sum += (3 - gen3Spawned) * Gen3Hp;
+        return sum;
+    }
+
+    void Split()
+    {
+        int count = slimeGen == 1 ? 2 : (gen2Deaths++ == 0 ? 2 : 1);
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 offset = (Vector3)(Random.insideUnitCircle.normalized * 3f);
+            GameObject clone = Instantiate(gameObject, transform.position + offset, transform.rotation);
+            clone.transform.localScale = transform.localScale * 0.75f;
+            bosss b = clone.GetComponent<bosss>();
+            b.slimeGen = slimeGen + 1;
+            b.setEnemyHP = slimeGen == 1 ? Gen2Hp : Gen3Hp;
+            b.EnemyHealth = b.setEnemyHP;
+            b.casting = false;
+            b.coinDrop = slimeGen == 1 ? 15 : 10;
+            b.expReward = expReward / 2;
+            b.summonCount = 1;
+            b.enragedSummonCount = 2;
+            clone.GetComponent<SpriteRenderer>().color = Color.white;
+            if (slimeGen + 1 == 3) gen3Spawned++;
+            Fx.Play("fx_puddle", clone.transform.position, 3f, new Color(0.55f, 1f, 0.35f), 12f);
+        }
+        Fx.Play("fx_shock", transform.position, 9f, new Color(0.55f, 1f, 0.35f), 16f);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? "킹 슬라임이 둘로 갈라졌다!" : "슬라임이 또 갈라진다!", 2f);
+    }
     public bool IsDead => isDead;
 
     void Summon(int count)
@@ -69,7 +120,20 @@ public class bosss : MonoBehaviour
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
-        gameObject.AddComponent<BossSkills>().kind = bossKind;
+        // 분열로 복제된 슬라임은 스킬 컴포넌트를 이미 가지고 있음
+        BossSkills skills = GetComponent<BossSkills>();
+        if (skills == null) skills = gameObject.AddComponent<BossSkills>();
+        skills.kind = bossKind;
+        if (IsSlime)
+        {
+            if (slimeGen == 1)
+            {
+                slimes.Clear();
+                gen2Deaths = 0;
+                gen3Spawned = 0;
+            }
+            slimes.Add(this);
+        }
     }
     bossbar bossbar;
     void Update()
@@ -77,8 +141,16 @@ public class bosss : MonoBehaviour
         // 죽었으면 아무것도 하지 않음
         if (isDead) return;
 
-        bossbar.MaxHealth = setEnemyHP;
-        bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
+        if (IsSlime)
+        {
+            bossbar.MaxHealth = 2600 + 2 * Gen2Hp + 3 * Gen3Hp;
+            bossbar.NowHealth = SlimeRemaining();
+        }
+        else
+        {
+            bossbar.MaxHealth = setEnemyHP;
+            bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
+        }
 
         if (player == null) return;
 
@@ -155,7 +227,14 @@ public class bosss : MonoBehaviour
 
         isDead = true;
 
-        bossbar.bossSpawn = false;
+        // 킹 슬라임은 분열하고, 마지막 한 마리가 쓰러질 때만 보스전이 끝남
+        bool lastOne = true;
+        if (IsSlime)
+        {
+            if (a == 1 && slimeGen < 3) Split();
+            lastOne = SlimeRemaining() <= 0;
+        }
+        if (lastOne) bossbar.bossSpawn = false;
         spriteRenderer.color = Color.white;
         if (a == 1)
         {
@@ -221,8 +300,10 @@ public class bosss : MonoBehaviour
             }
         }
 
-        // 스테이지 진행 (신전 문 열기 등)
-        if (enemySpawner != null) enemySpawner.OnBossDefeated();
+        // 스테이지 진행 (신전 문 열기 등) - 슬라임은 모두 쓰러졌을 때만
+        bool allDown = !IsSlime || SlimeRemaining() <= 0;
+        if (IsSlime) slimes.Remove(this);
+        if (enemySpawner != null && allDown) enemySpawner.OnBossDefeated();
 
         Destroy(gameObject);
     }

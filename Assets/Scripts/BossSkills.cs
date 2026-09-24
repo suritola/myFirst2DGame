@@ -40,9 +40,9 @@ public class BossSkills : MonoBehaviour
         if (boss.Enraged && Time.time >= nextSpecial)
         {
             nextSpecial = Time.time + 16f;
-            string name = kind == 0 ? "리치 왕이 망자의 의식을 시작한다!" : "지옥의 군주가 십자 불길을 내뿜는다!";
+            string name = kind == 0 ? "리치 왕이 망자의 의식을 시작한다!" : kind == 1 ? "지옥의 군주가 십자 불길을 내뿜는다!" : "킹 슬라임이 미친 듯이 뛰어오른다!";
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
-            StartCoroutine(Run(kind == 0 ? DeathVortex() : HellCross()));
+            StartCoroutine(Run(kind == 0 ? DeathVortex() : kind == 1 ? HellCross() : SlimeFrenzy()));
             return;
         }
 
@@ -51,7 +51,9 @@ public class BossSkills : MonoBehaviour
         step = (step + 1) % 3;
         IEnumerator skill = kind == 0
             ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : BoneSpears(p))
-            : (step == 0 ? FlameCharge(p) : step == 1 ? MeteorRain(p) : FireWave());
+            : kind == 1
+            ? (step == 0 ? FlameCharge(p) : step == 1 ? MeteorRain(p) : FireWave())
+            : (step == 0 ? SlimeLeap(p, 1f) : step == 1 ? AcidRain(p) : SlimeRoll(p));
         StartCoroutine(Run(skill));
     }
 
@@ -304,6 +306,110 @@ public class BossSkills : MonoBehaviour
         }
         inner.startColor = inner.endColor = new Color(0.75f, 0.4f, 1f, alpha);
         outer.startColor = outer.endColor = new Color(0.55f, 0.95f, 1f, alpha * 0.8f);
+    }
+
+    // ================================================================= 킹 슬라임 (분열할수록 작고 빠름)
+    static readonly Color Acid = new Color(0.55f, 1f, 0.35f, 0.9f);
+    float SlimeSize => Mathf.Max(0.4f, transform.localScale.x / 27f);
+
+    // 대점프: 떨어질 곳에 그림자 원 → 높이 뛰어올라 내려찍고 산성 웅덩이
+    IEnumerator SlimeLeap(PlayerController p, float warn)
+    {
+        float r = 3.6f * SlimeSize;
+        Vector3 target = Hostile.ClampArena(p.transform.position);
+        Hostile.Circle(target, r, warn + 0.35f, Acid);
+        yield return Windup(Acid, warn * 0.6f);
+        if (!Alive) yield break;
+
+        Vector3 start = transform.position;
+        Hostile.Play("whoosh", 0.7f, 0.6f);
+        Fx.Play("fx_puddle", start, 3f * SlimeSize, Acid, 14f);
+        // 위로 솟구침
+        for (float t = 0f; t < 0.3f; t += Time.deltaTime)
+        {
+            transform.position = start + Vector3.up * 14f * (t / 0.3f);
+            yield return null;
+        }
+        yield return new WaitForSeconds(Mathf.Max(0f, warn * 0.4f - 0.2f));
+        // 떨어짐
+        for (float t = 0f; t < 0.25f; t += Time.deltaTime)
+        {
+            transform.position = Vector3.Lerp(target + Vector3.up * 14f, target, t / 0.25f);
+            yield return null;
+        }
+        transform.position = target;
+        if (!Alive) yield break;
+        Hostile.HitCircle(target, r, 30f);
+        Fx.Play("fx_shock", target, r * 2.6f, Acid, 18f);
+        Fx.Play("fx_puddle", target, r * 1.3f, Acid, 12f);
+        HazardZone.Spawn(target, r * 0.8f, 3f, 10f, Acid, "fx_puddle", 0.7f);
+        Hostile.Play("thump", 1f, 0.6f);
+        Hostile.Shake(0.35f * SlimeSize + 0.1f);
+    }
+
+    // 산성 비: 플레이어 주변 여러 곳에 산성 덩어리가 떨어져 웅덩이
+    IEnumerator AcidRain(PlayerController p)
+    {
+        yield return Windup(Acid, 0.5f);
+        Vector3 c = p.transform.position;
+        int n = 6;
+        Vector3[] spots = new Vector3[n];
+        for (int i = 0; i < n; i++)
+        {
+            spots[i] = Hostile.ClampArena(i == 0 ? c : c + (Vector3)(Random.insideUnitCircle * 7f));
+            Hostile.Circle(spots[i], 2.2f, 1.1f, Acid);
+        }
+        Hostile.Play("hiss", 0.6f, 0.8f);
+        yield return new WaitForSeconds(1.1f);
+        if (!Alive) yield break;
+        foreach (Vector3 at in spots)
+        {
+            Hostile.HitCircle(at, 2.2f, 14f);
+            Fx.Play("fx_cloud", at, 4f, Acid, 16f);
+            HazardZone.Spawn(at, 1.8f, 3.5f, 8f, Acid, "fx_puddle", 0.75f);
+        }
+        Hostile.Play("boom", 0.4f, 1.4f);
+    }
+
+    // 구르기 돌진: 경로를 보여준 뒤 굴러가며 산성 자국을 남김
+    IEnumerator SlimeRoll(PlayerController p)
+    {
+        Vector3 start = transform.position;
+        Vector3 end = Hostile.ClampArena(start + (Vector3)(DirTo(p) * 20f));
+        Hostile.Line(start, end, 3.5f * SlimeSize + 1f, 0.8f, Acid);
+        yield return Windup(Acid, 0.8f);
+        if (!Alive) yield break;
+        bool hit = false;
+        float trail = 0f;
+        Hostile.Play("whoosh", 0.8f, 0.5f);
+        for (float t = 0f; t < 0.55f; t += Time.deltaTime)
+        {
+            if (!Alive) yield break;
+            transform.position = Vector3.Lerp(start, end, t / 0.55f);
+            transform.Rotate(0f, 0f, -900f * Time.deltaTime);
+            trail += Time.deltaTime;
+            if (trail > 0.08f)
+            {
+                trail = 0f;
+                HazardZone.Spawn(transform.position, 1.4f, 2.5f, 8f, Acid, "fx_puddle", 0.8f);
+            }
+            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f);
+            yield return null;
+        }
+        transform.rotation = Quaternion.identity;
+        Fx.Play("fx_shock", transform.position, 6f * SlimeSize, Acid, 18f);
+    }
+
+    // 특수: 슬라임 폭우 - 빠른 대점프 3연속
+    IEnumerator SlimeFrenzy()
+    {
+        for (int i = 0; i < 3 && Alive; i++)
+        {
+            PlayerController p = Hostile.Player;
+            if (p == null) yield break;
+            yield return StartCoroutine(SlimeLeap(p, 0.6f));
+            yield return new WaitForSeconds(0.25f);
+        }
     }
 
     // ================================================================= 지옥의 군주

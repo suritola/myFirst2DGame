@@ -20,6 +20,8 @@ public class StageManager : MonoBehaviour
     public GameObject portal;               // 보스를 잡으면 켜지는 신전 문
     public Color hellBackground = new Color(0.12f, 0.03f, 0.03f);
     public Vector2 stage2PlayerStart = new Vector2(0.5f, 0f);
+    public GameObject meadowMap;            // 3장 초원
+    public Color meadowBackground = new Color(0.18f, 0.32f, 0.16f);
 
     [Header("UI")]
     public Image fade;                      // 전체 화면 검은 막
@@ -72,6 +74,7 @@ public class StageManager : MonoBehaviour
         }
 
         if (hellMap != null) hellMap.SetActive(false);
+        if (meadowMap != null) meadowMap.SetActive(false);
         if (portal != null) portal.SetActive(false);
         if (specialPanel != null) specialPanel.SetActive(false);
         if (banner != null) banner.SetActive(false);
@@ -224,17 +227,49 @@ public class StageManager : MonoBehaviour
             ShowBanner("신전 문이 열렸다!\n문으로 들어가세요", 3f);
             StartCoroutine(PortalCountdown());
         }
+        else if (stage == 1)
+        {
+            if (portal != null) portal.SetActive(true);
+            ShowBanner("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다", 3.5f);
+            StartCoroutine(PortalCountdown());
+        }
         else
         {
-            ShowBanner("지옥의 군주를 쓰러뜨렸다!", 4f);
+            ShowBanner("킹 슬라임을 쓰러뜨렸다!\n모든 스테이지 클리어!", 6f);
         }
     }
 
     // PortalGate가 플레이어를 감지하면 호출
     public void EnterPortal()
     {
-        if (transitioning || CurrentStage != 0) return;
-        StartCoroutine(EnterHell());
+        if (transitioning) return;
+        if (CurrentStage == 0) StartCoroutine(EnterHell());
+        else if (CurrentStage == 1) StartCoroutine(EnterMeadow());
+    }
+
+    // 지옥 → 초원: 특수 능력 포인트 2개를 받고 맵 교체
+    IEnumerator EnterMeadow()
+    {
+        transitioning = true;
+        spawner.spawningEnabled = false;
+        Time.timeScale = 0f;
+        yield return Fade(0f, 1f, 0.8f);
+
+        if (hellMap != null) hellMap.SetActive(false);
+        if (meadowMap != null) meadowMap.SetActive(true);
+        if (portal != null) portal.SetActive(false);
+        if (Camera.main != null) Camera.main.backgroundColor = meadowBackground;
+        if (bossBar != null) bossBar.bossSpawn = false;
+
+        CurrentStage = 2;
+        spawner.StartStage(2);
+        if (player != null) player.position = stage2PlayerStart;
+        specialPoints += 2;
+
+        Time.timeScale = 1f;
+        yield return Fade(1f, 0f, 0.8f);
+        ShowBanner("3장 · 초원\n특수 능력 포인트 +2", 3f);
+        transitioning = false;
     }
 
     IEnumerator EnterHell()
@@ -279,12 +314,13 @@ public class StageManager : MonoBehaviour
     {
         if (portal == null || player == null) yield break;
         EnsureCountdownUI();
+        int fromStage = CurrentStage;
         // 포탈 판정 상자(문 아래쪽) 위치
         Vector3 target = portal.transform.position + new Vector3(0f, -3.8f, 0f);
         float left = portalTimeLimit;
         float wisp = 0f;
 
-        while (left > 0f && CurrentStage == 0 && !transitioning)
+        while (left > 0f && CurrentStage == fromStage && !transitioning)
         {
             left -= Time.deltaTime;            // 멈춘 동안에는 줄지 않음
             bool urgent = left <= portalPullTime;
@@ -322,7 +358,7 @@ public class StageManager : MonoBehaviour
 
         countdownText.gameObject.SetActive(false);
         portalGuide.enabled = false;
-        if (CurrentStage == 0 && !transitioning) EnterPortal();
+        if (CurrentStage == fromStage && !transitioning) EnterPortal();
     }
 
     void EnsureCountdownUI()
