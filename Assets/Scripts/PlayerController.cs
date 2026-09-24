@@ -637,17 +637,11 @@ void Shoot()
         HandleContact(collision);
     }
 
+    // 일반 적은 닿으면 스스로 피해를 주고 자폭함 (EnermyController)
+    // 보스는 사라지지 않으므로 여기서 처리
     void HandleContact(Collider2D collision)
     {
-        if (collision.CompareTag("enermy"))
-        {
-            EnermyController enemy = collision.GetComponent<EnermyController>();
-            if (enemy != null && !enemy.IsDead) TakeHit(enemy.contactDamage);
-        }
-        else if (collision.CompareTag("boss"))
-        {
-            TakeHit(bossContactDamage);
-        }
+        if (collision.CompareTag("boss")) TryHit(bossContactDamage);
     }
 
     [Header("피격")]
@@ -657,9 +651,12 @@ void Shoot()
 
     private float invincibleUntil = 0f;
 
-    void TakeHit(float amount)
+    public bool IsInvincible => Time.time < invincibleUntil;
+
+    // 피해를 받았으면 true, 무적이라 무시됐으면 false
+    public bool TryHit(float amount)
     {
-        if (Time.time < invincibleUntil) return;
+        if (IsInvincible) return false;
 
         invincibleUntil = Time.time + hurtInvincibleTime;
 
@@ -672,6 +669,8 @@ void Shoot()
             Time.timeScale = 1f;
             SceneManager.LoadScene("GameOver");
         }
+
+        return true;
     }
 
     // 무적 시간 동안 깜빡임

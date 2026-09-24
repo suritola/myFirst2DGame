@@ -165,6 +165,9 @@ public class EnermyController : MonoBehaviour
         isDead = true;
         spriteRenderer.color = Color.white;
 
+        // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음
+        if (bodyCollider != null) bodyCollider.enabled = false;
+
         if (a == 1)
         {
             playerC = FindFirstObjectByType<PlayerController>();
@@ -230,10 +233,24 @@ public class EnermyController : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // 플레이어와 닿으면 피해를 주고 자폭
+    // 플레이어가 무적이면 붙어 있다가 무적이 끝나는 순간 피해를 줌
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // 플레이어와 충돌했을 때
-        if (collision.CompareTag("Player")) Die(0);
+        TouchPlayer(collision);
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        TouchPlayer(collision);
+    }
+
+    void TouchPlayer(Collider2D collision)
+    {
+        if (isDead || !collision.CompareTag("Player")) return;
+
+        PlayerController target = collision.GetComponent<PlayerController>();
+        if (target != null && target.TryHit(contactDamage)) Die(0);
     }
 
 
