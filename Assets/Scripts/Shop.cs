@@ -65,6 +65,15 @@ public class Shop : MonoBehaviour
         coind = FindFirstObjectByType<Coin>();
         playerControllerd = FindFirstObjectByType<PlayerController>();
 
+        // 상점이 가진 능력치를 플레이어의 시작 값과 맞춤
+        if (playerControllerd != null)
+        {
+            damage = playerControllerd.damage;
+            ShootSpeed = playerControllerd.ShootSpeed;
+            ReloadSpeed = playerControllerd.reloadTime;
+            MaxBullet = playerControllerd.MaxBullet;
+        }
+
         if (shopPanel != null) shopPanel.SetActive(false);
         else Debug.LogError("shopPanel이 연결되지 않았습니다!");
 
@@ -80,31 +89,50 @@ public class Shop : MonoBehaviour
     }
 
 
+    [Header("가격 증가 / 최대치")]
+    public float damagePriceGrowth = 1.55f;     // 살 때마다 가격 x1.55
+    public int shootSpeedPriceStep = 4;         // 살 때마다 가격 +4
+    public float shootSpeedMultiplier = 0.88f;  // 발사 간격 x0.88 (12% 빨라짐)
+    public float minShootSpeed = 0.2f;          // 초당 5발이 최대
+    public float reloadPriceGrowth = 1.5f;
+    public float reloadStep = 0.2f;
+    public float minReloadTime = 0.8f;
+    public float maxBulletPriceGrowth = 1.5f;
+    public int maxBulletLimit = 16;
+    public float moveSpeedPriceGrowth = 1.6f;
+    public float moveSpeedMultiplier = 1.06f;
+    public int maxMoveSpeedBuys = 6;
+
+    int moveSpeedBuys = 0;
+
+    bool TryPay(int price)
+    {
+        if (coind == null || playerControllerd == null) return false;
+        if (coind.coins < price) return false;
+
+        coind.SubCoin(price);
+        coins = coind.coins;
+        return true;
+    }
+
+    bool ShootSpeedMaxed => ShootSpeed <= minShootSpeed + 0.001f;
+    bool ReloadMaxed => ReloadSpeed <= minReloadTime + 0.001f;
+    bool MaxBulletMaxed => MaxBullet >= maxBulletLimit;
+    bool MoveSpeedMaxed => moveSpeedBuys >= maxMoveSpeedBuys;
+
     // =====================================
     // 공격력 업그레이드
     // =====================================
 
     public void OnPressB1()
     {
-        if (coind == null || playerControllerd == null) return;
-
-        coins = coind.coins;
-
-        if (coins < damagePrice) return;
+        if (!TryPay(damagePrice)) return;
 
         damage++;
-
         playerControllerd.damage = damage;
-
-        coind.SubCoin(damagePrice);
-
-        coins = coind.coins;
-
-        damagePrice = Mathf.CeilToInt(damagePrice * 2.5213f);
-
+        damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();
     }
-
 
     // =====================================
     // 공속 업그레이드
@@ -112,55 +140,27 @@ public class Shop : MonoBehaviour
 
     public void OnPressB2()
     {
-        if (coind == null || playerControllerd == null) return;
+        if (ShootSpeedMaxed || !TryPay(ShootSpeedPrice)) return;
 
-        if (showedSpeed >= 5) return;
-
-        coins = coind.coins;
-
-        if (coins < ShootSpeedPrice) return;
-
-        ShootSpeed -= 0.15f;
-
+        ShootSpeed = Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier);
         playerControllerd.ShootSpeed = ShootSpeed;
-
-        coind.SubCoin(ShootSpeedPrice);
-
-        coins = coind.coins;
-
-        ShootSpeedPrice = (int)((1 - ShootSpeed) * 31.32f);
-
+        ShootSpeedPrice += shootSpeedPriceStep;
         UpdateShopText();
     }
 
-
     // =====================================
-    // 재장전속도 업그레이드
+    // 재장전 속도 업그레이드
     // =====================================
 
     public void OnPressB3()
     {
-        if (coind == null || playerControllerd == null) return;
+        if (ReloadMaxed || !TryPay(ReloadSpeedPrice)) return;
 
-        if (ReloadSpeed <= 1.5f) return;
-
-        coins = coind.coins;
-
-        if (coins < ReloadSpeedPrice) return;
-
-        ReloadSpeed -= 0.3f;
-
+        ReloadSpeed = Mathf.Max(minReloadTime, ReloadSpeed - reloadStep);
         playerControllerd.reloadTime = ReloadSpeed;
-
-        coind.SubCoin(ReloadSpeedPrice);
-
-        coins = coind.coins;
-
-        ReloadSpeedPrice = (int)(ReloadSpeedPrice * 1.6f);
-
+        ReloadSpeedPrice = Mathf.CeilToInt(ReloadSpeedPrice * reloadPriceGrowth);
         UpdateShopText();
     }
-
 
     // =====================================
     // 탄창 업그레이드
@@ -168,48 +168,27 @@ public class Shop : MonoBehaviour
 
     public void OnPressB4()
     {
-        if (coind == null || playerControllerd == null) return;
-
-        coins = coind.coins;
-
-        if (coins < MaxBulletPrice) return;
+        if (MaxBulletMaxed || !TryPay(MaxBulletPrice)) return;
 
         MaxBullet++;
-
         playerControllerd.MaxBullet = MaxBullet;
-
-        coind.SubCoin(MaxBulletPrice);
-
-        coins = coind.coins;
-
-        MaxBulletPrice = (int)(MaxBulletPrice * 1.85f);
-
+        MaxBulletPrice = Mathf.CeilToInt(MaxBulletPrice * maxBulletPriceGrowth);
         UpdateShopText();
     }
+
+    // =====================================
+    // 이동속도 업그레이드
+    // =====================================
 
     public void OnPressB5()
     {
-        if (coind == null || playerControllerd == null) return;
+        if (MoveSpeedMaxed || !TryPay(moveSpeedPrice)) return;
 
-        coins = coind.coins;
-
-        if (coins < moveSpeedPrice) return;
-
-        playerControllerd.speed *= 1.05f;
-
-        coind.SubCoin(moveSpeedPrice);
-
-        coins = coind.coins;
-
-        moveSpeedPrice = (int)(moveSpeedPrice * 2.3f);
-
+        moveSpeedBuys++;
+        playerControllerd.speed *= moveSpeedMultiplier;
+        moveSpeedPrice = Mathf.CeilToInt(moveSpeedPrice * moveSpeedPriceGrowth);
         UpdateShopText();
     }
-
-
-    // =====================================
-    // 상점 열기 / 닫기
-    // =====================================
 
     public bool isPause = false;
     void ToggleShop()
@@ -279,103 +258,57 @@ public class Shop : MonoBehaviour
     // 상점 텍스트 갱신
     // =====================================
 
+    string PriceText(int price, bool maxed) => maxed ? "최대" : "구매\n" + price + " 코인";
+
+    static string PerSecond(float interval) => (1f / interval).ToString("0.0");
+
     void UpdateShopText()
     {
-        if (coind == null) return;
+        if (coind == null || playerControllerd == null) return;
 
         coins = coind.coins;
         moveSpeed = playerControllerd.speed;
+        showedSpeed = 1f / ShootSpeed;
         if (mycoins != null) mycoins.text = "코인 : " + coins;
 
-        // =====================================
-        // 이동속도
-        // =====================================
-
-        if (priceTextInput5 != null) priceTextInput5.text = "구매\n" + moveSpeedPrice + " 코인";
-
-        if (statTextInput5 != null)
-        {
-            float tmp = moveSpeed * 1.05f;
-            statTextInput5.text = "이동속도 \n" + moveSpeed + " -> " + tmp;
-        }
-
-        // =====================================
         // 공격력
-        // =====================================
+        if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);
+        if (statTextInput != null) statTextInput.text = "총알 공격력\n" + damage + " -> " + (damage + 1);
 
-        if (priceTextInput != null) priceTextInput.text = "구매\n" + damagePrice + " 코인";
-
-        if (statTextInput != null)
+        // 공격 속도 (초당 발사 수)
+        if (priceTextInput2 != null) priceTextInput2.text = PriceText(ShootSpeedPrice, ShootSpeedMaxed);
+        if (statTextInput2 != null)
         {
-            int tmp = damage + 1;
-            statTextInput.text = "총알 공격력 \n" + damage + " -> " + tmp;
+            statTextInput2.text = ShootSpeedMaxed
+                ? "공격 속도\n초당 " + PerSecond(ShootSpeed) + "발 (최대)"
+                : "공격 속도 (초당)\n" + PerSecond(ShootSpeed) + " -> " + PerSecond(Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier)) + "발";
         }
 
-
-        // =====================================
-        // 공격속도
-        // =====================================
-
-        showedSpeed =
-            Mathf.Round((1f / ShootSpeed) * 100f) / 100f;
-
-        if (showedSpeed < 5)
+        // 재장전 속도
+        if (priceTextInput3 != null) priceTextInput3.text = PriceText(ReloadSpeedPrice, ReloadMaxed);
+        if (statTextInput3 != null)
         {
-            if (priceTextInput2 != null) priceTextInput2.text = "구매\n" + ShootSpeedPrice + " 코인";
-
-            if (statTextInput2 != null)
-            {
-                float tmp2 = ShootSpeed - 0.15f;
-
-                float currentSpeed = Mathf.Round((1f / ShootSpeed) * 100f) / 100f;
-
-                float nextSpeed = Mathf.Round((1f / tmp2) * 100f) / 100f;
-
-                statTextInput2.text = "공격 속도\n" + currentSpeed + " -> " + nextSpeed;
-            }
-        }
-        else
-        {
-            if (priceTextInput2 != null) priceTextInput2.text = "최대";
-
-            if (statTextInput2 != null) statTextInput2.text = "공격 속도\n5 (최대)";
+            statTextInput3.text = ReloadMaxed
+                ? "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 (최대)"
+                : "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 -> " + Mathf.Max(minReloadTime, ReloadSpeed - reloadStep).ToString("0.0") + "초";
         }
 
-
-        // =====================================
-        // 재장전속도
-        // =====================================
-
-        if (ReloadSpeed > 1.5f)
-        {
-            if (priceTextInput3 != null) priceTextInput3.text = "구매\n" + ReloadSpeedPrice + " 코인";
-
-            if (statTextInput3 != null)
-            {
-                float tmp3 = ReloadSpeed - 0.3f;
-
-                statTextInput3.text = "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 -> " + tmp3.ToString("0.0") + "초";
-            }
-        }
-        else
-        {
-            if (priceTextInput3 != null) priceTextInput3.text = "최대";
-
-            if (statTextInput3 != null) statTextInput3.text = "재장전 속도\n" + ReloadSpeed.ToString("0.0") + "초 (최대)";
-        }
-
-
-        // =====================================
         // 탄창
-        // =====================================
-
-        if (priceTextInput4 != null) priceTextInput4.text = "구매\n" + MaxBulletPrice + " 코인";
-
+        if (priceTextInput4 != null) priceTextInput4.text = PriceText(MaxBulletPrice, MaxBulletMaxed);
         if (statTextInput4 != null)
         {
-            int tmp4 = MaxBullet + 1;
+            statTextInput4.text = MaxBulletMaxed
+                ? "최대 탄창\n" + MaxBullet + "발 (최대)"
+                : "최대 탄창\n" + MaxBullet + " -> " + (MaxBullet + 1) + "발";
+        }
 
-            statTextInput4.text = "최대 탄창\n" + MaxBullet + " -> " + tmp4;
+        // 이동 속도
+        if (priceTextInput5 != null) priceTextInput5.text = PriceText(moveSpeedPrice, MoveSpeedMaxed);
+        if (statTextInput5 != null)
+        {
+            statTextInput5.text = MoveSpeedMaxed
+                ? "이동 속도\n" + moveSpeed.ToString("0.0") + " (최대)"
+                : "이동 속도\n" + moveSpeed.ToString("0.0") + " -> " + (moveSpeed * moveSpeedMultiplier).ToString("0.0");
         }
     }
 }

@@ -179,8 +179,6 @@ public class PlayerController : MonoBehaviour
     {
         needEXP = 100f;
         isShop = 0;
-        damage = 1;
-        ShootSpeed = 0.8f;
 
         NowBullet = MaxBullet;
         PlayerHealth = PlayerMaxHealth;
@@ -220,7 +218,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
-        needEXP = level * 100;
+        // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
+        needEXP = 50 + level * 50;
 
         // =========================
         // 재장전 입력
@@ -278,7 +277,8 @@ public class PlayerController : MonoBehaviour
         {
             NowCharge += Time.unscaledDeltaTime * 100f;
 
-            skillDamage += 0.02f * damage * Time.unscaledDeltaTime * 60f;
+            // 충전할수록 강해짐: 공격력 x2 (즉시) ~ x8 (최대 충전)
+            skillDamage = damage * (2f + 6f * Mathf.Clamp01(NowCharge / MaxCharge));
 
             if (NowCharge >= MaxCharge)
             {
@@ -443,7 +443,7 @@ void Shoot()
         if (skillGauge == null || !skillGauge.IsFull()) return;
         isSkillUsing = true;
         NowCharge = 0f;
-        skillDamage = 1f;
+        skillDamage = damage * 2f;
         if (audioSource != null && chargeSound != null) audioSource.PlayOneShot(chargeSound);
 
         ClearTargets();
@@ -603,8 +603,6 @@ void Shoot()
     int dropCoin;
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        EnemySpawner enemySpawner = FindFirstObjectByType<EnemySpawner>();
-
         if (collision.CompareTag("coin"))
         {
             Coin coin = FindFirstObjectByType<Coin>();
@@ -619,33 +617,48 @@ void Shoot()
 
         if (collision.CompareTag("enermy"))
         {
-            if ( audioSource != null && hitSound != null ) audioSource.PlayOneShot(hitSound);
-
-            if (enemySpawner != null)
-            {
-                if (enemySpawner.paze == 1) PlayerHealth -= 3 - ( 3 * def );
-                if (enemySpawner.paze == 2) PlayerHealth -= 6 - ( 6 * def );
-                if (enemySpawner.paze == 3) PlayerHealth -= 15 - (15 * def);
-            }
-
-            if (PlayerHealth <= 0)
-            {
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("GameOver");
-            }
+            EnermyController enemy = collision.GetComponent<EnermyController>();
+            if (enemy != null && !enemy.IsDead) TakeHit(enemy.contactDamage);
         }
         if (collision.CompareTag("boss"))
         {
-            if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound);
-
-            if (enemySpawner != null) PlayerHealth -= 40 - (40 * def);
-
-            if (PlayerHealth <= 0)
-            {
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("GameOver");
-            }
+            TakeHit(bossContactDamage);
         }
+    }
+
+    [Header("피격")]
+    public float bossContactDamage = 25f;
+    // 맞은 뒤 이 시간 동안은 다시 맞지 않음 (여러 마리에게 동시에 맞는 것 방지)
+    public float hurtInvincibleTime = 0.8f;
+
+    private float invincibleUntil = 0f;
+
+    void TakeHit(float amount)
+    {
+        if (Time.time < invincibleUntil) return;
+
+        invincibleUntil = Time.time + hurtInvincibleTime;
+
+        if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound);
+
+        PlayerHealth -= amount * (1f - def);
+
+        if (PlayerHealth <= 0)
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("GameOver");
+        }
+    }
+
+    // 무적 시간 동안 깜빡임
+    void LateUpdate()
+    {
+        if (spriteRenderer == null) return;
+
+        bool blinking = Time.time < invincibleUntil && !isSkillUsing;
+        UnityEngine.Color c = spriteRenderer.color;
+        c.a = blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f;
+        spriteRenderer.color = c;
     }
 
     // =====================================

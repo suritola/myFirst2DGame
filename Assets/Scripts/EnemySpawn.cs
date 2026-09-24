@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -13,7 +14,18 @@ public class EnemySpawner : MonoBehaviour
     public bool bossSpawned = false;
     public int spawnedEnemys = 0;
 
-    public float spawnTime = 5f; // n의 초기값 = 5초
+    [Header("페이즈별 난이도 (1, 2, 3 페이즈)")]
+    // 적 생성 간격(초)
+    public float[] spawnIntervalByPhase = { 1.8f, 1.4f, 1.1f };
+    // 동시에 살아 있을 수 있는 최대 적 수
+    public int[] maxAliveByPhase = { 8, 12, 16 };
+    // 이 수만큼 처치하면 다음 페이즈 / 보스
+    public int phase2Kills = 20;
+    public int phase3Kills = 40;
+    public int bossKills = 60;
+
+    int PhaseIndex => Mathf.Clamp(paze - 1, 0, 2);
+    int MaxAlive => maxAliveByPhase[Mathf.Min(PhaseIndex, maxAliveByPhase.Length - 1)];
 
     [Header("스폰 위치")]
     // 적이 생성될 수 있는 맵 안쪽 범위 (벽 안쪽에서 조금 띄움)
@@ -32,8 +44,8 @@ public class EnemySpawner : MonoBehaviour
         bossSpawned = false;
         boss1Cleared = false;
 
-        // 5초마다 적 생성
-        InvokeRepeating("spawnNormalEnemy", spawnTime, spawnTime);
+        // 페이즈에 따라 간격이 짧아지는 적 생성
+        StartCoroutine(SpawnLoop());
         InvokeRepeating("clear", 30, 30);
     }
 
@@ -49,15 +61,20 @@ public class EnemySpawner : MonoBehaviour
         }
             
     }
-    void spawnNormalEnemy()
+    IEnumerator SpawnLoop()
     {
-        SpawnEnemy(false, transform.position);
+        while (true)
+        {
+            float interval = spawnIntervalByPhase[Mathf.Min(PhaseIndex, spawnIntervalByPhase.Length - 1)];
+            yield return new WaitForSeconds(interval);
+            SpawnEnemy(false, transform.position);
+        }
     }
 
     bossbar bossbar;
     public void SpawnEnemy(bool boss, Vector3 here)
     {
-        if (spawnedEnemys >= 10) return;
+        if (spawnedEnemys >= MaxAlive) return;
 
         if (!boss)
         {
@@ -73,9 +90,9 @@ public class EnemySpawner : MonoBehaviour
             else if (paze == 2) Instantiate(enemy2Prefab, randomPosition, Quaternion.identity);
             else if (paze == 3) Instantiate(enemy3Prefab, randomPosition, Quaternion.identity);
 
-            if (killedEnemy > 20) paze = 2;
-            if (killedEnemy > 40) paze = 3;
-            if (killedEnemy > 60 && !bossSpawned && !boss1Cleared)
+            if (killedEnemy >= phase2Kills) paze = 2;
+            if (killedEnemy >= phase3Kills) paze = 3;
+            if (killedEnemy >= bossKills && !bossSpawned && !boss1Cleared)
             {
                 bossbar.bossSpawn = true;
                 bossSpawned = true;
@@ -85,10 +102,15 @@ public class EnemySpawner : MonoBehaviour
         }
         else
         {
-            // 적 생성
-            Instantiate(enemyPrefab, here, Quaternion.identity);
-            Instantiate(enemy2Prefab, here, Quaternion.identity);
-            Instantiate(enemy3Prefab, here, Quaternion.identity);
+            // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
+            GameObject[] minions = { enemyPrefab, enemy2Prefab, enemy3Prefab };
+            foreach (GameObject minion in minions)
+            {
+                if (spawnedEnemys >= MaxAlive) break;
+                spawnedEnemys++;
+                Vector2 offset = Random.insideUnitCircle * 3f;
+                Instantiate(minion, here + (Vector3)offset, Quaternion.identity);
+            }
         }
     }
 

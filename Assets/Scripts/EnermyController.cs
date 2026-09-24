@@ -19,6 +19,11 @@ public class EnermyController : MonoBehaviour
 
     public GameObject coin;
 
+    [Header("보상 / 피해")]
+    public float contactDamage = 5f;   // 플레이어와 닿았을 때 주는 피해
+    public int expReward = 20;          // 처치 경험치
+    public int coinDrop = 1;            // 떨어뜨리는 코인 수
+
     [Header("겹침 방지")]
     // 다른 적과 겹친 만큼 밀어내는 속도 (초당)
     public float separationSpeed = 4f;
@@ -166,7 +171,7 @@ public class EnermyController : MonoBehaviour
             LevelShop levelS = FindFirstObjectByType<LevelShop>();
             Level lv = FindFirstObjectByType<Level>();
 
-            playerC.nowEXP += 20 * lv.bonusEXP;
+            playerC.nowEXP += expReward * lv.bonusEXP;
 
             if (playerC.nowEXP >= playerC.needEXP)
             {
@@ -215,29 +220,11 @@ public class EnermyController : MonoBehaviour
 
             enemySpawner.killedEnemy++;
             if ( Random.Range(0,100) < chanceofHP) Instantiate(hp, transform.position, Quaternion.identity);
-            if (enemySpawner.paze == 1)
+            for (int i = 0; i < coinDrop; i++)
             {
-                Instantiate(coin, transform.position, Quaternion.identity);
-            }
-            else if (enemySpawner.paze == 2)
-            {
-                for (int i=0; i<3; i++)
-                {
-                    float rx = Random.Range(-1.5f, 1.5f);
-                    float ry = Random.Range(-1.5f, 1.5f);
-                    Vector2 drop = new Vector2(transform.position.x + rx, transform.position.y + ry);
-                    Instantiate(coin, drop, Quaternion.identity);
-                }
-            }
-            else if (enemySpawner.paze == 3)
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    float rx = Random.Range(-1.5f, 1.5f);
-                    float ry = Random.Range(-1.5f, 1.5f);
-                    Vector2 drop = new Vector2(transform.position.x + rx, transform.position.y + ry);
-                    Instantiate(coin, drop, Quaternion.identity);
-                }
+                Vector2 drop = transform.position;
+                if (i > 0) drop += new Vector2(Random.Range(-1.5f, 1.5f), Random.Range(-1.5f, 1.5f));
+                Instantiate(coin, drop, Quaternion.identity);
             }
         }
         Destroy(gameObject);

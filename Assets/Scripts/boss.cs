@@ -20,6 +20,8 @@ public class bosss : MonoBehaviour
     public GameObject coin;
 
     public int hitCount = 0;
+    // 이만큼 맞을 때마다 부하를 소환
+    public int hitsPerSummon = 20;
 
     void Start()
     {
@@ -83,7 +85,7 @@ public class bosss : MonoBehaviour
         Debug.Log("적 체력: " + EnemyHealth);
 
         hitCount++;
-        if (hitCount >= 5)
+        if (hitCount >= hitsPerSummon)
         {
             EnemySpawner enemySpawner = FindFirstObjectByType<EnemySpawner>();
             enemySpawner.SpawnEnemy(true,transform.position);

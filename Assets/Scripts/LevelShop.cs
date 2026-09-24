@@ -78,7 +78,7 @@ public class LevelShop : MonoBehaviour
         ability_content[4] = "킬 경험치 +20%";
 
         ability_name[5] = "흡혈 스킬";
-        ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP + " -> " + (1 + bul.getHP);
+        ability_content[5] = "스킬로 맞춘 적 1명당 체력을 회복합니다.\n( 회복량 " + bul.getHP + " -> " + (VampireHeal + bul.getHP) + " )";
 
         ability_name[6] = "멀티 샷";
         ability_content[6] = "멀티샷 +1";
@@ -150,6 +150,9 @@ public class LevelShop : MonoBehaviour
     }
 
     SkillGauge skill;
+
+    const int MinSkillPoint = 5;
+    const int VampireHeal = 2;
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.4f;
@@ -245,10 +248,15 @@ public class LevelShop : MonoBehaviour
         if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
         if (what == 0) bul.pene++;
         if (what == 1) bul.bonusCoin++;
-        if (what == 2) skill.MaxSkillPoint = (int) (skill.MaxSkillPoint * 0.8f);
+        if (what == 2)
+        {
+            // 너무 쉬워지지 않도록 최소 5회까지만 줄어듦
+            skill.MaxSkillPoint = Mathf.Max(MinSkillPoint, Mathf.RoundToInt(skill.MaxSkillPoint * 0.8f));
+            if (skill.MaxSkillPoint <= MinSkillPoint) ability_selected[2] = true;
+        }
         if (what == 3) bul.Skill_setTime *= 0.8f;
         if (what == 4) lv.bonusEXP += 0.2f;
-        if (what == 5) bul.getHP += 1;
+        if (what == 5) bul.getHP += VampireHeal;
         if (what == 6)
         {
             bul.multiShot += 1;

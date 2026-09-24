@@ -3893,17 +3893,17 @@ MonoBehaviour:
   bulletPrefab: {fileID: 6261401488390405836, guid: 16cb3098c69f6e743a2144de2f7553af, type: 3}
   isShop: 0
   bonusCoin: 0
-  ShootSpeed: 0.8
+  ShootSpeed: 0.45
   damage: 1
   pene: 1
   blood: 0
   getHP: 0
   multiShot: 1
   knockBack: 0.4
-  MaxBullet: 6
-  NowBullet: 6
+  MaxBullet: 8
+  NowBullet: 8
   reload: 0
-  reloadTime: 3
+  reloadTime: 1.8
   PlayerMaxHealth: 100
   PlayerHealth: 0
   targetRange: 500
@@ -4776,7 +4776,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gaugeImage: {fileID: 1351379409}
   SkillPoint: 0
-  MaxSkillPoint: 15
+  MaxSkillPoint: 12
 --- !u!114 &1351379409
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5803,16 +5803,16 @@ MonoBehaviour:
   mycoins: {fileID: 258748240}
   coins: 0
   damage: 1
-  ShootSpeed: 0.8
-  ReloadSpeed: 3
-  MaxBullet: 6
+  ShootSpeed: 0.45
+  ReloadSpeed: 1.8
+  MaxBullet: 8
   showedSpeed: 0
   moveSpeed: 0
   damagePrice: 5
-  ShootSpeedPrice: 5
-  ReloadSpeedPrice: 5
-  MaxBulletPrice: 5
-  moveSpeedPrice: 5
+  ShootSpeedPrice: 6
+  ReloadSpeedPrice: 6
+  MaxBulletPrice: 6
+  moveSpeedPrice: 8
   isShopOpen: 0
   coind: {fileID: 0}
   playerControllerd: {fileID: 0}
@@ -5872,7 +5872,6 @@ MonoBehaviour:
   boss1Cleared: 0
   bossSpawned: 0
   spawnedEnemys: 0
-  spawnTime: 2
 --- !u!4 &1500953196
 Transform:
   m_ObjectHideFlags: 0

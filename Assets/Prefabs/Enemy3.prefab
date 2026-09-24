@@ -183,10 +183,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f970e3becc05a0c48adf2f94179900cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 18
-  setEnemyHP: 50
+  speed: 14
+  setEnemyHP: 16
   EnemyHealth: 0
   KilledEnemy: 0
   coin: {fileID: 3721139401337131225, guid: 4396825abc2ee134baa6fdebf0551e35, type: 3}
+  separationSpeed: 6
   hp: {fileID: 6036257255657790500, guid: d7c3f9893125632478c48242ce8ab55f, type: 3}
-  chanceofHP: 30
+  chanceofHP: 15
+  contactDamage: 12
+  expReward: 45
+  coinDrop: 3

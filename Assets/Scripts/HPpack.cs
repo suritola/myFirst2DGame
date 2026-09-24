@@ -6,6 +6,7 @@ public class HPpack : MonoBehaviour
 {
     public GameObject pack;
     PlayerController playerC;
+    public float healAmount = 25f;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,7 +23,7 @@ public class HPpack : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             Destroy(pack);
-            playerC.PlayerHealth += 20;
+            playerC.PlayerHealth += healAmount;
             if (playerC.PlayerHealth > playerC.PlayerMaxHealth) playerC.PlayerHealth = playerC.PlayerMaxHealth;
             return;
         }
