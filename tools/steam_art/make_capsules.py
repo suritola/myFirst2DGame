@@ -1,7 +1,7 @@
 # Steam 스토어 그래픽 에셋(캡슐·라이브러리 이미지)을 게임 안 스프라이트로 만든다.
 #
-# 사용법: python3 tools/steam_art/make_capsules.py --title "Six Feet Under Fire"
-#         python3 tools/steam_art/make_capsules.py --title "Gravegun" --out steam_assets
+# 사용법: python3 tools/steam_art/make_capsules.py --title "GUN SAVER"
+#         python3 tools/steam_art/make_capsules.py --title "GUN SAVER" --out steam_assets
 # 필요: pip install pillow
 import argparse
 import os
@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SPR = os.path.join(ROOT, "Assets", "Sprites")
-FONT = os.path.join(os.path.dirname(__file__), "fonts", "PixelifySans.ttf")
+FONT = os.path.join(os.path.dirname(__file__), "fonts", "Silkscreen-Bold.ttf")
 CELL = 32  # 스프라이트 시트 한 칸 크기
 
 # (파일, 줄, 칸) — 줄 0: 대기, 4: 사격
@@ -115,7 +115,6 @@ def fit_font(text, max_w, max_h):
     size = int(max_h)
     while size > 8:
         f = ImageFont.truetype(FONT, size)
-        f.set_variation_by_name("Bold")
         box = f.getbbox(text)
         if box[2] - box[0] <= max_w and box[3] - box[1] <= max_h:
             return f
