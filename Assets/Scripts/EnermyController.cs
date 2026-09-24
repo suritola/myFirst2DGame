@@ -19,9 +19,19 @@ public class EnermyController : MonoBehaviour
 
     public GameObject coin;
 
+    [Header("겹침 방지")]
+    // 다른 적과 겹친 만큼 밀어내는 속도 (초당)
+    public float separationSpeed = 4f;
+
+    public bool IsDead => isDead;
+
+    private CircleCollider2D bodyCollider;
+    private static readonly Collider2D[] nearby = new Collider2D[24];
+
     void Start()
     {
         EnemyHealth = setEnemyHP;
+        bodyCollider = GetComponent<CircleCollider2D>();
 
         // 플레이어 찾기
         player = FindFirstObjectByType<PlayerController>().transform;
@@ -59,7 +69,56 @@ public class EnermyController : MonoBehaviour
     void FixedUpdate()
     {
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null) transform.Translate(move * speed * Time.fixedDeltaTime);
+        if (!isDead && player != null)
+        {
+            Vector3 step = move * speed + Separation() * separationSpeed;
+            transform.Translate(step * Time.fixedDeltaTime);
+        }
+    }
+
+    // 원 콜라이더의 월드 반지름
+    static float WorldRadius(CircleCollider2D c)
+    {
+        Vector3 s = c.transform.lossyScale;
+        return c.radius * Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y));
+    }
+
+    // 주변 적과 겹친 정도에 비례해 바깥으로 밀어내는 방향
+    Vector3 Separation()
+    {
+        if (bodyCollider == null) return Vector3.zero;
+
+        Vector2 center = bodyCollider.bounds.center;
+        float myRadius = WorldRadius(bodyCollider);
+
+        // 가장 큰 적까지 잡히도록 넉넉하게 검색
+        int count = Physics2D.OverlapCircleNonAlloc(center, myRadius * 3f, nearby);
+
+        Vector2 push = Vector2.zero;
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D other = nearby[i];
+            if (other == bodyCollider || !other.CompareTag("enermy")) continue;
+
+            CircleCollider2D otherCircle = other as CircleCollider2D;
+            if (otherCircle == null) continue;
+
+            EnermyController otherEnemy = other.GetComponent<EnermyController>();
+            if (otherEnemy == null || otherEnemy.IsDead) continue;
+
+            Vector2 away = center - (Vector2)other.bounds.center;
+            float dist = away.magnitude;
+            float minDist = myRadius + WorldRadius(otherCircle);
+            if (dist >= minDist) continue;
+
+            // 완전히 같은 위치면 임의 방향으로 벌림
+            if (dist < 0.001f) away = Random.insideUnitCircle.normalized;
+            else away /= dist;
+
+            push += away * ((minDist - dist) / minDist);
+        }
+
+        return Vector2.ClampMagnitude(push, 1.5f);
     }
 
     public void TakeDamage(int damage, float knockBack, Vector3 dir)
