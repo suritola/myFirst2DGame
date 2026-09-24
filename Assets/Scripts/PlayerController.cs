@@ -547,6 +547,7 @@ void Shoot()
         if (isSkillUsing) return;
         if (skillGauge == null || !skillGauge.IsFull()) return;
         isSkillUsing = true;
+        UltUsed?.Invoke();
         NowCharge = 0f;
         skillDamage = damage * 2f;
         if (audioSource != null && chargeSound != null) audioSource.PlayOneShot(chargeSound);
@@ -657,8 +658,12 @@ void Shoot()
     // 타겟들에게 순서대로 발사
     // =====================================
 
+    // 필살기를 썼을 때 (업적 등)
+    public static event System.Action UltUsed;
+
     IEnumerator InstantUlt()
     {
+        UltUsed?.Invoke();
         isVolleying = true;
         skillGauge.ResetSkillPoint();
         FaceTowards(mainCamera.ScreenToWorldPoint(Input.mousePosition));

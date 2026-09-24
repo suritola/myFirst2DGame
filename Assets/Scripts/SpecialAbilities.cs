@@ -729,10 +729,14 @@ public class SpecialAbilities : MonoBehaviour
 
     // ================================================================= evolution
     // order: 한 번에 여러 개를 진화할 때 알림 글자를 위로 쌓는 순서
+    // 능력이 진화했을 때 (업적 등)
+    public static event System.Action<int> Evolved;
+
     public void Evolve(int id, int order = 0)
     {
         if (!equipped.Contains(id) || evolved.Contains(id)) return;
         evolved.Add(id);
+        Evolved?.Invoke(id);
         if (id == OrbsId) SpawnOrbs(2);
 
         if (fx != null)
