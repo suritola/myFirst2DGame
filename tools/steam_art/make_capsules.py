@@ -170,6 +170,41 @@ def make_logo(title, w=1280, h=720):
     return logo.crop(logo.getbbox())
 
 
+def make_icon(grid=23):
+    # 도트 한 칸 = 픽셀 하나인 작은 캔버스에 그린 뒤 정수배로 키워서 선명하게 유지
+    icon = Image.new("RGBA", (grid, grid))
+    steps = [(38, 10, 14), (78, 18, 16), (140, 36, 18), (214, 84, 28)]
+    c = (grid - 1) / 2
+    for y in range(grid):
+        for x in range(grid):
+            d = ((x - c) ** 2 + (y - grid * 0.4) ** 2) ** 0.5 / grid
+            icon.putpixel((x, y), steps[max(0, min(3, 3 - int(d * 5.2)))] + (255,))
+
+    sprite = frame(*PLAYER)
+    sprite = sprite.crop(sprite.getbbox())
+    # 1칸 검은 외곽선
+    a = sprite.split()[3]
+    outline = Image.new("RGBA", (sprite.width + 2, sprite.height + 2), (0, 0, 0, 0))
+    for dx, dy in [(0, 1), (1, 0), (2, 1), (1, 2)]:
+        outline.paste((12, 6, 10, 255), (dx, dy), a)
+    outline.alpha_composite(sprite, (1, 1))
+    icon.alpha_composite(outline, ((grid - outline.width) // 2, grid - outline.height))
+
+    border = ImageDraw.Draw(icon)
+    border.rectangle((0, 0, grid - 1, grid - 1), outline=(255, 214, 120, 255))
+    return icon
+
+
+def save_icons(out):
+    icon = make_icon()
+    big = pixel_scale(icon, 8)  # 184×184
+    big.convert("RGB").save(os.path.join(out, "community_icon_184x184.jpg"), quality=95)
+    pixel_scale(icon, 32).save(os.path.join(out, "app_icon_736x736.png"))  # Unity 플레이어 아이콘용
+    # Steam 클라이언트 아이콘 (.ico): 작은 크기는 부드럽게 줄여야 알아보기 쉬움
+    big.resize((256, 256), Image.NEAREST).save(
+        os.path.join(out, "client_icon.ico"), sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (256, 256)])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--title", required=True)
@@ -180,6 +215,7 @@ def main():
     for name, (w, h, has_title) in SIZES.items():
         make(name, w, h, has_title, args.title).save(os.path.join(args.out, f"{name}_{w}x{h}.png"))
     make_logo(args.title).save(os.path.join(args.out, "library_logo.png"))
+    save_icons(args.out)
     print("저장 위치:", args.out)
 
 
