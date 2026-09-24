@@ -16,6 +16,9 @@ public class Bullet : MonoBehaviour
     // 스킬로 쏜 총알은 스킬 게이지를 채우지 않음
     public bool isSkill = false;
 
+    // 맞은 적을 밀어내는 거리 (쏠 때 플레이어가 정해 줌)
+    public float knockBack = 0.3f;
+
     PlayerController playerC;
 
     private Vector2 dir;
@@ -79,7 +82,7 @@ public class Bullet : MonoBehaviour
                 // 적에게 데미지
                 if (enemy.EnemyHealth <= 0f) return;
 
-                enemy.TakeDamage(damage, playerC.knockBack, dir);
+                enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
                 if (playerC.PlayerHealth < playerC.PlayerMaxHealth - blood) playerC.PlayerHealth += blood;
                 else playerC.PlayerHealth = playerC.PlayerMaxHealth;
@@ -108,7 +111,7 @@ public class Bullet : MonoBehaviour
                 // 적에게 데미지
                 if (enemy.EnemyHealth <= 0f) return;
 
-                enemy.TakeDamage(damage, playerC.knockBack, dir);
+                enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
                 if (playerC.PlayerHealth < playerC.PlayerMaxHealth - blood) playerC.PlayerHealth += blood;
                 else playerC.PlayerHealth = playerC.PlayerMaxHealth;

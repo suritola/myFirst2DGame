@@ -3899,7 +3899,7 @@ MonoBehaviour:
   blood: 0
   getHP: 0
   multiShot: 1
-  knockBack: 0.4
+  knockBack: 0.3
   MaxBullet: 8
   NowBullet: 8
   reload: 0
@@ -4015,7 +4015,7 @@ Rigidbody2D:
     serializedVersion: 2
     m_Bits: 0
   m_Interpolate: 0
-  m_SleepingMode: 1
+  m_SleepingMode: 0
   m_CollisionDetection: 0
   m_Constraints: 0
 --- !u!58 &1246439324

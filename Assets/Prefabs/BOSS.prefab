@@ -191,4 +191,4 @@ MonoBehaviour:
   hitCount: 0
   hp: {fileID: 6036257255657790500, guid: d7c3f9893125632478c48242ce8ab55f, type: 3}
   chanceofHP: 100
-  hitsPerSummon: 20
+  hitsPerSummon: 15

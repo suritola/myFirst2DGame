@@ -86,7 +86,7 @@ public class LevelShop : MonoBehaviour
             + (bul.multiShot + 1) + "발 " + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)) + " )";
 
         ability_name[7] = "밀어내기";
-        ability_content[7] = "총알이 적을 밀어내는 효과 +60% ";
+        ability_content[7] = "총알이 적을 밀어내는 효과 +25%\n( 최대 " + KnockBackMaxLevel + "번 )";
 
         ability_name[8] = "강철같은 심장";
         ability_content[8] = "체력을 즉시 모두 회복하며, 최대 체력이 30% 증가합니다.";
@@ -159,7 +159,9 @@ public class LevelShop : MonoBehaviour
     const int VampireHeal = 2;
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
-    const float BaseKnockBack = 0.4f;
+    const float BaseKnockBack = 0.3f;
+    const float KnockBackGrowth = 1.25f;
+    const int KnockBackMaxLevel = 3;
 
     // 툴팁용: 능력 설명 + 지금 적용 중인 수치
     public string GetAbilityTooltip(int id)
@@ -205,7 +207,7 @@ public class LevelShop : MonoBehaviour
                 break;
             case 7:
                 summary = "총알이 적을 더 멀리 밀어냅니다.";
-                current = "넉백: 기본의 " + (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "%";
+                current = "넉백: 기본의 " + (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "% (" + ability_level[7] + "/" + KnockBackMaxLevel + ")";
                 break;
             case 8:
                 summary = "최대 체력이 늘어나고, 선택하는 순간 체력을 모두 회복합니다.";
@@ -269,8 +271,8 @@ public class LevelShop : MonoBehaviour
         }
         if (what == 7)
         {
-            bul.knockBack *= 1.6f;
-            if (bul.knockBack >= 2) ability_selected[7] = true;
+            bul.knockBack *= KnockBackGrowth;
+            if (ability_level[7] >= KnockBackMaxLevel) ability_selected[7] = true;
         }
         if (what == 8)
         {

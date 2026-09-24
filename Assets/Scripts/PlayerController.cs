@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
         return multiShotDamageRates[Mathf.Clamp(shots - 1, 0, multiShotDamageRates.Length - 1)];
     }
 
-    public float knockBack = 0.4f;
+    public float knockBack = 0.3f;
 
     // =====================================
     // 탄약 / 재장전
@@ -391,6 +391,8 @@ void Shoot()
 
         float bulletDamage = damage * MultiShotDamageRate(multiShot);
 
+        float shotRate = MultiShotDamageRate(multiShot);
+
         if (multiShot == 1) CreateBullet(startPosition, direction, bulletDamage, pene, 0, false);
         else
         {
@@ -404,7 +406,7 @@ void Shoot()
 
                 Vector2 shotDirection = Quaternion.Euler(0, 0, angle) * direction;
 
-                CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false);
+                CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate);
             }
         }
     }
@@ -424,7 +426,7 @@ void Shoot()
         faceLockUntil = Time.time + faceShotTime;
     }
 
-    void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill)
+    void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill, float knockBackRate = 1f)
     {
         if (bulletPrefab == null) return;
 
@@ -439,6 +441,7 @@ void Shoot()
             bullet.blood = blood;
             bullet.damage = damage;
             bullet.isSkill = isSkill;
+            bullet.knockBack = knockBack * knockBackRate;
         }
 
     }
@@ -625,12 +628,23 @@ void Shoot()
             Destroy( collision.gameObject );
         }
 
+        HandleContact(collision);
+    }
+
+    // 적과 닿아 있는 동안에도 무적 시간 간격으로 계속 피해를 받음
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        HandleContact(collision);
+    }
+
+    void HandleContact(Collider2D collision)
+    {
         if (collision.CompareTag("enermy"))
         {
             EnermyController enemy = collision.GetComponent<EnermyController>();
             if (enemy != null && !enemy.IsDead) TakeHit(enemy.contactDamage);
         }
-        if (collision.CompareTag("boss"))
+        else if (collision.CompareTag("boss"))
         {
             TakeHit(bossContactDamage);
         }

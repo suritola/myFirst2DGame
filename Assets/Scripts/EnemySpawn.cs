@@ -25,7 +25,10 @@ public class EnemySpawner : MonoBehaviour
     public int bossKills = 60;
 
     int PhaseIndex => Mathf.Clamp(paze - 1, 0, 2);
-    int MaxAlive => maxAliveByPhase[Mathf.Min(PhaseIndex, maxAliveByPhase.Length - 1)];
+    // 보스전에는 부하가 더 나올 수 있도록 최대 수를 늘림
+    public int bossExtraAlive = 10;
+
+    int MaxAlive => maxAliveByPhase[Mathf.Min(PhaseIndex, maxAliveByPhase.Length - 1)] + (bossSpawned ? bossExtraAlive : 0);
 
     [Header("스폰 위치")]
     // 적이 생성될 수 있는 맵 안쪽 범위 (벽 안쪽에서 조금 띄움)
@@ -102,15 +105,24 @@ public class EnemySpawner : MonoBehaviour
         }
         else
         {
-            // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
-            GameObject[] minions = { enemyPrefab, enemy2Prefab, enemy3Prefab };
-            foreach (GameObject minion in minions)
-            {
-                if (spawnedEnemys >= MaxAlive) break;
-                spawnedEnemys++;
-                Vector2 offset = Random.insideUnitCircle * 3f;
-                Instantiate(minion, here + (Vector3)offset, Quaternion.identity);
-            }
+            SummonMinions(here, 3);
+        }
+    }
+
+    // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
+    // 약한 적이 더 자주 나오도록 해골 3 : 구울 2 : 망령 1 비율
+    public void SummonMinions(Vector3 here, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            if (spawnedEnemys >= MaxAlive) return;
+
+            int roll = Random.Range(0, 6);
+            GameObject minion = roll < 3 ? enemyPrefab : roll < 5 ? enemy2Prefab : enemy3Prefab;
+
+            spawnedEnemys++;
+            Vector2 offset = Random.insideUnitCircle.normalized * Random.Range(3f, 6f);
+            Instantiate(minion, here + (Vector3)offset, Quaternion.identity);
         }
     }
 

@@ -20,8 +20,31 @@ public class bosss : MonoBehaviour
     public GameObject coin;
 
     public int hitCount = 0;
-    // 이만큼 맞을 때마다 부하를 소환
-    public int hitsPerSummon = 20;
+
+    [Header("부하 소환")]
+    // 이만큼 맞을 때마다 부하를 추가로 소환
+    public int hitsPerSummon = 15;
+    public int summonOnHitCount = 2;
+    // 일정 시간마다 소환 (체력이 절반 아래면 더 자주, 더 많이)
+    public float summonInterval = 5f;
+    public int summonCount = 3;
+    public float enragedSummonInterval = 3f;
+    public int enragedSummonCount = 4;
+
+    [Header("넉백 저항")]
+    // 총알 넉백을 이 비율만큼만 받음
+    public float knockBackTaken = 0.25f;
+
+    float summonTimer;
+    EnemySpawner spawner;
+
+    bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
+
+    void Summon(int count)
+    {
+        if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
+        if (spawner != null) spawner.SummonMinions(transform.position, count);
+    }
 
     void Start()
     {
@@ -46,6 +69,14 @@ public class bosss : MonoBehaviour
         bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
 
         if (player == null) return;
+
+        // 주기적으로 부하 소환
+        summonTimer += Time.deltaTime;
+        if (summonTimer >= (Enraged ? enragedSummonInterval : summonInterval))
+        {
+            summonTimer = 0f;
+            Summon(Enraged ? enragedSummonCount : summonCount);
+        }
 
         // 적 → 플레이어 방향 계산
         move = player.position - transform.position;
@@ -74,7 +105,7 @@ public class bosss : MonoBehaviour
         // 체력 감소
         EnemyHealth -= damage;
 
-        transform.position += dir * knockBack;
+        transform.position += dir * knockBack * knockBackTaken;
 
         // 피격 애니메이션
         //animator.SetTrigger("hit");
@@ -87,8 +118,7 @@ public class bosss : MonoBehaviour
         hitCount++;
         if (hitCount >= hitsPerSummon)
         {
-            EnemySpawner enemySpawner = FindFirstObjectByType<EnemySpawner>();
-            enemySpawner.SpawnEnemy(true,transform.position);
+            Summon(summonOnHitCount);
             hitCount = 0;
         }
 
