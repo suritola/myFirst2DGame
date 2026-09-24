@@ -19,7 +19,11 @@ public class ShowBullet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (player.reload == 0)
+        if (!string.IsNullOrEmpty(player.ammoTextOverride))
+        {
+            TextInput.text = player.ammoTextOverride;
+        }
+        else if (player.reload == 0)
         {
             TextInput.text = player.NowBullet + " / " + player.MaxBullet;
         }

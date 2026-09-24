@@ -23,25 +23,11 @@ public class StageManager : MonoBehaviour
     [Header("UI")]
     public Image fade;                      // 전체 화면 검은 막
     public GameObject specialPanel;         // 특수 능력 선택 화면
-    public TextMeshProUGUI[] specialTitles;
-    public TextMeshProUGUI[] specialDescriptions;
+    public SpecialTreeUI specialTree;
+    public SpecialAbilities specials;
     public GameObject banner;               // 화면 중앙 알림
     public TextMeshProUGUI bannerText;
 
-    [Header("특수 능력 (준비 중 - 선택만 기록)")]
-    public string[] specialNames =
-    {
-        "지옥불 탄환",
-        "그림자 대시",
-        "수호 영혼",
-    };
-    [TextArea(2, 4)]
-    public string[] specialTexts =
-    {
-        "총알에 맞은 적이 불타 3초 동안\n초당 공격력의 30% 피해를 받습니다.",
-        "Space로 짧게 돌진합니다.\n돌진 중에는 무적 (쿨타임 3초).",
-        "영혼 구체 2개가 주위를 돌며\n닿은 적에게 피해를 줍니다.",
-    };
     public int chosenSpecial = -1;
 
     public int CurrentStage { get; private set; }
@@ -100,17 +86,15 @@ public class StageManager : MonoBehaviour
 
         yield return Fade(0f, 1f, 0.7f);
 
-        // 특수 능력 선택 (전체 화면)
-        for (int i = 0; i < specialTitles.Length && i < specialNames.Length; i++)
-        {
-            specialTitles[i].text = specialNames[i];
-            specialDescriptions[i].text = specialTexts[i] + "\n\n<color=#9d93a8>(준비 중)</color>";
-        }
+        // 특수 능력 선택 (전체 화면 스킬 트리)
         pendingPick = -1;
         specialPanel.SetActive(true);
+        if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
         SetFade(0f);
         while (pendingPick < 0) yield return null;
         chosenSpecial = pendingPick;
+        if (specials != null) specials.Equip(chosenSpecial);
+        TooltipUI.Hide();
         SetFade(1f);
         specialPanel.SetActive(false);
 
@@ -131,7 +115,7 @@ public class StageManager : MonoBehaviour
         transitioning = false;
     }
 
-    // 특수 능력 카드 버튼
+    // 스킬 트리에서 능력을 확정했을 때 (능력 번호)
     public void OnPickSpecial(int index)
     {
         pendingPick = index;

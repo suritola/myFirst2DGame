@@ -26,6 +26,11 @@ public class Bullet : MonoBehaviour
 
     private Vector2 dir;
 
+    public Vector2 Direction => dir;
+    // 적을 맞혔을 때 추가 효과 (연쇄 번개, 폭발 등)
+    public System.Action<Bullet, Collider2D> onHitEnemy;
+    public float lifetime = 2f;
+
     public Vector2 Dir
     {
         set
@@ -45,7 +50,7 @@ public class Bullet : MonoBehaviour
         remainPene = pene;
         playerC = FindAnyObjectByType<PlayerController>();
         mainCamera = Camera.main;
-        Destroy(gameObject, 2f);
+        Destroy(gameObject, lifetime);
     }
 
 
@@ -98,6 +103,8 @@ public class Bullet : MonoBehaviour
                 SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
                 if (skillGauge != null && !isSkill) skillGauge.AddSkillPoint(skillCharge);
+
+                onHitEnemy?.Invoke(this, collision);
             }
 
 

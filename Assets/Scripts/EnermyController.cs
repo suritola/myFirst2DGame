@@ -43,6 +43,13 @@ public class EnermyController : MonoBehaviour
 
     public bool IsDead => isDead;
 
+    // 시간 왜곡 (적 전체 감속)
+    public static float GlobalSpeedMultiplier = 1f;
+    // 거울 분신이 있으면 플레이어 대신 분신을 쫓음
+    public static Transform Decoy;
+    // 적이 처치됐을 때 (영혼 모으기 등)
+    public static System.Action<Vector3> Killed;
+
     private CircleCollider2D bodyCollider;
     private static readonly Collider2D[] nearby = new Collider2D[24];
 
@@ -71,7 +78,7 @@ public class EnermyController : MonoBehaviour
         if (player == null) return;
 
         // 적 → 플레이어 방향 계산
-        move = player.position - transform.position;
+        move = (Decoy != null ? Decoy.position : player.position) - transform.position;
 
         // z축 제거
         move.z = 0;
@@ -99,7 +106,7 @@ public class EnermyController : MonoBehaviour
                 dir = (move + side * Mathf.Sin(moveTime * zigzagFrequency) * zigzagAmplitude).normalized;
             }
 
-            float currentSpeed = speed;
+            float currentSpeed = speed * GlobalSpeedMultiplier;
             if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
 
             Vector3 step = dir * currentSpeed + Separation() * separationSpeed;
@@ -189,6 +196,7 @@ public class EnermyController : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        if (a == 1) Killed?.Invoke(transform.position);
         spriteRenderer.color = Color.white;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음

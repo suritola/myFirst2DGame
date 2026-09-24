@@ -154,6 +154,20 @@ public class PlayerController : MonoBehaviour
 
     private bool isSkillUsing = false;
 
+    // 특수 능력 (지옥 입장 시 선택)
+    [HideInInspector] public SpecialAbilities special;
+    // 희생의 계약 같은 일시 강화
+    [HideInInspector] public float damageMultiplier = 1f;
+    [HideInInspector] public float fireRateMultiplier = 1f;
+    // 분신 사용 중 반투명 등
+    [HideInInspector] public float bodyAlpha = 1f;
+    // 탄약 표시 대신 보여줄 글자 (과열, 충전 등)
+    [HideInInspector] public string ammoTextOverride;
+
+    public bool CanShoot => !isSkillUsing && !isReloading && NowBullet > 0;
+    public bool IsSkillUsing => isSkillUsing;
+    public Camera MainCamera => mainCamera;
+
     private float nextTargetTime = 0f;
 
     private float nextShootTime = 0f;
@@ -266,7 +280,8 @@ public class PlayerController : MonoBehaviour
         // 좌클릭 일반 발사
         // =========================
 
-        if (Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
+        bool specialWeapon = special != null && special.WeaponActive;
+        if (!specialWeapon && Input.GetMouseButtonDown(0) && !isSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작
@@ -370,7 +385,9 @@ void Shoot()
     {
         if (NowBullet <= 0 || isReloading) return;
 
-        nextShootTime = Time.time + ShootSpeed;
+        nextShootTime = Time.time + ShootSpeed / fireRateMultiplier;
+        // 탄창 저주: 마지막 한 발 강화
+        bool cursed = special != null && special.IsLastBulletCursed(NowBullet);
         NowBullet--;
 
         if (animator != null) animator.SetTrigger("Shoot");
@@ -389,11 +406,11 @@ void Shoot()
         // 멀티샷 퍼지는 각도
         float spreadAngle = 10f;
 
-        float bulletDamage = damage * MultiShotDamageRate(multiShot);
+        float bulletDamage = damage * damageMultiplier * MultiShotDamageRate(multiShot) * (cursed ? 3f : 1f);
 
         float shotRate = MultiShotDamageRate(multiShot);
 
-        if (multiShot == 1) CreateBullet(startPosition, direction, bulletDamage, pene, 0, false);
+        if (multiShot == 1) special?.CurseBullet(CreateBullet(startPosition, direction, bulletDamage, pene, 0, false), cursed);
         else
         {
             int shotCount = multiShot;
@@ -406,7 +423,7 @@ void Shoot()
 
                 Vector2 shotDirection = Quaternion.Euler(0, 0, angle) * direction;
 
-                CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate);
+                special?.CurseBullet(CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate), cursed);
             }
         }
     }
@@ -425,7 +442,7 @@ void Shoot()
     }
 
     // 잠깐 동안 목표 방향을 바라보게 함 (이동 입력보다 우선)
-    void FaceTowards(Vector3 worldPos)
+    public void FaceTowards(Vector3 worldPos)
     {
         if (spriteRenderer == null) return;
 
@@ -433,9 +450,9 @@ void Shoot()
         faceLockUntil = Time.time + faceShotTime;
     }
 
-    void CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill, float knockBackRate = 1f)
+    public Bullet CreateBullet(Vector3 startPosition, Vector2 direction, float damage, int penes, int blood, bool isSkill, float knockBackRate = 1f)
     {
-        if (bulletPrefab == null) return;
+        if (bulletPrefab == null) return null;
 
         GameObject newBullet = Instantiate(bulletPrefab, startPosition, Quaternion.identity);
 
@@ -452,6 +469,15 @@ void Shoot()
             bullet.skillCharge = knockBackRate;
         }
 
+        return bullet;
+    }
+
+    // 총구 위치 (바라보는 쪽 손)
+    public Vector3 MuzzlePosition => transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
+
+    public void GrantInvincibility(float seconds)
+    {
+        invincibleUntil = Mathf.Max(invincibleUntil, Time.time + seconds);
     }
 
     // =====================================
@@ -674,7 +700,18 @@ void Shoot()
 
         if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound);
 
-        PlayerHealth -= amount * (1f - def);
+        float taken = amount * (1f - def);
+
+        // 불사의 맹세: 죽을 피해를 한 번 버팀
+        if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())
+        {
+            PlayerHealth = 1f;
+            invincibleUntil = Time.time + 3f;
+            return true;
+        }
+
+        PlayerHealth -= taken;
+        special?.OnPlayerHurt();
 
         if (PlayerHealth <= 0)
         {
@@ -692,7 +729,7 @@ void Shoot()
 
         bool blinking = Time.time < invincibleUntil && !isSkillUsing;
         UnityEngine.Color c = spriteRenderer.color;
-        c.a = blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f;
+        c.a = (blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f) * bodyAlpha;
         spriteRenderer.color = c;
     }
 

@@ -84,7 +84,7 @@ public class bosss : MonoBehaviour
         }
 
         // 적 → 플레이어 방향 계산
-        move = player.position - transform.position;
+        move = (EnermyController.Decoy != null ? EnermyController.Decoy.position : player.position) - transform.position;
 
         // z축 제거
         move.z = 0;
@@ -100,7 +100,7 @@ public class bosss : MonoBehaviour
     void FixedUpdate()
     {
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null) transform.Translate(move * speed * Time.fixedDeltaTime);
+        if (!isDead && player != null) transform.Translate(move * speed * EnermyController.GlobalSpeedMultiplier * Time.fixedDeltaTime);
     }
 
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
