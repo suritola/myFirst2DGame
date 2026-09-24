@@ -3,8 +3,10 @@
 #
 # 사용법: pwsh tools/release.ps1            (버전 자동 증가: v1.0 -> v1.1 ...)
 #         pwsh tools/release.ps1 -Version v2.0
+#         pwsh tools/release.ps1 -NotesFile docs/patch-notes/v1.0.md
 param(
     [string]$Version,
+    [string]$NotesFile,     # 패치노트 파일 (없으면 커밋 목록으로 자동 작성)
     [string]$Repo = "suritola/myFirst2DGame-builds",
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
@@ -33,7 +35,8 @@ if (-not $Version) {
 }
 if ($prevCommit) { $changes = git -C $Project log --pretty="- %s" "$prevCommit..HEAD" }
 else { $changes = git -C $Project log --pretty="- %s" -n 15 }
-$notes = "소스 커밋: $commit`n`n## 변경 내역`n" + ($changes -join "`n")
+if ($NotesFile) { $notes = "소스 커밋: $commit`n`n" + (Get-Content $NotesFile -Raw -Encoding utf8) }
+else { $notes = "소스 커밋: $commit`n`n## 변경 내역`n" + ($changes -join "`n") }
 Write-Host "버전 $Version (커밋 $commit)"
 
 # ---------------------------------------------------------------- 프로젝트 복사 (Library는 재사용해서 빠르게)
