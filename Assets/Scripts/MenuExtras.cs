@@ -24,17 +24,18 @@ public static class MenuExtras
 
         RectTransform sr = (RectTransform)start.transform;
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialUI.Open(sr.root));
+        GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
 
-        // 세로로 다시 배치: 시작 · 튜토리얼 · 설정 · 종료
-        float[] ys = { -20f, -150f, -280f, -410f };
-        GameObject[] order = { start, tutorial, settings, exit };
+        // 세로로 다시 배치: 시작 · 튜토리얼 · 도감 · 설정 · 종료
+        float[] ys = { 0f, -108f, -216f, -324f, -432f };
+        GameObject[] order = { start, tutorial, codex, settings, exit };
         for (int i = 0; i < order.Length; i++)
         {
             if (order[i] == null) continue;
             RectTransform r = (RectTransform)order[i].transform;
             r.anchoredPosition = new Vector2(r.anchoredPosition.x, ys[i]);
-            r.sizeDelta = new Vector2(r.sizeDelta.x, 112f);
+            r.sizeDelta = new Vector2(r.sizeDelta.x, 94f);
         }
     }
 

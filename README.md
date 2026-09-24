@@ -55,8 +55,9 @@
 
 ## ⚙️ 메뉴 · 설정
 
-- **메인 메뉴**: 게임 시작 · **튜토리얼** · **설정** · 게임 종료
+- **메인 메뉴**: 게임 시작 · **튜토리얼** · **도감** · **설정** · 게임 종료
 - **튜토리얼**: 기본 조작, 필살기, 성장, 특수 능력, 적과 보스, 목표를 6쪽으로 설명합니다.
+- **도감**: 적 · 보스 · 무기(필살기 포함) · 스킬 · 패시브 · 진화 · 레벨업 · 상점 정보를 탭별 카드로 한눈에 봅니다. 적과 보스는 체력 · 속도 · 접촉 피해도 보여줍니다.
 - **설정** (메뉴 또는 게임 중 `ESC` → 설정)
   - **언어**: 한국어(기본) · English · 日本語 · 中文
   - **볼륨**: 0 ~ 100% (기본 50%)
@@ -352,6 +353,7 @@ Assets/
 │   ├── MusicManager.cs       # 배경음악 (Resources/Music)
 │   ├── Loc.cs / LocTable.cs / GameSettings.cs  # 다국어 번역표 · 설정 저장
 │   ├── MenuExtras.cs         # 메뉴 튜토리얼 · 설정 창
+│   ├── CodexUI.cs / CodexData.cs  # 도감 창 · 도감 자료 (Resources/CodexData)
 │   ├── LevelShop.cs / SkillGauge.cs  # 레벨업 능력 / 스킬 게이지
 │   └── *HUD.cs, Tooltip*.cs, DamageFlash.cs  # HUD·툴팁·피격 효과
 ├── Sounds/               # 효과음
