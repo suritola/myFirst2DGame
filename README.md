@@ -194,6 +194,12 @@
 
 ## 🚀 실행 방법
 
+### 빌드 받아서 플레이
+
+윈도우 빌드는 비공개 저장소 [myFirst2DGame-builds](https://github.com/suritola/myFirst2DGame-builds/releases)의 Releases에 버전별로 올라갑니다. 초대받은 사람만 받을 수 있어요. zip을 풀고 `MyFirstGame.exe`를 실행하면 됩니다.
+
+### 에디터에서 실행
+
 1. **Unity Hub**에서 `Unity 2022.3.28f1` 설치
 2. 이 저장소를 클론
    ```bash
@@ -226,6 +232,8 @@ Assets/
 ├── Sounds/               # 효과음
 ├── Sprites/              # 캐릭터·타일셋·UI 스프라이트 (UI/Theme = 직접 만든 UI 키트)
 └── Tiles/                # 타일 팔레트
+Assets/Editor/BuildScript.cs  # 명령줄 윈도우 빌드
+tools/release.ps1             # 빌드 → zip → 비공개 저장소 Release 업로드
 ```
 
 ## 🤝 기여 규칙
