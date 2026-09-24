@@ -1,42 +1,45 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
+
+// 한 페이즈의 적 생성 규칙
+[System.Serializable]
+public class SpawnPhase
+{
+    public int killsToEnter = 0;        // 스테이지에서 이만큼 처치하면 이 페이즈로
+    public float spawnInterval = 1.5f;  // 적 생성 간격(초)
+    public int maxAlive = 10;           // 동시에 살아 있을 수 있는 최대 적 수
+    public float[] weights;             // 적 종류별 등장 비율 (stage.enemies 순서)
+}
+
+// 한 스테이지(맵)의 적 구성
+[System.Serializable]
+public class StageConfig
+{
+    public string stageName;
+    public GameObject[] enemies;        // 약한 적부터 강한 적 순서
+    public SpawnPhase[] phases;
+    public int bossKills = 60;          // 이만큼 처치하면 보스 등장
+    public GameObject bossPrefab;
+    public float[] minionWeights;       // 보스가 부르는 부하 비율
+}
 
 public class EnemySpawner : MonoBehaviour
 {
-    public GameObject enemyPrefab;
-    public GameObject enemy2Prefab;
-    public GameObject enemy3Prefab;
-    public GameObject BossPrefab;
+    [Header("스테이지")]
+    public StageConfig[] stages;
+    public int stageIndex = 0;
+
+    [Header("진행 상황")]
     public int killedEnemy = 0;
     public int paze = 1;
-    PlayerController playerC;
-    public bool boss1Cleared = false;
     public bool bossSpawned = false;
+    public bool bossCleared = false;
     public int spawnedEnemys = 0;
+    // 스테이지 전환 연출 중에는 생성을 멈춤
+    public bool spawningEnabled = true;
 
-    [Header("페이즈별 난이도 (1, 2, 3 페이즈)")]
-    // 적 생성 간격(초)
-    public float[] spawnIntervalByPhase = { 1.8f, 1.4f, 1.1f };
-    // 동시에 살아 있을 수 있는 최대 적 수
-    public int[] maxAliveByPhase = { 8, 12, 16 };
-    // 이 수만큼 처치하면 다음 페이즈 / 보스
-    // 페이즈별 등장 비율 (해골, 구울, 망령) - 이전 적도 계속 나오고 상위 적 비율이 높아짐
-    public Vector3[] spawnWeightsByPhase =
-    {
-        new Vector3(100f, 0f, 0f),
-        new Vector3(45f, 55f, 0f),
-        new Vector3(25f, 35f, 40f),
-    };
-
-    public int phase2Kills = 20;
-    public int phase3Kills = 40;
-    public int bossKills = 60;
-
-    int PhaseIndex => Mathf.Clamp(paze - 1, 0, 2);
     // 보스전에는 부하가 더 나올 수 있도록 최대 수를 늘림
     public int bossExtraAlive = 10;
-
-    int MaxAlive => maxAliveByPhase[Mathf.Min(PhaseIndex, maxAliveByPhase.Length - 1)] + (bossSpawned ? bossExtraAlive : 0);
 
     [Header("스폰 위치")]
     // 적이 생성될 수 있는 맵 안쪽 범위 (벽 안쪽에서 조금 띄움)
@@ -47,19 +50,30 @@ public class EnemySpawner : MonoBehaviour
     // 보스가 나오는 신전 문 위치
     public Vector2 bossSpawnPoint = new Vector2(0.5f, 24f);
 
+    // 보스를 쓰러뜨렸을 때 (스테이지 번호)
+    public System.Action<int> onBossDefeated;
+
+    PlayerController playerC;
+    bossbar bossbar;
+
+    public StageConfig Stage => stages[Mathf.Clamp(stageIndex, 0, stages.Length - 1)];
+    SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
+    int MaxAlive => Phase.maxAlive + (bossSpawned ? bossExtraAlive : 0);
+
     void Start()
     {
-        // 게임 시작 시 적 1마리 생성
-        SpawnEnemy(false,transform.position);
+        playerC = FindFirstObjectByType<PlayerController>();
         bossbar = FindFirstObjectByType<bossbar>();
-        bossSpawned = false;
-        boss1Cleared = false;
+
+        // 게임 시작 시 적 1마리 생성
+        SpawnEnemy(false, transform.position);
 
         // 페이즈에 따라 간격이 짧아지는 적 생성
         StartCoroutine(SpawnLoop());
         InvokeRepeating("clear", 30, 30);
     }
 
+    // 떨어진 코인을 자동으로 회수
     void clear()
     {
         Coin coin1 = FindFirstObjectByType<Coin>();
@@ -70,75 +84,109 @@ public class EnemySpawner : MonoBehaviour
             Destroy(coin);
             coin1.AddCoin(1 + playerC.bonusCoin);
         }
-            
     }
+
     IEnumerator SpawnLoop()
     {
         while (true)
         {
-            float interval = spawnIntervalByPhase[Mathf.Min(PhaseIndex, spawnIntervalByPhase.Length - 1)];
-            yield return new WaitForSeconds(interval);
-            SpawnEnemy(false, transform.position);
+            yield return new WaitForSeconds(Phase.spawnInterval);
+            if (spawningEnabled) SpawnEnemy(false, transform.position);
         }
     }
 
-    bossbar bossbar;
     public void SpawnEnemy(bool boss, Vector3 here)
     {
-        if (spawnedEnemys >= MaxAlive) return;
-
-        if (!boss)
-        {
-            // 랜덤한 위치 생성
-            spawnedEnemys++;
-            playerC = FindFirstObjectByType<PlayerController>();
-
-
-            Vector3 randomPosition = GetSpawnPosition(playerC.transform.position);
-
-            // 적 생성
-            Instantiate(PickEnemyForPhase(), randomPosition, Quaternion.identity);
-
-            if (killedEnemy >= phase2Kills) paze = 2;
-            if (killedEnemy >= phase3Kills) paze = 3;
-            if (killedEnemy >= bossKills && !bossSpawned && !boss1Cleared)
-            {
-                bossbar.bossSpawn = true;
-                bossSpawned = true;
-                // 보스는 신전 문에서 등장
-                Instantiate(BossPrefab, bossSpawnPoint, Quaternion.identity);
-            }
-        }
-        else
+        if (boss)
         {
             SummonMinions(here, 3);
+            return;
+        }
+
+        if (spawnedEnemys >= MaxAlive) return;
+        if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
+
+        spawnedEnemys++;
+        Vector3 randomPosition = GetSpawnPosition(playerC.transform.position);
+        Instantiate(Pick(Phase.weights), randomPosition, Quaternion.identity);
+
+        UpdatePhase();
+
+        if (killedEnemy >= Stage.bossKills && !bossSpawned && !bossCleared && Stage.bossPrefab != null)
+        {
+            if (bossbar == null) bossbar = FindFirstObjectByType<bossbar>();
+            if (bossbar != null) bossbar.bossSpawn = true;
+            bossSpawned = true;
+
+            // 보스는 신전 문에서 등장
+            Instantiate(Stage.bossPrefab, bossSpawnPoint, Quaternion.identity);
         }
     }
 
-    GameObject PickEnemyForPhase()
+    // 처치 수에 맞는 페이즈로 올림
+    void UpdatePhase()
     {
-        Vector3 w = spawnWeightsByPhase[Mathf.Min(PhaseIndex, spawnWeightsByPhase.Length - 1)];
-        float roll = Random.Range(0f, w.x + w.y + w.z);
-        if (roll < w.x) return enemyPrefab;
-        if (roll < w.x + w.y) return enemy2Prefab;
-        return enemy3Prefab;
+        int phase = 1;
+        for (int i = 1; i < Stage.phases.Length; i++)
+        {
+            if (killedEnemy >= Stage.phases[i].killsToEnter) phase = i + 1;
+        }
+        paze = phase;
     }
 
+    // 비율에 따라 적 종류를 고름 (비율이 없는 적은 나오지 않음)
+    GameObject Pick(float[] weights)
+    {
+        GameObject[] enemies = Stage.enemies;
+        float total = 0f;
+        for (int i = 0; i < enemies.Length; i++) total += Weight(weights, i);
+
+        if (total <= 0f) return enemies[0];
+
+        float roll = Random.Range(0f, total);
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            roll -= Weight(weights, i);
+            if (roll < 0f) return enemies[i];
+        }
+        return enemies[enemies.Length - 1];
+    }
+
+    static float Weight(float[] weights, int i) => weights != null && i < weights.Length ? weights[i] : 0f;
+
     // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
-    // 약한 적이 더 자주 나오도록 해골 3 : 구울 2 : 망령 1 비율
     public void SummonMinions(Vector3 here, int count)
     {
         for (int i = 0; i < count; i++)
         {
             if (spawnedEnemys >= MaxAlive) return;
 
-            int roll = Random.Range(0, 6);
-            GameObject minion = roll < 3 ? enemyPrefab : roll < 5 ? enemy2Prefab : enemy3Prefab;
-
             spawnedEnemys++;
             Vector2 offset = Random.insideUnitCircle.normalized * Random.Range(3f, 6f);
-            Instantiate(minion, here + (Vector3)offset, Quaternion.identity);
+            Instantiate(Pick(Stage.minionWeights), here + (Vector3)offset, Quaternion.identity);
         }
+    }
+
+    public void OnBossDefeated()
+    {
+        bossCleared = true;
+        bossSpawned = false;
+        onBossDefeated?.Invoke(stageIndex);
+    }
+
+    // 다음 스테이지 시작: 남은 적과 코인을 정리하고 처음 페이즈부터
+    public void StartStage(int index)
+    {
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("enermy")) Destroy(enemy);
+        foreach (GameObject coin in GameObject.FindGameObjectsWithTag("coin")) Destroy(coin);
+
+        stageIndex = Mathf.Clamp(index, 0, stages.Length - 1);
+        killedEnemy = 0;
+        paze = 1;
+        bossSpawned = false;
+        bossCleared = false;
+        spawnedEnemys = 0;
+        spawningEnabled = true;
     }
 
     // 맵 안에서 플레이어와 충분히 떨어진 위치를 고름
@@ -179,5 +227,4 @@ public class EnemySpawner : MonoBehaviour
             playerPos.y < 0f ? spawnAreaMax.y : spawnAreaMin.y,
             0);
     }
-
 }

@@ -24,6 +24,19 @@ public class EnermyController : MonoBehaviour
     public int expReward = 20;          // 처치 경험치
     public int coinDrop = 1;            // 떨어뜨리는 코인 수
 
+    [Header("움직임")]
+    // 좌우로 흔들리며 다가옴 (0이면 직선)
+    public float zigzagAmplitude = 0f;
+    public float zigzagFrequency = 3f;
+    // 주기적으로 빠르게 돌진 (0이면 없음)
+    public float dashInterval = 0f;
+    public float dashDuration = 0.4f;
+    public float dashSpeedMultiplier = 2.5f;
+    // 총알 넉백을 이 비율만큼만 받음
+    public float knockBackTaken = 1f;
+
+    float moveTime;
+
     [Header("겹침 방지")]
     // 다른 적과 겹친 만큼 밀어내는 속도 (초당)
     public float separationSpeed = 4f;
@@ -76,7 +89,20 @@ public class EnermyController : MonoBehaviour
         // 죽지 않았을 때만 이동
         if (!isDead && player != null)
         {
-            Vector3 step = move * speed + Separation() * separationSpeed;
+            moveTime += Time.fixedDeltaTime;
+
+            Vector3 dir = move;
+            if (zigzagAmplitude > 0f)
+            {
+                // 진행 방향의 수직으로 흔들림
+                Vector3 side = new Vector3(-move.y, move.x, 0f);
+                dir = (move + side * Mathf.Sin(moveTime * zigzagFrequency) * zigzagAmplitude).normalized;
+            }
+
+            float currentSpeed = speed;
+            if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
+
+            Vector3 step = dir * currentSpeed + Separation() * separationSpeed;
             transform.Translate(step * Time.fixedDeltaTime);
         }
     }
@@ -133,7 +159,7 @@ public class EnermyController : MonoBehaviour
         // 체력 감소
         EnemyHealth -= damage;
 
-        transform.position += dir * knockBack;
+        transform.position += dir * knockBack * knockBackTaken;
 
         // 피격 애니메이션
         //animator.SetTrigger("hit");

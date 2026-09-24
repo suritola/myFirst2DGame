@@ -649,7 +649,11 @@ void Shoot()
     // 보스는 사라지지 않으므로 여기서 처리
     void HandleContact(Collider2D collision)
     {
-        if (collision.CompareTag("boss")) TryHit(bossContactDamage);
+        if (collision.CompareTag("boss"))
+        {
+            bosss boss = collision.GetComponent<bosss>();
+            TryHit(boss != null ? boss.contactDamage : bossContactDamage);
+        }
     }
 
     [Header("피격")]

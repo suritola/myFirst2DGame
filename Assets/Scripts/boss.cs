@@ -31,6 +31,11 @@ public class bosss : MonoBehaviour
     public float enragedSummonInterval = 3f;
     public int enragedSummonCount = 4;
 
+    [Header("보상 / 피해")]
+    public float contactDamage = 25f;
+    public int expReward = 200;
+    public int coinDrop = 50;
+
     [Header("넉백 저항")]
     // 총알 넉백을 이 비율만큼만 받음
     public float knockBackTaken = 0.25f;
@@ -145,9 +150,6 @@ public class bosss : MonoBehaviour
 
         bossbar.bossSpawn = false;
         spriteRenderer.color = Color.white;
-        EnemySpawner spawn = FindFirstObjectByType<EnemySpawner>();
-        spawn.boss1Cleared = true;
-        spawn.bossSpawned = false;
         if (a == 1)
         {
             
@@ -155,7 +157,7 @@ public class bosss : MonoBehaviour
             LevelShop levelS = FindFirstObjectByType<LevelShop>();
             Level lv = FindFirstObjectByType<Level>();
 
-            playerC.nowEXP += 200 * lv.bonusEXP;
+            playerC.nowEXP += expReward * lv.bonusEXP;
 
             if (playerC.nowEXP >= playerC.needEXP)
             {
@@ -203,7 +205,7 @@ public class bosss : MonoBehaviour
 
             enemySpawner.killedEnemy++;
             if (Random.Range(0, 100) < chanceofHP) Instantiate(hp, transform.position, Quaternion.identity);
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < coinDrop; i++)
             {
                 float rx = Random.Range(-5f, 5f);
                 float ry = Random.Range(-5f, 5f);
@@ -211,6 +213,10 @@ public class bosss : MonoBehaviour
                 Instantiate(coin, drop, Quaternion.identity);
             }
         }
+
+        // 스테이지 진행 (신전 문 열기 등)
+        if (enemySpawner != null) enemySpawner.OnBossDefeated();
+
         Destroy(gameObject);
     }
 
