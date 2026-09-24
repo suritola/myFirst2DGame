@@ -59,8 +59,9 @@ public class SkillGauge : MonoBehaviour
         gaugeImage.fillAmount = value;
 
 
-        if (value >= 1) gaugeImage.color = Color.yellow;
-        else gaugeImage.color = Color.blue;
+        // 충전 중에는 청록색, 가득 차면 금색
+        if (value >= 1) gaugeImage.color = new Color(1f, 0.82f, 0.3f);
+        else gaugeImage.color = new Color(0.3f, 0.86f, 0.9f);
 
         Debug.Log("게이지 Fill Amount: " + value);
     }

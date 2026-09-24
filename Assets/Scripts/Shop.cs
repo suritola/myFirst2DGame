@@ -338,7 +338,7 @@ public class Shop : MonoBehaviour
         {
             if (priceTextInput2 != null) priceTextInput2.text = "최대";
 
-            if (statTextInput2 != null) statTextInput2.text = "공격력 \n5(최대)";
+            if (statTextInput2 != null) statTextInput2.text = "공격 속도\n5 (최대)";
         }
 
 

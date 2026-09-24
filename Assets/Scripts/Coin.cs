@@ -29,7 +29,7 @@ public TextMeshProUGUI TextInput;
 
     void UpdateCoinText()
     {
-        if (TextInput != null) TextInput.text = coins + "[P]";
+        if (TextInput != null) TextInput.text = coins.ToString();
 
     }
 
