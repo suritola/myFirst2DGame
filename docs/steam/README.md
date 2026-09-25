@@ -59,8 +59,7 @@ pwsh tools/steam-upload.ps1 -Version v2.4            # 업로드 (처음엔 비�
 | LiberationSans (TextMesh Pro 기본) | ✅ SIL OFL |
 | 배경음악 5곡 · 코드로 만든 효과음 | ✅ 이 프로젝트에서 직접 만듦 |
 | **카페24 단정해 폰트** | ❓ 받은 곳 · 라이선스 파일 확인 (카페24 폰트는 보통 상업 무료) |
-| **마루부리 폰트** (`Assets/Sprites/MaruBuri-Bold.ttf`) | ❓ 네이버 폰트는 보통 OFL · 라이선스 파일 넣기 |
-| **효과음 mp3 9개** (`Assets/Sounds/`) | ❓ 출처 확인 필요 — 모르면 바꾸는 게 안전 |
+| **효과음 mp3 5개** (`Assets/Sounds/`) | ❓ 출처 확인 필요 — 모르면 바꾸는 게 안전 |
 | 지옥 · 초원 적, 타일, UI, 이펙트 스프라이트 | ❓ 직접 그린 것인지 받은 것인지 확인 |
 
 ## 이미지 규격
