@@ -50,3 +50,8 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_3000_TOTAL` | 여러 판 누적 처치 수 3000 |
 | `ACH_NO_HIT_BOSS` | 스테이지 보스가 나온 뒤 쓰러질 때까지 체력이 한 번도 줄지 않음 |
 | `ACH_CLOSE_CALL` | 스테이지 보스를 쓰러뜨린 순간 체력이 최대의 10% 이하 |
+
+## Steamworks 현지화 파일
+
+`docs/steam/achievement-loc/*.vdf` — Steamworks → 도전 과제 현지화에서 업로드한 파일 (영어 · 한국어 · 일본어 · 중국어 간체).
+키 `NEW_ACHIEVEMENT_1_<번호>_NAME/DESC`의 번호는 위 표의 순서(0부터)와 같습니다. 도전 과제를 새로 만들면 번호가 바뀌므로 먼저 "All Languages"를 받아서 확인하세요.
