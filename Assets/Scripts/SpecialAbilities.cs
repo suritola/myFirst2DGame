@@ -60,6 +60,8 @@ public class SpecialAbilities : MonoBehaviour
     int weaponIndex = -1;
     public bool WeaponActive => weaponIndex >= 0 && weaponIndex < weapons.Count;
     int CurrentWeapon => WeaponActive ? weapons[weaponIndex] : -1;
+    // 손에 들고 있는 무기 (PlayerLook): 낫을 던진 동안은 빈손
+    public int HeldWeapon => CurrentWeapon == ScytheId && activeScythe != null ? -1 : CurrentWeapon;
 
     PlayerController player;
     float nextFire;
@@ -1042,6 +1044,7 @@ public class SpecialAbilities : MonoBehaviour
         Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
         Vector2 aimDir = ((Vector2)(target - start)).normalized;
         Fx.Play("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
+        PlayerLook.Fired(CurrentWeapon);
         WeaponAmmo mag = Ammo(CurrentWeapon);
         cursed = IsLastBulletCursed(mag.ammo);
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
@@ -1135,6 +1138,8 @@ public class SpecialAbilities : MonoBehaviour
         }
     }
 
+    float nextFlameLook;
+
     void UpdateFlame(bool held)
     {
         if (overheated && heat <= 0.3f)
@@ -1148,6 +1153,7 @@ public class SpecialAbilities : MonoBehaviour
         // 켤 때 점화음, 뿜는 동안 불길 소리 (열이 오를수록 조금 높아짐)
         if (firing && !flameWasFiring) fx.Play("ignite", 0.9f);
         if (firing) fx.StartLoop("flame", 0.95f, 0.9f + heat * 0.25f);
+        if (firing && Time.time >= nextFlameLook) { nextFlameLook = Time.time + 0.07f; PlayerLook.Fired(FlameId); }
         else fx.StopLoop();
         flameWasFiring = firing;
 
@@ -1264,6 +1270,7 @@ public class SpecialAbilities : MonoBehaviour
         s.outTime = 0.45f * WeaponRateMul(ScytheId);
         s.owner = player.transform;
         s.direction = ((Vector2)(target - player.MuzzlePosition)).normalized;
+        PlayerLook.Fired(ScytheId);
         activeScythe = b.gameObject;
         fx.Play("whoosh", 0.7f, 0.9f);
     }

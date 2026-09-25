@@ -135,6 +135,8 @@ public class bosss : MonoBehaviour
         animator = GetComponent<Animator>();
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
+        // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)
+        if (!IsSlime || slimeGen == 1) StoryDirector.PlayBossIntro(transform, bossKind);
         // 분열로 복제된 슬라임은 스킬 컴포넌트를 이미 가지고 있음
         BossSkills skills = GetComponent<BossSkills>();
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();

@@ -102,6 +102,25 @@ public class SpecialFeedback : MonoBehaviour
             float shimmer = t > 0.24f ? Sin(2093f, t) * 0.15f * Sin(9f, t) : 0f;
             return (Sin(f, t) + Sin(f * 2f, t) * 0.3f + shimmer) * Decay(t, d, 1.3f) * 0.45f;
         });
+        // 보스 목소리: 한 음절씩 (리치 = 텅 빈 울림, 군주 = 낮은 으르렁, 슬라임 = 뽀글뽀글)
+        Make("voice_lich", 0.11f, (t, d, r) =>
+        {
+            float f = 180f + 40f * Mathf.Sin(t * 60f);
+            return (Sin(f, t) * 0.6f + Sin(f * 2.01f, t) * 0.3f + Sin(f * 3.02f, t) * 0.15f) * Mathf.Sin(Mathf.PI * t / d) * (0.8f + 0.2f * Sin(30f, t));
+        });
+        float growl = 0f;
+        Make("voice_demon", 0.12f, (t, d, r) =>
+        {
+            growl += (Noise(r) - growl) * 0.2f;
+            float f = 95f + 25f * Mathf.Sin(t * 45f);
+            float saw = 2f * (t * f - Mathf.Floor(t * f + 0.5f));
+            return (saw * 0.45f + growl * 0.6f + Sin(f * 0.5f, t) * 0.3f) * Mathf.Sin(Mathf.PI * t / d);
+        });
+        Make("voice_slime", 0.1f, (t, d, r) =>
+        {
+            float f = Mathf.Lerp(300f, 620f, t / d);
+            return Sin(f, t) * 0.6f * Mathf.Sin(Mathf.PI * t / d) * (0.7f + 0.3f * Sin(55f, t));
+        });
         // 코인 반짝
         Make("sparkle", 0.22f, (t, d, r) => (t < 0.07f ? Sin(2093f, t) : Sin(2637f, t)) * Decay(t, d, 2f) * 0.25f);
         // 준비 알림 (두 음)

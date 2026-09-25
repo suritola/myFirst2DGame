@@ -59,7 +59,6 @@ public class EndlessMode : MonoBehaviour
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         Instantiate(prefab, spawner.bossSpawnPoint, Quaternion.identity);
         Hostile.Play("roar", 1f, 0.9f);
-        Hostile.Shake(0.5f);
         stages.ShowBanner(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), 2.5f);
     }
 

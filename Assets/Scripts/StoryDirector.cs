@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // 시작 연출 (검은 화면 → 플레이어가 위에서 떨어짐 → 짧은 이야기)과 엔딩 이야기
-// Space · Enter · ESC · 건너뛰기 버튼으로 언제든 건너뜀
+// Space로 대사 넘기기(쓰는 중이면 완성, 다 나왔으면 다음 대사), ESC · 건너뛰기 버튼으로 언제든 건너뜀
 public class StoryDirector : MonoBehaviour
 {
     public static bool Playing { get; private set; }
@@ -160,7 +160,8 @@ public class StoryDirector : MonoBehaviour
         string sub = opened != null ? Loc.T("새 난이도 해금: ") + Loc.T(opened) + "\n\n" : "";
         body.text = sub + Loc.T("플레이해 주셔서 고맙습니다!");
         yield return Fade(title, 0f, 1f, 0.6f);
-        for (float t = 0f; t < 4f && !skip; t += Time.unscaledDeltaTime) yield return null;
+        advance = false;
+        for (float t = 0f; t < 4f && !skip && !advance; t += Time.unscaledDeltaTime) yield return null;
 
         Time.timeScale = 1f;
         Playing = false;
@@ -176,23 +177,134 @@ public class StoryDirector : MonoBehaviour
             string text = Loc.T(line);
             body.text = text;
             body.maxVisibleCharacters = 0;
-            for (int n = 0; n <= text.Length && !skip; n++)
+            advance = false;
+            // 한 글자씩 (Space를 누르면 이 대사를 바로 끝까지)
+            for (int n = 0; n <= text.Length && !skip && !advance; n++)
             {
                 body.maxVisibleCharacters = n;
-                if (n % 3 == 0 && n < text.Length && text[n] != ' ') Hostile.Play("pew", 0.12f, 2.2f);
+                if (n < text.Length && text[n] != ' ')
+                {
+                    if (voice == null) { if (n % 3 == 0) Hostile.Play("pew", 0.12f, 2.2f); }
+                    else if (n % 2 == 0) Hostile.Play(voice, 0.55f, voicePitch * Random.Range(0.88f, 1.12f));
+                }
                 float until = Time.unscaledTime + CharTime;
-                while (Time.unscaledTime < until && !skip) yield return null;
+                while (Time.unscaledTime < until && !skip && !advance) yield return null;
             }
             body.maxVisibleCharacters = 99999;
-            for (float t = 0f; t < LineHold && !skip; t += Time.unscaledDeltaTime) yield return null;
+            advance = false;
+            // 다 나온 대사에서 Space를 누르면 다음 대사로
+            for (float t = 0f; t < LineHold && !skip && !advance; t += Time.unscaledDeltaTime) yield return null;
+            advance = false;
             if (skip) yield break;
         }
         body.text = "";
     }
 
+    // Space = 대사 넘기기 (쓰는 중이면 완성, 다 나왔으면 다음 대사), ESC · 건너뛰기 버튼 = 이야기 전체 건너뛰기
+    bool advance;
+    // 보스 대사를 말할 때의 목소리 (SpecialFeedback 효과음 이름, null = 타자 소리)
+    string voice;
+    float voicePitch = 1f;
+
+    // ================================================================= 보스 등장
+    // 게임이 멈추고 → 카메라가 보스 쪽으로 부드럽게 이동 → 위아래 검은 띠와 함께 보스가 말함 → 돌아옴
+    static readonly (string name, string title, string[] lines, string voice, float pitch)[] Bosses =
+    {
+        ("리치 왕", "지하 묘역의 주인", new[] { "감히 내 잠든 묘역을 깨우다니...", "네 영혼도 내 망자의 군대에 더해 주마!" }, "voice_lich", 0.9f),
+        ("지옥의 군주", "불타는 지옥의 왕", new[] { "하찮은 인간이 지옥의 문턱을 넘었군.", "불길 속에서 재가 되어라!" }, "voice_demon", 0.8f),
+        ("킹 슬라임", "초원의 폭군", new[] { "뿌요... 이 초원은 이 몸의 식탁이다!", "납작하게 짓눌러 주마, 뿌요요옹!" }, "voice_slime", 1.1f),
+    };
+
+    // 한 판(무한 모드 포함)에서 보스마다 처음 나올 때 한 번만
+    static readonly System.Collections.Generic.HashSet<int> introduced = new System.Collections.Generic.HashSet<int>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void ResetIntros()
+    {
+        SceneManager.sceneLoaded += (s, m) => introduced.Clear();
+    }
+
+    public static void PlayBossIntro(Transform boss, int kind)
+    {
+        if (boss == null || kind < 0 || kind >= Bosses.Length || ShouldSkipAll || Playing) return;
+        if (!introduced.Add(kind)) return;
+        StoryDirector d = Create();
+        d.StartCoroutine(d.RunBossIntro(boss, kind));
+    }
+
+    IEnumerator RunBossIntro(Transform boss, int kind)
+    {
+        Playing = true;
+        var info = Bosses[kind];
+        float before = Time.timeScale;
+        Time.timeScale = 0f;
+        SetAlpha(black, 0f);
+        SetAlpha(shade, 0f);
+
+        // 위아래 검은 띠
+        RectTransform top = Bar(true), bottom = Bar(false);
+        SpecialFeedback fx = SpecialAbilities.SharedFx;
+        if (fx != null) fx.HoldCamera(boss.position);
+
+        // 이름표와 대사는 아래 띠 위에
+        title.rectTransform.anchoredPosition = new Vector2(0f, -300f);
+        body.rectTransform.anchoredPosition = new Vector2(0f, -385f);
+        body.fontSize = 34f;
+        title.text = Loc.T(info.name) + "  <size=60%><color=#d8c8a8>" + Loc.T(info.title) + "</color></size>";
+        SetAlpha(title, 0f);
+
+        for (float t = 0f; t < 0.7f && !skip; t += Time.unscaledDeltaTime)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, t / 0.7f);
+            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f * k);
+            if (fx != null && boss != null) fx.HoldCamera(boss.position);
+            yield return null;
+        }
+        top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f);
+        Hostile.Play("roar", 0.8f, kind == 2 ? 1.4f : kind == 1 ? 0.7f : 1f);
+        yield return Fade(title, 0f, 1f, 0.3f);
+
+        voice = info.voice;
+        voicePitch = info.pitch;
+        if (!skip) yield return Lines(info.lines);
+        voice = null;
+
+        // 돌아오기
+        if (fx != null) fx.ReleaseCamera();
+        skip = false;
+        SetAlpha(title, 0f);
+        body.text = "";
+        for (float t = 0f; t < 0.4f; t += Time.unscaledDeltaTime)
+        {
+            float k = 1f - t / 0.4f;
+            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f * k);
+            yield return null;
+        }
+        Time.timeScale = before;        // 필살기 조준(느린 시간) 중이었으면 그대로
+        Playing = false;
+        Destroy(gameObject);
+    }
+
+    RectTransform Bar(bool top)
+    {
+        GameObject go = new GameObject(top ? "BarTop" : "BarBottom", typeof(RectTransform), typeof(Image));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(canvas.transform, false);
+        r.SetSiblingIndex(2);                              // 검은 화면 위, 글자 아래
+        r.anchorMin = new Vector2(0f, top ? 1f : 0f);
+        r.anchorMax = new Vector2(1f, top ? 1f : 0f);
+        r.pivot = new Vector2(0.5f, top ? 1f : 0f);
+        r.sizeDelta = new Vector2(0f, 0f);
+        r.anchoredPosition = Vector2.zero;
+        go.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.92f);
+        go.GetComponent<Image>().raycastTarget = false;
+        return r;
+    }
+
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape)) skip = true;
+        if (Input.GetKeyDown(KeyCode.Escape)) skip = true;
+        else if (Input.GetKeyDown(KeyCode.Space)) advance = true;
     }
 
     void OnDestroy()
@@ -227,7 +339,7 @@ public class StoryDirector : MonoBehaviour
         RectTransform br = (RectTransform)b.transform;
         br.anchorMin = br.anchorMax = new Vector2(1f, 0f);
         br.anchoredPosition = new Vector2(-150f, 70f);
-        RectTransform hint = UIKit.Text(go.transform, "Space / Enter / ESC", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(260f, 30f)).rectTransform;
+        RectTransform hint = UIKit.Text(go.transform, "Space 대사 넘기기 · ESC 건너뛰기", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(420f, 30f)).rectTransform;
         hint.anchorMin = hint.anchorMax = new Vector2(1f, 0f);
         hint.anchoredPosition = new Vector2(-150f, 120f);
         d.skipButton = b.gameObject;

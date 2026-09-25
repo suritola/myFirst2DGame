@@ -48,12 +48,12 @@ public class BossSkills : MonoBehaviour
 
         if (Time.time < next) return;
         next = Time.time + (boss.Enraged ? 3.2f : 4.5f) * GameMode.SkillCooldownMul;
-        step = (step + 1) % 3;
+        step = (step + 1) % 5;
         IEnumerator skill = kind == 0
-            ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : BoneSpears(p))
+            ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : step == 2 ? BoneSpears(p) : step == 3 ? SoulChains(p) : GraspOfDead(p))
             : kind == 1
-            ? (step == 0 ? FlameCharge(p) : step == 1 ? MeteorRain(p) : FireWave())
-            : (step == 0 ? SlimeLeap(p, 1f) : step == 1 ? AcidRain(p) : SlimeRoll(p));
+            ? (step == 0 ? FlameCharge(p) : step == 1 ? MeteorRain(p) : step == 2 ? FireWave() : step == 3 ? HellfirePillars(p) : LavaFissure(p))
+            : (step == 0 ? SlimeLeap(p, 1f) : step == 1 ? AcidRain(p) : step == 2 ? SlimeRoll(p) : step == 3 ? AcidGeysers(p) : SlimeVortex(p));
         StartCoroutine(Run(skill));
     }
 
@@ -157,7 +157,6 @@ public class BossSkills : MonoBehaviour
                 foreach (Vector3 at in spots)
                     if (Vector2.Distance(pl.transform.position, at) < 1f) { pl.TryHit(16f); break; }
             Hostile.Play("crack", 0.7f, 1.1f);
-            Hostile.Shake(0.12f);
         }
     }
 
@@ -285,7 +284,7 @@ public class BossSkills : MonoBehaviour
         for (int i = 0; i < 16; i++) SoulWisp.Spawn(home, home + (Vector3)(Random.insideUnitCircle.normalized * 9f), Random.value < 0.5f ? cyan : violet, true);
         Hostile.Play("boom", 1f, 0.6f);
         Hostile.Play("chime", 0.7f, 0.5f);
-        Hostile.Shake(0.5f);
+        Hostile.Shake(0.25f);          // 리치 왕의 유일한 화면 흔들림
     }
 
     // 두 겹의 룬 고리: 안쪽은 끊긴 점선처럼, 바깥은 반대로 회전
@@ -344,7 +343,7 @@ public class BossSkills : MonoBehaviour
         Fx.Play("fx_puddle", target, r * 1.3f, Acid, 12f);
         HazardZone.Spawn(target, r * 0.8f, 3f, 10f, Acid, "fx_puddle", 0.7f);
         Hostile.Play("thump", 1f, 0.6f);
-        Hostile.Shake(0.35f * SlimeSize + 0.1f);
+        Hostile.Shake(0.2f);           // 킹 슬라임의 유일한 화면 흔들림
     }
 
     // 산성 비: 플레이어 주변 여러 곳에 산성 덩어리가 떨어져 웅덩이
@@ -436,7 +435,6 @@ public class BossSkills : MonoBehaviour
         }
         Hostile.Burst(transform.position, 3f, Fire, true);
         Fx.Play("fx_shock", transform.position, 7f, new Color(1f, 0.55f, 0.2f), 18f);
-        Hostile.Shake(0.3f);
     }
 
     // 운석 낙하: 플레이어 주변에 차례로 떨어지는 운석
@@ -474,7 +472,7 @@ public class BossSkills : MonoBehaviour
         Fx.Play("fx_explosion", spot, r * 2.6f, Color.white, 16f);
         Hostile.Burst(spot, r, Fire, true);
         Hostile.Play("boom", 0.6f, 0.9f);
-        Hostile.Shake(0.15f);
+        Hostile.Shake(0.15f);          // 지옥의 군주의 유일한 화면 흔들림
     }
 
     // 화염 파동: 틈이 있는 불의 고리가 퍼져 나감 (틈으로 피함)
@@ -593,6 +591,178 @@ public class BossSkills : MonoBehaviour
             beams[i].SetPosition(0, transform.position);
             beams[i].SetPosition(1, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length);
         }
+    }
+
+    // ================================================================= 추가 스킬 (새 도트 이펙트, 화면 흔들림 없음)
+    static readonly Color Bone = new Color(1f, 0.95f, 0.8f, 0.9f);
+
+    // 리치 왕 · 영혼 사슬: 플레이어 쪽 세 갈래 → 보스에서부터 영혼 사슬이 차례로 솟음
+    IEnumerator SoulChains(PlayerController p)
+    {
+        Vector3 c = transform.position;
+        Vector2 dir = ((Vector2)(p.transform.position - c)).normalized;
+        float[] spread = { -28f, 0f, 28f };
+        const float len = 16f;
+        foreach (float s in spread)
+        {
+            Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
+            Hostile.Line(c, c + (Vector3)(d * len), 1.6f, 0.9f, Soul);
+        }
+        Hostile.Play("shimmer", 0.6f, 0.6f);
+        yield return Windup(Soul, 0.9f);
+        if (!Alive) yield break;
+        bool hit = false;
+        for (float k = 1.2f; k <= len && Alive; k += 1.3f)
+        {
+            foreach (float s in spread)
+            {
+                Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
+                Vector3 at = c + (Vector3)(d * k);
+                if (Hostile.IsWall(at)) continue;
+                Fx.Play("fx_soulchain", at + Vector3.up * 1.5f, 3.2f, Color.white, 18f, 0f, 14);
+                if (!hit) hit = Hostile.HitCircle(at, 0.9f, 16f);
+            }
+            Hostile.Play("clank", 0.25f, 1.3f + k * 0.03f);
+            yield return new WaitForSeconds(0.06f);
+        }
+    }
+
+    // 리치 왕 · 망자의 손아귀: 플레이어 자리와 둘레에 뼈 손이 솟아 움켜쥠 (잡히면 잠깐 느려짐)
+    IEnumerator GraspOfDead(PlayerController p)
+    {
+        Vector3 c = p.transform.position;
+        List<Vector3> spots = new List<Vector3> { c };
+        float off = Random.Range(0f, 360f);
+        for (int i = 0; i < 6; i++)
+        {
+            float a = (off + i * 60f) * Mathf.Deg2Rad;
+            spots.Add(Hostile.ClampArena(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 3.2f));
+        }
+        foreach (Vector3 s in spots) Hostile.Circle(s, 1.4f, 1f, Bone);
+        Hostile.Play("hiss", 0.5f, 0.6f);
+        yield return Windup(Curse, 1f);
+        if (!Alive) yield break;
+        bool hit = false;
+        foreach (Vector3 s in spots)
+        {
+            Fx.Play("fx_bonehand", s + Vector3.up * 0.9f, 2.6f, Color.white, 14f, 0f, 14);
+            Fx.Play("fx_smoke", s, 2f, new Color(0.5f, 0.45f, 0.5f, 0.7f), 18f);
+            if (!hit && Hostile.HitCircle(s, 1.4f, 16f)) { hit = true; p.Slow(0.45f, 1.6f); }
+        }
+        Hostile.Play("crack", 0.6f, 0.8f);
+    }
+
+    // 지옥의 군주 · 지옥불 기둥: 보스에서 나선을 그리며 불기둥이 차례로 치솟음
+    IEnumerator HellfirePillars(PlayerController p)
+    {
+        Vector3 c = transform.position;
+        Vector2 dir = ((Vector2)(p.transform.position - c)).normalized;
+        float baseAng = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        yield return Windup(Fire, 0.5f);
+        if (!Alive) yield break;
+        const int n = 16;
+        Vector3[] spots = new Vector3[n];
+        for (int i = 0; i < n; i++)
+        {
+            float a = (baseAng + i * 42f) * Mathf.Deg2Rad;
+            spots[i] = Hostile.ClampArena(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (2.5f + i * 0.8f));
+            Hostile.Circle(spots[i], 1.4f, 0.6f + i * 0.08f, Fire);
+        }
+        yield return new WaitForSeconds(0.6f);
+        for (int i = 0; i < n && Alive; i++)
+        {
+            Fx.Play("fx_firepillar", spots[i] + Vector3.up * 1.8f, 4f, Color.white, 18f, 0f, 14);
+            Hostile.HitCircle(spots[i], 1.4f, 20f);
+            if (i % 3 == 0) Hostile.Play("ignite", 0.4f, 1.1f);
+            yield return new WaitForSeconds(0.08f);
+        }
+    }
+
+    // 지옥의 군주 · 용암 균열: 땅이 세 갈래로 갈라져 번진 뒤, 균열을 따라 용암이 치솟음
+    IEnumerator LavaFissure(PlayerController p)
+    {
+        Vector3 c = transform.position;
+        Vector2 dir = ((Vector2)(p.transform.position - c)).normalized;
+        float[] spread = { -35f, 0f, 35f };
+        const float len = 15f;
+        foreach (float s in spread)
+        {
+            Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
+            Hostile.Line(c, c + (Vector3)(d * len), 1.8f, 1.1f, Fire);
+        }
+        Hostile.Play("thump", 0.6f, 0.7f);
+        yield return Windup(Fire, 0.7f);
+        // 균열이 앞으로 번짐 (보이기만)
+        for (float k = 1f; k <= len && Alive; k += 2f)
+        {
+            foreach (float s in spread)
+            {
+                Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
+                Fx.Play("fx_fissure", c + (Vector3)(d * k), 1f, Color.white, 10f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 3);
+            }
+            yield return new WaitForSeconds(0.03f);
+        }
+        yield return new WaitForSeconds(0.35f);
+        if (!Alive) yield break;
+        bool hit = false;
+        for (float k = 1f; k <= len; k += 1.5f)
+            foreach (float s in spread)
+            {
+                Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
+                Vector3 at = c + (Vector3)(d * k);
+                Fx.Play("fx_firepillar", at + Vector3.up * 1.2f, 2.6f, Color.white, 20f, 0f, 14);
+                if (!hit) hit = Hostile.HitCircle(at, 1.1f, 22f);
+            }
+        Hostile.Play("boom", 0.6f, 0.8f);
+    }
+
+    // 킹 슬라임 · 산성 간헐천: 플레이어를 따라 세 번, 발밑 둘레에서 간헐천이 솟음
+    IEnumerator AcidGeysers(PlayerController p)
+    {
+        yield return Windup(Acid, 0.4f);
+        for (int wave = 0; wave < 3 && Alive; wave++)
+        {
+            Vector3 c = p.transform.position;
+            Vector3[] spots = new Vector3[4];
+            spots[0] = c;
+            for (int i = 1; i < spots.Length; i++) spots[i] = Hostile.ClampArena(c + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(2.5f, 5f)));
+            foreach (Vector3 s in spots) Hostile.Circle(s, 1.5f, 0.75f, Acid);
+            Hostile.Play("hiss", 0.5f, 1f + wave * 0.1f);
+            yield return new WaitForSeconds(0.75f);
+            if (!Alive) yield break;
+            bool hit = false;
+            foreach (Vector3 s in spots)
+            {
+                Fx.Play("fx_geyser", s + Vector3.up * 1.7f, 3.8f, Color.white, 16f, 0f, 14);
+                if (!hit) hit = Hostile.HitCircle(s, 1.5f, 16f);
+            }
+            Hostile.Play("whoosh", 0.5f, 1.2f);
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
+
+    // 킹 슬라임 · 끈적 소용돌이: 플레이어 자리에 소용돌이가 생겨 가운데로 끌어당기다 터짐
+    IEnumerator SlimeVortex(PlayerController p)
+    {
+        Vector3 c = p.transform.position;
+        const float r = 4.5f, pullTime = 2.2f;
+        FxAnim v = Fx.Play("fx_vortex", c, r * 2f, new Color(1f, 1f, 1f, 0.9f), 14f, 0f, 2, true, pullTime + 0.3f);
+        if (v != null) v.spin = -200f;
+        Hostile.Circle(c, 2f, pullTime, Acid);
+        Hostile.Play("whoosh", 0.7f, 0.6f);
+        for (float t = 0f; t < pullTime && Alive; t += Time.deltaTime)
+        {
+            PlayerController pl = Hostile.Player;
+            if (pl != null && Vector2.Distance(pl.transform.position, c) < r)
+                pl.transform.position = Vector3.MoveTowards(pl.transform.position, c, 2.2f * Time.deltaTime);
+            yield return null;
+        }
+        if (!Alive) yield break;
+        Hostile.HitCircle(c, 2f, 24f);
+        Fx.Play("fx_geyser", c + Vector3.up * 1.7f, 4.2f, Color.white, 16f, 0f, 14);
+        Hostile.Burst(c, 2f, Acid);
+        HazardZone.Spawn(c, 1.6f, 3f, 8f, Acid, "fx_puddle", 0.7f);
+        Hostile.Play("boom", 0.5f, 1.4f);
     }
 }
 

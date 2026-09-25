@@ -55,3 +55,6 @@ Thumbs.db
 
 # 트레일러 녹화 결과
 /[Rr]ecordings/
+
+# Python
+__pycache__/

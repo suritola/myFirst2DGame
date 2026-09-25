@@ -228,6 +228,9 @@ public class PlayerController : MonoBehaviour
 
         audioSource = GetComponent<AudioSource>();
 
+        // 들고 있는 무기 모습 · 발사 연출
+        PlayerLook.Attach(this);
+
         mainCamera = Camera.main;
 
         if (mainCamera != null) mainCamera.orthographicSize = normalZoom;
@@ -445,6 +448,7 @@ void Shoot()
         mousePosition.z = 0;
 
         FaceTowards(mousePosition);
+        PlayerLook.Fired(-1);
 
         if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
