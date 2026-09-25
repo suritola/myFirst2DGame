@@ -108,9 +108,17 @@ public class PlayerLook : MonoBehaviour
         Vector3 hand = new Vector3(left ? -0.35f : 0.35f, -0.55f, 0f);
         held.transform.localPosition = hand - (Vector3)(aim * kick);
         held.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
-        held.transform.localScale = Vector3.one * grow;
+        held.transform.localScale = Vector3.one * (grow * HeldScale(id));
         held.flipY = left;                           // 왼쪽을 볼 때 무기가 뒤집히지 않게
         held.color = body.color;                     // 피격 깜빡임을 몸과 같이
+    }
+
+    // 기본 무기 크기: 검사의 장검은 크게 (레벨업 긴 칼날로 더 커짐)
+    static float HeldScale(int id)
+    {
+        if (id != -1 || CharacterData.Selected != CharacterId.Swordsman) return 1f;
+        CharacterKit kit = CharacterKit.Instance;
+        return 2f * (kit != null ? Mathf.Sqrt(kit.reachMul) : 1f);
     }
 
     // 휘두르는 중이면 겨눈 방향에서 벗어난 각도, 휘두르는 순간 검이 조금 커짐

@@ -35,6 +35,13 @@ public class CharacterKit : MonoBehaviour
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
     public bool UsesAmmo => def.mag > 0;
 
+    // 캐릭터 전용 레벨업 능력이 올리는 값 (LevelShop.Kits)
+    [HideInInspector] public float reachMul = 1f;     // 검사 긴 칼날: 베기 사거리 · 손에 든 검 크기
+    [HideInInspector] public float arcBonus;          // 검사 넓은 베기: 부채꼴 반각 +
+    [HideInInspector] public float ultMul = 1f;       // 우클릭 강화 (회전 베기 · 출혈 돌진 · 화살비 · 대폭발)
+    [HideInInspector] public float blastMul = 1f;     // 연금술사 넓은 폭발: 평타 폭발 범위
+    [HideInInspector] public float powerMul = 1f;     // 궁수 강한 시위 · 연금술사 강력한 반응: 평타 피해
+
     public static void Attach(PlayerController p)
     {
         if (p == null || CharacterData.IsGunner || p.GetComponent<CharacterKit>() != null) return;
@@ -173,7 +180,7 @@ public class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Archer:
                 foreach (Vector2 d in Spread(dir, shots, 6f))
-                    Projectile(start, d, dmg, player.pene + 1, 60f, 0f, "fx_arrow", 0.45f, Color.white, false);
+                    Projectile(start, d, dmg * powerMul, player.pene + 1, 60f, 0f, "fx_arrow", 0.45f, Color.white, false);
                 Play("pew", 0.5f, 0.7f);
                 break;
             case CharacterId.Alchemist:
@@ -182,8 +189,8 @@ public class CharacterKit : MonoBehaviour
                     Vector3 land = ClampRange(start, target, def.range) + (i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 1.6f));
                     FlaskLob.Throw(start, land, 0.4f, 0.8f, Color.white, (p) =>
                     {
-                        float r = 1.8f * CatalystMul;
-                        DamageCircle(p, r, dmg * 1.6f, 1.2f);
+                        float r = 1.8f * CatalystMul * blastMul;
+                        DamageCircle(p, r, dmg * 1.6f * powerMul, 1.2f);
                         Fx.Play("fx_alchemyblast", p, r * 2.2f, Color.white, 18f);
                         Play("boom", 0.35f, 1.5f);
                     });
@@ -198,8 +205,8 @@ public class CharacterKit : MonoBehaviour
     void Swing(Vector2 dir, int shots)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
-        float reach = def.range;
-        float half = Mathf.Min(180f, 70f + 12f * (shots - 1));
+        float reach = def.range * reachMul;
+        float half = Mathf.Min(180f, 70f + arcBonus + 12f * (shots - 1));
         swingAlt = !swingAlt;
         bool left = dir.x < 0f;
         PlayerLook.Swing(swingAlt);
@@ -219,7 +226,7 @@ public class CharacterKit : MonoBehaviour
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(1f, 1f, 1f, 0.9f), 24f, rot, 15);
         if (a != null) a.sr.flipY = left ^ !swingAlt;
-        if (shots > 1)
+        if (half > 72f)
         {
             // 넓어진 폭: 양옆으로 한 번씩 더 그림
             FxAnim b = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(0.8f, 0.9f, 1f, 0.5f), 24f, rot + (half - 70f), 14);
@@ -289,7 +296,7 @@ public class CharacterKit : MonoBehaviour
         charge = Mathf.Min(1f, charge + Time.deltaTime / 1.5f);
         bool sword = Id == CharacterId.Swordsman;
         Vector3 at = sword ? transform.position : ClampRange(transform.position, Mouse, 14f);
-        float radius = sword ? 5f : (2f + 4f * charge) * CatalystMul;
+        float radius = (sword ? 5f : (2f + 4f * charge) * CatalystMul) * ultMul;
         Hostile.SetArc(ring, at, radius, 0f, 360f);
         Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
@@ -302,7 +309,7 @@ public class CharacterKit : MonoBehaviour
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐
-            float dmg = Damage * (3f + 6f * charge);
+            float dmg = Damage * (3f + 6f * charge) * ultMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
             Fx.Play("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Play("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -380,8 +387,8 @@ public class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
-            Specials.Damage(c.gameObject, Damage * 1.5f, dir, 1f);
-            Bleed.Apply(c.gameObject, Damage * 1.2f, 4f);
+            Specials.Damage(c.gameObject, Damage * 1.5f * ultMul, dir, 1f);
+            Bleed.Apply(c.gameObject, Damage * 1.2f * ultMul, 4f);
             Fx.Play("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
@@ -390,10 +397,10 @@ public class CharacterKit : MonoBehaviour
     // 화살비: 마우스 둘레에 화살이 1.2초 동안 쏟아짐
     IEnumerator ArrowRain(Vector3 center)
     {
-        const float radius = 4f;
+        float radius = 4f * ultMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         Play("whoosh", 0.8f, 0.9f);
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < Mathf.RoundToInt(20 * ultMul); i++)
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Play("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);

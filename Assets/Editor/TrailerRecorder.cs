@@ -6,7 +6,7 @@ using UnityEditor.Recorder.Input;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// 메뉴 Gun Saver → 트레일러 녹화
+// 메뉴 Soul Saver → 트레일러 녹화
 // 게임 씬을 열고 재생하면 TrailerDirector 가 트레일러를 연기하고, Unity Recorder 가 60fps로 녹화해서
 // Recordings/GunSaver_Trailer.mp4 를 만든 뒤 재생을 멈춤
 [InitializeOnLoad]
@@ -22,10 +22,10 @@ public static class TrailerRecorder
         EditorApplication.update += Tick;
     }
 
-    [MenuItem("Gun Saver/트레일러 녹화")]
+    [MenuItem("Soul Saver/트레일러 녹화")]
     static void Record() => Begin(true);
 
-    [MenuItem("Gun Saver/트레일러 미리보기 (녹화 없이)")]
+    [MenuItem("Soul Saver/트레일러 미리보기 (녹화 없이)")]
     static void Preview() => Begin(false);
 
     static void Begin(bool record)

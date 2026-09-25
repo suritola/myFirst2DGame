@@ -69,6 +69,6 @@ Compress-Archive -Path (Join-Path $OutDir "*") -DestinationPath $zip
 Write-Host ("압축 완료: {0:N1} MB" -f ((Get-Item $zip).Length / 1MB))
 
 # ---------------------------------------------------------------- 업로드
-& $Gh release create $Version $zip -R $Repo --title "Gun Saver $Version" --notes $notes
+& $Gh release create $Version $zip -R $Repo --title "Soul Saver $Version" --notes $notes
 if ($LASTEXITCODE -ne 0) { throw "Release 업로드 실패" }
 Write-Host "완료: https://github.com/$Repo/releases/tag/$Version"

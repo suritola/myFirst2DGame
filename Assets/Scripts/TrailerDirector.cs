@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // 트레일러 자동 촬영 모드 (에디터 전용 · 출시 빌드에는 들어가지 않음)
-// 메뉴 Gun Saver → 트레일러 녹화 로 켜면 게임 씬에서 주인공이 스스로 싸우며 정해진 장면을 연기함
+// 메뉴 Soul Saver → 트레일러 녹화 로 켜면 게임 씬에서 주인공이 스스로 싸우며 정해진 장면을 연기함
 // 1장 전투 → 무기 8종 필살기 → 스킬 트리 · 진화 → 보스 3종 → 로고 · 찜하기 화면 (약 50초)
 public class TrailerDirector : MonoBehaviour
 {
@@ -293,7 +293,7 @@ public class TrailerDirector : MonoBehaviour
         Material outline = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name.StartsWith("Cafe24") && m.name.Contains("Outline"));
         caption = Text(go.transform, font, outline, 64f, new Vector2(0f, -330f), new Vector2(1700f, 110f));
         logo = Text(go.transform, font, outline, 230f, new Vector2(0f, 60f), new Vector2(1700f, 280f));
-        logo.text = "Gun Saver";
+        logo.text = "Soul Saver";
         sub = Text(go.transform, font, null, 54f, new Vector2(0f, -150f), new Vector2(1700f, 90f));
         sub.text = "WISHLIST NOW ON STEAM";
         sub.color = new Color(0.92f, 0.88f, 0.8f);

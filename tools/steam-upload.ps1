@@ -32,7 +32,7 @@ if ($code -notmatch "public const uint AppId = (\d+);" -or [uint32]$Matches[1] -
 }
 if (-not (Test-Path $Config.steamcmd)) { throw "steamcmd 를 찾을 수 없습니다: $($Config.steamcmd) (https://developer.valvesoftware.com/wiki/SteamCMD 에서 받기)" }
 $commit = (git -C $Project rev-parse --short HEAD).Trim()
-Write-Host "Gun Saver $Version (커밋 $commit) → App $($Config.appId) / Depot $($Config.depotId)"
+Write-Host "Soul Saver $Version (커밋 $commit) → App $($Config.appId) / Depot $($Config.depotId)"
 
 # ---------------------------------------------------------------- 빌드 (스팀 연동 켬)
 if (-not $SkipBuild) {
@@ -80,7 +80,7 @@ $appVdf = Join-Path $ScriptDir "app_build_$($Config.appId).vdf"
 "AppBuild"
 {
     "AppID" "$($Config.appId)"
-    "Desc" "Gun Saver $Version ($commit)"
+    "Desc" "Soul Saver $Version ($commit)"
     "Preview" "$(if ($Preview) { 1 } else { 0 })"
     "SetLive" "$($Config.betaBranch)"
     "ContentRoot" "$OutDir"

@@ -30,6 +30,8 @@ public class AbilityHUD : MonoBehaviour
 
     public Sprite GetIcon(int id)
     {
+        Sprite kit = LevelShop.KitIcon(id);
+        if (kit != null) return kit;
         if (icons == null || id < 0 || id >= icons.Length) return null;
         return icons[id];
     }

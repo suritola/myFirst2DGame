@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelShop : MonoBehaviour
+public partial class LevelShop : MonoBehaviour
 {
     public GameObject LvshopPanel;
 
@@ -106,6 +106,8 @@ public class LevelShop : MonoBehaviour
 
         ability_name[11] = Loc.T("피의 굶주림");
         ability_content[11] = Loc.T("적을 처치할 때마다 체력을 회복합니다.\n( 처치당 ") + bul.healOnKill.ToString("0") + " -> " + (bul.healOnKill + HealOnKillStep).ToString("0") + " )";
+
+        KitSetAbilitys();
     }
     void Update()
     {
@@ -302,6 +304,7 @@ public class LevelShop : MonoBehaviour
         if (lv == null) lv = FindFirstObjectByType<Level>();
         if (skill == null) skill = FindFirstObjectByType<SkillGauge>();
         if (bul == null) return "";
+        if (KitTooltip(id, out string kitTip)) return kitTip;
 
         string summary = "";
         string current = "";
@@ -370,7 +373,7 @@ public class LevelShop : MonoBehaviour
     {
         if (target == null || abilityHUD == null) return;
 
-        Sprite icon = abilityHUD.GetIcon(id);
+        Sprite icon = KitIcon(id) ?? abilityHUD.GetIcon(id);
         if (icon != null) target.sprite = icon;
     }
 
@@ -386,6 +389,7 @@ public class LevelShop : MonoBehaviour
 
         ability_level[what]++;
         if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
+        if (KitApply(what)) return;
         if (what == 0) bul.pene++;
         if (what == 1) bul.bonusCoin++;
         if (what == 2)

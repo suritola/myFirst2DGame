@@ -19,7 +19,7 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_500` | **학살자** — 한 판에서 적 500마리를 처치했다 | **Slayer** — Defeat 500 enemies in one run | **殲滅者** — 1回のプレイで敵を500体倒した | **屠戮者** — 单局击败500个敌人 |
 | `ACH_BOSS_LICH` | **왕의 몰락** — 리치 왕을 쓰러뜨렸다 | **Fall of the King** — Defeat the Lich King | **王の失墜** — リッチ王を倒した | **王之陨落** — 击败巫妖王 |
 | `ACH_BOSS_DEMON` | **지옥을 식히다** — 지옥의 군주를 쓰러뜨렸다 | **Hell Freezes Over** — Defeat the Demon Lord | **地獄を鎮めて** — 地獄の君主を倒した | **冷却地狱** — 击败地狱领主 |
-| `ACH_CLEAR` | **Gun Saver** — 킹 슬라임을 쓰러뜨리고 게임을 클리어했다 | **Gun Saver** — Defeat the King Slime and clear the game | **Gun Saver** — キングスライムを倒してゲームをクリア | **Gun Saver** — 击败史莱姆王，通关游戏 |
+| `ACH_CLEAR` | **Soul Saver** — 킹 슬라임을 쓰러뜨리고 게임을 클리어했다 | **Soul Saver** — Defeat the King Slime and clear the game | **Soul Saver** — キングスライムを倒してゲームをクリア | **Soul Saver** — 击败史莱姆王，通关游戏 |
 | `ACH_FIRST_DEATH` | **다시 일어나라** — 처음으로 쓰러졌다 | **Get Back Up** — Fall in battle for the first time | **立ち上がれ** — 初めて倒れた | **重新站起来** — 第一次倒下 |
 | `ACH_SHOPPER` | **단골 손님** — 떠돌이 상점을 처음 열었다 | **Regular Customer** — Open the wandering shop | **常連客** — さすらいのショップを初めて開いた | **老主顾** — 第一次打开流浪商店 |
 | `ACH_FULL_SKILLS` | **손이 모자라** — 스킬 칸 3개를 모두 채웠다 | **All Hands** — Fill all 3 skill slots | **手が足りない** — スキル枠3つをすべて埋めた | **手忙脚乱** — 填满全部3个技能栏 |

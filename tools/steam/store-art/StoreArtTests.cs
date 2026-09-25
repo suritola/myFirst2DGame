@@ -272,7 +272,7 @@ public class StoreArtTests
         Canvas art = ArtCanvas(cam);
         Image dim = Img(art.transform, null, new Color(0f, 0f, 0f, 0.35f), Vector2.one * 0.5f, Vector2.zero, Vector2.zero);
         Stretch(dim.rectTransform);
-        TextMeshProUGUI title = Title(art.transform, "Gun Saver", 200f, Vector2.one * 0.5f, Vector2.zero, Vector2.zero);
+        TextMeshProUGUI title = Title(art.transform, "Soul Saver", 200f, Vector2.one * 0.5f, Vector2.zero, Vector2.zero);
 
         (string name, int w, int h, float zoom, float ty, float th)[] caps =
         {
