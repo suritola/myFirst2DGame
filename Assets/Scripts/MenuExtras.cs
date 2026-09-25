@@ -20,8 +20,18 @@ public static class MenuExtras
     // 무한 모드에서 쓰러지면 생존 시간 · 보스 처치 수 · 최고 기록
     static void InstallGameOver()
     {
-        if (EndlessMode.LastSeconds < 0f) return;
         Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        // 이번 판에 얻은 캐릭터 포인트
+        if (canvas != null && CharacterData.RunPoints > 0)
+        {
+            UIKit.EnsureStyle();
+            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 50f));
+            pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0") + "   " + Loc.T("보유 ") + CharacterData.Points.ToString("N0") + " P";
+            RectTransform pr = pt.rectTransform;
+            pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
+            pr.anchoredPosition = new Vector2(0f, 90f);
+        }
+        if (EndlessMode.LastSeconds < 0f) return;
         if (canvas != null)
         {
             UIKit.EnsureStyle();
@@ -43,19 +53,20 @@ public static class MenuExtras
         if (start == null || GameObject.Find("TutorialButton") != null) return;
 
         RectTransform sr = (RectTransform)start.transform;
+        GameObject character = UIKit.CloneButton(start, "CharacterButton", "캐릭터", () => CharacterUI.Open(sr.root));
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialUI.Open(sr.root));
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
 
-        // 세로로 다시 배치: 시작 · 튜토리얼 · 도감 · 설정 · 종료
-        float[] ys = { 0f, -108f, -216f, -324f, -432f };
-        GameObject[] order = { start, tutorial, codex, settings, exit };
+        // 세로로 다시 배치: 시작 · 캐릭터 · 튜토리얼 · 도감 · 설정 · 종료
+        float[] ys = { 0f, -94f, -188f, -282f, -376f, -470f };
+        GameObject[] order = { start, character, tutorial, codex, settings, exit };
         for (int i = 0; i < order.Length; i++)
         {
             if (order[i] == null) continue;
             RectTransform r = (RectTransform)order[i].transform;
             r.anchoredPosition = new Vector2(r.anchoredPosition.x, ys[i]);
-            r.sizeDelta = new Vector2(r.sizeDelta.x, 94f);
+            r.sizeDelta = new Vector2(r.sizeDelta.x, 84f);
         }
 
         InstallDifficulty(sr);

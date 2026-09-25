@@ -57,6 +57,14 @@ public class EnermyController : MonoBehaviour
 
     public bool IsDead => isDead;
 
+    // 잠깐 느려짐 (빙결 플라스크 · 연막탄 · 덫: 0 이면 묶임)
+    float slowUntil, slowMul = 1f;
+    public void Slow(float mul, float seconds)
+    {
+        slowMul = Time.time < slowUntil ? Mathf.Min(slowMul, mul) : mul;
+        slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
+    }
+
     // 시간 왜곡 (적 전체 감속)
     public static float GlobalSpeedMultiplier = 1f;
     // 거울 분신이 있으면 플레이어 대신 분신을 쫓음
@@ -139,7 +147,7 @@ public class EnermyController : MonoBehaviour
                 dir = (move + side * Mathf.Sin(moveTime * zigzagFrequency) * zigzagAmplitude).normalized;
             }
 
-            float currentSpeed = speed * GlobalSpeedMultiplier * (Time.time < enrageUntil ? enrageMul : 1f);
+            float currentSpeed = speed * GlobalSpeedMultiplier * (Time.time < enrageUntil ? enrageMul : 1f) * (Time.time < slowUntil ? slowMul : 1f);
             if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
 
             Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;

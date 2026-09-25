@@ -230,6 +230,8 @@ public class PlayerController : MonoBehaviour
 
         // 들고 있는 무기 모습 · 발사 연출
         PlayerLook.Attach(this);
+        // 거너가 아닌 캐릭터: 스탯 · 몸 그림 · 평타 · 우클릭 스킬 (CharacterData)
+        CharacterKit.Attach(this);
 
         mainCamera = Camera.main;
 
@@ -290,7 +292,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool holdingSpecial = special != null && special.WeaponActive;
-        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial) if (NowBullet < MaxBullet) StartCoroutine(Reload());
+        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial && CharacterKit.Instance == null) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
         // 이동 입력
@@ -326,60 +328,75 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool specialWeapon = special != null && special.WeaponActive;
-        if (!specialWeapon && GameInput.FireDown && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
+        CharacterKit kit = CharacterKit.Instance;
+        if (kit != null)
+        {
+            // 다른 캐릭터: 누르고 있으면 공격 속도에 맞춰 계속 (탄약 없음)
+            if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI())
+            {
+                kit.Attack();
+                nextShootTime = Time.time + ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul);
+            }
+            if (!specialWeapon) ammoTextOverride = kit.WeaponName;
+        }
+        else if (!specialWeapon && GameInput.FireDown && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작
         // =========================
 
-        if (GameInput.UltDown && !IsSkillUsing && !isReloading)
+        if (kit != null) kit.UpdateUlt(skillGauge);
+        else
         {
-            if (skillGauge != null && skillGauge.IsFull())
+            if (GameInput.UltDown && !IsSkillUsing && !isReloading)
             {
-                // 조준이 필요 없는 필살기는 누르자마자 발동 (줌 · 감속 없음)
-                if (special != null && special.IsInstantUlt) StartCoroutine(InstantUlt());
-                else StartSkill();
+                if (skillGauge != null && skillGauge.IsFull())
+                {
+                    // 조준이 필요 없는 필살기는 누르자마자 발동 (줌 · 감속 없음)
+                    if (special != null && special.IsInstantUlt) StartCoroutine(InstantUlt());
+                    else StartSkill();
+                }
             }
+
+            // =========================
+            // 우클릭 유지 중
+            // =========================
+
+            if (GameInput.UltHeld && isSkillUsing)
+            {
+                NowCharge += Time.unscaledDeltaTime * 100f;
+
+                // 충전할수록 강해짐: 공격력 x2 (즉시) ~ x8 (최대 충전)
+                skillDamage = damage * (2f + 6f * Mathf.Clamp01(NowCharge / MaxCharge));
+
+                if (NowCharge >= MaxCharge)
+                {
+                    NowCharge = MaxCharge;
+                    EndSkill();
+                }
+
+                if (mainCamera != null && mainCamera.orthographicSize < maxZoom) mainCamera.orthographicSize += 0.05f * Time.unscaledDeltaTime * 60f;
+
+                if (Time.unscaledTime >= nextTargetTime)
+                {
+                    FindNextTarget();
+                    nextTargetTime = Time.unscaledTime + targetInterval;
+                }
+                special?.UpdateAim(targets, Mathf.Clamp01(NowCharge / MaxCharge));
+            }
+
+            // =========================
+            // 우클릭 해제
+            // =========================
+
+            if (GameInput.UltUp && isSkillUsing) EndSkill();
         }
-
-        // =========================
-        // 우클릭 유지 중
-        // =========================
-
-        if (GameInput.UltHeld && isSkillUsing)
-        {
-            NowCharge += Time.unscaledDeltaTime * 100f;
-
-            // 충전할수록 강해짐: 공격력 x2 (즉시) ~ x8 (최대 충전)
-            skillDamage = damage * (2f + 6f * Mathf.Clamp01(NowCharge / MaxCharge));
-
-            if (NowCharge >= MaxCharge)
-            {
-                NowCharge = MaxCharge;
-                EndSkill();
-            }
-
-            if (mainCamera != null && mainCamera.orthographicSize < maxZoom) mainCamera.orthographicSize += 0.05f * Time.unscaledDeltaTime * 60f;
-
-            if (Time.unscaledTime >= nextTargetTime)
-            {
-                FindNextTarget();
-                nextTargetTime = Time.unscaledTime + targetInterval;
-            }
-            special?.UpdateAim(targets, Mathf.Clamp01(NowCharge / MaxCharge));
-        }
-
-        // =========================
-        // 우클릭 해제
-        // =========================
-
-        if (GameInput.UltUp && isSkillUsing) EndSkill();
 
         // =========================
         // 자동 재장전
         // =========================
 
-        if (NowBullet <= 0 && !isReloading) StartCoroutine(Reload());
+        if (NowBullet <= 0 && !isReloading && CharacterKit.Instance == null) StartCoroutine(Reload());
 
         // =========================
         // 애니메이션
@@ -399,7 +416,8 @@ public class PlayerController : MonoBehaviour
     void FixedUpdate()
     {
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
-        if (!isSkillUsing) transform.Translate(move * speed * slowMul * Time.fixedDeltaTime);
+        float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
+        if (!isSkillUsing) transform.Translate(move * speed * slowMul * kitMul * Time.fixedDeltaTime);
     }
 
     // =====================================
@@ -693,6 +711,8 @@ void Shoot()
 
     // 필살기를 썼을 때 (업적 등)
     public static event System.Action UltUsed;
+    // 다른 캐릭터의 우클릭 스킬도 필살기로 셈 (업적 등)
+    public void RaiseUltUsed() => UltUsed?.Invoke();
 
     IEnumerator InstantUlt()
     {

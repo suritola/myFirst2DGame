@@ -1,0 +1,253 @@
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+// 메인 메뉴 "캐릭터": 10칸 도감. 잠긴 캐릭터는 검은 실루엣과 ???, 누르면 스탯 · <선택> <취소> (잠겼으면 <구매>)
+public static class CharacterUI
+{
+    static GameObject open;
+    static Transform rootRef;
+    static RectTransform win;
+    static GameObject detail;
+    static TMP_Text pointsText;
+    public static bool IsOpen => open != null;
+
+    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
+    static readonly Color Dim = new Color(0.6f, 0.58f, 0.65f);
+
+    public static void Open(Transform root)
+    {
+        if (open != null) return;
+        rootRef = root;
+        win = UIKit.Modal(root, "CharacterPanel", new Vector2(1500f, 880f), out open);
+        open.AddComponent<CharacterUIInput>();
+        UIKit.Text(win, "캐릭터", 52f, Gold, new Vector2(0f, 380f), new Vector2(600f, 70f));
+        pointsText = UIKit.Text(win, "", 28f, Parch, new Vector2(520f, 380f), new Vector2(420f, 50f), TextAlignmentOptions.Right);
+        UIKit.MakeButton(win, "닫기", new Vector2(0f, -385f), new Vector2(240f, 70f), Close, 28f);
+        BuildGrid();
+    }
+
+    public static void Close()
+    {
+        CharacterData.Save();
+        if (open != null) Object.Destroy(open);
+        open = null;
+        detail = null;
+    }
+
+    static void RefreshPoints() => pointsText.text = Loc.T("보유 포인트: ") + CharacterData.Points.ToString("N0") + " P";
+
+    static readonly List<GameObject> cards = new List<GameObject>();
+
+    static void BuildGrid()
+    {
+        foreach (GameObject c in cards) if (c != null) Object.Destroy(c);
+        cards.Clear();
+        RefreshPoints();
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId id = (CharacterId)i;
+            Vector2 pos = new Vector2(-560f + 280f * (i % 5), i < 5 ? 150f : -200f);
+            cards.Add(Card(id, pos));
+        }
+    }
+
+    public static Sprite Portrait(CharacterId id)
+    {
+        CharacterDef d = CharacterData.Def(id);
+        string sheet = d.body ?? "gunner_nogun";
+        Sprite best = null;
+        foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + sheet))
+            if (best == null || string.CompareOrdinal(s.name, best.name) < 0) best = s;
+        // 거너는 idle 첫 프레임 (시트의 맨 위 왼쪽)
+        if (d.body == null)
+            foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + sheet))
+                if (s.name == "players blue x1_0") best = s;
+        return best;
+    }
+
+    static GameObject Card(CharacterId id, Vector2 pos)
+    {
+        CharacterDef d = CharacterData.Def(id);
+        bool unlocked = CharacterData.IsUnlocked(id), developed = CharacterData.IsDeveloped(id);
+        bool selected = unlocked && CharacterData.Selected == id;
+
+        Button b = UIKit.MakeButton(win, "", pos, new Vector2(250f, 320f), () => ShowDetail(id), 20f);
+        b.GetComponent<Image>().color = selected ? Gold : unlocked ? new Color(0.72f, 0.7f, 0.78f) : new Color(0.35f, 0.33f, 0.4f);
+        Transform t = b.transform;
+
+        // 그림 (잠겼으면 검은 실루엣)
+        RectTransform pr = UIKit.Rect("Portrait", t, new Vector2(0f, 38f), new Vector2(200f, 200f));
+        Image img = pr.gameObject.AddComponent<Image>();
+        img.sprite = Portrait(id);
+        img.preserveAspect = true;
+        img.raycastTarget = false;
+        img.color = unlocked ? Color.white : new Color(0.02f, 0.02f, 0.03f, 1f);
+        if (d.body == null && unlocked)
+        {
+            // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음)
+            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(48f, -18f), new Vector2(56f, 28f));
+            Image gi = gr.gameObject.AddComponent<Image>();
+            gi.sprite = Resources.Load<Sprite>("Weapons/weapon_pistol");
+            gi.preserveAspect = true;
+            gi.raycastTarget = false;
+        }
+
+        string name = unlocked ? d.name : "???";
+        TMP_Text nameText = UIKit.Text(t, name, 30f, unlocked ? Gold : Dim, new Vector2(0f, -100f), new Vector2(230f, 40f));
+        string sub = selected ? "선택됨" : unlocked ? d.title : developed ? "잠김" : "준비 중";
+        TMP_Text subText = UIKit.Text(t, sub, 20f, selected ? new Color(0.5f, 1f, 0.6f) : Dim, new Vector2(0f, -134f), new Vector2(230f, 30f));
+        if (!unlocked && developed)
+        {
+            subText.text = Loc.T("잠김") + " · " + d.price.ToString("N0") + " P";
+            subText.color = CharacterData.Points >= d.price ? new Color(1f, 0.85f, 0.4f) : Dim;
+        }
+        return b.gameObject;
+    }
+
+    // ================================================================= 자세히 (스탯 · 선택 · 구매)
+    static void ShowDetail(CharacterId id)
+    {
+        if (detail != null) Object.Destroy(detail);
+        CharacterDef d = CharacterData.Def(id);
+        bool unlocked = CharacterData.IsUnlocked(id), developed = CharacterData.IsDeveloped(id);
+
+        // 창 위에 덮는 판
+        detail = new GameObject("Detail", typeof(RectTransform), typeof(Image));
+        RectTransform dr = detail.GetComponent<RectTransform>();
+        dr.SetParent(win, false);
+        dr.anchorMin = Vector2.zero; dr.anchorMax = Vector2.one;
+        dr.offsetMin = dr.offsetMax = Vector2.zero;
+        detail.GetComponent<Image>().color = new Color(0.06f, 0.05f, 0.09f, 0.98f);
+
+        RectTransform pr = UIKit.Rect("Portrait", dr, new Vector2(-470f, 60f), new Vector2(360f, 360f));
+        Image img = pr.gameObject.AddComponent<Image>();
+        img.sprite = Portrait(id);
+        img.preserveAspect = true;
+        img.color = unlocked ? Color.white : new Color(0.02f, 0.02f, 0.03f, 1f);
+        if (d.body == null && unlocked)
+        {
+            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(88f, -32f), new Vector2(100f, 50f));
+            Image gi = gr.gameObject.AddComponent<Image>();
+            gi.sprite = Resources.Load<Sprite>("Weapons/weapon_pistol");
+            gi.preserveAspect = true;
+        }
+
+        UIKit.Text(dr, unlocked ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
+        UIKit.Text(dr, unlocked ? d.title : developed ? "잠긴 캐릭터" : "준비 중", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
+
+        if (!developed)
+        {
+            UIKit.Text(dr, "아직 준비 중인 캐릭터입니다.", 30f, Parch, new Vector2(200f, 60f), new Vector2(800f, 60f));
+            UIKit.MakeButton(dr, "취소", new Vector2(0f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
+            return;
+        }
+
+        // 오른쪽: 설명 · 스탯 (잠겼으면 ???)
+        float x = 190f;
+        UIKit.Text(dr, unlocked ? d.description : "포인트로 잠금을 풀면 이 캐릭터의 모습과 능력을 볼 수 있습니다.", 24f, Parch, new Vector2(x, 290f), new Vector2(820f, 70f), TextAlignmentOptions.Left);
+        float y = 200f;
+        Stat(dr, "체력", d.hp, unlocked, ref y);
+        Stat(dr, "공격력", d.damage, unlocked, ref y);
+        Stat(dr, "공격 속도", d.attackSpeed, unlocked, ref y);
+        StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), unlocked, ref y);
+        Stat(dr, "스킬 게이지", d.gauge, unlocked, ref y);
+        Stat(dr, "이동 속도", d.move, unlocked, ref y);
+        y -= 10f;
+        Info(dr, "기본 무기", unlocked ? Loc.T(d.weapon) + " — " + Loc.T(d.attack) : "???", ref y);
+        Info(dr, "우클릭", unlocked ? Loc.T(d.skill) + " — " + Loc.T(d.skillDesc) : "???", ref y);
+
+        if (unlocked)
+        {
+            bool selected = CharacterData.Selected == id;
+            Button sel = UIKit.MakeButton(dr, selected ? "선택됨" : "선택", new Vector2(-140f, -330f), new Vector2(240f, 70f), () =>
+            {
+                CharacterData.Selected = id;
+                Hostile.Play("chime", 0.6f, 1.2f);
+                CloseDetail();
+                BuildGrid();
+            }, 28f);
+            sel.interactable = !selected;
+            UIKit.MakeButton(dr, "취소", new Vector2(140f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
+        }
+        else
+        {
+            bool can = CharacterData.Points >= d.price;
+            Button buy = UIKit.MakeButton(dr, "", new Vector2(-140f, -330f), new Vector2(300f, 70f), () =>
+            {
+                if (!CharacterData.Buy(id)) return;
+                Hostile.Play("levelup", 0.8f);
+                BuildGrid();
+                ShowDetail(id);
+            }, 26f);
+            TMP_Text bt = buy.GetComponentInChildren<TMP_Text>();
+            bt.text = Loc.T("구매") + "  " + d.price.ToString("N0") + " P";
+            buy.interactable = can;
+            if (!can) UIKit.Text(dr, "포인트가 부족합니다. 게임에서 적을 처치하면 포인트가 쌓입니다.", 20f, Dim, new Vector2(0f, -270f), new Vector2(900f, 30f));
+            UIKit.MakeButton(dr, "취소", new Vector2(190f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
+        }
+    }
+
+    static void CloseDetail()
+    {
+        if (detail != null) Object.Destroy(detail);
+        detail = null;
+    }
+
+    public static bool DetailOpen => detail != null;
+    public static void Back()
+    {
+        if (detail != null) CloseDetail();
+        else Close();
+    }
+
+    // 스탯 한 줄: 이름 · 막대(거너 = 절반) · 퍼센트
+    static void Stat(RectTransform parent, string ko, float value, bool known, ref float y)
+    {
+        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
+        RectTransform bg = UIKit.Rect("Bar", parent, new Vector2(300f, y), new Vector2(420f, 18f));
+        bg.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.18f, 0.25f);
+        if (known)
+        {
+            float k = Mathf.Clamp01(value / 2f);
+            RectTransform fill = UIKit.Rect("Fill", bg, Vector2.zero, Vector2.zero);
+            fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(k, 1f);
+            fill.offsetMin = fill.offsetMax = Vector2.zero;
+            Color c = value > 1.01f ? new Color(0.5f, 0.9f, 0.5f) : value < 0.99f ? new Color(0.95f, 0.5f, 0.45f) : Gold;
+            fill.gameObject.AddComponent<Image>().color = c;
+            // 거너 기준선
+            RectTransform mark = UIKit.Rect("Base", bg, Vector2.zero, new Vector2(3f, 26f));
+            mark.anchorMin = mark.anchorMax = new Vector2(0.5f, 0.5f);
+            mark.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.6f);
+        }
+        UIKit.Text(parent, known ? Mathf.RoundToInt(value * 100f) + "%" : "???", 26f, Gold, new Vector2(580f, y), new Vector2(120f, 40f), TextAlignmentOptions.Right);
+        y -= 46f;
+    }
+
+    static void StatText(RectTransform parent, string ko, string value, bool known, ref float y)
+    {
+        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
+        TMP_Text t = UIKit.Text(parent, "", 26f, Gold, new Vector2(580f, y), new Vector2(300f, 40f), TextAlignmentOptions.Right);
+        t.text = known ? value : "???";
+        y -= 46f;
+    }
+
+    static void Info(RectTransform parent, string ko, string value, ref float y)
+    {
+        UIKit.Text(parent, ko, 24f, Gold, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
+        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(330f, y - 6f), new Vector2(680f, 70f), TextAlignmentOptions.TopLeft);
+        t.text = value;
+        y -= 78f;
+    }
+}
+
+// 캐릭터 창: ESC로 자세히 → 목록 → 닫기
+public class CharacterUIInput : MonoBehaviour
+{
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) CharacterUI.Back();
+    }
+}

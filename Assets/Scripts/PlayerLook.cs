@@ -17,13 +17,23 @@ public class PlayerLook : MonoBehaviour
     float kick, kickAngle;        // 반동: 뒤로 밀린 거리 · 들린 각도 (점점 돌아옴)
 
     // 무기마다: 반동 거리, 들리는 각도, 손에서 총구까지 길이
-    static float Recoil(int id) => id switch
+    static float Recoil(int id) => id == -1 ? BaseRecoil() : id switch
     {
         SpecialAbilities.ShotgunId => 0.45f, SpecialAbilities.SniperId => 0.6f, SpecialAbilities.DualId => 0.15f,
         SpecialAbilities.FlameId => 0.05f, SpecialAbilities.SeekerId => 0.3f, SpecialAbilities.ChainId => 0.2f,
         SpecialAbilities.ScytheId => 0f, SpecialAbilities.GrenadeId => 0.5f, _ => 0.18f,
     };
-    static float Lift(int id) => id switch
+    // 기본 무기 (-1): 캐릭터마다 다름 — 검은 크게 휘두르고, 표창 · 플라스크는 던지는 손짓
+    static float BaseRecoil() => CharacterData.Selected switch
+    {
+        CharacterId.Swordsman => 0f, CharacterId.Rogue => 0.1f, CharacterId.Archer => 0.15f, CharacterId.Alchemist => 0.1f, _ => 0.18f,
+    };
+    static float BaseLift() => CharacterData.Selected switch
+    {
+        CharacterId.Swordsman => 120f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f, _ => 8f,
+    };
+
+    static float Lift(int id) => id == -1 ? BaseLift() : id switch
     {
         SpecialAbilities.ShotgunId => 22f, SpecialAbilities.SniperId => 16f, SpecialAbilities.GrenadeId => 26f,
         SpecialAbilities.SeekerId => 12f, SpecialAbilities.FlameId => 2f, SpecialAbilities.ScytheId => -70f, _ => 8f,
@@ -70,8 +80,10 @@ public class PlayerLook : MonoBehaviour
         if (id != shownWeapon)
         {
             shownWeapon = id;
-            held.sprite = id >= 0 ? Resources.Load<Sprite>("Weapons/weapon_" + id)
-                        : id == -1 ? Resources.Load<Sprite>("Weapons/weapon_pistol") : null;
+            Sprite baseHeld = Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
+            // 다른 캐릭터의 특수 무기는 그림이 따로 없으면 기본 무기를 그대로 듦
+            held.sprite = id >= 0 ? (Resources.Load<Sprite>("Weapons/weapon_" + id) ?? baseHeld)
+                        : id == -1 ? baseHeld : null;
         }
         // 죽는 연출 · 숨김(시작 연출) 중에는 몸과 함께 숨김
         held.enabled = held.sprite != null && body.enabled;

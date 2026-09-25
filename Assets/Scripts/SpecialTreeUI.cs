@@ -104,8 +104,9 @@ public class SpecialTreeUI : MonoBehaviour
             Header(root, new Vector2(br.x, headerY), br.name);
 
             List<int> ids = new List<int>();
+            // 고른 캐릭터의 능력만 (CharacterData.pool)
             for (int i = 0; i < specials.abilities.Length; i++)
-                if (specials.abilities[i].kind == br.kind) ids.Add(i);
+                if (specials.abilities[i] != null && specials.abilities[i].kind == br.kind && CharacterData.InPool(i)) ids.Add(i);
 
             int rowCount = (ids.Count + 1) / 2;
             // 줄기

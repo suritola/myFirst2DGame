@@ -15,6 +15,8 @@ public class Point : MonoBehaviour
     public void AddPoint(int point)
     {
         points += point;
+        // 캐릭터 구매에 쓰는 포인트로도 쌓임 (게임을 꺼도 유지)
+        CharacterData.AddPoints(point);
 
         UpdatePointText();
 

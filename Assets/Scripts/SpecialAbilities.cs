@@ -17,7 +17,7 @@ public class SpecialDef
 }
 
 // 지옥 입장 때 고르는 특수 능력 (무기 / 스킬 / 패시브)
-public class SpecialAbilities : MonoBehaviour
+public partial class SpecialAbilities : MonoBehaviour
 {
     public const int ShotgunId = 0, SniperId = 1, DualId = 2, FlameId = 3, SeekerId = 4, ChainId = 5, ScytheId = 6, GrenadeId = 7;
     public const int DashId = 8, FireZoneId = 9, TimeWarpId = 10, PactId = 11, SoulBurstId = 12, SkeletonsId = 13, MirrorId = 14, HookId = 15;
@@ -131,6 +131,7 @@ public class SpecialAbilities : MonoBehaviour
 
     void Start()
     {
+        KitExtendAbilities();                   // 거너가 아닌 캐릭터의 능력 (SpecialAbilities.Kits.cs)
         player = FindFirstObjectByType<PlayerController>();
         if (player != null) player.special = this;
         EnermyController.Killed += OnEnemyKilled;
@@ -165,6 +166,7 @@ public class SpecialAbilities : MonoBehaviour
             if (abilities[id].kind == SpecialKind.Weapon) weapons.Add(id);
             if (abilities[id].kind == SpecialKind.Skill) skills.Add(id);
             if (id == OrbsId) SpawnOrbs(3);
+            KitOnEquip(id, false);
         }
         // 처음 무기를 골랐다면 바로 꺼내 들고 시작 (이미 들고 있던 무기는 그대로)
         if (!hadWeapons) weaponIndex = weapons.Count > 0 ? 0 : -1;
@@ -195,16 +197,16 @@ public class SpecialAbilities : MonoBehaviour
     // 기본 탄창 (0 = 탄약 없음: 화염 방사기는 열기, 낫은 회수)
     static int BaseMag(int id) => id switch
     {
-        ShotgunId => 5, SniperId => 4, DualId => 24, SeekerId => 12, ChainId => 8, GrenadeId => 6, _ => 0,
+        ShotgunId => 5, SniperId => 4, DualId => 24, SeekerId => 12, ChainId => 8, GrenadeId => 6, _ => KitMag(id),
     };
     // 발사 간격 (초) — 권총의 공격 속도 강화와는 별개
     static float BaseInterval(int id) => id switch
     {
-        ShotgunId => 0.65f, SniperId => 0.8f, DualId => 0.22f, SeekerId => 0.4f, ChainId => 0.45f, GrenadeId => 0.8f, _ => 0.45f,
+        ShotgunId => 0.65f, SniperId => 0.8f, DualId => 0.22f, SeekerId => 0.4f, ChainId => 0.45f, GrenadeId => 0.8f, _ => KitInterval(id),
     };
     static float BaseReload(int id) => id switch
     {
-        ShotgunId => 2f, SniperId => 2.2f, DualId => 1.8f, SeekerId => 1.6f, ChainId => 1.8f, GrenadeId => 2.4f, _ => 1.8f,
+        ShotgunId => 2f, SniperId => 2.2f, DualId => 1.8f, SeekerId => 1.6f, ChainId => 1.8f, GrenadeId => 2.4f, _ => KitReload(id),
     };
 
     public static bool UsesAmmo(int id) => BaseMag(id) > 0;
@@ -343,7 +345,7 @@ public class SpecialAbilities : MonoBehaviour
         ChainId => new Color(0.6f, 0.9f, 1f),
         ScytheId => new Color(0.8f, 0.55f, 1f),
         GrenadeId => new Color(1f, 0.45f, 0.1f),
-        _ => new Color(1f, 0.9f, 0.6f),
+        _ => KitColor(id),
     };
 
     static bool Alive(EnermyController e) => e != null && !e.IsDead;
@@ -749,6 +751,7 @@ public class SpecialAbilities : MonoBehaviour
         evolved.Add(id);
         Evolved?.Invoke(id);
         if (id == OrbsId) SpawnOrbs(2);
+        KitOnEquip(id, true);
 
         if (fx != null)
         {
@@ -864,7 +867,7 @@ public class SpecialAbilities : MonoBehaviour
             }
             UpdateWeaponReloads();
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
-            player.ammoTextOverride = WeaponActive ? AmmoText(CurrentWeapon) : null;
+            player.ammoTextOverride = WeaponActive ? AmmoText(CurrentWeapon) : CharacterKit.Instance != null ? CharacterKit.Instance.WeaponName : null;
             if (WeaponActive && KeyBindings.Down(GameAction.Reload)) StartWeaponReload(CurrentWeapon);
             if (WeaponActive) UpdateWeapon();
         }
@@ -941,6 +944,9 @@ public class SpecialAbilities : MonoBehaviour
                     fx.SetRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
                     if (down && Ready()) FireGrenade();
                 }
+                break;
+            default:
+                if (IsKit(CurrentWeapon)) KitUpdateWeapon(CurrentWeapon, down, held, up);
                 break;
         }
     }
@@ -1400,6 +1406,7 @@ public class SpecialAbilities : MonoBehaviour
                 fx.Play("shimmer", 0.8f, 1.6f);
                 break;
             case HookId: Hook(); StartCooldown(id, evo ? 2f : 4f); fx.Play("clank", 0.8f); break;
+            default: KitUseSkill(id); break;
         }
     }
 
@@ -1833,6 +1840,8 @@ public class SpecialAbilities : MonoBehaviour
         if (sp == null) return p;
         return new Vector3(Mathf.Clamp(p.x, sp.spawnAreaMin.x, sp.spawnAreaMax.x), Mathf.Clamp(p.y, sp.spawnAreaMin.y, sp.spawnAreaMax.y + 1.5f), 0f);
     }
+
+    public void ChakramReturned() => activeChakram = null;
 
     public void ScytheReturned()
     {
@@ -2318,8 +2327,12 @@ public class Scythe : MonoBehaviour
         }
     }
 
+    // 차크람(도적)은 자기 주인에게 회수를 알림
+    public SpecialAbilities returnsTo;
+
     void OnDestroy()
     {
+        if (returnsTo != null) { returnsTo.ChakramReturned(); return; }
         SpecialAbilities s = Object.FindFirstObjectByType<SpecialAbilities>();
         if (s != null) s.ScytheReturned();
     }
