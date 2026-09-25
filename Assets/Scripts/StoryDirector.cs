@@ -49,7 +49,7 @@ public class StoryDirector : MonoBehaviour
     GameObject skipButton;
     bool skip;
 
-    public static bool ShouldSkipAll => GameInput.Auto || TrailerDirector.Running || (Application.isBatchMode && !ForceInBatch);
+    public static bool ShouldSkipAll => GameInput.Auto || GameInput.TrailerRunning || (Application.isBatchMode && !ForceInBatch);
 
     // ================================================================= 시작
     public static IEnumerator Intro(bool endless)

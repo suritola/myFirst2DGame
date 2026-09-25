@@ -6,6 +6,13 @@ public static class GameInput
 {
     public static bool Auto;                // 자동 조종 중
 
+    // 트레일러 촬영 중인지 (TrailerDirector는 에디터 전용이라 출시 빌드에서는 항상 false)
+#if UNITY_EDITOR
+    public static bool TrailerRunning => TrailerDirector.Running;
+#else
+    public static bool TrailerRunning => false;
+#endif
+
     // 자동 조종 값 (TrailerDirector 가 채움)
     public static Vector2 AutoMove;         // 이동 방향 (-1 ~ 1)
     public static Vector3 AutoAim;          // 조준할 월드 좌표

@@ -99,7 +99,7 @@ public class StageManager : MonoBehaviour
         bool spawnWas = spawner != null && spawner.spawningEnabled;
         if (spawner != null) spawner.spawningEnabled = false;
         yield return null;                                  // 트레일러 촬영이 켜질 때까지 한 프레임
-        if (TrailerDirector.Running)
+        if (GameInput.TrailerRunning)
         {
             if (spawner != null) spawner.spawningEnabled = spawnWas;
             yield break;

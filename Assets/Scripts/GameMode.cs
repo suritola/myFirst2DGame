@@ -51,7 +51,7 @@ public static class GameMode
         {
             if (Override.HasValue) return Override.Value;
             // 트레일러 촬영 · 배치 모드(자동 테스트)는 항상 원래 게임(쉬움)
-            if (GameInput.Auto || TrailerDirector.Running || Application.isBatchMode) return Difficulty.Easy;
+            if (GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return Difficulty.Easy;
             Load();
             return current;
         }
