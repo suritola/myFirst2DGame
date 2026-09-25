@@ -4,7 +4,7 @@ using UnityEngine;
 // 거너는 그대로 (공격 속도 · 재장전 속도 · 최대 탄창), 다른 캐릭터는 2~4번 버튼이 무기에 맞는 업그레이드로 바뀜
 //   검사     베기 사거리 · 베기 각도 · 회전 베기 위력
 //   도적     투척 속도 · 표창 회수 속도 · 표창 주머니 (효과는 거너와 같고 이름만)
-//   궁수     연사 속도(그대로) · 관통력 · 화살비 위력
+//   궁수     시위 당기는 속도(공격 속도) · 관통력 · 화살비 위력
 //   연금술사 투척 속도(그대로) · 폭발 범위 · 대폭발 위력
 public partial class Shop
 {
@@ -84,7 +84,7 @@ public partial class Shop
         // 궁수 · 연금술사: 공격 속도 버튼은 그대로, 이름만
         if (Char == CharacterId.Archer)
         {
-            Rename(statTextInput2, "연사 속도");
+            Rename(statTextInput2, "시위 당기는 속도");
         }
         if (Char == CharacterId.Alchemist)
         {

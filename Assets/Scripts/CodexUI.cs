@@ -339,7 +339,7 @@ public static class CodexUI
             {
                 CharacterId.Swordsman => "장검 공격력 · 베기 사거리 · 베기 각도 · 회전 베기 위력 · 이동 속도",
                 CharacterId.Rogue => "표창 공격력 · 투척 속도 · 표창 회수 속도 · 표창 주머니 · 이동 속도",
-                CharacterId.Archer => "화살 공격력 · 연사 속도 · 관통력 · 화살비 위력 · 이동 속도",
+                CharacterId.Archer => "화살 공격력 · 시위 당기는 속도 · 관통력 · 화살비 위력 · 이동 속도",
                 CharacterId.Alchemist => "플라스크 공격력 · 투척 속도 · 폭발 범위 · 대폭발 위력 · 이동 속도",
                 _ => "",
             };

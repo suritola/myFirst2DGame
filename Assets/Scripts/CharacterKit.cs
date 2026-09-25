@@ -35,6 +35,15 @@ public class CharacterKit : MonoBehaviour
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
     public bool UsesAmmo => def.mag > 0;
 
+    // 궁수 활 시위: 누르고 있는 동안 draw 0 → 1
+    public bool DrawsBow => Id == CharacterId.Archer;
+    public bool BowFired { get; private set; }
+    public float Draw => drawing ? draw : 0f;
+    bool drawing;
+    float draw;
+    LineRenderer bowLine;
+    bool fullPlayed;
+
     // 캐릭터 전용 레벨업 능력이 올리는 값 (LevelShop.Kits)
     [HideInInspector] public float reachMul = 1f;     // 검사 긴 칼날: 베기 사거리 · 손에 든 검 크기
     [HideInInspector] public float arcBonus;          // 검사 넓은 베기: 부채꼴 반각 +
@@ -189,15 +198,10 @@ public class CharacterKit : MonoBehaviour
                 for (int i = 0; i < shots; i++)
                 {
                     Vector3 land = ClampRange(start, target, def.range) + (i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 1.6f));
-                    FlaskLob.Throw(start, land, 0.4f, 0.8f, Color.white, (p) =>
-                    {
-                        float r = 1.8f * CatalystMul * blastMul;
-                        DamageCircle(p, r, dmg * 1.6f * powerMul, 1.2f);
-                        Fx.Play("fx_alchemyblast", p, r * 2.2f, Color.white, 18f);
-                        Play("boom", 0.35f, 1.5f);
-                    });
+                    ThrowReagent(start, land, dmg);
                 }
-                Play("whoosh", 0.4f, 1.3f);
+                Play("glassclink", 0.6f, Random.Range(0.9f, 1.15f));
+                Play("whoosh", 0.25f, 1.5f);
                 break;
         }
     }
@@ -239,6 +243,116 @@ public class CharacterKit : MonoBehaviour
         Play("slash", 0.8f, hits > 0 ? 0.9f : 1.15f);
         Play("whoosh", 0.5f, 0.8f);
         if (hits >= 3) Hostile.Shake(0.08f);
+    }
+
+    // canDraw: 지금 당길 수 있는지 (전용 무기 · 우클릭 중이면 아님), fullTime: 가득 당기는 데 걸리는 시간
+    public void UpdateBow(bool canDraw, float fullTime)
+    {
+        BowFired = false;
+        if (!drawing)
+        {
+            if (canDraw && GameInput.FireHeld)
+            {
+                drawing = true;
+                draw = 0f;
+                fullPlayed = false;
+                Play("bowdraw", 0.45f, 1f);
+            }
+            else
+            {
+                if (bowLine != null) bowLine.enabled = false;
+                return;
+            }
+        }
+
+        draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.2f, fullTime));
+        Vector3 start = player.MuzzlePosition;
+        Vector3 target = Mouse;
+        player.FaceTowards(target);
+        Vector2 dir = ((Vector2)(target - start)).normalized;
+        PlayerLook.Draw(draw);
+
+        // 겨누는 선: 당길수록 길고 밝아짐, 가득 당기면 금색으로 반짝
+        if (bowLine == null) bowLine = Hostile.NewLine("BowDraw", Color.white, 0.08f, 17);
+        bowLine.enabled = true;
+        bowLine.positionCount = 2;
+        bowLine.SetPosition(0, start);
+        bowLine.SetPosition(1, start + (Vector3)(dir * (2f + 7f * draw)));
+        Color c = draw >= 1f ? new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f)) : new Color(0.7f, 1f, 0.6f, 0.2f + 0.5f * draw);
+        bowLine.startColor = bowLine.endColor = c;
+        bowLine.startWidth = bowLine.endWidth = 0.05f + 0.1f * draw;
+        if (draw >= 1f && !fullPlayed)
+        {
+            fullPlayed = true;
+            Play("ding", 0.5f, 1.5f);
+            Fx.Play("fx_sparkle", start, 1f, new Color(1f, 0.9f, 0.5f), 20f);
+        }
+
+        if (GameInput.FireHeld && canDraw) return;
+
+        // 발사: 피해 60% → 250%, 화살 속도 35 → 95
+        drawing = false;
+        bowLine.enabled = false;
+        PlayerLook.Draw(0f);
+        PlayerLook.Fired(-1);
+        float power = 0.6f + 1.9f * draw;
+        float speed = 35f + 60f * draw;
+        int shots = Mathf.Max(1, player.multiShot);
+        float dmg = Damage * player.MultiShotDamageRate(shots) * powerMul * power;
+        foreach (Vector2 d in Spread(dir, shots, 6f))
+        {
+            Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw, draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
+            if (b != null && draw >= 1f) b.pene += 1;          // 가득 당기면 하나 더 꿰뚫음
+        }
+        // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
+        Play("bowtwang", 0.55f + 0.35f * draw, 1.15f - 0.25f * draw);
+        Play("arrowfly", 0.3f + 0.4f * draw, 1f + 0.4f * draw);
+        BowFired = true;
+    }
+
+    // ================================================================= 연금술사: 시약 실험
+    // 화염 → 빙결 → 산성 시약을 번갈아 채워 던지고, 가끔(15%) 불안정한 플라스크가 크게 터짐
+    int reagent;
+    static readonly Color[] ReagentColors = { new Color(1f, 0.55f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };
+    public string NextReagentName => reagent switch { 0 => "화염 시약", 1 => "빙결 시약", _ => "산성 시약" };
+
+    void ThrowReagent(Vector3 from, Vector3 land, float dmg)
+    {
+        int kind = reagent;
+        reagent = (reagent + 1) % 3;
+        bool unstable = Random.value < 0.15f;
+        Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
+        FlaskLob.Throw(from, land, 0.4f, unstable ? 1.05f : 0.8f, tint, (p) =>
+        {
+            float r = 1.8f * CatalystMul * blastMul * (unstable ? 1.6f : 1f);
+            float hit = dmg * 1.6f * powerMul * (unstable ? 1.8f : 1f);
+            Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
+            if (unstable)
+            {
+                // 불안정! 보라색 대폭발
+                DamageCircle(p, r, hit, 2.2f);
+                Fx.Play("fx_alchemyblast", p, r * 2.4f, new Color(0.9f, 0.55f, 1f), 16f);
+                Fx.Play("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
+                Hostile.Shake(0.18f);
+                Play("boom", 0.7f, 1.1f);
+                return;
+            }
+            DamageCircle(p, r, hit, 1.2f);
+            Fx.Play("fx_alchemyblast", p, r * 2.2f, ReagentColors[kind], 18f);
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
+            {
+                if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+                if (kind == 0) Burn.Apply(c.gameObject, hit * 0.35f, 2f);
+                if (kind == 1) { EnermyController e = c.GetComponent<EnermyController>(); if (e != null) e.Slow(0.5f, 1.5f); }
+            }
+            if (kind == 0) Play("ignite", 0.3f, 1.3f);
+            if (kind == 1) Play("shimmer", 0.35f, 1.5f);
+            if (kind == 2)
+            {
+                if (Special != null) Special.SpawnZone(p, r * 0.8f, 2.5f, hit * 0.25f, new Color(0.45f, 1f, 0.3f, 0.6f));
+                Play("fizz", 0.45f, 1f);
+            }
+        });
     }
 
     public float CatalystMul => Special != null && Special.Has(SpecialAbilities.KitCatalyst) ? (Special.IsEvolved(SpecialAbilities.KitCatalyst) ? 1.5f : 1.3f) : 1f;
@@ -301,7 +415,7 @@ public class CharacterKit : MonoBehaviour
             if (ring == null) ring = Hostile.NewLine("UltRing", Color.white, 0.14f, 25);
             ring.loop = true;
             ring.enabled = true;
-            Play("hum", 0.5f, 0.8f);
+            Play(Id == CharacterId.Alchemist ? "bubble" : "hum", 0.5f, 0.8f);
         }
         if (!charging) return;
 
@@ -337,6 +451,8 @@ public class CharacterKit : MonoBehaviour
                 Fx.Play("fx_alchemyblast", p, radius * 2.4f, Color.white, 16f);
                 if (Special != null) Special.SpawnZone(p, radius * 0.7f, 4f, Damage * 0.5f, new Color(0.45f, 1f, 0.35f, 0.7f));
                 Play("boom", 1f, 0.9f);
+                Play("shatter", 0.8f, 0.8f);
+                Play("fizz", 0.7f, 0.8f);
             });
         }
         Spend(gauge);
@@ -409,6 +525,7 @@ public class CharacterKit : MonoBehaviour
     // 화살비: 마우스 둘레에 화살이 1.2초 동안 쏟아짐
     IEnumerator ArrowRain(Vector3 center)
     {
+        Play("bowtwang", 0.8f, 0.85f);
         float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         Play("whoosh", 0.8f, 0.9f);
@@ -417,7 +534,7 @@ public class CharacterKit : MonoBehaviour
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Play("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
             DamageCircle(at, 1.3f, Damage * 2.5f, 0.5f);
-            if (i % 4 == 0) Play("pew", 0.3f, 0.6f);
+            if (i % 4 == 0) Play("arrowfly", 0.35f, Random.Range(0.8f, 1.2f));
             yield return new WaitForSeconds(0.06f);
         }
     }

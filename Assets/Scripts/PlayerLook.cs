@@ -106,9 +106,9 @@ public class PlayerLook : MonoBehaviour
         float swing = SwingOffset(dt, out float grow);
         float angle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg + (left ? -(kickAngle + swing) : kickAngle + swing);
         Vector3 hand = new Vector3(left ? -0.35f : 0.35f, -0.55f, 0f);
-        held.transform.localPosition = hand - (Vector3)(aim * kick);
+        held.transform.localPosition = hand - (Vector3)(aim * (kick + 0.25f * drawAmount));
         held.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
-        held.transform.localScale = Vector3.one * (grow * HeldScale(id));
+        held.transform.localScale = Vector3.one * (grow * HeldScale(id) * (1f + 0.25f * drawAmount));
         held.flipY = left;                           // 왼쪽을 볼 때 무기가 뒤집히지 않게
         held.color = body.color;                     // 피격 깜빡임을 몸과 같이
     }
@@ -136,6 +136,13 @@ public class PlayerLook : MonoBehaviour
         }
         float b = Mathf.Clamp01((swingT - SwingTime) / SwingBack);
         return swingSign * Mathf.Lerp(-SwingArc, 0f, Mathf.SmoothStep(0f, 1f, b));
+    }
+
+    // 궁수: 시위를 당긴 정도 (0~1) — 활이 몸 쪽으로 당겨지고 커짐
+    float drawAmount;
+    public static void Draw(float k)
+    {
+        if (Instance != null) Instance.drawAmount = k;
     }
 
     // 검사 평타: alt 이면 아래→위로

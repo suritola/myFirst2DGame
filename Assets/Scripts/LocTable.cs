@@ -770,5 +770,9 @@ public static class LocTable
         { "주변의 적을 모두 얼려 4초 동안 거의 멈추게 하고 피해를 줍니다.", L("Freeze every nearby enemy nearly solid for 4 seconds and damage them.", "周囲の敵をすべて凍らせ、4秒間ほぼ動けなくしてダメージを与えます。", "冻结周围所有敌人，使其4秒内几乎静止并造成伤害。") },
         { "번개 폭풍", L("Lightning Storm", "雷の嵐", "雷电风暴") },
         { "하늘에서 번개 열두 줄기가 적에게 떨어집니다.", L("Twelve bolts of lightning strike enemies from the sky.", "空から12本の雷が敵に落ちます。", "十二道闪电从天而降击中敌人。") },
+        // v3.3 궁수 활 시위 · 연금술사 시약
+        { "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살", L("Hold to draw the bowstring, release to fire. The longer you draw, the stronger and faster the arrow", "押し続けると弦を引き、離すと発射。長く引くほど強く速い矢", "按住拉弓，松开射出。拉得越久，箭越强越快") },
+        { "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발", L("Flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask blows up big", "火炎・氷結・酸の試薬を交互に詰めたフラスコ。時々、不安定なフラスコが大爆発", "轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸") },
+        { "시위 당기는 속도", L("Draw Speed", "弦を引く速度", "拉弓速度") },
     };
 }

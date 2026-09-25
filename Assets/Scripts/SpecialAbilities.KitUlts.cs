@@ -27,9 +27,6 @@ public partial class SpecialAbilities
     public static SpecialKind KitKind(int id) => KitDefs[id - KitFirstId].kind;
     public static int KitCount => KitDefs.Length;
 
-    // 탄약 칸 글 (탄창이 없는 캐릭터가 전용 무기를 들었을 때)
-    public string AmmoText(int id) => id >= 0 ? Ammo(id).ammo + " / " + MagSize(id) : "";
-
     public static string KitUltName(int id)
     {
         foreach (var u in KitUlts) if (u.id == id) return u.name;
@@ -60,8 +57,8 @@ public partial class SpecialAbilities
         {
             case KitKnifeFan: fx.Play("whoosh", 0.55f, 1.8f); break;
             case KitBlazeStar: fx.Play("whoosh", 0.35f, 2f); fx.Play("ignite", 0.15f, 1.6f); break;
-            case KitBlastArrow: fx.Play("pew", 0.45f, 0.75f); break;
-            case KitFireFlask: case KitFrostFlask: case KitShockFlask: fx.Play("whoosh", 0.45f, 1.15f); break;
+            case KitBlastArrow: fx.Play("bowtwang", 0.6f, 1f); fx.Play("arrowfly", 0.4f, 0.9f); break;
+            case KitFireFlask: case KitFrostFlask: case KitShockFlask: fx.Play("glassclink", 0.6f, Random.Range(0.9f, 1.15f)); fx.Play("whoosh", 0.25f, 1.4f); break;
         }
     }
 
@@ -190,7 +187,9 @@ public partial class SpecialAbilities
                     for (float t = 0f; t < 30f; t += 1.2f) Fx.Play("fx_arrow", a + (Vector3)(dir * t), 1.6f, new Color(1f, 1f, 0.75f, 1f - t / 34f), 12f, rot, 16);
                     Fx.Beam(a, b, 0.8f, new Color(1f, 0.95f, 0.6f, 0.8f), 0.25f);
                     Hostile.Shake(0.35f);
-                    fx.Play("railgun", 0.6f, 1.2f);
+                    fx.Play("bowtwang", 1f, 0.6f);
+                    fx.Play("arrowfly", 1f, 0.7f);
+                    fx.Play("railgun", 0.35f, 1.2f);
                     break;
                 }
             case KitRepeater:
@@ -203,7 +202,8 @@ public partial class SpecialAbilities
                         Vector2 dd = Quaternion.Euler(0f, 0f, Random.Range(-12f, 12f)) * d;
                         KitProjectile(player.MuzzlePosition, dd, D * 0.7f, player.pene, 70f, "fx_arrow", 0.4f, Color.white, false);
                     }
-                    fx.Play("pew", 0.25f, 1.4f + Random.Range(-0.1f, 0.1f));
+                    fx.Play("bowtwang", 0.3f, 1.8f + Random.Range(-0.1f, 0.1f));
+                    fx.Play("arrowfly", 0.2f, 1.3f);
                     yield return new WaitForSeconds(0.05f);
                 }
                 break;
@@ -230,6 +230,7 @@ public partial class SpecialAbilities
                         DamageZone z = SpawnZone(p, r, 5f, D * 0.7f, new Color(1f, 0.35f, 0.08f, 0.8f));
                         z.lava = true;
                         Hostile.Shake(0.3f);
+                        fx.Play("shatter", 0.9f, 0.8f);
                         fx.Play("flame", 0.8f, 0.8f);
                     });
                     break;

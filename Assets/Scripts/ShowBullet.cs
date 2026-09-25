@@ -23,15 +23,6 @@ public class ShowBullet : MonoBehaviour
         {
             TextInput.text = player.ammoTextOverride;
         }
-        else if (CharacterKit.Instance != null && !CharacterKit.Instance.UsesAmmo)
-        {
-            // 탄창이 없는 캐릭터: 들고 있는 무기 이름 (전용 무기면 그 무기, 아니면 기본 무기)
-            SpecialAbilities sp = player.special;
-            TextInput.text = sp != null && sp.WeaponActive && sp.MagSize(sp.HeldWeapon) <= 0
-                ? Loc.T(sp.abilities[sp.HeldWeapon].name)
-                : sp != null && sp.WeaponActive ? sp.AmmoText(sp.HeldWeapon)
-                : CharacterKit.Instance.WeaponName;
-        }
         else if (player.reload == 0)
         {
             TextInput.text = player.NowBullet + " / " + player.MaxBullet;

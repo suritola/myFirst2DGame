@@ -333,7 +333,15 @@ public class PlayerController : MonoBehaviour
         {
             // 다른 캐릭터: 누르고 있으면 공격 속도에 맞춰 계속 (탄창이 있으면 한 발씩 씀)
             bool ammo = kit.UsesAmmo;
-            if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI()
+            if (kit.DrawsBow)
+            {
+                // 궁수: 좌클릭을 누르고 있으면 시위를 당기고, 떼면 발사 (오래 당길수록 강하고 빠른 화살)
+                // 공격 속도가 빠를수록 빨리 가득 당김
+                kit.UpdateBow(!specialWeapon && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI(),
+                              ShootSpeed * 2f / (fireRateMultiplier * kit.AttackSpeedMul));
+                if (kit.BowFired) nextShootTime = Time.time + 0.12f;
+            }
+            else if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI()
                 && (!ammo || (NowBullet > 0 && !isReloading && !IsSkillUsing)))
             {
                 kit.Attack();

@@ -46,14 +46,14 @@ public static class CharacterData
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
-            weapon = "사냥 활", attack = "적을 하나 더 꿰뚫는 화살",
+            weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살",
             skill = "화살비", skillDesc = "마우스 위치에 화살비를 쏟아붓습니다 (즉발)",
             hp = 0.9f, damage = 1.1f, attackSpeed = 0.9f, gauge = 1.1f, move = 1.05f, range = 0f, price = 1500, pool = Range(36, 8),
             color = new Color(0.45f, 0.8f, 0.4f) },
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
-            weapon = "플라스크", attack = "던진 자리에서 터지는 플라스크 (범위 피해)",
+            weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
             hp = 1f, damage = 0.9f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Range(44, 8),
             color = new Color(0.65f, 0.4f, 0.95f) },

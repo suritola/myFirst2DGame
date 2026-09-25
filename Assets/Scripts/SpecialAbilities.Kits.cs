@@ -248,7 +248,8 @@ public partial class SpecialAbilities
                 if (!down || !Ready()) break;
                 BeginShot(0, out Vector3 s3, out _);
                 KitProjectile(s3, dir, WDamage * 2.4f, evo ? 9999 : 6, 70f, "fx_arrow", 0.6f, new Color(1f, 1f, 0.8f), false);
-                fx.Play("crack", 0.5f, 1.4f);
+                fx.Play("bowtwang", 0.9f, 0.8f);
+                fx.Play("arrowfly", 0.7f, 1.1f);
                 break;
             case KitRepeater:
                 if (!held || !Ready()) break;
@@ -259,7 +260,8 @@ public partial class SpecialAbilities
                         Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-4f, 4f)) * dir;
                         KitProjectile(s4, d, WDamage * 0.45f, player.pene, 65f, "fx_arrow", 0.35f, Color.white, false);
                     }
-                    fx.Play("pew", 0.35f, 1.3f);
+                    fx.Play("bowtwang", 0.4f, 1.9f);          // 석궁: 짧고 높은 "탕"
+                    fx.Play("arrowfly", 0.25f, 1.4f);
                 }
                 break;
             case KitBlastArrow:
@@ -292,6 +294,7 @@ public partial class SpecialAbilities
 
     void KitFlaskLand(int id, Vector3 p, float r, float dmg, bool evo)
     {
+        fx.Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
         switch (id)
         {
             case KitFireFlask:

@@ -872,7 +872,7 @@ public partial class SpecialAbilities : MonoBehaviour
             }
             UpdateWeaponReloads();
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
-            player.ammoTextOverride = WeaponActive ? AmmoText(CurrentWeapon) : CharacterKit.Instance != null ? CharacterKit.Instance.WeaponName : null;
+            player.ammoTextOverride = WeaponActive ? (AmmoText(CurrentWeapon) ?? (IsKit(CurrentWeapon) ? Loc.T(abilities[CurrentWeapon].name) : null)) : CharacterKit.Instance != null ? CharacterKit.Instance.WeaponName : null;
             if (WeaponActive && KeyBindings.Down(GameAction.Reload)) StartWeaponReload(CurrentWeapon);
             if (WeaponActive) UpdateWeapon();
         }

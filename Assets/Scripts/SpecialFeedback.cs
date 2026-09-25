@@ -243,6 +243,65 @@ public class SpecialFeedback : MonoBehaviour
             ro += (n - ro) * 0.02f; ro2 += (n - ro2) * 0.2f;
             return (ro * 4f + ro2 * 0.4f) * (0.75f + 0.25f * Sin(4f, t));
         });
+        // 활시위 "퉁": 굵은 현을 튕긴 소리 (배음이 빨리 사라지고 음이 살짝 내려감) + 손끝 딸깍
+        Make("bowtwang", 0.4f, (t, d, r) =>
+        {
+            float f = Mathf.Lerp(125f, 108f, t / d);
+            float str = (Sin(f, t) * 0.6f + Sin(f * 2f, t) * 0.35f * Decay(t, d, 6f) + Sin(f * 3f, t) * 0.2f * Decay(t, d, 9f)) * Decay(t, d, 3.5f);
+            return str + Noise(r) * 0.5f * Decay(t, 0.012f, 2f);
+        });
+        // 화살이 날아가는 "슉": 높은 바람 소리가 빠르게 지나감
+        float alp = 0f;
+        Make("arrowfly", 0.26f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            alp += (n - alp) * 0.35f;
+            float hp = n - alp;
+            return hp * 0.55f * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / d)) * (1f - 0.6f * t / d);
+        });
+        // 유리병 "달그락": 병과 병이 부딪히는 높은 소리 두 번
+        Make("glassclink", 0.22f, (t, d, r) =>
+        {
+            float a = (Sin(2950f, t) + Sin(4420f, t) * 0.5f) * Decay(t, 0.12f, 3f);
+            float b = t > 0.06f ? (Sin(3500f, t) + Sin(5200f, t) * 0.4f) * Decay(t - 0.06f, 0.14f, 3f) * 0.7f : 0f;
+            return (a + b) * 0.28f;
+        });
+        // 유리 깨짐 "쨍그랑": 날카로운 잡음 + 여러 파편이 흩어지는 짤랑임
+        Make("shatter", 0.45f, (t, d, r) =>
+        {
+            float burst = Noise(r) * 0.6f * Decay(t, 0.05f, 2f);
+            float tinkle = 0f;
+            for (int k = 0; k < 5; k++)
+            {
+                float at = 0.02f + k * 0.06f;
+                if (t > at) tinkle += Sin(2600f + 900f * k, t) * Decay(t - at, 0.12f, 4f);
+            }
+            return burst + tinkle * 0.22f;
+        });
+        // 부글부글: 방울이 올라오며 톡톡 터지는 소리 (1초 반복)
+        Make("bubble", 1f, (t, d, r) =>
+        {
+            float ph = (t * 9f) % 1f;
+            float f = 180f + 520f * ph;
+            return Sin(f, t) * Mathf.Pow(1f - ph, 2f) * 0.35f + Sin(260f, t) * 0.08f;
+        });
+        // 치이익: 약품이 거품을 내며 녹는 소리
+        float fz = 0f;
+        Make("fizz", 0.7f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            fz += (n - fz) * 0.6f;
+            float pop = r.NextDouble() < 0.01 ? n : 0f;
+            return ((n - fz) * 0.35f + pop * 0.5f) * Decay(t, d, 1.5f);
+        });
+        // 시위를 당기는 "끼이익": 나무 활이 휘는 낮은 삐걱임
+        float cr = 0f;
+        Make("bowdraw", 0.6f, (t, d, r) =>
+        {
+            cr += (Noise(r) - cr) * 0.05f;
+            float creak = Sin(Mathf.Lerp(70f, 150f, t / d) + 25f * cr, t) * (0.35f + 0.5f * Mathf.Abs(cr));
+            return creak * 0.5f * Mathf.Clamp01(t / 0.08f) * (1f - 0.5f * t / d);
+        });
     }
 
     // ================================================================= lines
