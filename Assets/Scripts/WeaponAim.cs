@@ -115,16 +115,17 @@ public class WeaponAim
             {
                 // 거대한 불꽃 부채꼴 + 안에 든 적 조준경
                 const float range = 11f, half = 35f;
-                LineRenderer cone = Line(0, new Color(1f, 0.55f, 0.2f, 0.6f + 0.3f * pulse), 0.25f);
-                const int seg = 20;
-                cone.positionCount = seg + 3;
-                cone.SetPosition(0, p);
+                Color fire = new Color(1f, 0.55f, 0.2f);
+                Vector2 left = Quaternion.Euler(0, 0, half) * dir, right = Quaternion.Euler(0, 0, -half) * dir;
+                Dots(p + (Vector3)(left * 1.2f), p + (Vector3)(left * range), fire, 0.9f, 0.55f);
+                Dots(p + (Vector3)(right * 1.2f), p + (Vector3)(right * range), fire, 0.9f, 0.55f);
+                const int seg = 14;
                 for (int i = 0; i <= seg; i++)
                 {
                     Vector2 d = Quaternion.Euler(0, 0, -half + 2f * half * i / seg) * dir;
-                    cone.SetPosition(i + 1, p + (Vector3)(d * range));
+                    float a = 0.45f + 0.55f * Mathf.Repeat(i * 0.2f - age * 2.5f, 1f);
+                    Frame(Fx.Play("fx_trail_dot", p + (Vector3)(d * range), 0.6f, new Color(fire.r, fire.g, fire.b, a), 1f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 24, true));
                 }
-                cone.SetPosition(seg + 2, p);
                 if (Random.value < 0.6f && SpecialAbilities.GlowSprite != null)
                 {
                     Vector2 d = Quaternion.Euler(0, 0, Random.Range(-half, half)) * dir;
@@ -174,9 +175,13 @@ public class WeaponAim
                 // 회오리가 생길 자리 + 빨려 들어갈 범위
                 if (rune != null) rune.transform.position = mouse;
                 if (ghost != null) ghost.transform.position = mouse + Vector3.up * 1.8f;
-                LineRenderer pull = Line(0, new Color(1f, 0.5f, 0.15f, 0.35f + 0.3f * pulse), 0.12f);
-                pull.loop = true;
-                Hostile.SetArc(pull, mouse, 4.8f, 0f, 354f);
+                const int n = 18;
+                for (int i = 0; i < n; i++)
+                {
+                    float ang = (i * 360f / n + age * 40f) * Mathf.Deg2Rad;
+                    Vector3 at = mouse + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * (4.8f - 0.3f * Mathf.Repeat(age * 2f + i * 0.1f, 1f));
+                    Frame(Fx.Play("fx_trail_dot", at, 0.6f, new Color(1f, 0.5f, 0.15f, 0.5f + 0.4f * pulse), 1f, ang * Mathf.Rad2Deg + 180f, 24, true));
+                }
                 foreach (Collider2D col in Physics2D.OverlapCircleAll(mouse, 4.8f))
                     if (col.CompareTag("enermy") && Random.value < 0.3f && SpecialAbilities.GlowSprite != null)
                         FlameParticle.Spawn(SpecialAbilities.GlowSprite, col.transform.position, ((Vector2)(mouse - col.transform.position)).normalized * 3f, 0.4f, 0.04f, 0.25f, false);
@@ -216,11 +221,16 @@ public class WeaponAim
             case SpecialAbilities.ScytheId:
             {
                 // 베어 나갈 순서대로 이어지는 경로
-                LineRenderer path = Line(0, new Color(0.8f, 0.55f, 1f, 0.55f + 0.3f * pulse), 0.14f);
+                Color soul = new Color(0.8f, 0.55f, 1f);
                 List<Vector3> pts = new List<Vector3> { p };
                 foreach (EnermyController t in targets) if (t != null && !t.IsDead) pts.Add(t.transform.position);
-                path.positionCount = pts.Count;
-                for (int i = 0; i < pts.Count; i++) path.SetPosition(i, pts[i]);
+                for (int i = 1; i < pts.Count; i++)
+                {
+                    Dots(pts[i - 1], pts[i], soul, 0.75f, 0.6f);
+                    float spin = -age * 540f + i * 40f;
+                    Frame(Fx.Play("fx_scythe_ghost", pts[i], 1.9f + 0.2f * pulse, Color.white, 1f, spin, 27, true));
+                }
+                if (pts.Count > 1) Dots(pts[pts.Count - 1], p, new Color(soul.r, soul.g, soul.b, 0.45f), 1.1f, 0.45f);    // 제자리로 돌아오는 길
                 break;
             }
             case SpecialAbilities.GrenadeId:
@@ -233,9 +243,9 @@ public class WeaponAim
                     for (int c = -1; c <= 1; c++)
                     {
                         Vector3 at = p + (Vector3)(dir * row * 2.6f + side * c * 2.6f);
-                        LineRenderer ring = Line(li++, new Color(1f, 0.45f, 0.1f, 0.35f + 0.35f * Mathf.Sin(age * 10f - row * 0.8f)), 0.1f);
-                        ring.loop = true;
-                        Hostile.SetArc(ring, at, 1.8f, 0f, 354f);
+                        float glow = 0.5f + 0.4f * Mathf.Sin(age * 10f - row * 0.8f);
+                        Frame(Fx.Play("fx_target_rune", at, 3.6f, new Color(1f, 0.5f, 0.15f, glow), 1f, age * 90f * (c == 0 ? 1f : -1f), 24, true));
+                        li++;
                     }
                 break;
             }
@@ -245,6 +255,22 @@ public class WeaponAim
     void Frame(FxAnim a)
     {
         if (a != null) frame.Add(a.gameObject);
+    }
+
+    // a → b 방향을 가리키는 화살촉이 흘러가는 점선 (fx_trail_dot)
+    void Dots(Vector3 a, Vector3 b, Color c, float spacing, float size)
+    {
+        Vector3 d = b - a;
+        float len = d.magnitude;
+        if (len < 0.01f) return;
+        float rot = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        float shift = Mathf.Repeat(age * 3f, 1f) * spacing;
+        for (float s = shift; s < len; s += spacing)
+        {
+            float k = s / len;
+            float alpha = c.a * Mathf.Lerp(0.55f, 1f, Mathf.Sin(k * Mathf.PI));
+            Frame(Fx.Play("fx_trail_dot", a + d * k, size, new Color(c.r, c.g, c.b, alpha), 1f, rot, 24, true));
+        }
     }
 
     public void End()

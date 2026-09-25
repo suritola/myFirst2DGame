@@ -46,11 +46,11 @@ public class MusicManager : MonoBehaviour
     string Wanted()
     {
         string scene = SceneManager.GetActiveScene().name;
-        if (scene != "GameScene") return "bgm_menu";
+        if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null && spawner.bossSpawned && !spawner.bossCleared) return "bgm_boss";
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
-        return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : "bgm_meadow";
+        return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_desert";
     }
 
     void Update()

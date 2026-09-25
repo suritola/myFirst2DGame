@@ -33,6 +33,7 @@ public class EnemySkill : MonoBehaviour
         enemy = GetComponent<EnermyController>();
         sr = GetComponent<SpriteRenderer>();
         if (cooldown <= 0f) cooldown = DefaultCooldown(type);
+        cooldown *= GameMode.SkillCooldownMul;
         next = Time.time + Random.Range(1.5f, cooldown);
     }
 

@@ -43,5 +43,17 @@
 		"NEW_ACHIEVEMENT_1_18_DESC"	"ダメージを受けずにボスを倒した"
 		"NEW_ACHIEVEMENT_1_19_NAME"	"九死に一生"
 		"NEW_ACHIEVEMENT_1_19_DESC"	"体力10%以下でボスを倒した"
+		"NEW_ACHIEVEMENT_1_20_NAME"	"新たな挑戦"
+		"NEW_ACHIEVEMENT_1_20_DESC"	"イージーをクリアしてノーマル · ハードを解放した"
+		"NEW_ACHIEVEMENT_1_21_NAME"	"さらに一歩"
+		"NEW_ACHIEVEMENT_1_21_DESC"	"ノーマルをクリアした"
+		"NEW_ACHIEVEMENT_1_22_NAME"	"ガンマンの伝説"
+		"NEW_ACHIEVEMENT_1_22_DESC"	"ハードをクリアした"
+		"NEW_ACHIEVEMENT_1_23_NAME"	"砂漠の放浪者"
+		"NEW_ACHIEVEMENT_1_23_DESC"	"エンドレスで10分間生き延びた"
+		"NEW_ACHIEVEMENT_1_24_NAME"	"砂漠の主"
+		"NEW_ACHIEVEMENT_1_24_DESC"	"エンドレスで20分間生き延びた"
+		"NEW_ACHIEVEMENT_1_25_NAME"	"王たちの墓場"
+		"NEW_ACHIEVEMENT_1_25_DESC"	"エンドレス1回でボスを5体倒した"
 	}
 }

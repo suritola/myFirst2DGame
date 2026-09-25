@@ -275,7 +275,8 @@ public class PlayerController : MonoBehaviour
 
         // 상점 · ESC · 레벨업 등으로 멈춘 동안에는 입력을 받지 않음
         // (멈춘 화면에서 클릭하면 총이 나가거나 스킬이 시간을 다시 흐르게 하던 문제)
-        if (IsPaused)
+        // 시작 · 엔딩 연출 중에도 조작하지 않음
+        if (IsPaused || StoryDirector.Playing)
         {
             move = Vector3.zero;
             return;
@@ -805,6 +806,7 @@ void Shoot()
             {
                 coin.AddCoin(1 + bonusCoin);
                 if ( audioSource != null && getCoin != null ) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume);
+                Juice.CoinPicked(collision.transform.position);
             }
             Destroy( collision.gameObject );
         }
@@ -858,7 +860,7 @@ void Shoot()
 
         if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);
 
-        float taken = amount * (1f - def);
+        float taken = amount * GameMode.DamageMul * (1f - def);
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())

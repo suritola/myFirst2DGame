@@ -22,6 +22,10 @@ public class StageManager : MonoBehaviour
     public Vector2 stage2PlayerStart = new Vector2(0.5f, 0f);
     public GameObject meadowMap;            // 3장 초원
     public Color meadowBackground = new Color(0.18f, 0.32f, 0.16f);
+    // 무한 모드 불타는 사막 (지옥 맵을 복제해 만듦)
+    public Color desertBackground = new Color(0.24f, 0.13f, 0.06f);
+    GameObject desertMap;
+    GameObject[] endlessBosses;
 
     [Header("UI")]
     public Image fade;                      // 전체 화면 검은 막
@@ -85,6 +89,65 @@ public class StageManager : MonoBehaviour
         gameObject.AddComponent<WeaponUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
         // 상점의 필살기(스킬) 강화 창
         gameObject.AddComponent<SkillUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
+
+        StartCoroutine(Opening());
+    }
+
+    // ================================================================= 시작 (인트로 · 무한 모드)
+    IEnumerator Opening()
+    {
+        bool spawnWas = spawner != null && spawner.spawningEnabled;
+        if (spawner != null) spawner.spawningEnabled = false;
+        yield return null;                                  // 트레일러 촬영이 켜질 때까지 한 프레임
+        if (TrailerDirector.Running)
+        {
+            if (spawner != null) spawner.spawningEnabled = spawnWas;
+            yield break;
+        }
+
+        bool endless = GameMode.IsEndless;
+        if (endless) PrepareEndless();
+        yield return StoryDirector.Intro(endless);
+        if (endless) yield return PickEndlessSpecials();
+        if (spawner != null) spawner.spawningEnabled = true;
+        if (endless)
+        {
+            GameMode.StartEndlessClock();
+            gameObject.AddComponent<EndlessMode>().Init(this, endlessBosses);
+            ShowBanner(Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?"), 3f);
+        }
+    }
+
+    void PrepareEndless()
+    {
+        foreach (Renderer r in caveRenderers) if (r != null) r.enabled = false;
+        if (spawner == null) return;
+        desertMap = EndlessMode.BuildDesertMap(hellMap, spawner.spawnAreaMin, spawner.spawnAreaMax, stage2PlayerStart);
+        if (Camera.main != null) Camera.main.backgroundColor = desertBackground;
+        spawner.stages = EndlessMode.WithEndlessStage(spawner.stages, out endlessBosses);
+        CurrentStage = 3;
+        spawner.StartStage(3);
+        spawner.spawningEnabled = false;
+        if (player != null) player.position = stage2PlayerStart;
+    }
+
+    // 무한 모드는 처음부터 특수 능력 3개를 고르고 시작
+    IEnumerator PickEndlessSpecials()
+    {
+        if (specialPanel == null || specialTree == null) yield break;
+        transitioning = true;
+        float before = Time.timeScale;
+        Time.timeScale = 0f;
+        pendingPicks = null;
+        specialPanel.SetActive(true);
+        specialTree.Open(specials, OnPickSpecial);
+        while (pendingPicks == null) yield return null;
+        chosenSpecials = pendingPicks;
+        if (specials != null) specials.Equip(chosenSpecials);
+        TooltipUI.Hide();
+        specialPanel.SetActive(false);
+        Time.timeScale = before;           // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
+        transitioning = false;
     }
 
     void Update()
@@ -240,6 +303,11 @@ public class StageManager : MonoBehaviour
 
     void OnBossDefeated(int stage)
     {
+        if (GameMode.IsEndless)
+        {
+            if (EndlessMode.Instance != null) EndlessMode.Instance.OnBossDefeated();
+            return;
+        }
         if (stage == 0)
         {
             if (portal != null) portal.SetActive(true);
@@ -255,7 +323,22 @@ public class StageManager : MonoBehaviour
         else
         {
             ShowBanner(Loc.T("킹 슬라임을 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f);
+            // 클리어 기록 · 난이도 잠금 해제는 바로 저장하고, 잠시 뒤 엔딩
+            Difficulty cleared = GameMode.Current;
+            string opened = GameMode.OnCleared(cleared);
+            Cleared?.Invoke(cleared);
+            StartCoroutine(EndingAfter(cleared, opened));
         }
+    }
+
+    // 3장 보스를 쓰러뜨려 한 판을 클리어했을 때 (업적 등)
+    public static event System.Action<Difficulty> Cleared;
+
+    IEnumerator EndingAfter(Difficulty cleared, string opened)
+    {
+        yield return new WaitForSecondsRealtime(4f);
+        if (StoryDirector.ShouldSkipAll) yield break;
+        yield return StoryDirector.Ending(cleared, opened);
     }
 
     // PortalGate가 플레이어를 감지하면 호출

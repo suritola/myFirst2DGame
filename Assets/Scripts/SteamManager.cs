@@ -60,6 +60,15 @@ public class SteamManager : MonoBehaviour
             if (++runUlts >= 30) SteamAchievements.Unlock(SteamAchievements.Ult30);
         };
         Shop.StallOpened += () => SteamAchievements.Unlock(SteamAchievements.Shopper);
+        StageManager.Cleared += OnCleared;
+    }
+
+    // 한 판 클리어 (3장 보스): 난이도별 업적
+    void OnCleared(Difficulty d)
+    {
+        if (d == Difficulty.Easy) SteamAchievements.Unlock(SteamAchievements.UnlockDifficulty);
+        if (d == Difficulty.Normal) SteamAchievements.Unlock(SteamAchievements.ClearNormal);
+        if (d == Difficulty.Hard) SteamAchievements.Unlock(SteamAchievements.ClearHard);
     }
 
     // ================================================================= 업적 조건
@@ -90,7 +99,9 @@ public class SteamManager : MonoBehaviour
 
     void OnBossDefeated(int stage)
     {
-        SteamAchievements.Unlock(stage == 0 ? SteamAchievements.BossLich : stage == 1 ? SteamAchievements.BossDemon : SteamAchievements.Clear);
+        // 무한 모드의 보스는 스테이지 업적과 상관없음
+        if (!GameMode.IsEndless)
+            SteamAchievements.Unlock(stage == 0 ? SteamAchievements.BossLich : stage == 1 ? SteamAchievements.BossDemon : SteamAchievements.Clear);
         if (bossFight && !bossHit) SteamAchievements.Unlock(SteamAchievements.NoHitBoss);
         if (player != null && player.PlayerHealth > 0f && player.PlayerHealth <= player.PlayerMaxHealth * 0.1f)
             SteamAchievements.Unlock(SteamAchievements.CloseCall);
@@ -133,6 +144,14 @@ public class SteamManager : MonoBehaviour
         SpecialAbilities special = player != null ? player.special : null;
         if (special != null && special.SkillCount >= 3) SteamAchievements.Unlock(SteamAchievements.FullSkills);
         if (special != null && special.Weapons.Count >= 2) SteamAchievements.Unlock(SteamAchievements.Arsenal);
+        if (GameMode.IsEndless)
+        {
+            float s = GameMode.EndlessSeconds;
+            if (s >= 600f) SteamAchievements.Unlock(SteamAchievements.Endless10);
+            if (s >= 1200f) SteamAchievements.Unlock(SteamAchievements.Endless20);
+            if (EndlessMode.Instance != null && EndlessMode.Instance.BossesDefeated >= 5) SteamAchievements.Unlock(SteamAchievements.EndlessBosses);
+            return;
+        }
         if (spawner != null && spawner.stageIndex >= 1) SteamAchievements.Unlock(SteamAchievements.EnterHell);
         if (spawner != null && spawner.stageIndex >= 2) SteamAchievements.Unlock(SteamAchievements.EnterMeadow);
     }
@@ -171,6 +190,12 @@ public static class SteamAchievements
     public const string Kills3000Total = "ACH_KILLS_3000_TOTAL";
     public const string NoHitBoss = "ACH_NO_HIT_BOSS";
     public const string CloseCall = "ACH_CLOSE_CALL";
+    public const string UnlockDifficulty = "ACH_UNLOCK_DIFFICULTY";
+    public const string ClearNormal = "ACH_CLEAR_NORMAL";
+    public const string ClearHard = "ACH_CLEAR_HARD";
+    public const string Endless10 = "ACH_ENDLESS_10";
+    public const string Endless20 = "ACH_ENDLESS_20";
+    public const string EndlessBosses = "ACH_ENDLESS_BOSSES";
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 

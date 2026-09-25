@@ -43,5 +43,17 @@
 		"NEW_ACHIEVEMENT_1_18_DESC"	"Defeat a boss without taking damage"
 		"NEW_ACHIEVEMENT_1_19_NAME"	"Close Call"
 		"NEW_ACHIEVEMENT_1_19_DESC"	"Defeat a boss with 10% HP or less"
+		"NEW_ACHIEVEMENT_1_20_NAME"	"New Challenge"
+		"NEW_ACHIEVEMENT_1_20_DESC"	"Clear Easy to unlock Normal and Hard"
+		"NEW_ACHIEVEMENT_1_21_NAME"	"One Step Further"
+		"NEW_ACHIEVEMENT_1_21_DESC"	"Clear the game on Normal"
+		"NEW_ACHIEVEMENT_1_22_NAME"	"Legend of the Gunslinger"
+		"NEW_ACHIEVEMENT_1_22_DESC"	"Clear the game on Hard"
+		"NEW_ACHIEVEMENT_1_23_NAME"	"Desert Wanderer"
+		"NEW_ACHIEVEMENT_1_23_DESC"	"Survive 10 minutes in Endless"
+		"NEW_ACHIEVEMENT_1_24_NAME"	"Lord of the Desert"
+		"NEW_ACHIEVEMENT_1_24_DESC"	"Survive 20 minutes in Endless"
+		"NEW_ACHIEVEMENT_1_25_NAME"	"Graveyard of Kings"
+		"NEW_ACHIEVEMENT_1_25_DESC"	"Defeat 5 bosses in one Endless run"
 	}
 }

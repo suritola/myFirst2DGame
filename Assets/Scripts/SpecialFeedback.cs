@@ -93,6 +93,17 @@ public class SpecialFeedback : MonoBehaviour
         Make("hum", 1f, (t, d, r) => (Sin(180f, t) * 0.5f + Sin(360f, t) * 0.25f + Sin(540f, t) * 0.1f) * (0.8f + 0.2f * Sin(6f, t)));
         // 완충 띵
         Make("ding", 0.45f, (t, d, r) => (Sin(1318f, t) + Sin(2637f, t) * 0.35f) * Decay(t, d, 2.5f) * 0.7f);
+        // 적 처치: 짧게 떨어지는 퐁 + 푹 터지는 잡음
+        Make("pop", 0.18f, (t, d, r) => (Sin(Mathf.Lerp(420f, 110f, t / d), t) * 0.55f + Noise(r) * 0.35f * Decay(t, 0.05f, 2f)) * Decay(t, d, 2f));
+        // 레벨업: 도 · 미 · 솔 · 도 아르페지오 + 반짝임
+        Make("levelup", 0.7f, (t, d, r) =>
+        {
+            float f = t < 0.08f ? 523f : t < 0.16f ? 659f : t < 0.24f ? 784f : 1047f;
+            float shimmer = t > 0.24f ? Sin(2093f, t) * 0.15f * Sin(9f, t) : 0f;
+            return (Sin(f, t) + Sin(f * 2f, t) * 0.3f + shimmer) * Decay(t, d, 1.3f) * 0.45f;
+        });
+        // 코인 반짝
+        Make("sparkle", 0.22f, (t, d, r) => (t < 0.07f ? Sin(2093f, t) : Sin(2637f, t)) * Decay(t, d, 2f) * 0.25f);
         // 준비 알림 (두 음)
         Make("chime", 0.35f, (t, d, r) => (t < 0.12f ? Sin(880f, t) : Sin(1320f, t)) * Decay(t, d, 1.5f) * 0.5f);
         // 경고 (쿨타임, 부족)

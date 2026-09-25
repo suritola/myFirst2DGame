@@ -24,8 +24,8 @@ public class ESCmenu : MonoBehaviour
         isShopOpen = shop.isShopOpen;
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
-        // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기)
-        if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount) return;
+        // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
+        if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;
         if (isShopOpen)
         {
             shop.isShopOpen = false;
@@ -38,7 +38,7 @@ public class ESCmenu : MonoBehaviour
     // 창이 포커스를 잃으면 (Alt+Tab 등) 일시정지 메뉴를 열어 둠
     void OnApplicationFocus(bool focus)
     {
-        if (focus || isEscOpen || GameInput.Auto || Application.isBatchMode) return;
+        if (focus || isEscOpen || GameInput.Auto || Application.isBatchMode || StoryDirector.Playing) return;
         if (Time.timeScale == 0f || (shop != null && shop.isShopOpen)) return;
         ToggleEsc();
     }

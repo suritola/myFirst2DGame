@@ -397,9 +397,15 @@ public class StoreArtTests
             ("ACH_KILLS_3000_TOTAL", FxAt("fx_slash", 1), new Color(0.4f, 0.05f, 0.1f)),
             ("ACH_NO_HIT_BOSS", FxAt("fx_shock", 2), new Color(0.1f, 0.3f, 0.3f)),
             ("ACH_CLOSE_CALL", Asset("Assets/Sprites/Items/hp_potion.png"), new Color(0.3f, 0.08f, 0.12f)),
+            ("ACH_UNLOCK_DIFFICULTY", FxAt("fx_levelup", 3), new Color(0.25f, 0.14f, 0.38f)),
+            ("ACH_CLEAR_NORMAL", Fx("fx_target_rune"), new Color(0.1f, 0.28f, 0.34f)),
+            ("ACH_CLEAR_HARD", Fx("fx_scythe_ghost"), new Color(0.36f, 0.05f, 0.08f)),
+            ("ACH_ENDLESS_10", Asset("Assets/Resources/Desert/prop_cactus.png"), new Color(0.62f, 0.42f, 0.22f)),
+            ("ACH_ENDLESS_20", Asset("Assets/Resources/Desert/prop_flame_pillar.png"), new Color(0.42f, 0.16f, 0.06f)),
+            ("ACH_ENDLESS_BOSSES", Asset("Assets/Resources/Desert/prop_skull.png"), new Color(0.3f, 0.18f, 0.1f)),
         };
         // 흰 그림은 금색으로 칠함
-        string[] gold = { "ACH_FIRST_ULT", "ACH_EVOLVE", "ACH_LEVEL_10", "ACH_KILLS_500", "ACH_FULL_SKILLS", "ACH_ARSENAL", "ACH_LEVEL_15", "ACH_KILLS_3000_TOTAL", "ACH_NO_HIT_BOSS" };
+        string[] gold = { "ACH_FIRST_ULT", "ACH_EVOLVE", "ACH_LEVEL_10", "ACH_KILLS_500", "ACH_FULL_SKILLS", "ACH_ARSENAL", "ACH_LEVEL_15", "ACH_KILLS_3000_TOTAL", "ACH_NO_HIT_BOSS", "ACH_CLEAR_NORMAL" };
         foreach (var a in ach)
         {
             bg.color = new Color(0.85f, 0.72f, 0.4f);

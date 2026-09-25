@@ -1,0 +1,269 @@
+using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+// 시작 연출 (검은 화면 → 플레이어가 위에서 떨어짐 → 짧은 이야기)과 엔딩 이야기
+// Space · Enter · ESC · 건너뛰기 버튼으로 언제든 건너뜀
+public class StoryDirector : MonoBehaviour
+{
+    public static bool Playing { get; private set; }
+    public static bool EndingPlaying { get; private set; }
+    // 배치 모드(자동 테스트)에서도 연출을 보고 싶을 때
+    public static bool ForceInBatch;
+
+    const float CharTime = 0.035f;
+    const float LineHold = 1.7f;
+
+    static readonly string[] IntroLines =
+    {
+        "리치 왕이 지하 묘역을 깨우자, 죽은 자들이 땅 위로 기어 나왔다.",
+        "마을에 남은 마지막 총잡이는 무너진 신전의 구멍으로 몸을 던졌다.",
+        "리치 왕을 쓰러뜨리면 그 너머 지옥의 문도 열릴 것이다.",
+        "탄창은 가득하다. 이제 세상을 구할 차례다.",
+    };
+
+    static readonly string[] EndlessLines =
+    {
+        "지옥 너머, 모든 괴물이 모여드는 불타는 사막.",
+        "쓰러뜨린 왕들이 몇 번이고 다시 일어선다.",
+        "끝은 없다. 얼마나 버틸 수 있을까?",
+    };
+
+    static readonly string[] EndingLines =
+    {
+        "킹 슬라임이 녹아내리자, 초원에 오랜만에 바람이 불었다.",
+        "리치 왕의 저주도, 지옥 군주의 불길도 모두 꺼졌다.",
+        "총잡이는 마지막 탄피를 주워 모자 띠에 꽂았다.",
+        "살아남은 사람들은 그를 이렇게 불렀다.",
+        "총으로 세상을 구한 자 — Gun Saver.",
+        "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
+    };
+
+    Canvas canvas;
+    Image black;
+    Image shade;
+    TMP_Text body;
+    TMP_Text title;
+    GameObject skipButton;
+    bool skip;
+
+    public static bool ShouldSkipAll => GameInput.Auto || TrailerDirector.Running || (Application.isBatchMode && !ForceInBatch);
+
+    // ================================================================= 시작
+    public static IEnumerator Intro(bool endless)
+    {
+        yield return null;                    // 트레일러 촬영이 켜질 때까지 한 프레임 기다림
+        if (ShouldSkipAll) yield break;
+        StoryDirector d = Create();
+        yield return d.RunIntro(endless);
+        Destroy(d.gameObject);
+    }
+
+    IEnumerator RunIntro(bool endless)
+    {
+        Playing = true;
+        // 게임 시작 때 뜨는 능력 카드 창은 연출이 끝날 때까지 숨김
+        LevelShop shop = Cache<LevelShop>.Get;
+        GameObject cards = shop != null ? shop.LvshopPanel : null;
+        bool cardsWere = cards != null && cards.activeSelf;
+        if (cards != null) cards.SetActive(false);
+        PlayerController player = Hostile.Player;
+        SpriteRenderer[] hidden = player != null ? player.GetComponentsInChildren<SpriteRenderer>() : new SpriteRenderer[0];
+        bool[] wasOn = new bool[hidden.Length];
+        for (int i = 0; i < hidden.Length; i++) { wasOn[i] = hidden[i].enabled; hidden[i].enabled = false; }
+
+        SetAlpha(black, 1f);
+        SetAlpha(shade, 0f);
+
+        // 위에서 떨어지는 가짜 플레이어 + 커지는 그림자
+        GameObject faller = null, shadow = null;
+        Vector3 land = player != null ? player.transform.position : Vector3.zero;
+        SpriteRenderer main = player != null ? player.GetComponent<SpriteRenderer>() : null;
+        if (main != null)
+        {
+            faller = new GameObject("IntroFaller");
+            SpriteRenderer fr = faller.AddComponent<SpriteRenderer>();
+            fr.sprite = main.sprite;
+            fr.sortingLayerID = main.sortingLayerID;
+            fr.sortingOrder = main.sortingOrder + 5;
+            faller.transform.localScale = player.transform.lossyScale;
+            shadow = new GameObject("IntroShadow");
+            SpriteRenderer sh = shadow.AddComponent<SpriteRenderer>();
+            sh.sprite = SpecialAbilities.GlowSprite;
+            sh.color = new Color(0f, 0f, 0f, 0.5f);
+            sh.sortingLayerID = main.sortingLayerID;
+            sh.sortingOrder = main.sortingOrder - 1;
+            shadow.transform.position = land + new Vector3(0f, -0.9f, 0f);
+        }
+
+        // 1) 검은 화면이 걷히며 떨어짐 (게임 시간은 흐르되 적 생성 · 조작은 멈춤)
+        const float fallFrom = 13f, fadeTime = 0.9f, fallTime = 0.75f;
+        for (float t = 0f; t < fadeTime + fallTime && !skip; t += Time.unscaledDeltaTime)
+        {
+            SetAlpha(black, 1f - Mathf.Clamp01(t / fadeTime));
+            float k = Mathf.Clamp01((t - fadeTime * 0.4f) / fallTime);
+            if (faller != null) faller.transform.position = land + new Vector3(0f, fallFrom * (1f - k * k), 0f);
+            if (shadow != null) shadow.transform.localScale = new Vector3(1.6f, 0.5f, 1f) * Mathf.Lerp(0.2f, 1f, k);
+            yield return null;
+        }
+        SetAlpha(black, 0f);
+        if (faller != null) Destroy(faller);
+        if (shadow != null) Destroy(shadow);
+        for (int i = 0; i < hidden.Length; i++) if (hidden[i] != null) hidden[i].enabled = wasOn[i];
+
+        // 착지: 먼지 · 흔들림 · 쿵
+        if (!skip)
+        {
+            Fx.Play("fx_smoke", land + new Vector3(0f, -0.7f, 0f), 3.2f, new Color(0.85f, 0.8f, 0.72f, 0.9f), 18f);
+            Fx.Play("fx_shock", land + new Vector3(0f, -0.8f, 0f), 4f, new Color(1f, 0.9f, 0.7f, 0.7f), 20f);
+            Hostile.Shake(0.45f);
+            Hostile.Play("thump", 1f, 0.8f);
+            for (float t = 0f; t < 0.6f && !skip; t += Time.unscaledDeltaTime) yield return null;
+        }
+
+        // 2) 이야기 (시간을 멈추고 글자가 한 줄씩)
+        if (!skip)
+        {
+            float before = Time.timeScale;
+            Time.timeScale = 0f;
+            yield return Fade(shade, 0f, 0.78f, 0.4f);
+            yield return Lines(endless ? EndlessLines : IntroLines);
+            yield return Fade(shade, GetAlpha(shade), 0f, 0.4f);
+            Time.timeScale = before;         // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
+        }
+        if (cards != null && cardsWere) cards.SetActive(true);
+        Playing = false;
+    }
+
+    // ================================================================= 엔딩
+    public static IEnumerator Ending(Difficulty cleared, string opened)
+    {
+        StoryDirector d = Create();
+        yield return d.RunEnding(cleared, opened);
+    }
+
+    IEnumerator RunEnding(Difficulty cleared, string opened)
+    {
+        Playing = true;
+        EndingPlaying = true;
+        Time.timeScale = 0f;
+        SetAlpha(black, 0f);
+        SetAlpha(shade, 0f);
+        yield return Fade(black, 0f, 1f, 1.5f);
+        if (!skip) yield return Lines(EndingLines);
+
+        // 마무리: 클리어 · 새로 열린 난이도 · 인사
+        skip = false;
+        title.text = GameMode.Name(cleared) + " " + Loc.T("클리어!");
+        string sub = opened != null ? Loc.T("새 난이도 해금: ") + Loc.T(opened) + "\n\n" : "";
+        body.text = sub + Loc.T("플레이해 주셔서 고맙습니다!");
+        yield return Fade(title, 0f, 1f, 0.6f);
+        for (float t = 0f; t < 4f && !skip; t += Time.unscaledDeltaTime) yield return null;
+
+        Time.timeScale = 1f;
+        Playing = false;
+        EndingPlaying = false;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    // ================================================================= 공통
+    IEnumerator Lines(string[] lines)
+    {
+        foreach (string line in lines)
+        {
+            string text = Loc.T(line);
+            body.text = text;
+            body.maxVisibleCharacters = 0;
+            for (int n = 0; n <= text.Length && !skip; n++)
+            {
+                body.maxVisibleCharacters = n;
+                if (n % 3 == 0 && n < text.Length && text[n] != ' ') Hostile.Play("pew", 0.12f, 2.2f);
+                float until = Time.unscaledTime + CharTime;
+                while (Time.unscaledTime < until && !skip) yield return null;
+            }
+            body.maxVisibleCharacters = 99999;
+            for (float t = 0f; t < LineHold && !skip; t += Time.unscaledDeltaTime) yield return null;
+            if (skip) yield break;
+        }
+        body.text = "";
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape)) skip = true;
+    }
+
+    void OnDestroy()
+    {
+        if (!EndingPlaying) Playing = false;
+    }
+
+    static StoryDirector Create()
+    {
+        GameObject go = new GameObject("StoryDirector", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        StoryDirector d = go.AddComponent<StoryDirector>();
+        d.canvas = go.GetComponent<Canvas>();
+        d.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        d.canvas.sortingOrder = 31000;     // 게임 UI(능력 카드 등)보다 항상 위
+        CanvasScaler cs = go.GetComponent<CanvasScaler>();
+        cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        cs.referenceResolution = new Vector2(1920f, 1080f);
+        cs.matchWidthOrHeight = 0.5f;
+        UIKit.EnsureStyle();
+
+        d.shade = FullImage(go.transform, "Shade", new Color(0.02f, 0.01f, 0.03f, 0f));
+        d.black = FullImage(go.transform, "Black", new Color(0f, 0f, 0f, 0f));
+
+        d.title = UIKit.Text(go.transform, "", 64f, new Color(0.96f, 0.83f, 0.47f, 0f), new Vector2(0f, 120f), new Vector2(1400f, 100f));
+        d.body = UIKit.Text(go.transform, "", 40f, new Color(0.95f, 0.91f, 0.84f), new Vector2(0f, -40f), new Vector2(1500f, 240f));
+        d.body.enableAutoSizing = false;
+        d.body.fontSize = 40f;
+        d.body.enableWordWrapping = true;
+
+        // 오른쪽 아래: 건너뛰기 버튼 + 키 안내
+        Button b = UIKit.MakeButton(go.transform, "건너뛰기", Vector2.zero, new Vector2(230f, 64f), () => d.skip = true, 26f);
+        RectTransform br = (RectTransform)b.transform;
+        br.anchorMin = br.anchorMax = new Vector2(1f, 0f);
+        br.anchoredPosition = new Vector2(-150f, 70f);
+        RectTransform hint = UIKit.Text(go.transform, "Space / Enter / ESC", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(260f, 30f)).rectTransform;
+        hint.anchorMin = hint.anchorMax = new Vector2(1f, 0f);
+        hint.anchoredPosition = new Vector2(-150f, 120f);
+        d.skipButton = b.gameObject;
+        return d;
+    }
+
+    static Image FullImage(Transform parent, string name, Color c)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(parent, false);
+        r.anchorMin = Vector2.zero;
+        r.anchorMax = Vector2.one;
+        r.offsetMin = r.offsetMax = Vector2.zero;
+        Image img = go.GetComponent<Image>();
+        img.color = c;
+        img.raycastTarget = true;       // 연출 중에는 뒤쪽 클릭을 막음
+        return img;
+    }
+
+    IEnumerator Fade(Graphic g, float from, float to, float time)
+    {
+        for (float t = 0f; t < time && !skip; t += Time.unscaledDeltaTime)
+        {
+            SetAlpha(g, Mathf.Lerp(from, to, t / time));
+            yield return null;
+        }
+        SetAlpha(g, to);
+    }
+
+    static void SetAlpha(Graphic g, float a)
+    {
+        Color c = g.color;
+        c.a = a;
+        g.color = c;
+    }
+
+    static float GetAlpha(Graphic g) => g.color.a;
+}

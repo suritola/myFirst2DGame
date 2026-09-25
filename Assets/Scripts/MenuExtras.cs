@@ -14,6 +14,26 @@ public static class MenuExtras
         Scene scene = SceneManager.GetActiveScene();
         if (scene.name == "MainMenu") InstallMainMenu();
         else if (scene.name == "GameScene") InstallEsc();
+        else if (scene.name == "GameOver") InstallGameOver();
+    }
+
+    // 무한 모드에서 쓰러지면 생존 시간 · 보스 처치 수 · 최고 기록
+    static void InstallGameOver()
+    {
+        if (EndlessMode.LastSeconds < 0f) return;
+        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        if (canvas != null)
+        {
+            UIKit.EnsureStyle();
+            string text = Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
+                        + "\n" + Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds);
+            TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, 110f));
+            t.text = text;
+            RectTransform r = t.rectTransform;
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+            r.anchoredPosition = new Vector2(0f, -120f);
+        }
+        EndlessMode.LastSeconds = -1f;
     }
 
     static void InstallMainMenu()
@@ -37,6 +57,49 @@ public static class MenuExtras
             r.anchoredPosition = new Vector2(r.anchoredPosition.x, ys[i]);
             r.sizeDelta = new Vector2(r.sizeDelta.x, 94f);
         }
+
+        InstallDifficulty(sr);
+    }
+
+    // 게임 시작 버튼 위: 쉬움 · 보통 · 어려움 · 무한 (잠긴 난이도는 회색, 누를 수 없음)
+    static void InstallDifficulty(RectTransform start)
+    {
+        Transform parent = start.parent;
+        List<Button> buttons = new List<Button>();
+        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), start.anchoredPosition + new Vector2(0f, 72f), new Vector2(900f, 26f));
+        for (int i = 0; i < 4; i++)
+        {
+            Difficulty d = (Difficulty)i;
+            Button b = UIKit.MakeButton(parent, GameMode.Names[i], start.anchoredPosition + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
+            {
+                GameMode.Current = d;
+                HighlightDifficulty(buttons, hint);
+            }, 26f);
+            b.name = "Difficulty_" + d;
+            buttons.Add(b);
+        }
+        HighlightDifficulty(buttons, hint);
+    }
+
+    static void HighlightDifficulty(List<Button> buttons, TMP_Text hint)
+    {
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            Difficulty d = (Difficulty)i;
+            bool open = GameMode.IsUnlocked(d), on = open && GameMode.Current == d;
+            buttons[i].interactable = open;
+            Image img = buttons[i].GetComponent<Image>();
+            img.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.6f, 0.58f, 0.65f) : new Color(0.25f, 0.24f, 0.28f, 0.8f);
+            buttons[i].transform.localScale = Vector3.one * (on ? 1.08f : 1f);
+            TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
+            label.color = open ? new Color(0.96f, 0.9f, 0.8f) : new Color(0.55f, 0.52f, 0.5f);
+        }
+        // 잠긴 난이도가 있으면 여는 방법을 알려 줌
+        string text = !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
+                    : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
+                    : "";
+        hint.text = Loc.T(text);
+        UIKit.Remember(hint, text);
     }
 
     static void InstallEsc()
@@ -104,7 +167,7 @@ public static class UIKit
         };
     }
 
-    static void EnsureStyle()
+    public static void EnsureStyle()
     {
         if (Font != null && ButtonSprite != null) return;
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))

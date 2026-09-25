@@ -7,7 +7,7 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 | 항목 | 위치 |
 |---|---|
 | Steamworks.NET 연동 (초기화 · 콜백 · 스팀 밖 실행 시 스팀으로 재실행) | `Assets/Scripts/SteamManager.cs`, `Packages/manifest.json` |
-| 업적 20개 (코드 연결 + 4개 언어 이름 · 설명 + 아이콘) | [achievements.md](achievements.md), `art/achievements/` |
+| 업적 26개 (코드 연결 + 4개 언어 이름 · 설명 + 아이콘) | [achievements.md](achievements.md), `art/achievements/` |
 | 스팀용 빌드와 GitHub용 빌드 분리 (`-steam`일 때만 연동, 아니면 `DISABLESTEAMWORKS`) | `Assets/Editor/BuildScript.cs` |
 | 게임 아이콘 (실행 파일 · 작업 표시줄) | `Assets/Art/Icon/GunSaverIcon.png` |
 | SteamPipe 업로드 스크립트 | `tools/steam-upload.ps1`, `tools/steam/steam-config.json` |
@@ -29,7 +29,7 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 ### 3. Steamworks 설정 (partner.steamgames.com)
 - [ ] **SteamPipe → 디포**: 디포 1개 (Windows, 모든 언어)
 - [ ] **설치 → 일반**: 실행 옵션 — 실행 파일 `Gun Saver.exe`, OS Windows, 64비트
-- [ ] **스탯 및 업적**: [achievements.md](achievements.md) 대로 20개 만들고 **게시**
+- [ ] **스탯 및 업적**: [achievements.md](achievements.md) 대로 26개 만들고 **게시**
 - [ ] **상점 페이지**: [store-page.md](store-page.md) 글, `art/` 이미지 올리기
 - [ ] **가격** 정하기 · **출시일** 정하기
 - [ ] **콘텐츠 설문 / 연령 등급** (폭력성: 판타지 몬스터와의 전투, 피 표현 약함)

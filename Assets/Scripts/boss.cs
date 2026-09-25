@@ -58,6 +58,12 @@ public class bosss : MonoBehaviour
     static int gen3Spawned;
     const int Gen2Hp = 1100;
     const int Gen3Hp = 500;
+    // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
+    static float slimeMul = 1f;
+    static int gen1Max = 2600;
+    static int ScaledHp(int hp) => Mathf.RoundToInt(hp * slimeMul);
+    // 난이도 배율을 이미 적용했는지 (분열 복제에는 적용된 값이 넘어감)
+    [HideInInspector] public bool difficultyApplied;
     bool IsSlime => bossKind == 2;
 
     // 남은 체력 합계 (아직 분열하지 않은 몫 포함)
@@ -71,8 +77,8 @@ public class bosss : MonoBehaviour
             sum += Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
             if (s.slimeGen == 1) gen1Alive = true;
         }
-        if (gen1Alive) sum += 2 * Gen2Hp;
-        sum += (3 - gen3Spawned) * Gen3Hp;
+        if (gen1Alive) sum += 2 * ScaledHp(Gen2Hp);
+        sum += (3 - gen3Spawned) * ScaledHp(Gen3Hp);
         return sum;
     }
 
@@ -86,7 +92,7 @@ public class bosss : MonoBehaviour
             clone.transform.localScale = transform.localScale * 0.75f;
             bosss b = clone.GetComponent<bosss>();
             b.slimeGen = slimeGen + 1;
-            b.setEnemyHP = slimeGen == 1 ? Gen2Hp : Gen3Hp;
+            b.setEnemyHP = ScaledHp(slimeGen == 1 ? Gen2Hp : Gen3Hp);
             b.EnemyHealth = b.setEnemyHP;
             b.casting = false;
             b.coinDrop = slimeGen == 1 ? 15 : 10;
@@ -110,6 +116,15 @@ public class bosss : MonoBehaviour
 
     void Start()
     {
+        if (!difficultyApplied)
+        {
+            difficultyApplied = true;
+            if (IsSlime && slimeGen == 1) slimeMul = GameMode.BossHpMul;
+            setEnemyHP = Mathf.RoundToInt(setEnemyHP * GameMode.BossHpMul);
+            expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
+            coinDrop = Mathf.RoundToInt(coinDrop * GameMode.RewardMul);
+            if (IsSlime && slimeGen == 1) gen1Max = setEnemyHP;
+        }
         EnemyHealth = setEnemyHP;
 
         // 플레이어 찾기
@@ -144,7 +159,7 @@ public class bosss : MonoBehaviour
         bossbar.bossKind = bossKind;
         if (IsSlime)
         {
-            bossbar.MaxHealth = 2600 + 2 * Gen2Hp + 3 * Gen3Hp;
+            bossbar.MaxHealth = gen1Max + 2 * ScaledHp(Gen2Hp) + 3 * ScaledHp(Gen3Hp);
             bossbar.NowHealth = SlimeRemaining();
         }
         else
@@ -266,6 +281,7 @@ public class bosss : MonoBehaviour
 
     IEnumerator LevelUpSequence(LevelShop levelS)
     {
+        if (playerC != null) Juice.LevelUp(playerC.transform.position);
         levelS.toggleLevelUp();
 
 

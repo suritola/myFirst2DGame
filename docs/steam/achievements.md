@@ -1,6 +1,6 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 20개를 만듭니다.
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 26개를 만듭니다.
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
 - 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256)
@@ -30,6 +30,12 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_3000_TOTAL` | **전설의 사냥꾼** — 누적 적 3000마리를 처치했다 | **Legendary Hunter** — Defeat 3,000 enemies in total | **伝説の狩人** — 累計で敵を3000体倒した | **传奇猎手** — 累计击败3000个敌人 |
 | `ACH_NO_HIT_BOSS` | **완벽한 결투** — 피해를 받지 않고 보스를 쓰러뜨렸다 | **Flawless Duel** — Defeat a boss without taking damage | **完璧な決闘** — ダメージを受けずにボスを倒した | **完美对决** — 无伤击败首领 |
 | `ACH_CLOSE_CALL` | **구사일생** — 체력 10% 이하로 보스를 쓰러뜨렸다 | **Close Call** — Defeat a boss with 10% HP or less | **九死に一生** — 体力10%以下でボスを倒した | **九死一生** — 以10%以下的生命值击败首领 |
+| `ACH_UNLOCK_DIFFICULTY` | **새로운 도전** — 쉬움을 클리어해 보통 · 어려움을 열었다 | **New Challenge** — Clear Easy to unlock Normal and Hard | **新たな挑戦** — イージーをクリアしてノーマル · ハードを解放した | **新的挑战** — 通关简单难度，解锁普通和困难 |
+| `ACH_CLEAR_NORMAL` | **한 걸음 더** — 보통 난이도를 클리어했다 | **One Step Further** — Clear the game on Normal | **さらに一歩** — ノーマルをクリアした | **更进一步** — 通关普通难度 |
+| `ACH_CLEAR_HARD` | **총잡이의 전설** — 어려움 난이도를 클리어했다 | **Legend of the Gunslinger** — Clear the game on Hard | **ガンマンの伝説** — ハードをクリアした | **枪手传说** — 通关困难难度 |
+| `ACH_ENDLESS_10` | **사막의 방랑자** — 무한 모드에서 10분 동안 살아남았다 | **Desert Wanderer** — Survive 10 minutes in Endless | **砂漠の放浪者** — エンドレスで10分間生き延びた | **沙漠流浪者** — 在无尽模式中存活10分钟 |
+| `ACH_ENDLESS_20` | **사막의 주인** — 무한 모드에서 20분 동안 살아남았다 | **Lord of the Desert** — Survive 20 minutes in Endless | **砂漠の主** — エンドレスで20分間生き延びた | **沙漠之主** — 在无尽模式中存活20分钟 |
+| `ACH_ENDLESS_BOSSES` | **왕들의 무덤** — 무한 모드 한 판에서 보스 5마리를 쓰러뜨렸다 | **Graveyard of Kings** — Defeat 5 bosses in one Endless run | **王たちの墓場** — エンドレス1回でボスを5体倒した | **王者之墓** — 单局无尽模式击败5个首领 |
 
 ## 풀리는 조건 (코드 기준)
 
@@ -50,6 +56,9 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_3000_TOTAL` | 여러 판 누적 처치 수 3000 |
 | `ACH_NO_HIT_BOSS` | 스테이지 보스가 나온 뒤 쓰러질 때까지 체력이 한 번도 줄지 않음 |
 | `ACH_CLOSE_CALL` | 스테이지 보스를 쓰러뜨린 순간 체력이 최대의 10% 이하 |
+| `ACH_UNLOCK_DIFFICULTY` / `ACH_CLEAR_NORMAL` / `ACH_CLEAR_HARD` | 쉬움 / 보통 / 어려움에서 3장 보스(킹 슬라임) 처치 |
+| `ACH_ENDLESS_10` / `ACH_ENDLESS_20` | 무한 모드 한 판에서 10분 / 20분 생존 (일시정지 시간은 빼고) |
+| `ACH_ENDLESS_BOSSES` | 무한 모드 한 판에서 보스 5마리 처치 |
 
 ## Steamworks 현지화 파일
 

@@ -67,8 +67,19 @@ public class EnermyController : MonoBehaviour
     private CircleCollider2D bodyCollider;
     private static readonly Collider2D[] nearby = new Collider2D[24];
 
+    // 난이도 배율을 이미 적용했는지 (복제돼도 두 번 곱하지 않게)
+    [HideInInspector] public bool difficultyApplied;
+
     void Start()
     {
+        if (!difficultyApplied)
+        {
+            difficultyApplied = true;
+            setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * GameMode.EnemyHpMul));
+            speed *= GameMode.EnemySpeedMul;
+            expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
+            coinDrop = Mathf.Max(coinDrop, Mathf.RoundToInt(coinDrop * GameMode.RewardMul));
+        }
         EnemyHealth = setEnemyHP;
         bodyCollider = GetComponent<CircleCollider2D>();
 
@@ -259,6 +270,7 @@ public class EnermyController : MonoBehaviour
         isDead = true;
         if (a == 1) Killed?.Invoke(transform.position);
         if (a == 1) onKilled?.Invoke();
+        if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
         spriteRenderer.color = baseColor;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음
@@ -292,6 +304,7 @@ public class EnermyController : MonoBehaviour
 
     IEnumerator LevelUpSequence(LevelShop levelS)
     {
+        if (playerC != null) Juice.LevelUp(playerC.transform.position);
         levelS.toggleLevelUp();
 
 

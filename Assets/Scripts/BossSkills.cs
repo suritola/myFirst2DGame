@@ -39,7 +39,7 @@ public class BossSkills : MonoBehaviour
         // 체력 절반 아래: 특수 스킬 (처음 한 번은 바로)
         if (boss.Enraged && Time.time >= nextSpecial)
         {
-            nextSpecial = Time.time + 16f;
+            nextSpecial = Time.time + 16f * GameMode.SkillCooldownMul;
             string name = kind == 0 ? Loc.T("리치 왕이 망자의 의식을 시작한다!") : kind == 1 ? Loc.T("지옥의 군주가 십자 불길을 내뿜는다!") : Loc.T("킹 슬라임이 미친 듯이 뛰어오른다!");
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
             StartCoroutine(Run(kind == 0 ? DeathVortex() : kind == 1 ? HellCross() : SlimeFrenzy()));
@@ -47,7 +47,7 @@ public class BossSkills : MonoBehaviour
         }
 
         if (Time.time < next) return;
-        next = Time.time + (boss.Enraged ? 3.2f : 4.5f);
+        next = Time.time + (boss.Enraged ? 3.2f : 4.5f) * GameMode.SkillCooldownMul;
         step = (step + 1) % 3;
         IEnumerator skill = kind == 0
             ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : BoneSpears(p))

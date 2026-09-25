@@ -4782,7 +4782,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gaugeImage: {fileID: 1351379409}
   SkillPoint: 0
-  MaxSkillPoint: 25
+  MaxSkillPoint: 40
 --- !u!114 &1351379409
 MonoBehaviour:
   m_ObjectHideFlags: 0

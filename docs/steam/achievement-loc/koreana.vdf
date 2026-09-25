@@ -43,5 +43,17 @@
 		"NEW_ACHIEVEMENT_1_18_DESC"	"피해를 받지 않고 보스를 쓰러뜨렸다"
 		"NEW_ACHIEVEMENT_1_19_NAME"	"구사일생"
 		"NEW_ACHIEVEMENT_1_19_DESC"	"체력 10% 이하로 보스를 쓰러뜨렸다"
+		"NEW_ACHIEVEMENT_1_20_NAME"	"새로운 도전"
+		"NEW_ACHIEVEMENT_1_20_DESC"	"쉬움을 클리어해 보통 · 어려움을 열었다"
+		"NEW_ACHIEVEMENT_1_21_NAME"	"한 걸음 더"
+		"NEW_ACHIEVEMENT_1_21_DESC"	"보통 난이도를 클리어했다"
+		"NEW_ACHIEVEMENT_1_22_NAME"	"총잡이의 전설"
+		"NEW_ACHIEVEMENT_1_22_DESC"	"어려움 난이도를 클리어했다"
+		"NEW_ACHIEVEMENT_1_23_NAME"	"사막의 방랑자"
+		"NEW_ACHIEVEMENT_1_23_DESC"	"무한 모드에서 10분 동안 살아남았다"
+		"NEW_ACHIEVEMENT_1_24_NAME"	"사막의 주인"
+		"NEW_ACHIEVEMENT_1_24_DESC"	"무한 모드에서 20분 동안 살아남았다"
+		"NEW_ACHIEVEMENT_1_25_NAME"	"왕들의 무덤"
+		"NEW_ACHIEVEMENT_1_25_DESC"	"무한 모드 한 판에서 보스 5마리를 쓰러뜨렸다"
 	}
 }

@@ -29,7 +29,7 @@ public class SkillGauge : MonoBehaviour
         PlayerController p = Hostile.Player;
         // 멈췄을 때나 스킬을 쓰는 중에는 차지 않음
         if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;
-        AddSkillPoint(pointsPerSecond * (Boosted ? killBoost : 1f) * Time.deltaTime);
+        AddSkillPoint(pointsPerSecond * GameMode.GaugeMul * (Boosted ? killBoost : 1f) * Time.deltaTime);
     }
 
     void Start()
