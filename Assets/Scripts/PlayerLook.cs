@@ -15,6 +15,10 @@ public class PlayerLook : MonoBehaviour
     readonly System.Collections.Generic.Dictionary<string, Sprite> noGun = new System.Collections.Generic.Dictionary<string, Sprite>();
     Vector2 aim = Vector2.right;
     float kick, kickAngle;        // 반동: 뒤로 밀린 거리 · 들린 각도 (점점 돌아옴)
+    // 검사 평타: 검을 위→아래(또는 아래→위)로 크게 휘두른 뒤 제자리로
+    const float SwingTime = 0.12f, SwingBack = 0.22f, SwingArc = 85f;
+    float swingT = 99f;
+    float swingSign = 1f;
 
     // 무기마다: 반동 거리, 들리는 각도, 손에서 총구까지 길이
     static float Recoil(int id) => id == -1 ? BaseRecoil() : id switch
@@ -30,7 +34,7 @@ public class PlayerLook : MonoBehaviour
     };
     static float BaseLift() => CharacterData.Selected switch
     {
-        CharacterId.Swordsman => 120f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f, _ => 8f,
+        CharacterId.Swordsman => 0f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f, _ => 8f,
     };
 
     static float Lift(int id) => id == -1 ? BaseLift() : id switch
@@ -99,12 +103,39 @@ public class PlayerLook : MonoBehaviour
         kickAngle = Mathf.MoveTowards(kickAngle, 0f, dt * 260f);
 
         bool left = aim.x < 0f;
-        float angle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg + (left ? -kickAngle : kickAngle);
+        float swing = SwingOffset(dt, out float grow);
+        float angle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg + (left ? -(kickAngle + swing) : kickAngle + swing);
         Vector3 hand = new Vector3(left ? -0.35f : 0.35f, -0.55f, 0f);
         held.transform.localPosition = hand - (Vector3)(aim * kick);
         held.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+        held.transform.localScale = Vector3.one * grow;
         held.flipY = left;                           // 왼쪽을 볼 때 무기가 뒤집히지 않게
         held.color = body.color;                     // 피격 깜빡임을 몸과 같이
+    }
+
+    // 휘두르는 중이면 겨눈 방향에서 벗어난 각도, 휘두르는 순간 검이 조금 커짐
+    float SwingOffset(float dt, out float grow)
+    {
+        grow = 1f;
+        if (swingT > SwingTime + SwingBack) return 0f;
+        swingT += dt;
+        if (swingT < SwingTime)
+        {
+            float k = swingT / SwingTime;
+            k = 1f - (1f - k) * (1f - k);                  // 처음에 빠르게
+            grow = 1f + 0.5f * Mathf.Sin(k * Mathf.PI);
+            return swingSign * Mathf.Lerp(SwingArc, -SwingArc, k);
+        }
+        float b = Mathf.Clamp01((swingT - SwingTime) / SwingBack);
+        return swingSign * Mathf.Lerp(-SwingArc, 0f, Mathf.SmoothStep(0f, 1f, b));
+    }
+
+    // 검사 평타: alt 이면 아래→위로
+    public static void Swing(bool alt)
+    {
+        if (Instance == null) return;
+        Instance.swingT = 0f;
+        Instance.swingSign = alt ? 1f : -1f;
     }
 
     // 총구 끝 (들고 있는 무기 그림의 앞쪽 끝): 총알도 여기서 나감
@@ -173,6 +204,8 @@ public class PlayerLook : MonoBehaviour
                 FlameParticle.Spawn(Hostile.Glow, tip, aim * 4f, 0.25f, 0.08f, 0.02f, false);
                 break;
             default:
+                // 탄피는 총만 (다른 캐릭터의 검 · 표창 · 활 · 플라스크와 그 특수 무기는 없음)
+                if (id >= 20 || (id == -1 && !CharacterData.IsGunner)) break;
                 Eject(new Color(0.95f, 0.8f, 0.4f));
                 break;
         }

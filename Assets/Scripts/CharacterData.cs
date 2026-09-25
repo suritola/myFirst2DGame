@@ -31,15 +31,15 @@ public static class CharacterData
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
-            weapon = "장검", attack = "앞으로 뻗어 나가는 검기 (관통)",
+            weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
             hp = 1.2f, damage = 1.5f, attackSpeed = 0.5f, gauge = 1f, range = 12f, price = 0, pool = Range(20, 8),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
             name = "도적", title = "그림자 칼날", body = "rogue", held = "shuriken",
-            description = "약하지만 빠른 표창 세례와 은신으로 싸우는 암살자.",
+            description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
-            skill = "은신", skillDesc = "즉시 몸을 숨깁니다. 적이 놓치고, 이동 속도 +60% · 공격 속도 +20%",
+            skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발)",
             hp = 0.8f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, price = 0, pool = Range(28, 8),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {

@@ -174,12 +174,12 @@ public partial class SpecialAbilities
         {
             case KitGreatsword:
                 {
-                    float range = evo ? 5f : 4.2f;
+                    float range = evo ? 15f : 13f;
                     fx.SetCone(previewCone, player.transform.position, dir, 75f, range, new Color(col.r, col.g, col.b, 0.35f), 0.08f);
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
                     DamageArc(player.transform.position, dir, range, 75f, WDamage * (evo ? 3f : 2.2f), 2.5f);
-                    Fx.Play("fx_swordwave", player.transform.position + (Vector3)(dir * range * 0.55f), range * 1.4f, Color.white, 20f, rot, 15);
+                    Fx.Play("fx_swordswing", player.transform.position, range * 2.03f, new Color(1f, 0.85f, 0.6f), 24f, rot, 15);
                     fx.Play("slash", 0.9f, 0.7f);
                     break;
                 }

@@ -153,7 +153,9 @@ public static class CharacterUI
         Stat(dr, "공격력", d.damage, unlocked, ref y);
         Stat(dr, "공격 속도", d.attackSpeed, unlocked, ref y);
         StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), unlocked, ref y);
-        Stat(dr, "스킬 게이지", d.gauge, unlocked, ref y);
+        // 스킬 게이지는 높을수록 늦게 참 (거너보다 높으면 빨강)
+        UIKit.Text(dr, "높을수록 늦게 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(-40f, y - 22f), new Vector2(200f, 20f), TextAlignmentOptions.Left);
+        Stat(dr, "스킬 게이지", d.gauge, unlocked, ref y, true);
         Stat(dr, "이동 속도", d.move, unlocked, ref y);
         y -= 10f;
         Info(dr, "기본 무기", unlocked ? Loc.T(d.weapon) + " — " + Loc.T(d.attack) : "???", ref y);
@@ -204,8 +206,9 @@ public static class CharacterUI
     }
 
     // 스탯 한 줄: 이름 · 막대(거너 = 절반) · 퍼센트
-    static void Stat(RectTransform parent, string ko, float value, bool known, ref float y)
+    static void Stat(RectTransform parent, string ko, float value, bool known, ref float y, bool lowerIsBetter = false)
     {
+        float good = lowerIsBetter ? 2f - value : value;
         UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
         RectTransform bg = UIKit.Rect("Bar", parent, new Vector2(300f, y), new Vector2(420f, 18f));
         bg.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.18f, 0.25f);
@@ -215,7 +218,7 @@ public static class CharacterUI
             RectTransform fill = UIKit.Rect("Fill", bg, Vector2.zero, Vector2.zero);
             fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(k, 1f);
             fill.offsetMin = fill.offsetMax = Vector2.zero;
-            Color c = value > 1.01f ? new Color(0.5f, 0.9f, 0.5f) : value < 0.99f ? new Color(0.95f, 0.5f, 0.45f) : Gold;
+            Color c = good > 1.01f ? new Color(0.5f, 0.9f, 0.5f) : good < 0.99f ?new Color(0.95f, 0.5f, 0.45f) : Gold;
             fill.gameObject.AddComponent<Image>().color = c;
             // 거너 기준선
             RectTransform mark = UIKit.Rect("Base", bg, Vector2.zero, new Vector2(3f, 26f));

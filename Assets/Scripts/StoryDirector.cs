@@ -41,6 +41,82 @@ public class StoryDirector : MonoBehaviour
         "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
     };
 
+
+    // 캐릭터마다 다른 시작 · 엔딩 이야기 (거너는 위의 기본 이야기)
+    static string[] IntroFor(CharacterId id) => id switch
+    {
+        CharacterId.Swordsman => new[]
+        {
+            "리치 왕이 지하 묘역을 깨우자, 죽은 자들이 땅 위로 기어 나왔다.",
+            "떠돌이 기사는 녹슨 장검 한 자루를 등에 메고 무너진 신전 앞에 섰다.",
+            "총알은 떨어져도, 칼날은 떨어지지 않는다.",
+            "기사는 망설임 없이 어둠 속으로 뛰어내렸다.",
+        },
+        CharacterId.Rogue => new[]
+        {
+            "리치 왕이 지하 묘역을 깨우자, 죽은 자들이 땅 위로 기어 나왔다.",
+            "그림자 칼날이라 불리는 도적은 신전 지하에 잠든 보물 이야기를 들었다.",
+            "망자든 악마든, 등을 보인 놈부터 쓰러진다.",
+            "도적은 소리 없이 구멍 아래로 몸을 날렸다.",
+        },
+        CharacterId.Archer => new[]
+        {
+            "리치 왕이 지하 묘역을 깨우자, 죽은 자들이 땅 위로 기어 나왔다.",
+            "숲의 사냥꾼은 죽은 짐승들이 숲을 떠나 신전으로 향하는 것을 보았다.",
+            "흔적을 따라가자, 무너진 신전의 구멍이 나타났다.",
+            "화살통은 가득하다. 이번 사냥감은 리치 왕이다.",
+        },
+        CharacterId.Alchemist => new[]
+        {
+            "리치 왕이 지하 묘역을 깨우자, 죽은 자들이 땅 위로 기어 나왔다.",
+            "미친 학자는 오히려 기뻤다. 되살아난 시체라니, 이렇게 좋은 재료가 또 있을까.",
+            "플라스크를 허리춤에 가득 채우고, 학자는 신전의 구멍으로 뛰어들었다.",
+            "“자, 실험을 시작하지.”",
+        },
+        _ => IntroLines,
+    };
+
+    static string[] EndingFor(CharacterId id) => id switch
+    {
+        CharacterId.Swordsman => new[]
+        {
+            "킹 슬라임이 녹아내리자, 초원에 오랜만에 바람이 불었다.",
+            "리치 왕의 저주도, 지옥 군주의 불길도 모두 꺼졌다.",
+            "기사는 이 빠진 장검을 닦아 칼집에 꽂았다.",
+            "사람들은 총 한 자루 없이 세상을 구한 기사를 신기한 듯 바라보았다.",
+            "“총이 아니어도 괜찮다. 지킬 수만 있다면.”",
+            "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
+        },
+        CharacterId.Rogue => new[]
+        {
+            "킹 슬라임이 녹아내리자, 초원에 오랜만에 바람이 불었다.",
+            "리치 왕의 저주도, 지옥 군주의 불길도 모두 꺼졌다.",
+            "도적은 리치 왕의 왕관을 슬쩍 품에 넣었다.",
+            "영웅의 이름을 물었을 때, 도적은 이미 그림자 속으로 사라진 뒤였다.",
+            "다음 날, 왕궁의 보물 창고가 텅 비었다는 소문이 돌았다.",
+            "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
+        },
+        CharacterId.Archer => new[]
+        {
+            "킹 슬라임이 녹아내리자, 초원에 오랜만에 바람이 불었다.",
+            "리치 왕의 저주도, 지옥 군주의 불길도 모두 꺼졌다.",
+            "사냥꾼은 마지막 화살을 거두어 화살통에 꽂았다.",
+            "숲에는 다시 새소리가 돌아왔다.",
+            "사람들은 숲의 사냥꾼에게 깊이 고개를 숙였다.",
+            "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
+        },
+        CharacterId.Alchemist => new[]
+        {
+            "킹 슬라임이 녹아내리자, 초원에 오랜만에 바람이 불었다.",
+            "리치 왕의 저주도, 지옥 군주의 불길도 모두 꺼졌다.",
+            "학자는 킹 슬라임의 점액을 플라스크에 담으며 킬킬 웃었다.",
+            "“이걸로 논문 세 편은 쓰겠군.”",
+            "세상은 구해졌다. 대부분은 우연이었지만.",
+            "하지만 지평선 너머, 붉게 타오르는 사막에서 무언가 꿈틀거리고 있었다...",
+        },
+        _ => EndingLines,
+    };
+
     Canvas canvas;
     Image black;
     Image shade;
@@ -129,7 +205,7 @@ public class StoryDirector : MonoBehaviour
             float before = Time.timeScale;
             Time.timeScale = 0f;
             yield return Fade(shade, 0f, 0.78f, 0.4f);
-            yield return Lines(endless ? EndlessLines : IntroLines);
+            yield return Lines(endless ? EndlessLines : IntroFor(CharacterData.Selected));
             yield return Fade(shade, GetAlpha(shade), 0f, 0.4f);
             Time.timeScale = before;         // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
         }
@@ -152,7 +228,7 @@ public class StoryDirector : MonoBehaviour
         SetAlpha(black, 0f);
         SetAlpha(shade, 0f);
         yield return Fade(black, 0f, 1f, 1.5f);
-        if (!skip) yield return Lines(EndingLines);
+        if (!skip) yield return Lines(EndingFor(CharacterData.Selected));
 
         // 마무리: 클리어 · 새로 열린 난이도 · 인사
         skip = false;
