@@ -351,7 +351,13 @@ public class StoreArtTests
         GameObject[] bosses = (GameObject[])Get(data, "bosses");
         GameObject[] enemies = (GameObject[])Get(data, "enemies");
         Sprite Of(GameObject g) => Trim(g.GetComponentInChildren<SpriteRenderer>(true).sprite);
-        Sprite Fx(string n) => Trim(Resources.LoadAll<Sprite>("FX/" + n).OrderBy(s => s.name.Length).ThenBy(s => s.name).First());
+        Sprite Fx(string n) => FxAt(n, 0);
+        Sprite FxAt(string n, int frame) => Trim(Resources.LoadAll<Sprite>("FX/" + n).OrderBy(s => s.name.Length).ThenBy(s => s.name).ElementAt(frame));
+#if UNITY_EDITOR
+        Sprite Asset(string path) => Trim(UnityEditor.AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().OrderBy(s => s.name.Length).ThenBy(s => s.name).First());
+#else
+        Sprite Asset(string path) => Fx("fx_orb");
+#endif
         Sprite playerSprite = Trim(((Component)Player()).GetComponent<SpriteRenderer>().sprite);
 
         // 게임 아이콘 1024 · 커뮤니티 아이콘 184
@@ -381,15 +387,26 @@ public class StoreArtTests
             ("ACH_BOSS_LICH", Of(bosses[0]), new Color(0.25f, 0.18f, 0.4f)),
             ("ACH_BOSS_DEMON", Of(bosses[1]), new Color(0.5f, 0.15f, 0.05f)),
             ("ACH_CLEAR", Of(bosses[2]), new Color(0.6f, 0.5f, 0.15f)),
+            ("ACH_FIRST_DEATH", playerSprite, new Color(0.35f, 0.06f, 0.08f)),
+            ("ACH_SHOPPER", Asset("Assets/Sprites/coin_sprites_fixed/coin_01.png"), new Color(0.4f, 0.28f, 0.1f)),
+            ("ACH_FULL_SKILLS", Fx("fx_orb"), new Color(0.12f, 0.3f, 0.4f)),
+            ("ACH_ARSENAL", FxAt("fx_muzzle", 1), new Color(0.35f, 0.2f, 0.1f)),
+            ("ACH_EVOLVE_3", FxAt("fx_soulburst", 3), new Color(0.3f, 0.12f, 0.35f)),
+            ("ACH_ULT_30", FxAt("fx_explosion", 3), new Color(0.4f, 0.1f, 0.05f)),
+            ("ACH_LEVEL_15", Fx("fx_markbolt"), new Color(0.15f, 0.18f, 0.45f)),
+            ("ACH_KILLS_3000_TOTAL", FxAt("fx_slash", 1), new Color(0.4f, 0.05f, 0.1f)),
+            ("ACH_NO_HIT_BOSS", FxAt("fx_shock", 2), new Color(0.1f, 0.3f, 0.3f)),
+            ("ACH_CLOSE_CALL", Asset("Assets/Sprites/Items/hp_potion.png"), new Color(0.3f, 0.08f, 0.12f)),
         };
+        // 흰 그림은 금색으로 칠함
+        string[] gold = { "ACH_FIRST_ULT", "ACH_EVOLVE", "ACH_LEVEL_10", "ACH_KILLS_500", "ACH_FULL_SKILLS", "ACH_ARSENAL", "ACH_LEVEL_15", "ACH_KILLS_3000_TOTAL", "ACH_NO_HIT_BOSS" };
         foreach (var a in ach)
         {
             bg.color = new Color(0.85f, 0.72f, 0.4f);
             inner.color = a.c;
             inner.rectTransform.offsetMin = Vector2.one * 10f; inner.rectTransform.offsetMax = -Vector2.one * 10f;
             pic.sprite = a.s;
-            bool tint = a.id == "ACH_FIRST_ULT" || a.id == "ACH_EVOLVE" || a.id == "ACH_LEVEL_10" || a.id == "ACH_KILLS_500";
-            pic.color = tint ? Gold : Color.white;
+            pic.color = gold.Contains(a.id) ? Gold : a.id == "ACH_FIRST_DEATH" ? new Color(0.75f, 0.72f, 0.78f) : Color.white;
             pic.rectTransform.sizeDelta = Vector2.one * 256f * 0.66f;
             yield return null;
             Texture2D t = Render(cam, 256, 256, false);

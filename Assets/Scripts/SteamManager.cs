@@ -49,31 +49,73 @@ public class SteamManager : MonoBehaviour
 #endif
         SceneManager.sceneLoaded += OnSceneLoaded;
         EnermyController.Killed += OnEnemyKilled;
-        SpecialAbilities.Evolved += _ => SteamAchievements.Unlock(SteamAchievements.Evolve);
-        PlayerController.UltUsed += () => SteamAchievements.Unlock(SteamAchievements.FirstUlt);
+        SpecialAbilities.Evolved += _ =>
+        {
+            SteamAchievements.Unlock(SteamAchievements.Evolve);
+            if (++runEvolves >= 3) SteamAchievements.Unlock(SteamAchievements.Evolve3);
+        };
+        PlayerController.UltUsed += () =>
+        {
+            SteamAchievements.Unlock(SteamAchievements.FirstUlt);
+            if (++runUlts >= 30) SteamAchievements.Unlock(SteamAchievements.Ult30);
+        };
+        Shop.StallOpened += () => SteamAchievements.Unlock(SteamAchievements.Shopper);
     }
 
     // ================================================================= 업적 조건
-    int runKills;
+    // 여러 판에 걸친 누적 처치 수 (이 PC의 PlayerPrefs)
+    const string TotalKillsKey = "stats.totalKills";
+    const int TotalKillsGoal = 3000;
+
+    int runKills, runEvolves, runUlts;
     EnemySpawner spawner;
     PlayerController player;
 
+    // 보스전: 피해를 받았는지 (체력이 한 번이라도 줄었는지)
+    bool bossFight, bossHit;
+    float lastHealth;
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (scene.name == "GameOver") SteamAchievements.Unlock(SteamAchievements.FirstDeath);
         if (scene.name != "GameScene") return;
-        runKills = 0;
+        runKills = runEvolves = runUlts = 0;
+        bossFight = false;
         player = FindFirstObjectByType<PlayerController>();
         spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner == null) return;
         spawner.onMidBossDefeated += () => SteamAchievements.Unlock(SteamAchievements.MidBoss);
-        spawner.onBossDefeated += stage => SteamAchievements.Unlock(
-            stage == 0 ? SteamAchievements.BossLich : stage == 1 ? SteamAchievements.BossDemon : SteamAchievements.Clear);
+        spawner.onBossDefeated += OnBossDefeated;
+    }
+
+    void OnBossDefeated(int stage)
+    {
+        SteamAchievements.Unlock(stage == 0 ? SteamAchievements.BossLich : stage == 1 ? SteamAchievements.BossDemon : SteamAchievements.Clear);
+        if (bossFight && !bossHit) SteamAchievements.Unlock(SteamAchievements.NoHitBoss);
+        if (player != null && player.PlayerHealth > 0f && player.PlayerHealth <= player.PlayerMaxHealth * 0.1f)
+            SteamAchievements.Unlock(SteamAchievements.CloseCall);
+        bossFight = false;
     }
 
     void OnEnemyKilled(Vector3 at)
     {
         runKills++;
         if (runKills >= 500) SteamAchievements.Unlock(SteamAchievements.Kills500);
+        if (GameInput.Auto) return;
+        int total = PlayerPrefs.GetInt(TotalKillsKey, 0) + 1;
+        PlayerPrefs.SetInt(TotalKillsKey, total);
+        if (total >= TotalKillsGoal) SteamAchievements.Unlock(SteamAchievements.Kills3000Total);
+    }
+
+    // 보스가 나온 순간부터 쓰러질 때까지 체력이 줄었는지 매 프레임 확인
+    void TrackBossFight()
+    {
+        if (player == null || spawner == null) return;
+        bool active = spawner.bossSpawned && !spawner.bossCleared;
+        if (active && !bossFight) { bossFight = true; bossHit = false; lastHealth = player.PlayerHealth; }
+        if (!bossFight) return;
+        if (player.PlayerHealth < lastHealth) bossHit = true;
+        lastHealth = player.PlayerHealth;
     }
 
     float nextPoll;
@@ -83,9 +125,14 @@ public class SteamManager : MonoBehaviour
 #if STEAM
         if (Initialized) SteamAPI.RunCallbacks();
 #endif
+        TrackBossFight();
         if (Time.unscaledTime < nextPoll) return;
         nextPoll = Time.unscaledTime + 0.5f;
         if (player != null && player.level >= 10) SteamAchievements.Unlock(SteamAchievements.Level10);
+        if (player != null && player.level >= 15) SteamAchievements.Unlock(SteamAchievements.Level15);
+        SpecialAbilities special = player != null ? player.special : null;
+        if (special != null && special.SkillCount >= 3) SteamAchievements.Unlock(SteamAchievements.FullSkills);
+        if (special != null && special.Weapons.Count >= 2) SteamAchievements.Unlock(SteamAchievements.Arsenal);
         if (spawner != null && spawner.stageIndex >= 1) SteamAchievements.Unlock(SteamAchievements.EnterHell);
         if (spawner != null && spawner.stageIndex >= 2) SteamAchievements.Unlock(SteamAchievements.EnterMeadow);
     }
@@ -114,6 +161,16 @@ public static class SteamAchievements
     public const string BossLich = "ACH_BOSS_LICH";
     public const string BossDemon = "ACH_BOSS_DEMON";
     public const string Clear = "ACH_CLEAR";
+    public const string FirstDeath = "ACH_FIRST_DEATH";
+    public const string Shopper = "ACH_SHOPPER";
+    public const string FullSkills = "ACH_FULL_SKILLS";
+    public const string Arsenal = "ACH_ARSENAL";
+    public const string Evolve3 = "ACH_EVOLVE_3";
+    public const string Ult30 = "ACH_ULT_30";
+    public const string Level15 = "ACH_LEVEL_15";
+    public const string Kills3000Total = "ACH_KILLS_3000_TOTAL";
+    public const string NoHitBoss = "ACH_NO_HIT_BOSS";
+    public const string CloseCall = "ACH_CLOSE_CALL";
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 

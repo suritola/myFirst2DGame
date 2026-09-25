@@ -108,11 +108,15 @@ public class Shop : MonoBehaviour
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [{INTERACT}]"), 2.2f);
     }
 
+    // 떠돌이 상점을 열었을 때 (업적 등)
+    public static event System.Action StallOpened;
+
     // 제단에 다가갔을 때 (열렸으면 true)
     public bool OpenFromStall()
     {
         if (isShopOpen || isPause || Time.timeScale != 1f) return false;
         ToggleShop();
+        if (isShopOpen) StallOpened?.Invoke();
         return isShopOpen;
     }
 
