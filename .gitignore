@@ -52,3 +52,6 @@ crashlytics-build.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# 트레일러 녹화 결과
+/[Rr]ecordings/

@@ -119,6 +119,7 @@ public static class SteamAchievements
 
     public static void Unlock(string id)
     {
+        if (GameInput.Auto) return;      // 트레일러 자동 조종 중에는 풀지 않음
         if (!done.Add(id)) return;       // 한 번 실행 중에 같은 업적은 한 번만
         Debug.Log("[Steam] 업적: " + id);
 #if STEAM

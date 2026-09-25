@@ -144,6 +144,23 @@ public class StageManager : MonoBehaviour
         CloseUpgrade();
     }
 
+    // 트레일러 촬영용: 연출 없이 바로 해당 스테이지 맵으로 (0 동굴, 1 지옥, 2 초원)
+    public void JumpToStage(int stage, Vector3 caveStart)
+    {
+        foreach (Renderer r in caveRenderers) if (r != null) r.enabled = stage == 0;
+        if (hellMap != null) hellMap.SetActive(stage == 1);
+        if (meadowMap != null) meadowMap.SetActive(stage == 2);
+        if (portal != null) portal.SetActive(false);
+        if (bossBar != null) bossBar.bossSpawn = false;
+        if (Camera.main != null && stage > 0) Camera.main.backgroundColor = stage == 1 ? hellBackground : meadowBackground;
+        CurrentStage = stage;
+        spawner.StartStage(stage);
+        if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
+    }
+
+    // 트레일러 촬영용: 스킬 트리 닫기
+    public void CloseUpgradeNow() { if (upgradeOpen) CloseUpgrade(); }
+
     void CloseUpgrade()
     {
         TooltipUI.Hide();

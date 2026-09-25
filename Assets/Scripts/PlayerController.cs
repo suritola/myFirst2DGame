@@ -302,6 +302,8 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) move += Vector3.down;
 
+        if (GameInput.Auto) move = GameInput.AutoMove;
+
         move = move.normalized;
 
         // =========================
@@ -320,13 +322,13 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool specialWeapon = special != null && special.WeaponActive;
-        if (!specialWeapon && Input.GetMouseButtonDown(0) && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
+        if (!specialWeapon && GameInput.FireDown && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작
         // =========================
 
-        if (Input.GetMouseButtonDown(1) && !IsSkillUsing && !isReloading)
+        if (GameInput.UltDown && !IsSkillUsing && !isReloading)
         {
             if (skillGauge != null && skillGauge.IsFull())
             {
@@ -340,7 +342,7 @@ public class PlayerController : MonoBehaviour
         // 우클릭 유지 중
         // =========================
 
-        if (Input.GetMouseButton(1) && isSkillUsing)
+        if (GameInput.UltHeld && isSkillUsing)
         {
             NowCharge += Time.unscaledDeltaTime * 100f;
 
@@ -367,7 +369,7 @@ public class PlayerController : MonoBehaviour
         // 우클릭 해제
         // =========================
 
-        if (Input.GetMouseButtonUp(1) && isSkillUsing) EndSkill();
+        if (GameInput.UltUp && isSkillUsing) EndSkill();
 
         // =========================
         // 자동 재장전
@@ -438,7 +440,7 @@ void Shoot()
 
         if (animator != null) animator.SetTrigger("Shoot");
 
-        Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mousePosition = mainCamera.ScreenToWorldPoint(GameInput.MousePosition);
         mousePosition.z = 0;
 
         FaceTowards(mousePosition);
@@ -483,7 +485,7 @@ void Shoot()
     // 마우스가 버튼 같은 UI 위에 있으면 사격하지 않음
     static bool PointerOverUI()
     {
-        return UnityEngine.EventSystems.EventSystem.current != null
+        return !GameInput.Auto && UnityEngine.EventSystems.EventSystem.current != null
             && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
     }
 
@@ -666,7 +668,7 @@ void Shoot()
         UltUsed?.Invoke();
         isVolleying = true;
         skillGauge.ResetSkillPoint();
-        FaceTowards(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+        FaceTowards(mainCamera.ScreenToWorldPoint(GameInput.MousePosition));
         yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(), damage * 5f, 0f));
         isVolleying = false;
     }

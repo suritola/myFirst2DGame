@@ -172,6 +172,16 @@ public class SpecialAbilities : MonoBehaviour
 
     public bool Has(int id) => equipped.Contains(id);
 
+    // 가진 무기 중 하나를 바로 꺼내 듦 (-1 = 기본 권총) · 트레일러 촬영용
+    public void SelectWeapon(int id)
+    {
+        weaponIndex = weapons.IndexOf(id);
+        CancelSniperCharge();
+        if (flameMuzzle != null) Destroy(flameMuzzle);
+        flameWasFiring = false;
+        fx.StopLoop();
+    }
+
     // ================================================================= weapon ammo (무기마다 따로)
     class WeaponAmmo
     {
@@ -871,7 +881,7 @@ public class SpecialAbilities : MonoBehaviour
 
     Vector3 MouseWorld()
     {
-        Vector3 m = player.MainCamera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 m = player.MainCamera.ScreenToWorldPoint(GameInput.MousePosition);
         m.z = 0f;
         return m;
     }
@@ -879,14 +889,14 @@ public class SpecialAbilities : MonoBehaviour
     float Damage => player.damage * player.damageMultiplier;
     // 들고 있는 무기의 강화가 반영된 피해
     float WDamage => Damage * WeaponDamageMul(CurrentWeapon);
-    bool OverUI => UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+    bool OverUI => !GameInput.Auto && UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
 
     // ================================================================= weapons
     void UpdateWeapon()
     {
-        bool down = Input.GetMouseButtonDown(0) && !OverUI;
-        bool held = Input.GetMouseButton(0) && !OverUI;
-        bool up = Input.GetMouseButtonUp(0);
+        bool down = GameInput.FireDown && !OverUI;
+        bool held = GameInput.FireHeld && !OverUI;
+        bool up = GameInput.FireUp;
 
         switch (CurrentWeapon)
         {
