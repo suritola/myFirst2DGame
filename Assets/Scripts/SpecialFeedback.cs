@@ -251,6 +251,14 @@ public class SpecialFeedback : MonoBehaviour
 
     public void SetLine(LineRenderer lr, Vector3 a, Vector3 b, Color color, float width)
     {
+        // 점선용 선은 도트 화살촉으로 그림 (Sprites/Default 셰이더가 텍스처 반복을 무시해 실선으로 보였음)
+        if (lr.material != null && lr.material.mainTexture != null)
+        {
+            lr.enabled = false;
+            SetDots(lr, a, b, color, width);
+            return;
+        }
+        HideDots(lr);
         lr.enabled = true;
         lr.positionCount = 2;
         lr.SetPosition(0, a);
@@ -295,6 +303,67 @@ public class SpecialFeedback : MonoBehaviour
     public static void Hide(LineRenderer lr)
     {
         if (lr != null) lr.enabled = false;
+        HideDots(lr);
+    }
+
+    // ================================================================= dotted lines (fx_trail_dot)
+    static readonly Dictionary<LineRenderer, List<SpriteRenderer>> dotPools = new Dictionary<LineRenderer, List<SpriteRenderer>>();
+    static Sprite dotSprite;
+    const float DotSpacing = 0.75f;
+
+    static void HideDots(LineRenderer lr)
+    {
+        if (lr == null || !dotPools.TryGetValue(lr, out List<SpriteRenderer> pool)) return;
+        foreach (SpriteRenderer s in pool) if (s != null) s.enabled = false;
+    }
+
+    // a → b 를 가리키는 화살촉이 흘러가는 점선 (굵기가 클수록 큰 점)
+    void SetDots(LineRenderer lr, Vector3 a, Vector3 b, Color color, float width)
+    {
+        if (dotSprite == null)
+        {
+            Sprite[] frames = Fx.Frames("fx_trail_dot");
+            if (frames.Length == 0) return;
+            dotSprite = frames[0];
+        }
+        if (!dotPools.TryGetValue(lr, out List<SpriteRenderer> pool))
+        {
+            pool = new List<SpriteRenderer>();
+            dotPools[lr] = pool;
+        }
+        pool.RemoveAll(s => s == null);
+
+        Vector3 d = b - a;
+        float len = d.magnitude;
+        int count = len < 0.01f ? 0 : Mathf.Min(120, Mathf.FloorToInt(len / DotSpacing) + 1);
+        float size = Mathf.Clamp(width * 4.5f, 0.35f, 1.2f);
+        float scale = size / dotSprite.bounds.size.y;
+        float rot = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        float shift = Mathf.Repeat(Time.unscaledTime * 2.5f, 1f) * DotSpacing;
+
+        while (pool.Count < count)
+        {
+            GameObject go = new GameObject("AimDot");
+            go.transform.SetParent(lr.transform, false);
+            SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = dotSprite;
+            sr.sortingLayerName = "Effect";
+            pool.Add(sr);
+        }
+        for (int i = 0; i < pool.Count; i++)
+        {
+            SpriteRenderer sr = pool[i];
+            if (i >= count) { sr.enabled = false; continue; }
+            float dist = Mathf.Min(len, i * DotSpacing + shift);
+            float k = dist / Mathf.Max(0.01f, len);
+            sr.enabled = true;
+            sr.sortingOrder = lr.sortingOrder;
+            sr.transform.position = a + d * k;
+            sr.transform.rotation = Quaternion.Euler(0f, 0f, rot);
+            sr.transform.localScale = Vector3.one * scale;
+            // 끝으로 갈수록 살짝 옅게
+            sr.color = new Color(color.r, color.g, color.b, color.a * Mathf.Lerp(1f, 0.55f, k));
+        }
     }
 
     // ================================================================= floating text

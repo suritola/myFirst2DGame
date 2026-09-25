@@ -29,6 +29,10 @@ public class Bullet : MonoBehaviour
     public Vector2 Direction => dir;
     // 적을 맞혔을 때 추가 효과 (연쇄 번개, 폭발 등)
     public System.Action<Bullet, Collider2D> onHitEnemy;
+    // 채워 두면 같은 적은 한 번만 맞힘 (부메랑 낫: 돌아올 때 비워서 한 번 더)
+    public System.Collections.Generic.HashSet<int> hitOnce;
+    // 채워 두면 벽에 닿아도 사라지지 않고 이걸 부름 (부메랑 낫: 벽에서 되돌아옴)
+    public System.Action onHitWall;
     public float lifetime = 2f;
 
     public Vector2 Dir
@@ -70,6 +74,7 @@ public class Bullet : MonoBehaviour
 
         if (collision.CompareTag("Wall"))
         {
+            if (onHitWall != null) { onHitWall(); return; }
             Destroy(gameObject);
 
             return;
@@ -89,6 +94,7 @@ public class Bullet : MonoBehaviour
             {
                 // 적에게 데미지
                 if (enemy.EnemyHealth <= 0f) return;
+                if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
@@ -117,6 +123,7 @@ public class Bullet : MonoBehaviour
             {
                 // 적에게 데미지
                 if (enemy.EnemyHealth <= 0f) return;
+                if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;

@@ -143,8 +143,8 @@ public class WeaponAim
             {
                 // 굵어지는 레이저 조준선, 선 위의 적마다 조준경, 마우스엔 큰 조준경
                 Vector3 m = owner.PlayerMuzzle;
-                Vector3 end = m + (Vector3)(dir * 45f);
-                Frame(Fx.Beam(m, end, 0.12f + 0.5f * charge, new Color(C.r, C.g, C.b, 0.5f + 0.3f * pulse), 0.2f, 15));
+                Vector3 end = m + (Vector3)(dir * owner.ScreenEdgeDistance(m, dir));
+                Dots(m + (Vector3)(dir * 0.8f), end, new Color(C.r, C.g, C.b, 0.6f + 0.3f * pulse), 0.8f, 0.55f + 0.45f * charge);
                 if (reticle != null)
                 {
                     reticle.transform.position = mouse;

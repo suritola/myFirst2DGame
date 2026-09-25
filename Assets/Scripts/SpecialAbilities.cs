@@ -906,7 +906,7 @@ public class SpecialAbilities : MonoBehaviour
                 if (down && Ready()) FireShotgun();
                 break;
             case SniperId:
-                UpdateSniper(down, up);
+                UpdateSniper(down, held, up);
                 break;
             case DualId:
                 if (held && Ready()) FireDual();
@@ -928,7 +928,7 @@ public class SpecialAbilities : MonoBehaviour
             case ScytheId:
                 if (activeScythe == null)
                     fx.SetLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
-                if (down && activeScythe == null && !player.IsSkillUsing) FireScythe();
+                if (down && activeScythe == null && !player.IsSkillUsing && Time.time >= nextScytheAt) FireScythe();
                 player.ammoTextOverride = activeScythe == null ? Loc.T("낫 준비") : Loc.T("낫 회수 중");
                 break;
             case GrenadeId:
@@ -957,13 +957,14 @@ public class SpecialAbilities : MonoBehaviour
         return target;
     }
 
-    // 저격총: 점선 조준선은 항상, 누르고 있으면 충전 (빛, 소리, 완충 알림)
-    void UpdateSniper(bool down, bool up)
+    // 저격총: 화면 끝까지 닿는 점선 조준선은 항상, 누르고 있으면 충전 (빛, 소리, 완충 알림)
+    // 계속 누르고 있으면 완충되는 순간 발사하고 다시 충전 (꾹 눌러 연사), 일찍 떼면 그만큼만 충전해 발사
+    void UpdateSniper(bool down, bool held, bool up)
     {
         Vector3 muzzle = player.MuzzlePosition;
         Vector3 mouse = MouseWorld();
 
-        if (down && Ready())
+        if ((down || (held && sniperCharge < 0f)) && Ready())
         {
             sniperCharge = 0f;
             chargeFullPlayed = false;
@@ -975,9 +976,9 @@ public class SpecialAbilities : MonoBehaviour
         Color lineColor = sniperCharge < 0f ? new Color(0.5f, 0.95f, 1f, 0.35f)
             : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
             : new Color(0.5f, 0.95f, 1f, 0.4f + 0.5f * k);
-        // 발사 버튼을 누르고 있는 동안만, 화면 끝까지 닿는 점선 조준선
-        if (sniperCharge < 0f) return;
+        // 화면 끝까지 닿는 점선 조준선 (충전할수록 밝고 굵어짐)
         fx.SetLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * ScreenEdgeDistance(muzzle, AimDir())), lineColor, 0.08f + 0.1f * k);
+        if (sniperCharge < 0f) return;
 
         sniperCharge = Mathf.Min(SniperChargeTime, sniperCharge + Time.deltaTime);
         player.ammoTextOverride = full ? Loc.T("완충!") : Loc.T("충전 ") + Mathf.RoundToInt(k * 100f) + "%";
@@ -997,7 +998,8 @@ public class SpecialAbilities : MonoBehaviour
             fx.Play("ding", 0.8f);
         }
 
-        if (up)
+        // 떼면 지금까지 충전한 만큼, 누르고 있으면 완충되는 순간 발사
+        if (up || (full && held))
         {
             FireSniper(k);
             CancelSniperCharge();
@@ -1007,7 +1009,7 @@ public class SpecialAbilities : MonoBehaviour
     const float SniperLineLength = 40f;
 
     // 화면 가장자리까지의 거리 (조준선을 화면 끝까지 그릴 때)
-    float ScreenEdgeDistance(Vector3 from, Vector2 dir)
+    public float ScreenEdgeDistance(Vector3 from, Vector2 dir)
     {
         Camera cam = player.MainCamera;
         if (cam == null) return SniperLineLength;
@@ -1018,7 +1020,7 @@ public class SpecialAbilities : MonoBehaviour
         else if (dir.x < -0.0001f) t = Mathf.Min(t, (c.x - w - from.x) / dir.x);
         if (dir.y > 0.0001f) t = Mathf.Min(t, (c.y + h - from.y) / dir.y);
         else if (dir.y < -0.0001f) t = Mathf.Min(t, (c.y - h - from.y) / dir.y);
-        return Mathf.Max(1f, t);
+        return Mathf.Max(1f, t) + 2f;          // 화면 밖까지 조금 더 (가장자리에서 끊겨 보이지 않게)
     }
     float SniperChargeTime => (IsEvolved(SniperId) ? 0.8f : 1.2f) * (1f - 0.15f * Trait(SniperId));
 
@@ -1241,16 +1243,20 @@ public class SpecialAbilities : MonoBehaviour
         }
     }
 
+    float nextScytheAt;
+
     void FireScythe()
     {
+        nextScytheAt = Time.time + 0.35f;
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
         bool evo = IsEvolved(ScytheId);
         float grow = 1f + 0.15f * Trait(ScytheId);
-        Bullet b = Shot(player.MuzzlePosition, ((Vector2)(target - player.MuzzlePosition)).normalized, WDamage * (evo ? 2.2f : 1.5f), 9999, 1.2f, false,
+        Bullet b = Shot(player.MuzzlePosition, ((Vector2)(target - player.MuzzlePosition)).normalized, WDamage * (evo ? 1.75f : 1.2f), 9999, 1.2f, false,
                         new Color(0.75f, 0.45f, 1f), 0f, (evo ? 3.5f : 2.5f) * grow, 0.3f);
         if (b == null) return;
         b.lifetime = 5f;
+        b.hitOnce = new HashSet<int>();         // 적마다 갈 때 한 번, 돌아올 때 한 번 (Scythe가 비움)
         Scythe s = b.gameObject.AddComponent<Scythe>();
         s.distance = (evo ? 16f : 12f) * grow;
         // 총알 대신 코드로 그린 낫을 보여줌 (판정은 그대로)
@@ -2269,7 +2275,22 @@ public class Scythe : MonoBehaviour
     Vector3 start;
     bool returning;
 
-    void Start() => start = transform.position;
+    void Start()
+    {
+        start = transform.position;
+        // 벽은 그냥 통과함 (벽에 닿아 사라지면 바로 회수돼 벽 앞에서 연사가 되던 문제)
+        Bullet b = GetComponent<Bullet>();
+        if (b != null) b.onHitWall = () => { };
+    }
+
+    // 끝까지 날아가면 주인에게 돌아옴 (돌아오는 길에 같은 적을 한 번 더 벨 수 있음)
+    void StartReturn()
+    {
+        if (returning) return;
+        returning = true;
+        Bullet b = GetComponent<Bullet>();
+        if (b != null && b.hitOnce != null) b.hitOnce.Clear();
+    }
 
     void Update()
     {
@@ -2281,7 +2302,7 @@ public class Scythe : MonoBehaviour
         {
             float k = Mathf.Clamp01(t / outTime);
             transform.position = start + (Vector3)direction * distance * Mathf.Sin(k * Mathf.PI * 0.5f);
-            if (k >= 1f) returning = true;
+            if (k >= 1f) StartReturn();
         }
         else
         {
