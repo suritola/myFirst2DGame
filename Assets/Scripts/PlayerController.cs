@@ -292,7 +292,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool holdingSpecial = special != null && special.WeaponActive;
-        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial && CharacterKit.Instance == null) if (NowBullet < MaxBullet) StartCoroutine(Reload());
+        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
         // 이동 입력
@@ -331,13 +331,16 @@ public class PlayerController : MonoBehaviour
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null)
         {
-            // 다른 캐릭터: 누르고 있으면 공격 속도에 맞춰 계속 (탄약 없음)
-            if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI())
+            // 다른 캐릭터: 누르고 있으면 공격 속도에 맞춰 계속 (탄창이 있으면 한 발씩 씀)
+            bool ammo = kit.UsesAmmo;
+            if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI()
+                && (!ammo || (NowBullet > 0 && !isReloading && !IsSkillUsing)))
             {
                 kit.Attack();
+                if (ammo) NowBullet--;
                 nextShootTime = Time.time + ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul);
             }
-            if (!specialWeapon) ammoTextOverride = kit.WeaponName;
+            if (!specialWeapon) ammoTextOverride = ammo ? null : kit.WeaponName;
         }
         else if (!specialWeapon && GameInput.FireDown && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
@@ -396,7 +399,7 @@ public class PlayerController : MonoBehaviour
         // 자동 재장전
         // =========================
 
-        if (NowBullet <= 0 && !isReloading && CharacterKit.Instance == null) StartCoroutine(Reload());
+        if (NowBullet <= 0 && !isReloading && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) StartCoroutine(Reload());
 
         // =========================
         // 애니메이션

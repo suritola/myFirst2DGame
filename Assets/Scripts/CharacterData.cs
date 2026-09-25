@@ -13,6 +13,7 @@ public class CharacterDef
     public string skill, skillDesc; // 우클릭 스킬
     public float hp = 1f, damage = 1f, attackSpeed = 1f, gauge = 1f, move = 1f;
     public float range;             // 평타 사거리 (칸), 0 = 무한
+    public int mag;                 // 기본 탄창 수, 0 = 무한 (거너는 인스펙터 값)
     public int price;               // 0 = 처음부터, -1 = 준비 중
     public int[] pool;              // 지옥의 문에서 고를 수 있는 특수 능력 (무기 · 스킬 · 패시브)
     public Color color = Color.white;
@@ -27,7 +28,7 @@ public static class CharacterData
             description = "리볼버와 여러 특수 총기를 다루는 총잡이. 모든 캐릭터의 기준.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "타겟팅 필살기", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
-            range = 0f, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
+            range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
@@ -40,7 +41,7 @@ public static class CharacterData
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발)",
-            hp = 0.8f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, price = 0, pool = Range(28, 8),
+            hp = 0.8f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, mag = 6, price = 0, pool = Range(28, 8),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",

@@ -206,6 +206,7 @@ public class bosss : MonoBehaviour
 
         // 체력 감소
         EnemyHealth -= damage;
+        DamagePopup.Show(transform, damage, spriteRenderer);
 
         transform.position += dir * knockBack * knockBackTaken;
 

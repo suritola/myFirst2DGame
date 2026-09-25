@@ -32,6 +32,8 @@ public class CharacterKit : MonoBehaviour
     public float AttackSpeedMul => 1f;
     public float MoveMul => 1f;
     public string WeaponName => Loc.T(def.weapon);
+    // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
+    public bool UsesAmmo => def.mag > 0;
 
     public static void Attach(PlayerController p)
     {
@@ -61,6 +63,7 @@ public class CharacterKit : MonoBehaviour
         player.damage *= def.damage;
         player.ShootSpeed /= Mathf.Max(0.1f, def.attackSpeed);
         player.speed *= def.move;
+        if (def.mag > 0) player.MaxBullet = def.mag;          // (거너의 mag 는 표시용, 실제 탄창은 인스펙터 값)
         player.NowBullet = player.MaxBullet;
 
         // 새 몸 그림 (애니메이터는 거너 그림을 쓰므로 끔)
@@ -165,7 +168,7 @@ public class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Rogue:
                 foreach (Vector2 d in Spread(dir, shots, 8f))
-                    Projectile(start, d, dmg, player.pene, 45f, 0f, "fx_shuriken", 0.7f, Color.white, true);
+                    Projectile(start, d, dmg, player.pene, 45f, 0f, "fx_shuriken", 1.1f, Color.white, true);
                 Play("whoosh", 0.35f, 1.8f);
                 break;
             case CharacterId.Archer:

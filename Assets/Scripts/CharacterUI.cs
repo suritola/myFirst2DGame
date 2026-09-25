@@ -154,9 +154,10 @@ public static class CharacterUI
         Stat(dr, "공격 속도", d.attackSpeed, unlocked, ref y);
         StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), unlocked, ref y);
         // 스킬 게이지는 높을수록 늦게 참 (거너보다 높으면 빨강)
-        UIKit.Text(dr, "높을수록 늦게 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(-40f, y - 22f), new Vector2(200f, 20f), TextAlignmentOptions.Left);
+        UIKit.Text(dr, "높을수록 늦게 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(300f, y - 20f), new Vector2(420f, 18f), TextAlignmentOptions.Center);
         Stat(dr, "스킬 게이지", d.gauge, unlocked, ref y, true);
         Stat(dr, "이동 속도", d.move, unlocked, ref y);
+        StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), unlocked, ref y);
         y -= 10f;
         Info(dr, "기본 무기", unlocked ? Loc.T(d.weapon) + " — " + Loc.T(d.attack) : "???", ref y);
         Info(dr, "우클릭", unlocked ? Loc.T(d.skill) + " — " + Loc.T(d.skillDesc) : "???", ref y);
