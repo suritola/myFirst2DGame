@@ -290,12 +290,12 @@ public class CharacterKit : MonoBehaviour
 
         if (GameInput.FireHeld && canDraw) return;
 
-        // 발사: 피해 60% → 250%, 화살 속도 35 → 95
+        // 발사: 피해 30% → 250%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
         drawing = false;
         bowLine.enabled = false;
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        float power = 0.6f + 1.9f * draw;
+        float power = 0.3f + 2.2f * draw;
         float speed = 35f + 60f * draw;
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots) * powerMul * power;

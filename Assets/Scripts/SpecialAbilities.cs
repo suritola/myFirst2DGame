@@ -1129,7 +1129,8 @@ public partial class SpecialAbilities : MonoBehaviour
     {
         if (player.IsSkillUsing || !WeaponHasAmmo(SniperId)) return;
         Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
-        Bullet b = Shot(start, dir, WDamage * Mathf.Lerp(1.5f, 3f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
+        // 바로 떼면 약하고 완충할수록 강함 (연타가 완충 사격보다 초당 피해가 높지 않게)
+        Bullet b = Shot(start, dir, WDamage * Mathf.Lerp(0.6f, 3.2f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
         // 진화: 완충 사격이 맞은 곳마다 폭발
         if (b != null && charge >= 1f && IsEvolved(SniperId))
         {

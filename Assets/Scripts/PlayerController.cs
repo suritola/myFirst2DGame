@@ -339,7 +339,8 @@ public class PlayerController : MonoBehaviour
                 // 공격 속도가 빠를수록 빨리 가득 당김
                 kit.UpdateBow(!specialWeapon && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI(),
                               ShootSpeed * 2f / (fireRateMultiplier * kit.AttackSpeedMul));
-                if (kit.BowFired) nextShootTime = Time.time + 0.12f;
+                // 쏜 뒤에는 가득 당기는 시간의 절반만큼 쉼 (연타가 끝까지 당기는 것보다 세지 않게)
+                if (kit.BowFired) nextShootTime = Time.time + ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul);
             }
             else if (!specialWeapon && GameInput.FireHeld && !kit.Busy && Time.time >= nextShootTime && !PointerOverUI()
                 && (!ammo || (NowBullet > 0 && !isReloading && !IsSkillUsing)))

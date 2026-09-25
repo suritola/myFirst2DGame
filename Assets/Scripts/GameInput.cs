@@ -19,7 +19,7 @@ public static class GameInput
     public static bool AutoFire;            // 좌클릭 누르고 있음
     public static bool AutoUlt;             // 우클릭 누르고 있음
     // 눌렀다 / 뗐다 신호는 "이 프레임에 일어남"으로 표시 (다른 스크립트의 Update 순서와 상관없게)
-    public static int FireDownFrame = -1, UltDownFrame = -1, UltUpFrame = -1;
+    public static int FireDownFrame = -1, FireUpFrame = -1, UltDownFrame = -1, UltUpFrame = -1;
 
     public static Vector3 MousePosition
     {
@@ -33,7 +33,7 @@ public static class GameInput
 
     public static bool FireDown => Auto ? Time.frameCount == FireDownFrame : Input.GetMouseButtonDown(0);
     public static bool FireHeld => Auto ? AutoFire : Input.GetMouseButton(0);
-    public static bool FireUp => Auto ? false : Input.GetMouseButtonUp(0);
+    public static bool FireUp => Auto ? Time.frameCount == FireUpFrame : Input.GetMouseButtonUp(0);
 
     public static bool UltDown => Auto ? Time.frameCount == UltDownFrame : Input.GetMouseButtonDown(1);
     public static bool UltHeld => Auto ? AutoUlt : Input.GetMouseButton(1);

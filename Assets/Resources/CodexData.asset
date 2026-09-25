@@ -19,7 +19,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 60a98310ec0fb5c86f12750f87a46be5, type: 3}
   - name: "\uC601\uD63C \uC800\uACA9\uCD1D"
     kind: 0
-    description: "\uB204\uB974\uACE0 \uC788\uB2E4\uAC00 \uB5BC\uBA74 \uBC1C\uC0AC\uD569\uB2C8\uB2E4. \uBAA8\uB4E0 \uC801\uC744 \uAD00\uD1B5\uD558\uACE0\n\uCDA9\uC804 \uC815\uB3C4\uC5D0 \uB530\uB77C \uD53C\uD574 150%~300%."
+    description: "\uB204\uB974\uACE0 \uC788\uB2E4\uAC00 \uB5BC\uBA74 \uBC1C\uC0AC\uD569\uB2C8\uB2E4. \uBAA8\uB4E0 \uC801\uC744 \uAD00\uD1B5\uD558\uACE0\n\uCDA9\uC804 \uC815\uB3C4\uC5D0 \uB530\uB77C \uD53C\uD574 60%~320%."
     icon: {fileID: 21300000, guid: 7b50a0344fc74ad3cca966cfcf21c4cb, type: 3}
   - name: "\uC800\uC8FC\uBC1B\uC740 \uC30D\uAD8C\uCD1D"
     kind: 0

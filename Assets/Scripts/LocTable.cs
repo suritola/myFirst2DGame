@@ -251,7 +251,7 @@ public static class LocTable
         { "탄창 저주", L("Cursed Magazine", "弾倉の呪い", "弹匣诅咒") },
         { "불사의 맹세", L("Oath of Undying", "不死の誓い", "不死誓约") },
         { "총알 대신 앞쪽 부채꼴(6칸) 안의 적 모두에게\n즉시 250% 피해와 강한 넉백. 발사 간격 1.4배.", L("Instead of bullets, hits every enemy in a cone ahead (6 tiles)\nfor 250% damage with strong knockback. Fire interval x1.4.", "弾の代わりに前方の扇形(6マス)内の敵全員に\n即座に250%ダメージと強いノックバック。発射間隔1.4倍。", "不发射子弹，直接对前方扇形(6格)内所有敌人\n造成250%伤害并强力击退。射击间隔1.4倍。") },
-        { "누르고 있다가 떼면 발사합니다. 모든 적을 관통하고\n충전 정도에 따라 피해 150%~300%.", L("Hold and release to fire. Pierces every enemy;\n150%-300% damage depending on charge.", "押し続けて離すと発射。全ての敵を貫通し\nチャージに応じて150%〜300%ダメージ。", "按住后松开发射。穿透所有敌人，\n根据蓄力造成150%~300%伤害。") },
+        { "누르고 있다가 떼면 발사합니다. 모든 적을 관통하고\n충전 정도에 따라 피해 60%~320%.", L("Hold and release to fire. Pierces every enemy;\n60%-320% damage depending on charge.", "押し続けて離すと発射。全ての敵を貫通し\nチャージに応じて60%〜320%ダメージ。", "按住后松开发射。穿透所有敌人，\n根据蓄力造成60%~320%伤害。") },
         { "누르고 있으면 연사합니다. 발사 간격 절반, 발당 피해 55%.\n두 발에 탄 1개만 씁니다.", L("Hold for rapid fire. Half the fire interval, 55% damage per shot.\nOnly 1 ammo per 2 shots.", "押し続けると連射。発射間隔半分、1発55%ダメージ。\n2発で弾1つしか使いません。", "按住连射。射击间隔减半，每发55%伤害。\n每2发只消耗1颗子弹。") },
         { "누르고 있으면 불을 뿜어 적을 관통하고 불태웁니다.\n탄약 대신 과열 게이지를 씁니다.", L("Hold to spew fire that pierces and burns enemies.\nUses an overheat gauge instead of ammo.", "押し続けると火を噴き、敵を貫通して燃やします。\n弾薬の代わりに過熱ゲージを使います。", "按住喷火，穿透并点燃敌人。\n使用过热槽代替弹药。") },
         { "가장 가까운 적을 쫓아가는 유도탄을 쏩니다.\n발당 피해 70%, 조준이 필요 없습니다.", L("Fires homing shots that chase the nearest enemy.\n70% damage per shot, no aiming needed.", "最も近い敵を追う誘導弾を撃ちます。\n1発70%ダメージ、照準不要。", "发射追踪最近敌人的导弹。\n每发70%伤害，无需瞄准。") },
