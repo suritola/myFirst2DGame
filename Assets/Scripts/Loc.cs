@@ -15,7 +15,10 @@ public static class Loc
     public static event System.Action Changed;
     internal static void RaiseChanged() => Changed?.Invoke();
 
-    public static string T(string ko)
+    // 번역한 뒤 {SKILL1} 같은 키 표시를 지금 설정된 키 이름으로 바꿈 (KeyBindings)
+    public static string T(string ko) => KeyBindings.Apply(Translate(ko));
+
+    static string Translate(string ko)
     {
         if (string.IsNullOrEmpty(ko)) return ko;
         if (!LocTable.Entries.TryGetValue(ko, out string[] tr)) return ko;

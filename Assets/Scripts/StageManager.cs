@@ -41,7 +41,7 @@ public class StageManager : MonoBehaviour
 
     [Header("특수 능력 포인트 (2장 중간 보스 보상)")]
     public int specialPoints = 0;
-    public KeyCode upgradeKey = KeyCode.T;
+    // 특수 강화 키는 KeyBindings (기본 T)
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     GameObject upgradeButton;
@@ -100,10 +100,10 @@ public class StageManager : MonoBehaviour
                 upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
                 upgradeGlowImage.color = new Color(1f, 0.72f, 0.3f, 0.3f + 0.45f * pulse);
                 upgradeText.color = Color.Lerp(Gold, Color.white, pulse);
-                upgradeText.text = Loc.T("특수 강화 [") + upgradeKey + Loc.T("]   포인트 ") + specialPoints;
+                upgradeText.text = Loc.T("특수 강화 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   포인트 ") + specialPoints;
             }
         }
-        if (show && Input.GetKeyDown(upgradeKey)) OpenUpgrade();
+        if (show && KeyBindings.Down(GameAction.Upgrade)) OpenUpgrade();
     }
 
     // ================================================================= 특수 능력 포인트
@@ -115,7 +115,7 @@ public class StageManager : MonoBehaviour
     void OnMidBossDefeated()
     {
         specialPoints++;
-        ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + upgradeKey + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
+        ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
     }
 
     public void OpenUpgrade()

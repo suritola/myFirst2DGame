@@ -49,7 +49,7 @@ public class SpecialFeedback : MonoBehaviour
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
         oneShot.pitch = pitch;
-        oneShot.PlayOneShot(c, vol * volume);
+        oneShot.PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
     }
 
     public void StartLoop(string name, float vol = 1f, float pitch = 1f)
@@ -60,7 +60,7 @@ public class SpecialFeedback : MonoBehaviour
             loop.clip = c;
             loop.Play();
         }
-        loop.volume = vol * volume;
+        loop.volume = vol * volume * GameSettings.SfxVolume;
         loop.pitch = pitch;
     }
 
@@ -313,6 +313,7 @@ public class SpecialFeedback : MonoBehaviour
     // ================================================================= screen shake
     public void Shake(float strength = 0.25f, float duration = 0.12f)
     {
+        if (!GameSettings.ScreenShake) return;
         Camera cam = Camera.main;
         if (cam == null) return;
         if (shake != null) StopCoroutine(shake);

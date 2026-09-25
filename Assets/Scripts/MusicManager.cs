@@ -7,7 +7,7 @@ public class MusicManager : MonoBehaviour
 {
     public static MusicManager Instance { get; private set; }
 
-    // 음악은 효과음보다 조금 작게 (전체 볼륨은 설정의 AudioListener.volume)
+    // 음악은 효과음보다 조금 작게 (전체 볼륨은 설정의 AudioListener.volume, 음악 볼륨은 여기에 곱함)
     const float MusicGain = 0.5f;
     const float FadeTime = 1.2f;
 
@@ -71,7 +71,10 @@ public class MusicManager : MonoBehaviour
         }
 
         float step = Time.unscaledDeltaTime / FadeTime * MusicGain;
-        current.volume = Mathf.MoveTowards(current.volume, MusicGain, step);
+        float target = MusicGain * GameSettings.MusicVolume;
+        // 설정에서 줄이면 페이드를 기다리지 않고 바로 따라감
+        if (current.volume > target) current.volume = target;
+        current.volume = Mathf.MoveTowards(current.volume, target, step);
         previous.volume = Mathf.MoveTowards(previous.volume, 0f, step);
         if (previous.volume <= 0f && previous.isPlaying) previous.Stop();
     }

@@ -113,7 +113,7 @@ public class LevelShop : MonoBehaviour
         UpdateSelectLock();
 
         // 클릭으로 고른 카드를 스페이스바로 확정
-        if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && Input.GetKeyDown(KeyCode.Space))
+        if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
         {
             int what = pendingSlot == 0 ? first : pendingSlot == 1 ? second : third;
             pendingSlot = -1;
@@ -174,7 +174,7 @@ public class LevelShop : MonoBehaviour
         {
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
             selectHint.color = picked != null ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.92f, 0.88f, 0.8f);
-            selectHint.text = picked != null ? Loc.T("[Space] 확정 : ") + picked : Loc.T("카드를 클릭해 고른 뒤 [Space]로 확정");
+            selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정");
         }
     }
 

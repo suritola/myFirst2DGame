@@ -22,26 +22,29 @@ public class ESCmenu : MonoBehaviour
     void Update()
     {
         isShopOpen = shop.isShopOpen;
-        // 타겟팅 스킬(시간이 느려진 상태) 중에는 열지 않음
-        PlayerController player = FindFirstObjectByType<PlayerController>();
-        bool skillUsing = player != null && player.IsSkillUsing;
-        if (Input.GetKeyDown(KeyCode.Escape) && (!skillUsing || isEscOpen))
+        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+
+        // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기)
+        if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount) return;
+        if (isShopOpen)
         {
-            // 설정 창이 열려 있으면 먼저 닫음
-            if (SettingsUI.IsOpen) { SettingsUI.Close(); return; }
-            if (isShopOpen)
-            {
-                shop.isShopOpen = false;
-                StartCoroutine(shop.StartGameCountdown());
-                shopPanel.SetActive(false);
-            }
-            else ToggleEsc();
+            shop.isShopOpen = false;
+            StartCoroutine(shop.StartGameCountdown());
+            shopPanel.SetActive(false);
         }
+        else ToggleEsc();
+    }
+
+    // 창이 포커스를 잃으면 (Alt+Tab 등) 일시정지 메뉴를 열어 둠
+    void OnApplicationFocus(bool focus)
+    {
+        if (focus || isEscOpen || GameInput.Auto || Application.isBatchMode) return;
+        if (Time.timeScale == 0f || (shop != null && shop.isShopOpen)) return;
+        ToggleEsc();
     }
 
     public void onPressRestart()
     {
-        SceneManager.LoadScene("GameOver");
         SceneManager.LoadScene("GameScene");
         Time.timeScale = 1f;
     }
@@ -59,6 +62,9 @@ public class ESCmenu : MonoBehaviour
 
         if (isEscOpen)
         {
+            // 필살기 조준 중(시간이 느려진 상태)이면 조준을 취소하고 멈춤 (게이지는 그대로)
+            PlayerController player = Hostile.Player;
+            if (player != null) player.CancelSkill();
             timeScaleBeforeOpen = Time.timeScale;
             Time.timeScale = 0f;
         }

@@ -266,9 +266,9 @@ public class EnermyController : MonoBehaviour
 
         if (a == 1)
         {
-            playerC = FindFirstObjectByType<PlayerController>();
-            LevelShop levelS = FindFirstObjectByType<LevelShop>();
-            Level lv = FindFirstObjectByType<Level>();
+            playerC = Cache<PlayerController>.Get;
+            LevelShop levelS = Cache<LevelShop>.Get;
+            Level lv = Cache<Level>.Get;
 
             playerC.nowEXP += expReward * lv.bonusEXP;
 
@@ -280,7 +280,7 @@ public class EnermyController : MonoBehaviour
                 StartCoroutine(LevelUpSequence(levelS));
             }
 
-            Point point = FindFirstObjectByType<Point>();
+            Point point = Cache<Point>.Get;
 
             if (point != null) point.AddPoint(10);
         }
@@ -310,7 +310,7 @@ public class EnermyController : MonoBehaviour
     {
         // 죽음 애니메이션 시간
         yield return new WaitForSeconds(1f);
-        EnemySpawner enemySpawner = FindFirstObjectByType<EnemySpawner>();
+        EnemySpawner enemySpawner = Cache<EnemySpawner>.Get;
         enemySpawner.spawnedEnemys--;
         // 총알에 죽었을 때만 코인 생성
         if (a == 1)

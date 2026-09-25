@@ -16,6 +16,8 @@ public class DamageFlash : MonoBehaviour
     public static void Show(float strength)
     {
         if (instance == null) Create();
+        // 번쩍임 효과를 끄면 피격 번쩍임 없음 (저체력 테두리는 깜빡이지 않고 은은하게 유지)
+        if (!GameSettings.Flashes) return;
         if (instance != null) instance.flash = Mathf.Max(instance.flash, Mathf.Clamp01(strength));
     }
 
@@ -75,7 +77,7 @@ public class DamageFlash : MonoBehaviour
         if (player == null) player = FindFirstObjectByType<PlayerController>();
         float low = 0f;
         if (player != null && player.PlayerMaxHealth > 0f && player.PlayerHealth / player.PlayerMaxHealth < LowHealthRatio)
-            low = 0.22f + 0.14f * Mathf.Sin(Time.unscaledTime * 5f);
+            low = GameSettings.Flashes ? 0.22f + 0.14f * Mathf.Sin(Time.unscaledTime * 5f) : 0.22f;
 
         float alpha = Mathf.Max(flash, low);
         image.color = new Color(1f, 1f, 1f, alpha);

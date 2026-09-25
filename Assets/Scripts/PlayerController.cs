@@ -286,7 +286,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool holdingSpecial = special != null && special.WeaponActive;
-        if (Input.GetKeyDown(KeyCode.R) && !holdingSpecial) if (NowBullet < MaxBullet) StartCoroutine(Reload());
+        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
         // 이동 입력
@@ -294,13 +294,13 @@ public class PlayerController : MonoBehaviour
 
         move = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) move += Vector3.left;
+        if (KeyBindings.Held(GameAction.Left)) move += Vector3.left;
 
-        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) move += Vector3.right;
+        if (KeyBindings.Held(GameAction.Right)) move += Vector3.right;
 
-        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) move += Vector3.up;
+        if (KeyBindings.Held(GameAction.Up)) move += Vector3.up;
 
-        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) move += Vector3.down;
+        if (KeyBindings.Held(GameAction.Down)) move += Vector3.down;
 
         if (GameInput.Auto) move = GameInput.AutoMove;
 
@@ -409,7 +409,7 @@ public class PlayerController : MonoBehaviour
         isReloading = true;
         reload = 0f;
 
-        if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound);
+        if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
 
         while (reload < reloadTime)
         {
@@ -445,7 +445,7 @@ void Shoot()
 
         FaceTowards(mousePosition);
 
-        if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound);
+        if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
         Vector3 startPosition = transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
 
@@ -552,7 +552,7 @@ void Shoot()
         UltUsed?.Invoke();
         NowCharge = 0f;
         skillDamage = damage * 2f;
-        if (audioSource != null && chargeSound != null) audioSource.PlayOneShot(chargeSound);
+        if (audioSource != null && chargeSound != null) audioSource.PlayOneShot(chargeSound, GameSettings.SfxVolume);
 
         ClearTargets();
 
@@ -656,6 +656,30 @@ void Shoot()
         NowCharge = 0f;
     }
 
+    // 조준을 쏘지 않고 취소 (일시정지할 때): 시간 · 화면 · 줌을 되돌리고 게이지는 그대로 둠
+    public void CancelSkill()
+    {
+        if (!isSkillUsing) return;
+
+        isSkillUsing = false;
+
+        if (audioSource != null) audioSource.Stop();
+
+        Time.timeScale = 1f;
+
+        StartCoroutine(FadeScreen(0f));
+
+        StartCoroutine(ResetZoom());
+
+        foreach (GameObject mark in targetMarks) if (mark != null) Destroy(mark);
+
+        targetMarks.Clear();
+        targets.Clear();
+        special?.EndAim();
+
+        NowCharge = 0f;
+    }
+
     // =====================================
     // 타겟들에게 순서대로 발사
     // =====================================
@@ -700,7 +724,7 @@ void Shoot()
 
                 FaceTowards(target.transform.position);
 
-                if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound);
+                if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
                 CreateBullet(startPosition, direction, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
 
@@ -780,7 +804,7 @@ void Shoot()
             if (coin != null)
             {
                 coin.AddCoin(1 + bonusCoin);
-                if ( audioSource != null && getCoin != null ) audioSource.PlayOneShot( getCoin );
+                if ( audioSource != null && getCoin != null ) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume);
             }
             Destroy( collision.gameObject );
         }
@@ -832,7 +856,7 @@ void Shoot()
 
         invincibleUntil = Time.time + hurtInvincibleTime;
 
-        if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound);
+        if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);
 
         float taken = amount * (1f - def);
 

@@ -15,6 +15,7 @@ public class Level : MonoBehaviour
     public float bonusEXP = 1.0f;
 
     public TextMeshProUGUI levelText;
+    RectTransform gauge;
     void Start()
     {
         EXPmaxWidth = GetComponent<RectTransform>().sizeDelta.x;
@@ -27,11 +28,12 @@ public class Level : MonoBehaviour
     void Update()
     {
 
-        playerLevel = FindFirstObjectByType<PlayerController>().level;
+        PlayerController player = Cache<PlayerController>.Get;
+        playerLevel = player.level;
         levelText.text = "Lv. " + playerLevel;
-        playerEXP = FindFirstObjectByType<PlayerController>().nowEXP;
-        playerMaxEXP = FindFirstObjectByType<PlayerController>().needEXP;
-        if (playerEXP > 0) EXPgauge.GetComponent<RectTransform>().sizeDelta = new Vector2(playerEXP / playerMaxEXP * EXPmaxWidth, EXPgauge.GetComponent<RectTransform>().sizeDelta.y);
-        else EXPgauge.GetComponent<RectTransform>().sizeDelta = new Vector2(0, EXPgauge.GetComponent<RectTransform>().sizeDelta.y);
+        playerEXP = player.nowEXP;
+        playerMaxEXP = player.needEXP;
+        if (gauge == null) gauge = EXPgauge.GetComponent<RectTransform>();
+        gauge.sizeDelta = new Vector2(playerEXP > 0 ? playerEXP / playerMaxEXP * EXPmaxWidth : 0, gauge.sizeDelta.y);
     }
 }

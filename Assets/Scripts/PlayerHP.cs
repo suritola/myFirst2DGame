@@ -12,6 +12,7 @@ public class PlayerHP : MonoBehaviour
     public float HPmaxWidth;
     public float playerHP;
     public float playerMaxHP;
+    RectTransform gauge;
 
     // Start is called before the first frame update
     void Start()
@@ -24,10 +25,11 @@ public class PlayerHP : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        playerHP = FindFirstObjectByType<PlayerController>().PlayerHealth;
-        playerMaxHP = FindFirstObjectByType<PlayerController>().PlayerMaxHealth;
-        if (playerHP > 0) HPgauge.GetComponent<RectTransform>().sizeDelta = new Vector2(playerHP / playerMaxHP * HPmaxWidth, HPgauge.GetComponent<RectTransform>().sizeDelta.y);
-        else HPgauge.GetComponent<RectTransform>().sizeDelta = new Vector2(0, HPgauge.GetComponent<RectTransform>().sizeDelta.y);
+        PlayerController player = Cache<PlayerController>.Get;
+        playerHP = player.PlayerHealth;
+        playerMaxHP = player.PlayerMaxHealth;
+        if (gauge == null) gauge = HPgauge.GetComponent<RectTransform>();
+        gauge.sizeDelta = new Vector2(playerHP > 0 ? playerHP / playerMaxHP * HPmaxWidth : 0, gauge.sizeDelta.y);
 
         if (hpText != null) hpText.text = Mathf.CeilToInt(Mathf.Max(playerHP, 0)) + " / " + Mathf.CeilToInt(playerMaxHP);
     }

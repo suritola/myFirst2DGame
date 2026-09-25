@@ -105,7 +105,7 @@ public class Shop : MonoBehaviour
             if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
         }
         ShopStall.Spawn(this, at);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [Space]"), 2.2f);
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [{INTERACT}]"), 2.2f);
     }
 
     // 제단에 다가갔을 때 (열렸으면 true)

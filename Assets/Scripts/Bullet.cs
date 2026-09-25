@@ -99,8 +99,6 @@ public class Bullet : MonoBehaviour
                 // 스킬 포인트 추가
                 // =========================
 
-                SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
-
                 // 스킬 게이지는 이제 시간으로 참 (SkillGauge)
 
                 onHitEnemy?.Invoke(this, collision);
@@ -113,7 +111,7 @@ public class Bullet : MonoBehaviour
         }
         if (collision.CompareTag("boss"))
         {
-            bosss enemy = FindFirstObjectByType<bosss>();
+            bosss enemy = Cache<bosss>.Get;
 
             if (enemy != null)
             {
@@ -128,8 +126,6 @@ public class Bullet : MonoBehaviour
                 // =========================
                 // 스킬 포인트 추가
                 // =========================
-
-                SkillGauge skillGauge = FindFirstObjectByType<SkillGauge>();
 
                 // 스킬 게이지는 이제 시간으로 참 (SkillGauge)
             }

@@ -188,6 +188,7 @@ public static class UIKit
 }
 
 // ===================================================================== settings
+// 탭 3개: 일반(언어 · 볼륨) / 화면(모드 · 해상도 · 수직 동기화 · 흔들림 · 번쩍임) / 조작(키 바꾸기)
 public static class SettingsUI
 {
     static GameObject open;
@@ -195,24 +196,71 @@ public static class SettingsUI
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
+    static readonly Color Off = new Color(0.6f, 0.58f, 0.65f);
+
+    static readonly string[] TabNames = { "일반", "화면", "조작" };
+    static int tab;
+    static RectTransform page;
+    static readonly List<Button> tabButtons = new List<Button>();
+
+    // 키 바꾸기: 입력을 기다리는 동작 (-1 = 없음)
+    static int capturing = -1;
+    static readonly List<TMP_Text> keyLabels = new List<TMP_Text>();
+
+    // ESC를 이 창이 처리한 프레임 (ESCmenu가 같은 ESC로 메뉴를 닫지 않게)
+    public static int EscHandledFrame = -1;
 
     public static void Open(Transform root)
     {
         if (open != null) return;
-        RectTransform win = UIKit.Modal(root, "SettingsPanel", new Vector2(960f, 640f), out open);
+        RectTransform win = UIKit.Modal(root, "SettingsPanel", new Vector2(1180f, 860f), out open);
+        open.AddComponent<SettingsInput>();
 
-        UIKit.Text(win, "설정", 52f, Gold, new Vector2(0f, 250f), new Vector2(600f, 70f));
+        UIKit.Text(win, "설정", 52f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));
 
-        // 언어
-        UIKit.Text(win, "언어", 30f, Parch, new Vector2(-330f, 130f), new Vector2(200f, 50f), TextAlignmentOptions.Left);
+        tabButtons.Clear();
+        for (int i = 0; i < TabNames.Length; i++)
+        {
+            int t = i;
+            tabButtons.Add(UIKit.MakeButton(win, TabNames[i], new Vector2(-270f + 270f * i, 272f), new Vector2(250f, 64f), () => ShowTab(t), 28f));
+        }
+        page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
+
+        UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 76f), Close, 30f);
+        ShowTab(tab);
+    }
+
+    static void ShowTab(int t)
+    {
+        tab = t;
+        capturing = -1;
+        keyLabels.Clear();
+        for (int i = page.childCount - 1; i >= 0; i--) Object.Destroy(page.GetChild(i).gameObject);
+        for (int i = 0; i < tabButtons.Count; i++)
+        {
+            tabButtons[i].GetComponent<Image>().color = i == tab ? Gold : Off;
+            tabButtons[i].transform.localScale = Vector3.one * (i == tab ? 1.06f : 1f);
+        }
+        if (tab == 0) BuildGeneral();
+        else if (tab == 1) BuildDisplay();
+        else BuildControls();
+    }
+
+    static TMP_Text RowLabel(string ko, float y) =>
+        UIKit.Text(page, ko, 30f, Parch, new Vector2(-400f, y), new Vector2(280f, 50f), TextAlignmentOptions.Left);
+
+    // ================================================================= 일반
+    static void BuildGeneral()
+    {
+        RowLabel("언어", 200f);
         List<Button> langButtons = new List<Button>();
         for (int i = 0; i < 4; i++)
         {
             int lang = i;
-            Button b = UIKit.MakeButton(win, "", new Vector2(-110f + 170f * i, 130f), new Vector2(160f, 64f), () =>
+            Button b = UIKit.MakeButton(page, "", new Vector2(-140f + 185f * i, 200f), new Vector2(170f, 64f), () =>
             {
                 GameSettings.Language = (Loc.Lang)lang;
-                Highlight(langButtons);
+                HighlightLang(langButtons);
             }, 26f);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.text = Loc.LangNames[i];     // 언어 이름은 각 언어로 그대로
@@ -220,31 +268,211 @@ public static class SettingsUI
             if (native != null) label.font = native;   // 기본 폰트엔 일본어 · 중국어 글자가 없음
             langButtons.Add(b);
         }
-        Highlight(langButtons);
+        HighlightLang(langButtons);
 
-        // 볼륨 (0 ~ 100%)
-        UIKit.Text(win, "볼륨", 30f, Parch, new Vector2(-330f, 0f), new Vector2(200f, 50f), TextAlignmentOptions.Left);
-        TMP_Text percent = UIKit.Text(win, "", 30f, Gold, new Vector2(350f, 0f), new Vector2(120f, 50f));
-        Slider slider = MakeSlider(win, new Vector2(40f, 0f), new Vector2(500f, 36f));
-        slider.value = GameSettings.Volume;
-        percent.text = Mathf.RoundToInt(slider.value * 100f) + "%";
-        slider.onValueChanged.AddListener(v =>
-        {
-            GameSettings.Volume = v;
-            percent.text = Mathf.RoundToInt(v * 100f) + "%";
-        });
-
-        UIKit.MakeButton(win, "닫기", new Vector2(0f, -230f), new Vector2(260f, 76f), Close, 30f);
+        SliderRow("전체 볼륨", 70f, GameSettings.Volume, v => GameSettings.Volume = v);
+        SliderRow("음악", -50f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        SliderRow("효과음", -170f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
     }
 
-    static void Highlight(List<Button> buttons)
+    static void HighlightLang(List<Button> buttons)
     {
         for (int i = 0; i < buttons.Count; i++)
         {
             bool on = i == (int)GameSettings.Language;
-            buttons[i].GetComponent<Image>().color = on ? Gold : new Color(0.6f, 0.58f, 0.65f);
+            buttons[i].GetComponent<Image>().color = on ? Gold : Off;
             buttons[i].transform.localScale = Vector3.one * (on ? 1.06f : 1f);
         }
+    }
+
+    // 0 ~ 100%
+    static void SliderRow(string ko, float y, float value, System.Action<float> set)
+    {
+        RowLabel(ko, y);
+        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
+        slider.value = value;
+        percent.text = Mathf.RoundToInt(value * 100f) + "%";
+        slider.onValueChanged.AddListener(v =>
+        {
+            set(v);
+            percent.text = Mathf.RoundToInt(v * 100f) + "%";
+        });
+    }
+
+    // ================================================================= 화면
+    static void BuildDisplay()
+    {
+        RowLabel("화면 모드", 200f);
+        Button full = null, windowed = null;
+        System.Action highlightMode = () =>
+        {
+            bool isFull = Screen.fullScreenMode != FullScreenMode.Windowed;
+            full.GetComponent<Image>().color = isFull ? Gold : Off;
+            windowed.GetComponent<Image>().color = isFull ? Off : Gold;
+        };
+        full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, 200f), new Vector2(250f, 64f), () =>
+        {
+            Screen.SetResolution(Display.main.systemWidth, Display.main.systemHeight, FullScreenMode.FullScreenWindow);
+            Deselect();
+            highlightMode();
+        }, 26f);
+        windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, 200f), new Vector2(250f, 64f), () =>
+        {
+            // 화면을 꽉 채우는 크기면 창 테두리가 화면 밖으로 나가므로 한 단계 작은 해상도로
+            Vector2Int r = new Vector2Int(Screen.width, Screen.height);
+            if (r.x >= Display.main.systemWidth || r.y >= Display.main.systemHeight)
+            {
+                List<Vector2Int> list = Resolutions();
+                for (int i = list.Count - 1; i >= 0; i--)
+                    if (list[i].x < Display.main.systemWidth && list[i].y < Display.main.systemHeight) { r = list[i]; break; }
+            }
+            Screen.SetResolution(r.x, r.y, FullScreenMode.Windowed);
+            Deselect();
+            highlightMode();
+        }, 26f);
+        highlightMode();
+
+        // 해상도: < 1920 × 1080 >
+        RowLabel("해상도", 90f);
+        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 90f), new Vector2(320f, 50f));
+        res.text = Screen.width + " × " + Screen.height;
+        System.Action<int> step = d =>
+        {
+            List<Vector2Int> list = Resolutions();
+            int at = list.FindIndex(v => v.x == Screen.width && v.y == Screen.height);
+            if (at < 0) at = list.Count - 1;
+            at = Mathf.Clamp(at + d, 0, list.Count - 1);
+            Screen.SetResolution(list[at].x, list[at].y, Screen.fullScreenMode);
+            res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
+            Deselect();
+        };
+        UIKit.MakeButton(page, "<", new Vector2(-110f, 90f), new Vector2(80f, 64f), () => step(-1), 30f);
+        UIKit.MakeButton(page, ">", new Vector2(300f, 90f), new Vector2(80f, 64f), () => step(1), 30f);
+
+        ToggleRow("수직 동기화", -20f, () => GameSettings.VSync, v => GameSettings.VSync = v);
+        ToggleRow("화면 흔들림", -130f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
+        ToggleRow("번쩍임 효과", -240f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
+    }
+
+    // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)
+    static List<Vector2Int> Resolutions()
+    {
+        List<Vector2Int> list = new List<Vector2Int>();
+        foreach (Resolution r in Screen.resolutions)
+        {
+            Vector2Int v = new Vector2Int(r.width, r.height);
+            if (v.x >= 800 && !list.Contains(v)) list.Add(v);
+        }
+        Vector2Int now = new Vector2Int(Screen.width, Screen.height);
+        if (!list.Contains(now)) list.Add(now);
+        list.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
+        return list;
+    }
+
+    static void ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set)
+    {
+        RowLabel(ko, y);
+        Button b = null;
+        TMP_Text label = null;
+        System.Action refresh = () =>
+        {
+            bool on = get();
+            string text = on ? "켜짐" : "꺼짐";
+            label.text = Loc.T(text);
+            UIKit.Remember(label, text);
+            b.GetComponent<Image>().color = on ? Gold : Off;
+        };
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        {
+            set(!get());
+            Deselect();
+            refresh();
+        }, 26f);
+        label = b.GetComponentInChildren<TMP_Text>();
+        refresh();
+    }
+
+    // ================================================================= 조작
+    static readonly string[] ActionNames =
+    {
+        "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
+        "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "특수 강화",
+    };
+
+    static void BuildControls()
+    {
+        for (int i = 0; i < KeyBindings.All.Length; i++)
+        {
+            int index = i;
+            int col = i < 6 ? 0 : 1;
+            float y = 220f - 78f * (i % 6);
+            float x = col == 0 ? -540f : 20f;
+            UIKit.Text(page, ActionNames[i], 26f, Parch, new Vector2(x + 170f, y), new Vector2(340f, 50f), TextAlignmentOptions.Left);
+            Button b = UIKit.MakeButton(page, "", new Vector2(x + 430f, y), new Vector2(170f, 60f), () =>
+            {
+                capturing = index;
+                Deselect();                 // Space · Enter가 버튼을 다시 누르지 않게
+                RefreshKeys();
+            }, 26f);
+            keyLabels.Add(b.GetComponentInChildren<TMP_Text>());
+        }
+        UIKit.Text(page, "버튼을 누른 뒤 바꿀 키를 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
+        UIKit.MakeButton(page, "기본값으로", new Vector2(390f, -255f), new Vector2(260f, 60f), () =>
+        {
+            capturing = -1;
+            KeyBindings.ResetAll();
+            Deselect();
+            RefreshKeys();
+        }, 24f);
+        RefreshKeys();
+    }
+
+    static void RefreshKeys()
+    {
+        for (int i = 0; i < keyLabels.Count; i++)
+        {
+            if (keyLabels[i] == null) continue;
+            bool waiting = i == capturing;
+            keyLabels[i].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.Name(KeyBindings.All[i]);
+            keyLabels[i].color = waiting ? Gold : new Color(0.96f, 0.9f, 0.8f);
+        }
+    }
+
+    static readonly KeyCode[] Bindable = BuildBindable();
+
+    static KeyCode[] BuildBindable()
+    {
+        List<KeyCode> list = new List<KeyCode>();
+        foreach (KeyCode k in (KeyCode[])System.Enum.GetValues(typeof(KeyCode)))
+            if (k != KeyCode.None && k != KeyCode.Escape && k < KeyCode.Mouse0 && !list.Contains(k)) list.Add(k);
+        return list.ToArray();
+    }
+
+    // 창이 열려 있는 동안 매 프레임 (SettingsInput): 키 입력 받기 · ESC
+    internal static void Tick()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            EscHandledFrame = Time.frameCount;
+            if (capturing >= 0) { capturing = -1; RefreshKeys(); }
+            else Close();
+            return;
+        }
+        if (capturing < 0) return;
+        foreach (KeyCode k in Bindable)
+        {
+            if (!Input.GetKeyDown(k)) continue;
+            KeyBindings.Set(KeyBindings.All[capturing], k);
+            capturing = -1;
+            RefreshKeys();
+            return;
+        }
+    }
+
+    static void Deselect()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
     }
 
     static Slider MakeSlider(Transform parent, Vector2 pos, Vector2 size)
@@ -286,9 +514,17 @@ public static class SettingsUI
 
     public static void Close()
     {
+        capturing = -1;
+        GameSettings.Save();
         if (open != null) Object.Destroy(open);
         open = null;
     }
+}
+
+// 설정 창에 붙어서 SettingsUI.Tick을 불러 줌 (멈춘 화면에서도 Update는 돔)
+public class SettingsInput : MonoBehaviour
+{
+    void Update() => SettingsUI.Tick();
 }
 
 // ===================================================================== tutorial
@@ -306,10 +542,10 @@ public static class TutorialUI
     {
         ("기본 조작", "fx_keycap", new[]
         {
-            ("W A S D", "이동"),
+            ("{MOVE}", "이동"),
             ("좌클릭", "마우스 방향으로 사격"),
-            ("R", "재장전"),
-            ("Q", "무기 교체 (특수 무기를 얻은 뒤)"),
+            ("{RELOAD}", "재장전"),
+            ("{SWAP}", "무기 교체 (특수 무기를 얻은 뒤)"),
             ("ESC", "일시정지 · 설정"),
         }),
         ("필살기", "fx_reticle", new[]
@@ -321,16 +557,16 @@ public static class TutorialUI
         }),
         ("성장", "fx_prompt", new[]
         {
-            ("레벨업", "카드를 클릭해 고르고 Space로 확정"),
-            ("상점 제단", "적 35마리마다 나타남 · 다가가서 Space로 열기"),
+            ("레벨업", "카드를 클릭해 고르고 {INTERACT}로 확정"),
+            ("상점 제단", "적 35마리마다 나타남 · 다가가서 {INTERACT}로 열기"),
             ("상점", "능력치 · 무기 강화 · 스킬 강화"),
             ("코인", "적이 떨어뜨림 · 코인 자석 능력으로 끌어올 수 있음"),
         }),
         ("특수 능력", "fx_orb", new[]
         {
             ("지옥의 문", "1장 보스를 쓰러뜨리고 문에 들어가면 특수 능력 3개를 고릅니다"),
-            ("무기 · 스킬 · 패시브", "무기는 Q로 교체, 스킬은 E · F · Space"),
-            ("특수 강화 (T)", "중간 보스를 잡으면 포인트 · 새 능력을 배우거나 가진 능력을 진화"),
+            ("무기 · 스킬 · 패시브", "무기는 {SWAP}로 교체, 스킬은 {SKILL1} · {SKILL2} · {SKILL3}"),
+            ("특수 강화 ({UPGRADE})", "중간 보스를 잡으면 포인트 · 새 능력을 배우거나 가진 능력을 진화"),
         }),
         ("적과 보스", "fx_warn", new[]
         {

@@ -2,13 +2,13 @@ using TMPro;
 using UnityEngine;
 
 // 떠돌이 상점 제단: 일반 몹을 여러 마리 잡을 때마다 플레이어 근처에 나타나고,
-// 가까이 가서 Space를 누르면 상점이 열림. 10초가 지나면 사라짐 (Shop이 만듦)
+// 가까이 가서 상호작용 키(기본 Space)를 누르면 상점이 열림. 10초가 지나면 사라짐 (Shop이 만듦)
 public class ShopStall : MonoBehaviour
 {
     public float lifetime = 10f;
     public float openDistance = 3f;
 
-    // 플레이어가 제단 앞에 있으면 Space는 상점 열기 (스킬 대신)
+    // 플레이어가 제단 앞에 있으면 상호작용 키는 상점 열기 (스킬 대신)
     public static bool PlayerNear;
 
     Shop shop;
@@ -86,12 +86,12 @@ public class ShopStall : MonoBehaviour
         if (glow != null) glow.transform.localScale = Vector3.one * (0.45f + Mathf.Sin(Time.time * 4f) * 0.05f);
         label.text = Loc.T("상점  ") + Mathf.CeilToInt(left);
 
-        // 가까이 오면 안내가 나타나고, Space로 상점 열기
+        // 가까이 오면 안내가 나타나고, 상호작용 키로 상점 열기
         PlayerController p = Hostile.Player;
         bool near = p != null && Vector2.Distance(p.transform.position, transform.position) < openDistance;
         PlayerNear = near;
         UpdatePrompt(near);
-        if (near && Time.timeScale == 1f && !p.IsSkillUsing && Input.GetKeyDown(KeyCode.Space))
+        if (near && Time.timeScale == 1f && !p.IsSkillUsing && KeyBindings.Down(GameAction.Interact))
         {
             if (shop.OpenFromStall())
             {
@@ -139,6 +139,15 @@ public class ShopStall : MonoBehaviour
         promptText.sortingLayerID = SortingLayer.NameToID("Effect");
         promptText.sortingOrder = 33;
         promptText.rectTransform.sizeDelta = new Vector2(4f, 1.2f);
+
+        // 키 그림은 SPACE라서, 상호작용 키를 바꿨으면 그림 대신 글자로 키 이름을 보여 줌
+        if (KeyBindings.Get(GameAction.Interact) != KeyCode.Space)
+        {
+            if (keycap != null) keycap.gameObject.SetActive(false);
+            t.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+            promptText.rectTransform.sizeDelta = new Vector2(6f, 1.2f);
+            promptText.text = "[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("상점 열기");
+        }
 
         nearRing = Hostile.NewLine("StallNearRing", new Color(1f, 0.85f, 0.4f, 0f), 0.16f, 2);
         nearRing.transform.SetParent(transform, false);

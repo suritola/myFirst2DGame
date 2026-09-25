@@ -90,7 +90,7 @@ public class SpecialTreeUI : MonoBehaviour
         {
             (kind: SpecialKind.Weapon, name: Loc.T("무기  [Q] 교체"), x: -630f, cols: new[] { -760f, -500f }),
             (kind: SpecialKind.Passive, name: Loc.T("패시브  항상 적용"), x: 0f, cols: new[] { -130f, 130f }),
-            (kind: SpecialKind.Skill, name: Loc.T("스킬  [E] 사용"), x: 630f, cols: new[] { 500f, 760f }),
+            (kind: SpecialKind.Skill, name: Loc.T("스킬  [{SKILL1}] 사용"), x: 630f, cols: new[] { 500f, 760f }),
         };
         float[] rows = { 60f, -55f, -170f, -285f };
         const float headerY = 160f;
@@ -322,7 +322,7 @@ public class SpecialTreeUI : MonoBehaviour
         }
         else if (upgradeMode && !specials.Has(id) && specials.abilities[id].kind == SpecialKind.Skill && SkillSlotsFull())
         {
-            note = Loc.T("스킬 칸(E · F · Space)이 가득 찼습니다. 가진 스킬을 진화시켜 보세요.");
+            note = Loc.T("스킬 칸({SKILL1} · {SKILL2} · {SKILL3})이 가득 찼습니다. 가진 스킬을 진화시켜 보세요.");
         }
         else if (picked.Count < pointsNow)
         {
@@ -370,7 +370,7 @@ public class SpecialTreeUI : MonoBehaviour
             {
                 detailName.text = Loc.T("능력 ") + pointsNow + Loc.T("개를 고르세요");
                 detailKind.text = Loc.T("포인트 ") + pointsNow + Loc.T("개 · 노드를 눌러 선택");
-                detailText.text = Loc.T("무기는 Q로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 E · F · Space에 배정됩니다. 다시 누르면 선택이 취소됩니다.");
+                detailText.text = Loc.T("무기는 {SWAP}로 기본 권총과 번갈아 쓰고, 스킬은 고른 순서대로 {SKILL1} · {SKILL2} · {SKILL3}에 배정됩니다. 다시 누르면 선택이 취소됩니다.");
             }
             return;
         }
@@ -383,5 +383,5 @@ public class SpecialTreeUI : MonoBehaviour
         detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
     }
 
-    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? Loc.T("무기 · Q로 교체") : k == SpecialKind.Skill ? Loc.T("스킬 · E/F/Space") : Loc.T("패시브 · 항상 적용");
+    static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? Loc.T("무기 · {SWAP}로 교체") : k == SpecialKind.Skill ? Loc.T("스킬 · {SKILL1}/{SKILL2}/{SKILL3}") : Loc.T("패시브 · 항상 적용");
 }

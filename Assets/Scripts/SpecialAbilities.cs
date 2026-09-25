@@ -53,9 +53,8 @@ public class SpecialAbilities : MonoBehaviour
     public static readonly int[] WeaponStatMax = { 5, 5, 3, 3 };
     readonly Dictionary<int, int[]> weaponLevels = new Dictionary<int, int[]>();
 
-    // 스킬 키: 고른 순서대로 E, F, Space
-    static readonly KeyCode[] SkillKeys = { KeyCode.E, KeyCode.F, KeyCode.Space };
-    static readonly string[] SkillKeyNames = { "E", "F", "Space" };
+    // 스킬 키: 고른 순서대로 스킬 1 · 2 · 3 (기본 E, F, C · 설정에서 바꿀 수 있음)
+    static readonly GameAction[] SkillKeys = { GameAction.Skill1, GameAction.Skill2, GameAction.Skill3 };
 
     // 무기: Q로 기본 권총 → 무기1 → 무기2 순서로 교체 (-1 = 기본 권총)
     int weaponIndex = -1;
@@ -232,7 +231,7 @@ public class SpecialAbilities : MonoBehaviour
         WeaponAmmo a = Ammo(id);
         if (a.Reloading || a.ammo >= MagSize(id)) return;
         a.reloadEnd = Time.time + BaseReload(id);
-        if (player.reloadSound != null && player.TryGetComponent(out AudioSource src)) src.PlayOneShot(player.reloadSound);
+        if (player.reloadSound != null && player.TryGetComponent(out AudioSource src)) src.PlayOneShot(player.reloadSound, GameSettings.SfxVolume);
     }
 
     // 들고 있지 않은 무기도 장전은 계속 진행
@@ -838,7 +837,8 @@ public class SpecialAbilities : MonoBehaviour
     {
         if (player == null || equipped.Count == 0 || Time.timeScale == 0f)
         {
-            // 멈춘 동안에는 소리와 표시를 숨김
+            // 멈춘 동안에는 소리와 표시를 숨기고 조준 중이던 스킬은 취소 (멈춘 사이 키를 떼도 조준이 남지 않게)
+            aimingSkill = -1;
             if (fx != null) fx.StopLoop();
             HidePreviews();
             UpdateHud();
@@ -849,7 +849,7 @@ public class SpecialAbilities : MonoBehaviour
 
         if (weapons.Count > 0)
         {
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (KeyBindings.Down(GameAction.Swap))
             {
                 // 기본 권총(-1) → 무기1 → 무기2 → 기본 권총 ...
                 weaponIndex = weaponIndex + 1 >= weapons.Count ? -1 : weaponIndex + 1;
@@ -863,7 +863,7 @@ public class SpecialAbilities : MonoBehaviour
             UpdateWeaponReloads();
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
             player.ammoTextOverride = WeaponActive ? AmmoText(CurrentWeapon) : null;
-            if (WeaponActive && Input.GetKeyDown(KeyCode.R)) StartWeaponReload(CurrentWeapon);
+            if (WeaponActive && KeyBindings.Down(GameAction.Reload)) StartWeaponReload(CurrentWeapon);
             if (WeaponActive) UpdateWeapon();
         }
 
@@ -1044,7 +1044,7 @@ public class SpecialAbilities : MonoBehaviour
         cursed = IsLastBulletCursed(mag.ammo);
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
         if (mag.ammo <= 0) StartWeaponReload(CurrentWeapon);
-        if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound);
+        if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
         return ((Vector2)(target - start)).normalized;
     }
 
@@ -1278,11 +1278,11 @@ public class SpecialAbilities : MonoBehaviour
 
     // ================================================================= skills
     // 스킬 키: 쿨타임 중이면 경고, 조준형은 누르고 있는 동안 미리보기 후 떼면 사용
-    void HandleSkillKey(int id, KeyCode key)
+    void HandleSkillKey(int id, GameAction key)
     {
-        // 상점 제단 앞에서는 Space가 상점 열기
-        if (key == KeyCode.Space && ShopStall.PlayerNear) return;
-        if (Input.GetKeyDown(key))
+        // 상점 제단 앞에서는 상호작용 키가 상점 열기 (스킬 키를 같은 키로 바꿨을 때)
+        if (KeyBindings.Get(key) == KeyBindings.Get(GameAction.Interact) && ShopStall.PlayerNear) return;
+        if (KeyBindings.Down(key))
         {
             float left = CooldownUntil(id) - Time.time;
             if (left > 0f)
@@ -1296,7 +1296,7 @@ public class SpecialAbilities : MonoBehaviour
             else UseSkill(id);
         }
 
-        if (aimingSkill == id && Input.GetKeyUp(key))
+        if (aimingSkill == id && KeyBindings.Up(key))
         {
             aimingSkill = -1;
             if (Time.time >= CooldownUntil(id) && !player.IsSkillUsing) UseSkill(id);
@@ -1781,6 +1781,8 @@ public class SpecialAbilities : MonoBehaviour
 
     public void Flash(Vector3 pos, float size, Color color, float duration)
     {
+        // 번쩍임 효과를 끄면 섬광을 옅게
+        if (!GameSettings.Flashes) color.a *= 0.35f;
         GameObject f = MakeSprite("Flash", glowSprite, pos, size / 8f, color, "Effect", 3);
         f.AddComponent<FadeOut>().duration = duration;
     }
@@ -2039,7 +2041,7 @@ public class SpecialAbilities : MonoBehaviour
             else if (def.kind == SpecialKind.Skill)
             {
                 int slot = skills.IndexOf(row.id);
-                string key = slot >= 0 && slot < SkillKeyNames.Length ? SkillKeyNames[slot] : "?";
+                string key = slot >= 0 && slot < SkillKeys.Length ? KeyBindings.Name(SkillKeys[slot]) : "?";
                 float left = CooldownUntil(row.id) - Time.time;
                 float length = cooldownLength.TryGetValue(row.id, out float l) ? l : 1f;
                 fill = left > 0f ? 1f - left / length : 1f;
