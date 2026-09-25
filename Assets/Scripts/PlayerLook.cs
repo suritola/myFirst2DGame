@@ -2,7 +2,7 @@ using UnityEngine;
 
 // 플레이어 모습: 들고 있는 무기에 따라 손에 드는 무기 도트가 바뀌고(Resources/Weapons),
 // 쏠 때마다 무기마다 다른 발사 연출 (반동 · 불티 · 탄피 · 연기 등)
-// 기본 권총은 캐릭터 그림에 그려진 총을 그대로 씀
+// 거너는 총을 지운 캐릭터 그림(Resources/Characters/gunner_nogun)을 쓰고, 기본 권총도 따로 들어 마우스를 따라 겨눔
 public class PlayerLook : MonoBehaviour
 {
     public static PlayerLook Instance { get; private set; }
@@ -10,7 +10,9 @@ public class PlayerLook : MonoBehaviour
     PlayerController player;
     SpriteRenderer body;
     SpriteRenderer held;
-    int shownWeapon = -2;
+    int shownWeapon = -99;
+    // 거너: 애니메이션 프레임 이름 → 총을 지운 같은 프레임
+    readonly System.Collections.Generic.Dictionary<string, Sprite> noGun = new System.Collections.Generic.Dictionary<string, Sprite>();
     Vector2 aim = Vector2.right;
     float kick, kickAngle;        // 반동: 뒤로 밀린 거리 · 들린 각도 (점점 돌아옴)
 
@@ -47,6 +49,7 @@ public class PlayerLook : MonoBehaviour
             held.sortingOrder = body.sortingOrder + 1;
         }
         held.enabled = false;
+        foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/gunner_nogun")) noGun[s.name] = s;
     }
 
     void OnDestroy()
@@ -54,17 +57,21 @@ public class PlayerLook : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
+    // -1 = 기본 권총, -2 = 빈손 (낫을 던진 동안)
     int CurrentWeapon => player != null && player.special != null ? player.special.HeldWeapon : -1;
 
     void LateUpdate()
     {
         if (player == null || body == null) return;
+        // 캐릭터 그림에 그려진 권총은 지우고 (애니메이션이 이번 프레임에 고른 그림을 같은 이름의 총 없는 그림으로)
+        if (body.sprite != null && noGun.TryGetValue(body.sprite.name, out Sprite bare)) body.sprite = bare;
+
         int id = CurrentWeapon;
         if (id != shownWeapon)
         {
             shownWeapon = id;
-            Sprite s = id >= 0 ? Resources.Load<Sprite>("Weapons/weapon_" + id) : null;
-            held.sprite = s;
+            held.sprite = id >= 0 ? Resources.Load<Sprite>("Weapons/weapon_" + id)
+                        : id == -1 ? Resources.Load<Sprite>("Weapons/weapon_pistol") : null;
         }
         // 죽는 연출 · 숨김(시작 연출) 중에는 몸과 함께 숨김
         held.enabled = held.sprite != null && body.enabled;
@@ -72,6 +79,8 @@ public class PlayerLook : MonoBehaviour
 
         if (player.special != null) aim = player.special.AimDirection;
         if (aim.sqrMagnitude < 0.01f) aim = body.flipX ? Vector2.left : Vector2.right;
+        // 몸도 겨누는 쪽을 바라봄 (총은 왼쪽, 몸은 오른쪽을 보는 어색함이 없게)
+        if (Mathf.Abs(aim.x) > 0.05f) body.flipX = aim.x < 0f;
 
         float dt = Time.unscaledDeltaTime;
         kick = Mathf.MoveTowards(kick, 0f, dt * 5f);
@@ -86,10 +95,13 @@ public class PlayerLook : MonoBehaviour
         held.color = body.color;                     // 피격 깜빡임을 몸과 같이
     }
 
-    // 총구 끝 (들고 있는 무기 그림의 앞쪽 끝)
+    // 총구 끝 (들고 있는 무기 그림의 앞쪽 끝): 총알도 여기서 나감
+    public bool HasTip => held != null && held.enabled && held.sprite != null;
+    public Vector3 TipPosition => Tip();
+
     Vector3 Tip()
     {
-        if (held == null || !held.enabled || held.sprite == null) return player.MuzzlePosition;
+        if (!HasTip) return player.BaseMuzzle;
         float len = held.sprite.bounds.size.x * (1f - held.sprite.pivot.x / held.sprite.rect.width);
         return held.transform.position + (Vector3)(aim * len);
     }
@@ -157,7 +169,7 @@ public class PlayerLook : MonoBehaviour
     // 탄피가 옆으로 튀어 떨어짐
     void Eject(Color c)
     {
-        Vector3 at = held != null && held.enabled ? held.transform.position : player.MuzzlePosition;
+        Vector3 at = held != null && held.enabled ? held.transform.position : player.BaseMuzzle;
         Vector2 side = new Vector2(-aim.y, aim.x) * (aim.x < 0f ? -1f : 1f);
         Casing.Spawn(at, (side * 2.5f + Vector2.up * 3f) + Random.insideUnitCircle * 0.8f, c);
     }

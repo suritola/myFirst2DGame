@@ -452,7 +452,7 @@ void Shoot()
 
         if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
-        Vector3 startPosition = transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
+        Vector3 startPosition = MuzzlePosition;
 
         Vector2 direction = (mousePosition - startPosition).normalized;
 
@@ -528,7 +528,9 @@ void Shoot()
     }
 
     // 총구 위치 (바라보는 쪽 손)
-    public Vector3 MuzzlePosition => transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
+    public Vector3 MuzzlePosition => PlayerLook.Instance != null && PlayerLook.Instance.HasTip ? PlayerLook.Instance.TipPosition : BaseMuzzle;
+    // 손에 든 무기 그림이 없을 때의 총구 (캐릭터 그림 기준)
+    public Vector3 BaseMuzzle => transform.position + new Vector3(spriteRenderer != null && spriteRenderer.flipX ? -0.5f : 0.5f, -0.5f, 0);
 
     // 꽃가루 구름 등으로 잠깐 느려짐
     float slowUntil;

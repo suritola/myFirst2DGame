@@ -270,6 +270,15 @@ WEAPON_ROWS = {
         'klk.................',
         'kk..................',
     ],
+    'pistol': [  # 기본 권총 (거너 그림의 리볼버를 크게)
+        '...kkkkkkkkkk.',
+        '..kGGGGGGGGGwk',
+        '.kgGgkkkkkkkk.',
+        'kbBkGk........',
+        'kbBkk.........',
+        '.kbk..........',
+        '..k...........',
+    ],
     7: [  # 용암 유탄 발사기: 드럼 탄창 + 굵은 포신
         '.......kkkkk.............',
         '.kkkkkkrrrrrkkkkkkkkkkk..',
@@ -298,7 +307,7 @@ def weapons():
         width = max(len(r) for r in rows)
         rows = [r.ljust(width, '.') for r in rows]
         img = Img.from_rows(rows, WP)
-        out = os.path.join(WEAPONS, 'weapon_%d.png' % wid)
+        out = os.path.join(WEAPONS, 'weapon_%s.png' % wid)
         write(img, out)
         if not os.path.exists(out + '.meta'):
             weapon_meta(out + '.meta', 16, img.w, img.h)

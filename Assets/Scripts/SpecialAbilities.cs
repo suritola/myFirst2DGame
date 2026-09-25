@@ -60,8 +60,8 @@ public class SpecialAbilities : MonoBehaviour
     int weaponIndex = -1;
     public bool WeaponActive => weaponIndex >= 0 && weaponIndex < weapons.Count;
     int CurrentWeapon => WeaponActive ? weapons[weaponIndex] : -1;
-    // 손에 들고 있는 무기 (PlayerLook): 낫을 던진 동안은 빈손
-    public int HeldWeapon => CurrentWeapon == ScytheId && activeScythe != null ? -1 : CurrentWeapon;
+    // 손에 들고 있는 무기 (PlayerLook): -1 = 기본 권총, 낫을 던진 동안은 빈손(-2)
+    public int HeldWeapon => CurrentWeapon == ScytheId && activeScythe != null ? -2 : CurrentWeapon;
 
     PlayerController player;
     float nextFire;
