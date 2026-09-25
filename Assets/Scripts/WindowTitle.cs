@@ -6,6 +6,21 @@ public static class WindowTitle
 {
     public const string GameName = "Soul Saver";
 
+    // 메인 메뉴 오른쪽 아래 "v2.0" 같은 버전 글을 실제 버전으로
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void HookVersion()
+    {
+        FixVersion();
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => FixVersion();
+    }
+
+    static void FixVersion()
+    {
+        string v = "v" + Application.version.TrimStart('v');
+        foreach (TMPro.TMP_Text t in Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
+            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$")) t.text = v;
+    }
+
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
     [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
     static extern bool SetWindowTextW(System.IntPtr hWnd, string text);

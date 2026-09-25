@@ -16,9 +16,23 @@ public partial class LevelShop
 
     static KitCard Card(string name, string desc, int icon, int max) => new KitCard { name = name, desc = desc, icon = icon, max = max };
 
-    static KitCard KitCardOf(int id)
+    static KitCard KitCardOf(int id) => KitCardOf(CharacterData.Selected, id);
+
+    // 도감용: 이 캐릭터의 전용 레벨업 카드 (이름 · 설명 · 아이콘 번호)
+    public static System.Collections.Generic.List<(string name, string desc, int icon)> KitCardsFor(CharacterId who)
     {
-        switch (CharacterData.Selected)
+        var list = new System.Collections.Generic.List<(string, string, int)>();
+        foreach (int id in new[] { PierceId, MultiId, KnockId, GlareId })
+        {
+            KitCard c = KitCardOf(who, id);
+            if (c != null) list.Add((c.name, c.desc, c.icon));
+        }
+        return list;
+    }
+
+    static KitCard KitCardOf(CharacterId who, int id)
+    {
+        switch (who)
         {
             case CharacterId.Swordsman:
                 return id switch

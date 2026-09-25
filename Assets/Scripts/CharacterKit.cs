@@ -39,6 +39,8 @@ public class CharacterKit : MonoBehaviour
     [HideInInspector] public float reachMul = 1f;     // 검사 긴 칼날: 베기 사거리 · 손에 든 검 크기
     [HideInInspector] public float arcBonus;          // 검사 넓은 베기: 부채꼴 반각 +
     [HideInInspector] public float ultMul = 1f;       // 우클릭 강화 (회전 베기 · 출혈 돌진 · 화살비 · 대폭발)
+    // 스킬 강화 상점의 첫 줄(캐릭터 우클릭) 위력 · 효과 범위까지 곱한 값
+    float UltMul => ultMul * (Special != null ? Special.UltPower(SpecialAbilities.PistolUlt) * (1f + 0.1f * Special.UltTrait(SpecialAbilities.PistolUlt)) : 1f);
     [HideInInspector] public float blastMul = 1f;     // 연금술사 넓은 폭발: 평타 폭발 범위
     [HideInInspector] public float powerMul = 1f;     // 궁수 강한 시위 · 연금술사 강력한 반응: 평타 피해
 
@@ -251,6 +253,16 @@ public class CharacterKit : MonoBehaviour
     public void UpdateUlt(SkillGauge gauge)
     {
         bool full = gauge != null && gauge.IsFull();
+        // 전용 특수 무기를 들고 있으면 우클릭은 그 무기의 궁극기
+        if (!charging && !Dashing && Special != null && Special.KitWeaponUltActive)
+        {
+            if (GameInput.UltDown && full)
+            {
+                Special.KitWeaponUlt();
+                Spend(gauge);
+            }
+            return;
+        }
         switch (Id)
         {
             case CharacterId.Swordsman:
@@ -296,7 +308,7 @@ public class CharacterKit : MonoBehaviour
         charge = Mathf.Min(1f, charge + Time.deltaTime / 1.5f);
         bool sword = Id == CharacterId.Swordsman;
         Vector3 at = sword ? transform.position : ClampRange(transform.position, Mouse, 14f);
-        float radius = (sword ? 5f : (2f + 4f * charge) * CatalystMul) * ultMul;
+        float radius = (sword ? 5f : (2f + 4f * charge) * CatalystMul) * UltMul;
         Hostile.SetArc(ring, at, radius, 0f, 360f);
         Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
@@ -309,7 +321,7 @@ public class CharacterKit : MonoBehaviour
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐
-            float dmg = Damage * (3f + 6f * charge) * ultMul;
+            float dmg = Damage * (3f + 6f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
             Fx.Play("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Play("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -318,7 +330,7 @@ public class CharacterKit : MonoBehaviour
         }
         else
         {
-            float dmg = Damage * (4f + 8f * charge);
+            float dmg = Damage * (4f + 8f * charge) * UltMul;
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {
                 DamageCircle(p, radius, dmg, 3f);
@@ -387,8 +399,8 @@ public class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
-            Specials.Damage(c.gameObject, Damage * 1.5f * ultMul, dir, 1f);
-            Bleed.Apply(c.gameObject, Damage * 1.2f * ultMul, 4f);
+            Specials.Damage(c.gameObject, Damage * 1.5f * UltMul, dir, 1f);
+            Bleed.Apply(c.gameObject, Damage * 1.2f * UltMul, 4f);
             Fx.Play("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
@@ -397,10 +409,10 @@ public class CharacterKit : MonoBehaviour
     // 화살비: 마우스 둘레에 화살이 1.2초 동안 쏟아짐
     IEnumerator ArrowRain(Vector3 center)
     {
-        float radius = 4f * ultMul;
+        float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         Play("whoosh", 0.8f, 0.9f);
-        for (int i = 0; i < Mathf.RoundToInt(20 * ultMul); i++)
+        for (int i = 0; i < Mathf.RoundToInt(20 * UltMul); i++)
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Play("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);

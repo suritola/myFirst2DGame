@@ -141,7 +141,7 @@ public class SkillUpgradeShop : MonoBehaviour
             iimg.preserveAspect = true;
             iimg.raycastTarget = false;
 
-            string weaponName = id == SpecialAbilities.PistolUlt ? Loc.T("기본 권총") : Loc.T(specials.abilities[id].name);
+            string weaponName = id == SpecialAbilities.PistolUlt ? Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon) : Loc.T(specials.abilities[id].name);
             Text(rowsRoot, weaponName + "\n<color=#f5d478><size=80%>" + SpecialAbilities.UltName(id) + "</size></color>", 24f, Parch,
                  new Vector2(-300f, y), new Vector2(260f, h), TextAlignmentOptions.Left);
 

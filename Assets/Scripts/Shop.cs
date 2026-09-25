@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Shop : MonoBehaviour
+public partial class Shop : MonoBehaviour
 {
     public GameObject shopPanel;
 
@@ -172,8 +172,9 @@ public class Shop : MonoBehaviour
     {
         if (!TryPay(damagePrice)) return;
 
-        damage += damageStep;
-        playerControllerd.damage = damage;
+        // 캐릭터 공격력 배율을 지키도록 플레이어 값에 바로 더함 (검사 150% · 도적 70% …)
+        playerControllerd.damage += KitDamageStep;
+        damage = playerControllerd.damage;
         damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();
     }
@@ -184,6 +185,7 @@ public class Shop : MonoBehaviour
 
     public void OnPressB2()
     {
+        if (KitPress(2)) return;
         if (ShootSpeedMaxed || !TryPay(ShootSpeedPrice)) return;
 
         ShootSpeed = Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier);
@@ -198,6 +200,7 @@ public class Shop : MonoBehaviour
 
     public void OnPressB3()
     {
+        if (KitPress(3)) return;
         if (ReloadMaxed || !TryPay(ReloadSpeedPrice)) return;
 
         ReloadSpeed = Mathf.Max(minReloadTime, ReloadSpeed - reloadStep);
@@ -212,6 +215,7 @@ public class Shop : MonoBehaviour
 
     public void OnPressB4()
     {
+        if (KitPress(4)) return;
         if (MaxBulletMaxed || !TryPay(MaxBulletPrice)) return;
 
         MaxBullet++;
@@ -311,6 +315,11 @@ public class Shop : MonoBehaviour
         if (coind == null || playerControllerd == null) return;
 
         coins = coind.coins;
+        // 캐릭터 · 레벨업 카드가 바꾼 값을 따라감 (상점이 먼저 시작해도 어긋나지 않게)
+        damage = playerControllerd.damage;
+        ShootSpeed = playerControllerd.ShootSpeed;
+        ReloadSpeed = playerControllerd.reloadTime;
+        MaxBullet = playerControllerd.MaxBullet;
         moveSpeed = playerControllerd.speed;
         showedSpeed = 1f / ShootSpeed;
         if (mycoins != null) mycoins.text = Loc.T("코인 : ") + coins;
@@ -320,7 +329,7 @@ public class Shop : MonoBehaviour
         if (priceTextInput != null) priceTextInput.text = PriceText(damagePrice, false);
         if (statTextInput != null)
         {
-            statTextInput.text = Loc.T("총알 공격력\n") + damage.ToString("0.##") + " -> " + (damage + damageStep).ToString("0.##");
+            statTextInput.text = Loc.T(KitDamageLabel) + "\n" + damage.ToString("0.##") + " -> " + (damage + KitDamageStep).ToString("0.##");
 
             // 멀티샷 중이면 실제 한 발당 피해도 함께 표시
             int shots = playerControllerd.multiShot;
@@ -328,7 +337,7 @@ public class Shop : MonoBehaviour
             {
                 float rate = playerControllerd.MultiShotDamageRate(shots);
                 statTextInput.text += "  (" + shots + Loc.T("발, 발당 ") + (damage * rate).ToString("0.##")
-                    + " -> " + ((damage + damageStep) * rate).ToString("0.##") + ")";
+                    + " -> " + ((damage + KitDamageStep) * rate).ToString("0.##") + ")";
             }
         }
 
@@ -367,5 +376,7 @@ public class Shop : MonoBehaviour
                 ? Loc.T("이동 속도\n") + moveSpeed.ToString("0.0") + Loc.T(" (최대)")
                 : Loc.T("이동 속도\n") + moveSpeed.ToString("0.0") + " -> " + (moveSpeed * moveSpeedMultiplier).ToString("0.0");
         }
+
+        KitShopText();
     }
 }

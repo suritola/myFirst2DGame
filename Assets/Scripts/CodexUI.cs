@@ -19,11 +19,12 @@ public static class CodexUI
     static readonly Color Dim = new Color(0.72f, 0.68f, 0.76f);
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
 
-    static readonly string[] Tabs = { "적", "보스", "무기", "스킬", "패시브", "진화", "레벨업", "상점" };
+    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "스킬", "패시브", "진화", "레벨업", "상점" };
     static readonly string[] Hints =
     {
         "스테이지마다 나오는 적과 스킬 · 붉은 경고가 보이면 피하세요",
         "각 스테이지의 마지막 적 · 체력이 절반 아래로 떨어지면 특수 스킬을 씁니다",
+        "메인 메뉴의 캐릭터에서 고릅니다 · 잠긴 캐릭터는 포인트로 해금하면 정보가 보입니다",
         "{SWAP}로 교체 · 우클릭 필살기는 무기마다 다릅니다",
         "{SKILL1} · {SKILL2} · {SKILL3} 순서로 배정 (최대 3개)",
         "고르면 항상 적용되는 능력",
@@ -106,7 +107,7 @@ public static class CodexUI
         UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
 
         tabButtons.Clear();
-        float w = 184f;
+        float w = 164f;
         for (int i = 0; i < Tabs.Length; i++)
         {
             int t = i;
@@ -163,13 +164,15 @@ public static class CodexUI
         {
             case 0: Enemies(data); break;
             case 1: Bosses(data); break;
-            case 2: Specials(data, SpecialKind.Weapon); break;
-            case 3: Specials(data, SpecialKind.Skill); break;
-            case 4: Specials(data, SpecialKind.Passive); break;
-            case 5: Evolutions(data); break;
-            case 6: LevelUpCards(data); break;
-            case 7:
+            case 2: Characters(); break;
+            case 3: Specials(data, SpecialKind.Weapon); break;
+            case 4: Specials(data, SpecialKind.Skill); break;
+            case 5: Specials(data, SpecialKind.Passive); break;
+            case 6: Evolutions(data); break;
+            case 7: LevelUpCards(data); break;
+            case 8:
                 foreach (var s in Shops) Card(FxIcon(s.icon), Gold, Loc.T(s.name), "", Loc.T(s.desc));
+                KitShops();
                 break;
         }
         scroll.verticalNormalizedPosition = 1f;
@@ -228,8 +231,10 @@ public static class CodexUI
                 body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(id) + " (" + Loc.T(UltInstant[id] ? "즉발" : "조준") + ")")
                         + "  " + Loc.T(UltDesc[id]);
             }
+            tag += "  ·  " + Loc.T("거너");
             Card(d.icon, Color.white, Loc.T(d.name), tag, body);
         }
+        KitSpecials(kind);
     }
 
     static void Evolutions(CodexData data)
@@ -250,7 +255,99 @@ public static class CodexUI
         for (int i = 0; i < LevelUps.Length; i++)
         {
             Sprite icon = data != null && data.abilityIcons != null && i < data.abilityIcons.Length ? data.abilityIcons[i] : null;
-            Card(icon, Color.white, Loc.T(LevelUps[i].name), "", Loc.T(LevelUps[i].desc));
+            Card(icon, Color.white, Loc.T(LevelUps[i].name), i == 0 || i == 3 || i == 6 || i == 7 ? Loc.T("거너") : Loc.T("모든 캐릭터"), Loc.T(LevelUps[i].desc));
+        }
+        // 해금한 캐릭터의 전용 카드 (무기 관련 카드 대신 나옴)
+        foreach (CharacterId c in UnlockedKits())
+            foreach (var k in LevelShop.KitCardsFor(c))
+                Card(Resources.Load<Sprite>("Icons/ability_" + k.icon), Color.white, Loc.T(k.name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"), Loc.T(k.desc).Replace("\n", " "));
+    }
+
+    // ================================================================= 캐릭터
+    static System.Collections.Generic.IEnumerable<CharacterId> UnlockedKits()
+    {
+        for (int i = 1; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            if (CharacterData.IsDeveloped(c) && CharacterData.IsUnlocked(c)) yield return c;
+        }
+    }
+
+    static CharacterId? OwnerOf(int abilityId)
+    {
+        for (int i = 1; i < CharacterData.All.Length; i++)
+            if (System.Array.IndexOf(CharacterData.All[i].pool, abilityId) >= 0) return (CharacterId)i;
+        return null;
+    }
+
+    static string Pct(float v) => Mathf.RoundToInt(v * 100f) + "%";
+
+    static void Characters()
+    {
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            if (!CharacterData.IsDeveloped(c)) continue;
+            CharacterDef d = CharacterData.Def(c);
+            Sprite portrait = CharacterUI.Portrait(c);
+            if (!CharacterData.IsUnlocked(c))
+            {
+                // 잠긴 캐릭터: 모습 · 능력 모두 숨김
+                Card(portrait, Color.black, "???", Loc.T("잠긴 캐릭터") + "  ·  " + d.price.ToString("N0") + " P",
+                     Loc.T("포인트로 잠금을 풀면 이 캐릭터의 모습과 능력을 볼 수 있습니다."));
+                continue;
+            }
+            string tag = Loc.T("체력") + " " + Pct(d.hp) + " · " + Loc.T("공격력") + " " + Pct(d.damage) + " · " + Loc.T("공격 속도") + " " + Pct(d.attackSpeed)
+                         + " · " + Loc.T("스킬 게이지") + " " + Pct(d.gauge) + " · " + Loc.T("탄창") + " " + (d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"));
+            string body = Loc.T(d.description)
+                + "\n" + Accent.Tag(Loc.T("기본 무기") + " · " + Loc.T(d.weapon)) + "  " + Loc.T(d.attack)
+                + "  (" + Loc.T("사거리") + " " + (d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한")) + ")"
+                + "\n" + Accent.Tag(Loc.T("우클릭") + " · " + Loc.T(d.skill)) + "  " + Loc.T(d.skillDesc);
+            if (c != CharacterId.Gunner)
+            {
+                var names = new System.Collections.Generic.List<string>();
+                foreach (int id in d.pool) if (SpecialAbilities.IsKitWeapon(id)) names.Add(Loc.T(SpecialAbilities.KitName(id)));
+                body += "\n" + Accent.Tag(Loc.T("전용 무기")) + "  " + string.Join(" · ", names);
+            }
+            Card(portrait, Color.white, Loc.T(d.name) + "  <size=70%>" + Loc.T(d.title) + "</size>", tag, body);
+        }
+    }
+
+    // 해금한 캐릭터의 전용 무기 · 스킬 · 패시브
+    static void KitSpecials(SpecialKind kind)
+    {
+        for (int id = SpecialAbilities.KitFirstId; id < SpecialAbilities.KitFirstId + SpecialAbilities.KitCount; id++)
+        {
+            if (SpecialAbilities.KitKind(id) != kind) continue;
+            CharacterId? owner = OwnerOf(id);
+            if (owner == null || !CharacterData.IsUnlocked(owner.Value)) continue;
+            string tag = (kind == SpecialKind.Weapon ? Loc.T("특수 무기") : kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브"))
+                         + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + " " + Loc.T("전용");
+            string body = Loc.T(SpecialAbilities.KitDesc(id)).Replace("\n", " ");
+            if (kind == SpecialKind.Weapon)
+                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + Loc.T(SpecialAbilities.KitUltName(id)) + " (" + Loc.T("즉발") + ")") + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
+            Card(Resources.Load<Sprite>("Icons/ability_" + id), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
+        }
+    }
+
+    // 해금한 캐릭터의 상점 업그레이드
+    static void KitShops()
+    {
+        foreach (CharacterId c in UnlockedKits())
+        {
+            string ups = c switch
+            {
+                CharacterId.Swordsman => "장검 공격력 · 베기 사거리 · 베기 각도 · 회전 베기 위력 · 이동 속도",
+                CharacterId.Rogue => "표창 공격력 · 투척 속도 · 표창 회수 속도 · 표창 주머니 · 이동 속도",
+                CharacterId.Archer => "화살 공격력 · 연사 속도 · 관통력 · 화살비 위력 · 이동 속도",
+                CharacterId.Alchemist => "플라스크 공격력 · 투척 속도 · 폭발 범위 · 대폭발 위력 · 이동 속도",
+                _ => "",
+            };
+            if (ups == "") continue;
+            string[] parts = ups.Split(new[] { " · " }, System.StringSplitOptions.None);
+            for (int i = 0; i < parts.Length; i++) parts[i] = Loc.T(parts[i]);
+            Card(CharacterUI.Portrait(c), Color.white, Loc.T("능력치 상점") + " · " + Loc.T(CharacterData.Def(c).name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"),
+                 string.Join(" · ", parts) + "\n" + Loc.T("공격 속도 · 재장전 · 탄창 대신 무기에 맞는 강화가 나옵니다."));
         }
     }
 

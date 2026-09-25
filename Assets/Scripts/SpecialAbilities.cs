@@ -680,7 +680,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     public int UltLevel(int weapon, int stat) => ultLevels.TryGetValue(weapon, out int[] l) ? l[stat] : 0;
     public float UltPower(int weapon) => 1f + 0.2f * UltLevel(weapon, UltPowerStat);
-    int UltTrait(int weapon) => UltLevel(weapon, UltTraitStat);
+    public int UltTrait(int weapon) => UltLevel(weapon, UltTraitStat);
 
     public bool UpgradeUlt(int weapon, int stat)
     {
@@ -691,10 +691,13 @@ public partial class SpecialAbilities : MonoBehaviour
         return true;
     }
 
-    public static string UltName(int weapon) => weapon == PistolUlt ? Loc.T("일제 사격") : VolleyName(weapon);
+    public static string UltName(int weapon) => weapon == PistolUlt ? Loc.T(CharacterData.IsGunner ? "일제 사격" : CharacterData.Current.skill)
+                                                  : IsKit(weapon) ? Loc.T(KitUltName(weapon)) : VolleyName(weapon);
 
     public static string UltTraitName(int weapon) => weapon switch
     {
+        PistolUlt when !CharacterData.IsGunner => Loc.T("효과 범위"),
+        _ when IsKit(weapon) => Loc.T("효과 범위"),
         PistolUlt => Loc.T("타겟 수"), ScytheId => Loc.T("타겟 수"), SeekerId => Loc.T("영혼 구슬"), ShotgunId => Loc.T("포격 횟수"),
         SniperId => Loc.T("광선 굵기"), DualId => Loc.T("지속 시간"), FlameId => Loc.T("회오리 지속"), ChainId => Loc.T("뇌운 지속"), GrenadeId => Loc.T("폭격 줄"),
         _ => Loc.T("특성"),
@@ -702,6 +705,8 @@ public partial class SpecialAbilities : MonoBehaviour
 
     public static string UltTraitStep(int weapon) => weapon switch
     {
+        PistolUlt when !CharacterData.IsGunner => "+10%",
+        _ when IsKit(weapon) => "+10%",
         PistolUlt => Loc.T("+2마리"), ScytheId => Loc.T("+2마리"), SeekerId => Loc.T("+1개"), ShotgunId => Loc.T("+1회"), SniperId => "+30%",
         DualId => Loc.T("+0.4초"), FlameId => Loc.T("+1.5초"), ChainId => Loc.T("+0.8초"), GrenadeId => Loc.T("+2줄"),
         _ => "",
@@ -863,7 +868,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 flameWasFiring = false;
                 fx.StopLoop();
                 fx.Play("clank", 0.5f, 1.4f);
-                fx.FloatText(player.transform.position, WeaponActive ? Loc.T(abilities[CurrentWeapon].name) : Loc.T("기본 권총"), new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
+                fx.FloatText(player.transform.position, WeaponActive ? Loc.T(abilities[CurrentWeapon].name) : Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon), new Color(0.96f, 0.83f, 0.47f), 4.5f, 0f);
             }
             UpdateWeaponReloads();
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
@@ -1047,15 +1052,21 @@ public partial class SpecialAbilities : MonoBehaviour
         start = player.MuzzlePosition;
         nextFire = Time.time + BaseInterval(CurrentWeapon) / player.fireRateMultiplier * WeaponRateMul(CurrentWeapon);
         // 무기마다 자기 탄창을 씀 (권총 탄창과 별개)
-        Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
+        bool kitWeapon = IsKit(CurrentWeapon);
         Vector2 aimDir = ((Vector2)(target - start)).normalized;
-        Fx.Play("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
+        if (!kitWeapon)
+        {
+            // 총: 총구 섬광 (검 · 표창 · 활 · 플라스크에는 없음)
+            Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
+            Fx.Play("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
+        }
         PlayerLook.Fired(CurrentWeapon);
         WeaponAmmo mag = Ammo(CurrentWeapon);
         cursed = IsLastBulletCursed(mag.ammo);
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
         if (mag.ammo <= 0) StartWeaponReload(CurrentWeapon);
-        if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
+        if (kitWeapon) KitShotSound(CurrentWeapon);
+        else if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
         return ((Vector2)(target - start)).normalized;
     }
 
@@ -2007,8 +2018,15 @@ public partial class SpecialAbilities : MonoBehaviour
             {
                 // 기본 권총: 권총 탄창과 장전 상태
                 bool inHand = !WeaponActive;
-                row.name.text = Loc.T("기본 권총");
-                if (player.reload > 0f)
+                // 캐릭터의 기본 무기 (거너 권총 · 검사 장검 · 도적 표창 …), 탄창이 없는 무기는 무한
+                CharacterKit kit = CharacterKit.Instance;
+                row.name.text = Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon);
+                if (kit != null && !kit.UsesAmmo)
+                {
+                    fill = 1f;
+                    info = Loc.T("무한");
+                }
+                else if (player.reload > 0f)
                 {
                     fill = Mathf.Clamp01(player.reload / Mathf.Max(0.01f, player.reloadTime));
                     info = Loc.T("장전 중");
@@ -2046,7 +2064,13 @@ public partial class SpecialAbilities : MonoBehaviour
                 else
                 {
                     WeaponAmmo a = Ammo(row.id);
-                    if (a.Reloading)
+                    if (MagSize(row.id) <= 0)
+                    {
+                        // 검 · 창처럼 탄창이 없는 전용 무기
+                        fill = 1f;
+                        info = Loc.T("무한");
+                    }
+                    else if (a.Reloading)
                     {
                         fill = 1f - (a.reloadEnd - Time.time) / BaseReload(row.id);
                         info = Loc.T("장전 중");
