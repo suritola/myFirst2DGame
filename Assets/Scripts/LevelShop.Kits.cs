@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 캐릭터 전용 레벨업 카드: 무기와 관련된 카드(관통 · 노려보는 눈빛 · 멀티 샷 · 밀어내기)만
-// 캐릭터의 무기 · 우클릭에 맞는 카드로 바뀜. 나머지 카드는 모든 캐릭터가 같이 씀
+// 캐릭터의 평타 · 우클릭에 맞는 특수 능력 카드로 바뀜 (기본 스펙을 올리지 않음). 나머지 카드는 모든 캐릭터가 같이 씀
 public partial class LevelShop
 {
     // 바뀌는 카드 번호
@@ -37,37 +37,37 @@ public partial class LevelShop
             case CharacterId.Swordsman:
                 return id switch
                 {
-                    PierceId => Card("넓은 베기", "장검을 더 넓게 휘두릅니다.\n( 베는 각도 +30° )", 20, 3),
-                    GlareId => Card("회전 베기 수련", "우클릭 회전 베기의 범위와 피해가 20% 커집니다.", 24, 3),
-                    MultiId => Card("긴 칼날", "장검이 길어져 더 멀리 벱니다.\n( 사거리 +15% )", 22, 3),
-                    KnockId => Card("날랜 손목", "장검을 더 빨리 휘두릅니다.\n( 공격 속도 +12% )", 21, 3),
+                    PierceId => Card("날아가는 검기", "평타를 휘두르면 검기가 날아가 적을 꿰뚫습니다.\n( 레벨마다 검기 피해 증가 )", 22, 3),
+                    MultiId => Card("흡혈 베기", "평타로 벤 적 하나당(최대 3) 체력을 회복합니다.", 21, 3),
+                    KnockId => Card("쳐내기", "평타를 휘두르면 범위 안의 적 투사체를 베어 없앱니다.", 20, 1),
+                    GlareId => Card("칼바람", "회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다.\n( 레벨마다 지속 시간 +1초 )", 24, 3),
                     _ => null,
                 };
             case CharacterId.Rogue:
                 return id switch
                 {
-                    PierceId => Card("관통 표창", "표창이 적을 하나 더 꿰뚫습니다.", 29, 5),
-                    GlareId => Card("깊은 상처", "우클릭 출혈 돌진의 피해와 출혈이 25% 강해집니다.", 33, 3),
-                    MultiId => Card("표창 한 움큼", "한 번에 던지는 표창이 1개 늘어나지만, 개당 피해는 줄어듭니다.", 28, 4),
-                    KnockId => Card("큰 표창 주머니", "표창 탄창이 2발 늘어납니다.", 30, 3),
+                    PierceId => Card("도탄 표창", "표창이 적에 맞으면 가까운 다른 적에게 튕겨 날아갑니다.\n( 레벨마다 튕기는 횟수 +1 )", 29, 3),
+                    MultiId => Card("갈고리 표창", "표창에 맞은 적이 출혈을 입습니다.", 33, 3),
+                    KnockId => Card("그림자 분신", "출혈 돌진을 시작한 자리에 분신이 남아 표창을 던집니다.\n( 레벨마다 지속 시간 +1초 )", 28, 3),
+                    GlareId => Card("표창 폭풍", "출혈 돌진이 끝나는 자리에서 표창이 사방으로 퍼집니다.\n( 레벨마다 표창 +4개 )", 30, 3),
                     _ => null,
                 };
             case CharacterId.Archer:
                 return id switch
                 {
-                    PierceId => Card("관통 화살", "화살이 적을 하나 더 꿰뚫습니다.", 41, 5),
-                    GlareId => Card("넓은 화살비", "우클릭 화살비의 범위와 화살 수가 20% 늘어납니다.", 38, 3),
-                    MultiId => Card("연발 사격", "한 번에 쏘는 화살이 1발 늘어나지만, 한 발당 피해는 줄어듭니다.", 37, 4),
-                    KnockId => Card("강한 시위", "화살 피해가 12% 늘어납니다.", 36, 3),
+                    PierceId => Card("분열 화살", "가득 당긴 화살이 처음 맞힌 적에게서 여러 갈래로 갈라집니다.\n( 레벨마다 갈래 +1 )", 41, 3),
+                    MultiId => Card("메아리 화살", "화살을 쏘면 잠시 뒤 유령 화살이 같은 방향으로 한 발 더 날아갑니다. (피해 50%)", 37, 1),
+                    KnockId => Card("바람 걸음", "가득 당긴 화살을 쏘면 반동으로 뒤로 휙 물러납니다.", 36, 1),
+                    GlareId => Card("가시 덤불", "화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.\n( 레벨마다 지속 시간 +1초 )", 38, 3),
                     _ => null,
                 };
             case CharacterId.Alchemist:
                 return id switch
                 {
-                    PierceId => Card("넓은 폭발", "플라스크 폭발 범위가 15% 커집니다.", 50, 3),
-                    GlareId => Card("대폭발 연구", "우클릭 대폭발 플라스크의 범위와 피해가 20% 커집니다.", 49, 3),
-                    MultiId => Card("연속 투척", "한 번에 던지는 플라스크가 1개 늘어나지만, 개당 피해는 줄어듭니다.", 46, 4),
-                    KnockId => Card("강력한 반응", "플라스크 폭발 피해가 15% 늘어납니다.", 44, 3),
+                    PierceId => Card("연쇄 반응", "플라스크 폭발로 쓰러진 적이 그 자리에서 한 번 더 터집니다.", 50, 3),
+                    MultiId => Card("급속 냉동", "빙결 시약이 적을 느리게 하는 대신 꽁꽁 얼립니다.\n( 레벨마다 얼리는 시간 증가 )", 46, 3),
+                    KnockId => Card("호문쿨루스", "작은 조수가 머리 위를 맴돌며 적에게 플라스크를 던집니다.\n( 레벨마다 던지는 간격 감소 )", 44, 3),
+                    GlareId => Card("파편 플라스크", "대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.\n( 레벨마다 파편 +2개 )", 49, 3),
                     _ => null,
                 };
         }
@@ -107,33 +107,10 @@ public partial class LevelShop
         CharacterKit kit = CharacterKit.Instance;
         if (c == null || kit == null) return false;
 
-        switch (CharacterData.Selected)
-        {
-            case CharacterId.Swordsman:
-                if (id == PierceId) kit.arcBonus += 15f;
-                if (id == GlareId) kit.ultMul += 0.2f;
-                if (id == MultiId) kit.reachMul += 0.15f;
-                if (id == KnockId) bul.ShootSpeed /= 1.12f;
-                break;
-            case CharacterId.Rogue:
-                if (id == PierceId) bul.pene++;
-                if (id == GlareId) kit.ultMul += 0.25f;
-                if (id == MultiId) bul.multiShot++;
-                if (id == KnockId) { bul.MaxBullet += 2; bul.NowBullet += 2; }
-                break;
-            case CharacterId.Archer:
-                if (id == PierceId) bul.pene++;
-                if (id == GlareId) kit.ultMul += 0.2f;
-                if (id == MultiId) bul.multiShot++;
-                if (id == KnockId) kit.powerMul += 0.12f;
-                break;
-            case CharacterId.Alchemist:
-                if (id == PierceId) kit.blastMul += 0.15f;
-                if (id == GlareId) kit.ultMul += 0.2f;
-                if (id == MultiId) bul.multiShot++;
-                if (id == KnockId) kit.powerMul += 0.15f;
-                break;
-        }
+        // 카드 칸 → CharacterKit.card 번호 (0 관통 · 1 멀티 샷 · 2 밀어내기 · 3 노려보는 눈빛 자리)
+        int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : 3;
+        kit.card[slot]++;
+        kit.CardPicked(slot);
         if (ability_level[id] >= c.max) ability_selected[id] = true;
         return true;
     }

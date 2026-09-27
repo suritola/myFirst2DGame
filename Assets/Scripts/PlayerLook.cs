@@ -118,7 +118,7 @@ public class PlayerLook : MonoBehaviour
     {
         if (id != -1 || CharacterData.Selected != CharacterId.Swordsman) return 1f;
         CharacterKit kit = CharacterKit.Instance;
-        return 2f * (kit != null ? Mathf.Sqrt(kit.reachMul) : 1f);
+        return 2.6f * (kit != null ? Mathf.Sqrt(kit.reachMul) : 1f);
     }
 
     // 휘두르는 중이면 겨눈 방향에서 벗어난 각도, 휘두르는 순간 검이 조금 커짐

@@ -110,8 +110,8 @@ public partial class Shop
                     break;
                 case CharacterId.Swordsman when slot == 3:
                     label = "베기 각도";
-                    now = Mathf.RoundToInt(140f + 2f * k.arcBonus) + "°";
-                    next = Mathf.RoundToInt(140f + 2f * (k.arcBonus + 10f)) + "°";
+                    now = Mathf.RoundToInt(100f + 2f * k.arcBonus) + "°";
+                    next = Mathf.RoundToInt(100f + 2f * (k.arcBonus + 10f)) + "°";
                     break;
                 case CharacterId.Archer when slot == 3:
                     label = "관통력";
