@@ -1,4 +1,5 @@
-# 새 캐릭터 특수 능력 아이콘 (ID 20~51) → Assets/Resources/Icons/ability_<id>.png  (32x32)
+# 새 캐릭터 특수 능력 아이콘 (ID 20~51) · 캐릭터 전용 레벨업 카드 아이콘 (ID 60~75)
+#   → Assets/Resources/Icons/ability_<id>.png  (32x32)
 # 캐릭터 색 둥근 판 위에 능력마다 다른 문양
 # 실행: python tools/pixelart/make_ability_icons.py
 import math, os, re, sys, uuid
@@ -9,7 +10,7 @@ from make_fx import disc, ring, line, ROOT
 OUT = os.path.join(ROOT, 'Assets', 'Resources', 'Icons')
 W = (240, 240, 248, 255); K = (25, 20, 30, 255); G = (175, 180, 195, 255); Y = (240, 200, 80, 255)
 R = (220, 60, 60, 255); B = (120, 80, 50, 255); P = (170, 110, 230, 255); C = (120, 230, 255, 255)
-GR = (110, 230, 110, 255); O = (255, 150, 50, 255); S = (150, 150, 165, 255)
+GR = (110, 230, 110, 255); O = (255, 150, 50, 255); S = (150, 150, 165, 255); T = (215, 195, 140, 255)
 
 
 def sword(img, x0=9, y0=23, x1=23, y1=9, blade=W):
@@ -44,80 +45,214 @@ def flask(img, liquid):
         img.blend(x, 26, K)
 
 
-def glyph(img, gid):
-    g = gid
-    if g == 'greatsword': sword(img, 8, 25, 24, 7); line(img, 12, 21, 21, 12, G, 3.5)
-    elif g == 'twin': sword(img, 8, 24, 20, 8); sword(img, 24, 24, 12, 8)
-    elif g == 'spear': line(img, 6, 26, 24, 8, B, 1.6); line(img, 21, 11, 26, 6, W, 3); disc(img, 20, 12, 1.6, R)
-    elif g == 'dashslash': sword(img, 12, 22, 25, 9); [line(img, 4, 12 + i * 4, 12, 12 + i * 4, C, 1) for i in range(3)]
-    elif g == 'whirl': ring(img, 16, 16, 10, 2, W); ring(img, 16, 16, 6, 1.5, C, gaps=3); disc(img, 16, 16, 2, Y)
-    elif g == 'wave':
-        for x in range(32):
-            for y in range(32):
-                d1 = math.hypot(x - 10, y - 16); d2 = math.hypot(x - 6, y - 16)
-                if d1 < 13 and d2 > 12: img.blend(x, y, C)
-    elif g == 'shield':
-        for y in range(7, 26):
-            w = 9 if y < 18 else 9 - (y - 18)
+def card(img, x, y, col=W, mark=R):
+    img.rect(x, y, 8, 11, col)
+    for i in range(8): img.set(x + i, y, K); img.set(x + i, y + 10, K)
+    for j in range(11): img.set(x, y + j, K); img.set(x + 7, y + j, K)
+    disc(img, x + 4, y + 5.5, 1.8, mark)
+
+
+def bird(img, cx, cy):
+    disc(img, cx, cy, 3.5, B); disc(img, cx + 4, cy - 2, 2.2, B)
+    img.set(int(cx + 6), int(cy - 2), Y)
+    line(img, cx - 1, cy - 1, cx - 7, cy - 8, (160, 120, 80, 255), 2)
+    line(img, cx + 1, cy - 1, cx + 4, cy - 9, (160, 120, 80, 255), 1.6)
+
+
+def glyph(img, g):
+    # ---------------- 검사
+    if g == 'hammer':
+        line(img, 9, 25, 20, 12, B, 1.8)
+        line(img, 16, 8, 25, 17, G, 5.5); line(img, 16, 8, 25, 17, W, 1.2)
+        line(img, 5, 27, 12, 27, Y, 1)
+    elif g == 'whip':
+        pts = [(6, 24), (10, 18), (15, 17), (19, 21), (23, 18), (26, 10)]
+        for (a, b), (c, d) in zip(pts, pts[1:]): line(img, a, b, c, d, C, 1.6)
+        line(img, 4, 26, 7, 23, B, 2); disc(img, 26, 10, 1.8, Y)
+    elif g == 'lance':
+        line(img, 5, 27, 24, 8, B, 1.6)
+        for k in range(6): line(img, 18 + k, 14 - k, 27, 5, W, 1.4 - k * 0.1)
+        line(img, 6, 20, 12, 26, Y, 2)
+    elif g == 'warcry':
+        disc(img, 12, 16, 5, T); disc(img, 12, 14, 1, K); line(img, 11, 18, 14, 18, K, 1)
+        for r in (7, 10, 13):
+            for i in range(24):
+                ang = -0.9 + i * 0.075
+                img.blend(int(14 + math.cos(ang) * r), int(16 + math.sin(ang) * r), O)
+    elif g == 'judgment':
+        line(img, 16, 3, 16, 22, W, 3); line(img, 11, 7, 21, 7, Y, 2); disc(img, 16, 3, 1.5, Y)
+        for x in range(8, 25): img.blend(x, 26, O)
+        line(img, 10, 26, 7, 21, O, 1); line(img, 22, 26, 25, 21, O, 1)
+    elif g == 'earthsplit':
+        pts = [(5, 26), (10, 22), (13, 24), (17, 17), (21, 18), (26, 9)]
+        for (a, b), (c, d) in zip(pts, pts[1:]): line(img, a, b, c, d, K, 2.2)
+        for (a, b), (c, d) in zip(pts, pts[1:]): line(img, a, b - 1, c, d - 1, O, 0.8)
+    elif g == 'unyielding':
+        for y in range(8, 26):
+            w = 8 if y < 18 else 8 - (y - 18)
             for x in range(16 - w, 16 + w): img.blend(x, y, G)
-        line(img, 16, 9, 16, 22, Y, 2); line(img, 11, 14, 21, 14, Y, 2)
-    elif g == 'bloodblade': sword(img, 9, 23, 23, 9, R); disc(img, 22, 22, 3, R); disc(img, 22, 20, 1.5, R)
-    elif g == 'knifefan':
-        for k in range(5):
-            a = math.radians(-60 + k * 30)
-            line(img, 16, 26, 16 + math.sin(a) * 14, 26 - math.cos(a) * 14, W, 1.6)
-    elif g == 'blazestar': star(img, 16, 16, 10, G); disc(img, 22, 10, 3.5, O); disc(img, 22, 9, 1.8, Y)
-    elif g == 'chakram': ring(img, 16, 16, 9, 3, C); ring(img, 16, 16, 9, 1, W, gaps=6); disc(img, 16, 16, 3, K)
-    elif g == 'shadowstep':
-        disc(img, 10, 18, 5, (80, 60, 120, 200)); disc(img, 22, 13, 5, P); line(img, 12, 17, 20, 14, W, 1)
-    elif g == 'smoke':
-        for x, y, r in [(12, 18, 6), (19, 16, 6), (16, 12, 5), (21, 21, 4)]: disc(img, x, y, r, (140, 130, 160, 255))
-    elif g == 'assassin': line(img, 8, 24, 22, 10, W, 2); ring(img, 20, 12, 6, 1.5, R); disc(img, 20, 12, 1.5, R)
-    elif g == 'crit': star(img, 16, 16, 11, Y, 8, 0.2); disc(img, 16, 16, 3, R)
-    elif g == 'afterimage':
-        for i, a in enumerate([90, 160, 255]): disc(img, 10 + i * 5, 16, 5, (170, 120, 230, a))
-    elif g == 'longbow':
-        for y in range(5, 28): img.blend(int(9 + 7 * math.sin((y - 5) / 23 * math.pi)), y, B)
-        line(img, 9, 5, 9, 27, W, 1); arrow(img, 6, 16, 27, 16)
-    elif g == 'repeater':
-        for i in range(3): arrow(img, 5, 10 + i * 6, 25, 10 + i * 6)
-    elif g == 'blastarrow': arrow(img, 5, 25, 20, 10); disc(img, 23, 8, 5, O); disc(img, 23, 8, 2.5, Y)
-    elif g == 'backstep': arrow(img, 26, 16, 10, 16); line(img, 6, 22, 12, 22, C, 1); line(img, 6, 25, 14, 25, C, 1)
-    elif g == 'trap':
-        ring(img, 16, 18, 8, 2, S)
+        line(img, 12, 10, 15, 16, K, 1); line(img, 15, 16, 13, 21, K, 1)
+        disc(img, 21, 21, 3.5, R)
+    elif g == 'fervor':
+        for i, c in enumerate([O, Y, R]):
+            line(img, 8 + i * 6, 26, 11 + i * 6, 8 + i * 2, c, 2)
+        disc(img, 24, 8, 2.5, Y)
+    # ---------------- 도적
+    elif g == 'blowgun':
+        line(img, 5, 24, 20, 12, B, 2.4); line(img, 21, 11, 27, 6, GR, 1.2)
+        for x, y in [(22, 16), (25, 12)]: disc(img, x, y, 1.3, GR)
+    elif g == 'cards':
+        card(img, 7, 10, W, R); card(img, 12, 8, W, K); card(img, 17, 11, (255, 235, 150, 255), R)
+    elif g == 'wire':
+        pts = [(7, 9), (25, 12), (13, 25)]
+        for i in range(3):
+            a, b = pts[i]; c, d = pts[(i + 1) % 3]
+            line(img, a, b, c, d, (230, 220, 255, 255), 1)
+        for x, y in pts: disc(img, x, y, 2, P)
+    elif g == 'deathmark':
+        disc(img, 16, 14, 7, W); disc(img, 13, 13, 1.8, K); disc(img, 19, 13, 1.8, K)
+        img.rect(13, 20, 7, 4, W); line(img, 16, 18, 16, 19, K, 1)
+        ring(img, 16, 16, 12, 1.2, R)
+    elif g == 'caltrops':
+        for cx, cy in [(10, 12), (21, 11), (15, 21), (24, 22)]:
+            for a in (0, 120, 240):
+                r = math.radians(a - 90)
+                line(img, cx, cy, cx + math.cos(r) * 4, cy + math.sin(r) * 4, G, 1.2)
+            disc(img, cx, cy, 1.2, K)
+    elif g == 'pickpocket':
+        disc(img, 14, 19, 7, (130, 95, 60, 255)); line(img, 10, 13, 18, 13, Y, 1.5)
+        disc(img, 23, 10, 3.2, Y); ring(img, 23, 10, 3.2, 1, K)
+    elif g == 'evasion':
+        for i, a in enumerate([70, 140, 255]): disc(img, 9 + i * 6, 16, 4.5, (190, 150, 240, a))
+        line(img, 6, 8, 26, 24, W, 1)
+    elif g == 'spree':
+        for i in range(3): line(img, 6 + i * 3, 24 - i * 7, 14 + i * 3, 24 - i * 7, C, 1.2)
+        star(img, 21, 15, 7, R, 4, 0.8)
+    # ---------------- 궁수
+    elif g == 'netbow':
+        for k in range(6):
+            a = k * math.pi / 3
+            line(img, 16, 16, 16 + math.cos(a) * 11, 16 + math.sin(a) * 11, T, 1)
+        for r in (4, 8, 11): ring(img, 16, 16, r, 1, T)
+    elif g == 'javelin':
+        line(img, 4, 27, 23, 8, B, 1.6); line(img, 21, 10, 27, 4, W, 2.6)
+        for i in range(3): line(img, 5 + i * 4, 12 + i * 2, 9 + i * 4, 12 + i * 2, C, 1)
+    elif g == 'burstbow':
+        for i in range(3): arrow(img, 5 + i * 5, 24 - i * 2, 17 + i * 5, 12 - i * 2)
+    elif g == 'falcon':
+        bird(img, 15, 19)
+        line(img, 22, 26, 27, 21, R, 1); line(img, 24, 27, 28, 23, R, 1)
+    elif g == 'gale':
+        arrow(img, 5, 16, 27, 16, C)
+        for i in range(2):
+            for x in range(6, 22): img.blend(x, int(10 + i * 12 + 1.5 * math.sin(x * 0.6)), C)
+    elif g == 'focus':
+        ring(img, 16, 16, 10, 1.4, W); ring(img, 16, 16, 5, 1.2, GR)
+        line(img, 16, 3, 16, 9, W, 1); line(img, 16, 23, 16, 29, W, 1)
+        line(img, 3, 16, 9, 16, W, 1); line(img, 23, 16, 29, 16, W, 1)
+        disc(img, 16, 16, 1.5, R)
+    elif g == 'trophy':
+        disc(img, 16, 18, 7, T)
+        line(img, 10, 13, 6, 5, T, 1.6); line(img, 22, 13, 26, 5, T, 1.6)
+        disc(img, 13, 17, 1.4, K); disc(img, 19, 17, 1.4, K)
+        disc(img, 24, 24, 3.2, R)
+    elif g == 'distance':
+        disc(img, 7, 22, 3, W); disc(img, 25, 10, 3, R)
+        for x in range(10, 23, 3): img.blend(x, int(22 - (x - 7) * 12 / 18), Y)
+    # ---------------- 연금술사
+    elif g == 'quicksilver':
+        disc(img, 12, 20, 5, (205, 210, 225, 255)); disc(img, 10, 18, 1.5, W)
+        for x, y in [(19, 12), (24, 7)]: disc(img, x, y, 2, (205, 210, 225, 255))
+        line(img, 16, 16, 26, 6, S, 0.7)
+    elif g == 'magnet':
+        for y in range(32):
+            for x in range(32):
+                d = math.hypot(x + 0.5 - 16, y + 0.5 - 14)
+                if 5 <= d <= 10 and y >= 14: img.blend(x, y, R)
+        img.rect(6, 6, 5, 8, R); img.rect(21, 6, 5, 8, R)
+        img.rect(6, 6, 5, 3, W); img.rect(21, 6, 5, 3, W)
+    elif g == 'firework':
+        line(img, 10, 27, 15, 14, O, 1)
         for k in range(8):
             a = k * math.pi / 4
-            line(img, 16 + math.cos(a) * 8, 18 + math.sin(a) * 8, 16 + math.cos(a) * 5, 18 + math.sin(a) * 5, W, 1)
-    elif g == 'triplearrow':
-        for i in range(3): arrow(img, 4 + i * 3, 26 - i * 3, 22 + i * 3, 8 - i * 0 + 0 * i)
-    elif g == 'eye':
-        for x in range(5, 28):
-            h = int(6 * math.sin((x - 5) / 22 * math.pi))
-            img.blend(x, 16 - h, W); img.blend(x, 16 + h, W)
-        disc(img, 16, 16, 4, GR); disc(img, 16, 16, 1.8, K)
-    elif g == 'wind':
-        for i in range(3):
-            for x in range(6, 26): img.blend(x, int(10 + i * 6 + 2 * math.sin(x * 0.5 + i)), C)
-    elif g == 'fireflask': flask(img, O); disc(img, 16, 20, 2, Y)
-    elif g == 'iceflask': flask(img, C); star(img, 16, 20, 3, W, 6, 0)
-    elif g == 'shockflask': flask(img, (255, 235, 90, 255)); line(img, 13, 16, 18, 20, K, 1); line(img, 18, 20, 14, 24, K, 1)
-    elif g == 'heal': flask(img, R); line(img, 16, 16, 16, 24, W, 2); line(img, 12, 20, 20, 20, W, 2)
-    elif g == 'transmute': disc(img, 16, 16, 9, Y); disc(img, 16, 16, 6, (255, 225, 120, 255)); ring(img, 16, 16, 9, 1, K); line(img, 13, 16, 19, 16, K, 1)
-    elif g == 'acidrain':
-        for x, y in [(9, 8), (16, 12), (23, 7), (12, 19), (21, 18)]:
-            disc(img, x, y + 2, 2.3, GR); img.set(int(x), int(y - 1), GR)
-        for x in range(5, 27): img.blend(x, 27, GR)
-    elif g == 'catalyst':
-        for x, y, r in [(12, 20, 4), (19, 15, 3), (15, 10, 2.5), (22, 22, 2)]: ring(img, x, y, r, 1.3, GR)
-    elif g == 'goldtouch':
-        disc(img, 12, 18, 6, Y); ring(img, 12, 18, 6, 1, K); disc(img, 21, 12, 5, Y); ring(img, 21, 12, 5, 1, K)
+            line(img, 18, 11, 18 + math.cos(a) * 8, 11 + math.sin(a) * 8, [R, Y, GR, C][k % 4], 1.2)
+        disc(img, 18, 11, 1.6, W)
+    elif g == 'stone':
+        pts = [(16, 5), (25, 14), (16, 27), (7, 14)]
+        for y in range(5, 28):
+            for x in range(7, 26):
+                if abs(x - 16) / 9 + abs(y - 15) / 11 <= 1: img.blend(x, y, (220, 60, 110, 255))
+        line(img, 12, 10, 16, 20, (255, 170, 200, 255), 1)
+    elif g == 'rewind':
+        ring(img, 16, 16, 10, 2, C)
+        line(img, 16, 16, 16, 9, W, 1.5); line(img, 16, 16, 21, 18, W, 1.5)
+        line(img, 5, 8, 7, 14, C, 1.6); line(img, 7, 14, 12, 12, C, 1.6)
+    elif g == 'giant':
+        flask(img, GR)
+        line(img, 16, 18, 16, 24, W, 1.6); line(img, 13, 21, 16, 18, W, 1.6); line(img, 19, 21, 16, 18, W, 1.6)
+    elif g == 'cycle':
+        for k in range(3):
+            a = k * 2 * math.pi / 3
+            x0, y0 = 16 + math.cos(a) * 9, 16 + math.sin(a) * 9
+            x1, y1 = 16 + math.cos(a + 1.6) * 9, 16 + math.sin(a + 1.6) * 9
+            line(img, x0, y0, x1, y1, GR, 1.8)
+            disc(img, x1, y1, 2, W)
+    elif g == 'volatile':
+        flask(img, (190, 90, 240, 255))
+        star(img, 22, 9, 5, Y, 6, 0.1)
+    # ---------------- 캐릭터 전용 레벨업 카드 (60~75)
+    elif g == 'c_wave':
+        for x in range(32):
+            for y in range(32):
+                d1 = math.hypot(x - 12, y - 16); d2 = math.hypot(x - 8, y - 16)
+                if d1 < 12 and d2 > 11: img.blend(x, y, C)
+        sword(img, 6, 24, 16, 12)
+    elif g == 'c_vamp': sword(img, 9, 23, 23, 9, R); disc(img, 22, 22, 3, R)
+    elif g == 'c_parry':
+        sword(img, 8, 24, 22, 10); disc(img, 22, 21, 3, O); line(img, 18, 26, 26, 17, W, 1)
+    elif g == 'c_storm':
+        ring(img, 16, 16, 10, 2, W, gaps=4); ring(img, 16, 16, 6, 1.5, C, gaps=3); disc(img, 16, 16, 2, Y)
+    elif g == 'c_ricochet':
+        star(img, 9, 22, 5, G); line(img, 12, 19, 18, 9, S, 1); line(img, 18, 9, 25, 18, S, 1); star(img, 25, 19, 4, G)
+    elif g == 'c_barb': star(img, 14, 14, 9, G); disc(img, 22, 23, 3, R); disc(img, 22, 21, 1.5, R)
+    elif g == 'c_clone':
+        disc(img, 11, 16, 6, (90, 60, 130, 180)); disc(img, 21, 16, 6, P); star(img, 21, 16, 4, W)
+    elif g == 'c_starstorm':
+        for k in range(6):
+            a = k * math.pi / 3
+            star(img, 16 + math.cos(a) * 9, 16 + math.sin(a) * 9, 3, G, 4, a)
+    elif g == 'c_split':
+        arrow(img, 4, 16, 16, 16)
+        for dy in (-7, 0, 7): arrow(img, 17, 16, 27, 16 + dy)
+    elif g == 'c_echo':
+        arrow(img, 4, 20, 24, 20); arrow(img, 8, 12, 28, 12, (140, 210, 255, 255))
+    elif g == 'c_windstep':
+        arrow(img, 12, 16, 27, 16)
+        for i in range(3): line(img, 4, 10 + i * 6, 10, 10 + i * 6, C, 1)
+    elif g == 'c_thorn':
+        for x in range(5, 28, 4): line(img, x, 26, x + 2, 16 + (x % 3) * 2, GR, 1.4)
+        for x in range(5, 28, 4): img.set(x + 2, 15 + (x % 3) * 2, W)
+    elif g == 'c_chain':
+        disc(img, 11, 20, 5, O); disc(img, 11, 20, 2.5, Y); disc(img, 22, 11, 4, O); disc(img, 22, 11, 2, Y)
+        line(img, 14, 17, 19, 13, W, 1)
+    elif g == 'c_freeze': flask(img, C); star(img, 16, 20, 4, W, 6, 0); ring(img, 16, 16, 13, 1, W)
+    elif g == 'c_homunculus':
+        disc(img, 16, 18, 7, GR); disc(img, 13, 16, 1.5, K); disc(img, 19, 16, 1.5, K)
+        line(img, 16, 11, 16, 6, GR, 1); disc(img, 16, 5, 1.6, Y)
+    elif g == 'c_shrapnel':
+        flask(img, GR)
+        for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
 
 
 ICONS = {
-    20: ('greatsword', 'sw'), 21: ('twin', 'sw'), 22: ('spear', 'sw'), 23: ('dashslash', 'sw'), 24: ('whirl', 'sw'), 25: ('wave', 'sw'), 26: ('shield', 'sw'), 27: ('bloodblade', 'sw'),
-    28: ('knifefan', 'rg'), 29: ('blazestar', 'rg'), 30: ('chakram', 'rg'), 31: ('shadowstep', 'rg'), 32: ('smoke', 'rg'), 33: ('assassin', 'rg'), 34: ('crit', 'rg'), 35: ('afterimage', 'rg'),
-    36: ('longbow', 'ar'), 37: ('repeater', 'ar'), 38: ('blastarrow', 'ar'), 39: ('backstep', 'ar'), 40: ('trap', 'ar'), 41: ('triplearrow', 'ar'), 42: ('eye', 'ar'), 43: ('wind', 'ar'),
-    44: ('fireflask', 'al'), 45: ('iceflask', 'al'), 46: ('shockflask', 'al'), 47: ('heal', 'al'), 48: ('transmute', 'al'), 49: ('acidrain', 'al'), 50: ('catalyst', 'al'), 51: ('goldtouch', 'al'),
+    20: ('hammer', 'sw'), 21: ('whip', 'sw'), 22: ('lance', 'sw'), 23: ('warcry', 'sw'), 24: ('judgment', 'sw'), 25: ('earthsplit', 'sw'), 26: ('unyielding', 'sw'), 27: ('fervor', 'sw'),
+    28: ('blowgun', 'rg'), 29: ('cards', 'rg'), 30: ('wire', 'rg'), 31: ('deathmark', 'rg'), 32: ('caltrops', 'rg'), 33: ('pickpocket', 'rg'), 34: ('evasion', 'rg'), 35: ('spree', 'rg'),
+    36: ('netbow', 'ar'), 37: ('javelin', 'ar'), 38: ('burstbow', 'ar'), 39: ('falcon', 'ar'), 40: ('gale', 'ar'), 41: ('focus', 'ar'), 42: ('trophy', 'ar'), 43: ('distance', 'ar'),
+    44: ('quicksilver', 'al'), 45: ('magnet', 'al'), 46: ('firework', 'al'), 47: ('stone', 'al'), 48: ('rewind', 'al'), 49: ('giant', 'al'), 50: ('cycle', 'al'), 51: ('volatile', 'al'),
+    60: ('c_wave', 'sw'), 61: ('c_vamp', 'sw'), 62: ('c_parry', 'sw'), 63: ('c_storm', 'sw'),
+    64: ('c_ricochet', 'rg'), 65: ('c_barb', 'rg'), 66: ('c_clone', 'rg'), 67: ('c_starstorm', 'rg'),
+    68: ('c_split', 'ar'), 69: ('c_echo', 'ar'), 70: ('c_windstep', 'ar'), 71: ('c_thorn', 'ar'),
+    72: ('c_chain', 'al'), 73: ('c_freeze', 'al'), 74: ('c_homunculus', 'al'), 75: ('c_shrapnel', 'al'),
 }
 BG = {'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 

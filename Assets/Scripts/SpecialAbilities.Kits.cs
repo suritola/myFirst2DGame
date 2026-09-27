@@ -5,55 +5,56 @@ using UnityEngine;
 // 거너가 아닌 캐릭터의 특수 능력 (ID 20 ~ 51): 캐릭터마다 무기 3 · 스킬 3 · 패시브 2
 // 지옥의 문 · 특수 강화에서는 고른 캐릭터의 능력만 나옴 (CharacterData.pool)
 // SpecialAbilities 의 나머지 부분(탄창 · 쿨타임 · 진화 · 강화 상점 · HUD)을 그대로 씀
+// 거너의 능력 · 캐릭터 전용 레벨업 카드 · 다른 캐릭터의 능력과 겹치지 않게 캐릭터마다 따로 만듦
 public partial class SpecialAbilities
 {
     public const int KitFirstId = 20;
-    // 검사
-    public const int KitGreatsword = 20, KitTwinBlades = 21, KitSpear = 22, KitDashSlash = 23, KitWhirlwind = 24, KitSwordWave = 25, KitIronWill = 26, KitBloodBlade = 27;
-    // 도적
-    public const int KitKnifeFan = 28, KitBlazeStar = 29, KitChakram = 30, KitShadowStep = 31, KitSmokeBomb = 32, KitAssassinate = 33, KitVitalStrike = 34, KitAfterimage = 35;
-    // 궁수
-    public const int KitLongbow = 36, KitRepeater = 37, KitBlastArrow = 38, KitBackstep = 39, KitHunterTrap = 40, KitPiercingVolley = 41, KitEagleEye = 42, KitTailwind = 43;
-    // 연금술사
-    public const int KitFireFlask = 44, KitFrostFlask = 45, KitShockFlask = 46, KitHealPotion = 47, KitTransmute = 48, KitAcidRain = 49, KitCatalyst = 50, KitGoldTouch = 51;
+    // 검사: 묵직한 기사
+    public const int KitHammer = 20, KitWhip = 21, KitLance = 22, KitWarCry = 23, KitJudgment = 24, KitEarthsplit = 25, KitUnyielding = 26, KitFervor = 27;
+    // 도적: 속임수와 암살
+    public const int KitBlowgun = 28, KitCards = 29, KitWire = 30, KitDeathMark = 31, KitCaltrops = 32, KitPickpocket = 33, KitEvasion = 34, KitSpree = 35;
+    // 궁수: 사냥꾼
+    public const int KitNetBow = 36, KitJavelin = 37, KitBurstBow = 38, KitFalcon = 39, KitGale = 40, KitFocus = 41, KitTrophy = 42, KitKeepDistance = 43;
+    // 연금술사: 괴짜 발명
+    public const int KitQuicksilver = 44, KitMagnet = 45, KitFirework = 46, KitStone = 47, KitRewind = 48, KitGiant = 49, KitCycle = 50, KitVolatile = 51;
 
     static readonly (string name, SpecialKind kind, string desc)[] KitDefs =
     {
-        ("대검", SpecialKind.Weapon, "앞쪽을 크게 휩쓰는 느리고 무거운 베기. (공격력 220%)\n진화: 공격력 300%, 범위 증가"),
-        ("쌍검", SpecialKind.Weapon, "누르고 있으면 양손 검으로 빠르게 연속 베기. (공격력 80%)\n진화: 한 번에 두 번씩 벱니다"),
-        ("창", SpecialKind.Weapon, "앞으로 길게 찔러 한 줄의 적을 모두 꿰뚫습니다. (공격력 160%)\n진화: 사거리와 피해 증가"),
-        ("돌진 베기", SpecialKind.Skill, "마우스 쪽으로 빠르게 돌진하며 지나간 적을 벱니다. (공격력 300%)\n진화: 쿨타임 감소, 더 멀리"),
-        ("회오리 베기", SpecialKind.Skill, "잠시 동안 검을 휘돌려 주변 적을 계속 벱니다.\n진화: 지속 시간과 범위 증가"),
-        ("검기", SpecialKind.Skill, "거대한 초승달 검기를 날려 한 줄을 벱니다. (공격력 400%)\n진화: 검기 3개"),
-        ("강철 의지", SpecialKind.Passive, "받는 피해가 20% 줄어듭니다.\n진화: 30%"),
-        ("흡혈의 검", SpecialKind.Passive, "적을 벨 때마다 체력을 조금 회복합니다.\n진화: 회복량 두 배"),
+        ("전쟁 망치", SpecialKind.Weapon, "가까운 땅을 내리찍어 주변 적에게 피해를 주고 잠깐 기절시킵니다. (공격력 250%)\n진화: 범위 증가, 기절 두 배"),
+        ("채찍검", SpecialKind.Weapon, "길게 휘어지는 칼날 채찍. 끝부분에 맞은 적은 두 배 가까운 피해를 받습니다.\n진화: 더 길고, 끝 피해 증가"),
+        ("기창", SpecialKind.Weapon, "창을 앞세워 짧게 돌격하며 지나간 적을 찌르고 밀쳐냅니다. (공격력 180%)\n진화: 더 멀리, 돌격 중 무적"),
+        ("전투 함성", SpecialKind.Skill, "크게 외쳐 주변 적을 밀쳐내고 6초 동안 공격력이 40% 오릅니다.\n진화: 공격력 +60%"),
+        ("심판의 대검", SpecialKind.Skill, "마우스 위치에 하늘에서 거대한 검이 떨어져 크게 베고 기절시킵니다. (공격력 800%)\n진화: 대검 세 자루"),
+        ("대지 가르기", SpecialKind.Skill, "마우스 쪽으로 땅을 길게 갈라 한 줄의 적에게 피해를 주고 느리게 만듭니다. (공격력 300%)\n진화: 세 갈래로 갈라짐"),
+        ("불굴", SpecialKind.Passive, "잃은 체력이 많을수록 공격력이 오릅니다. (최대 +50%)\n진화: 최대 +80%"),
+        ("전투 열기", SpecialKind.Passive, "적을 처치할 때마다 4초 동안 공격 속도 +6% (최대 5중첩).\n진화: +8%, 최대 8중첩"),
 
-        ("단검 부채", SpecialKind.Weapon, "단검 다섯 자루를 부채꼴로 던집니다. (자루당 공격력 60%)\n진화: 일곱 자루"),
-        ("불꽃 표창", SpecialKind.Weapon, "누르고 있으면 맞은 적을 불태우는 표창을 연사합니다.\n진화: 불타는 피해 두 배"),
-        ("차크람", SpecialKind.Weapon, "날아갔다 돌아오는 원반. 갈 때 한 번, 올 때 한 번 벱니다.\n진화: 더 크고 멀리"),
-        ("그림자 이동", SpecialKind.Skill, "마우스 위치로 순간 이동합니다. 잠깐 무적.\n진화: 쿨타임 감소, 도착 자리에서 폭발"),
-        ("연막탄", SpecialKind.Skill, "연막을 터뜨려 안에 든 적을 크게 느리게 합니다.\n진화: 연막이 적에게 피해"),
-        ("암살", SpecialKind.Skill, "가장 가까운 적에게 순간 이동해 치명적인 일격. (공격력 600%)\n진화: 두 번 연속"),
-        ("급소 찌르기", SpecialKind.Passive, "공격력이 25% 오릅니다.\n진화: 45%"),
-        ("잔상", SpecialKind.Passive, "이동 속도 +15%, 맞은 뒤 무적 시간이 길어집니다.\n진화: 이동 속도 +30%"),
+        ("독침 대롱", SpecialKind.Weapon, "누르고 있으면 독침을 빠르게 붑니다. 맞은 적은 중독이 쌓입니다. (최대 5중첩)\n진화: 최대 10중첩"),
+        ("도박 카드", SpecialKind.Weapon, "카드 세 장을 던집니다. 카드마다 피해가 제각각이고, 가끔 조커가 터집니다.\n진화: 다섯 장, 조커 확률 두 배"),
+        ("살상 와이어", SpecialKind.Weapon, "클릭한 곳에 와이어 고리를 박습니다. 고리를 잇는 줄에 닿은 적은 계속 베입니다. (고리 3개)\n진화: 고리 5개"),
+        ("죽음의 표식", SpecialKind.Skill, "마우스 근처의 적에게 표식. 3초 뒤 큰 피해로 터집니다. 그 전에 쓰러지면 쿨타임 초기화. (공격력 1000%)\n진화: 표식 세 개"),
+        ("마름쇠", SpecialKind.Skill, "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 두 배"),
+        ("소매치기", SpecialKind.Skill, "순식간에 주변 적들 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 더 떨어뜨립니다.\n진화: 더 많은 적, 코인 두 배"),
+        ("회피 본능", SpecialKind.Passive, "받는 공격을 20% 확률로 피합니다.\n진화: 30%"),
+        ("연쇄 처치", SpecialKind.Passive, "적을 처치하면 2초 동안 이동 속도 +20%, 모든 스킬 쿨타임 0.3초 감소.\n진화: 쿨타임 0.6초 감소"),
 
-        ("장궁", SpecialKind.Weapon, "무거운 화살로 적 여섯을 꿰뚫습니다. (공격력 240%)\n진화: 무한 관통"),
-        ("연사 석궁", SpecialKind.Weapon, "누르고 있으면 작은 화살을 빠르게 연사합니다. (공격력 45%)\n진화: 두 발씩"),
-        ("폭발 화살", SpecialKind.Weapon, "맞은 자리에서 터지는 화살. (공격력 140% + 폭발)\n진화: 폭발 범위 증가"),
-        ("후퇴 사격", SpecialKind.Skill, "뒤로 뛰어 물러나며 화살 다섯 발을 부채꼴로 쏩니다.\n진화: 화살 아홉 발"),
-        ("사냥 덫", SpecialKind.Skill, "마우스 위치에 덫을 놓습니다. 밟은 적은 묶이고 큰 피해를 받습니다.\n진화: 덫 세 개"),
-        ("관통 사격", SpecialKind.Skill, "거대한 화살 세 발을 한 줄로 쏘아 모두 꿰뚫습니다. (공격력 300%)\n진화: 다섯 발"),
-        ("매의 눈", SpecialKind.Passive, "공격력 +15%, 모든 화살이 적을 하나 더 꿰뚫습니다.\n진화: 공격력 +30%"),
-        ("순풍", SpecialKind.Passive, "공격 속도 +15%, 이동 속도 +10%.\n진화: 공격 속도 +30%"),
+        ("그물 활", SpecialKind.Weapon, "맞은 자리에 그물이 펼쳐져 주변 적을 묶습니다.\n진화: 그물이 더 넓고 오래"),
+        ("투창", SpecialKind.Weapon, "모든 적을 꿰뚫는 무거운 창. 멀리 날아갈수록 피해가 커집니다. (최대 공격력 300%)\n진화: 최대 400%"),
+        ("속사 활", SpecialKind.Weapon, "한 번 누르면 화살 세 발을 눈 깜짝할 새 연달아 쏩니다. (발당 공격력 70%)\n진화: 다섯 발"),
+        ("매의 급습", SpecialKind.Skill, "사냥 매를 날려 마우스 근처의 적을 차례로 덮칩니다. (적마다 공격력 250%)\n진화: 더 많은 적"),
+        ("돌풍 화살", SpecialKind.Skill, "거센 바람을 두른 거대한 화살. 한 줄을 꿰뚫고 적을 멀리 날려 버립니다. (공격력 300%)\n진화: 화살이 두 배 커짐"),
+        ("사냥꾼의 집중", SpecialKind.Skill, "5초 동안 활시위를 순식간에 가득 당깁니다.\n진화: 8초"),
+        ("전리품 사냥", SpecialKind.Passive, "적을 처치할 때마다 최대 체력 +0.5 (최대 +40).\n진화: +1 (최대 +80)"),
+        ("거리 유지", SpecialKind.Passive, "5칸 안에 적이 없으면 공격력이 30% 오릅니다.\n진화: +50%"),
 
-        ("화염 플라스크", SpecialKind.Weapon, "터진 자리에 불타는 장판을 남깁니다.\n진화: 장판이 더 크고 오래"),
-        ("빙결 플라스크", SpecialKind.Weapon, "터진 자리의 적을 크게 느리게 만듭니다.\n진화: 느려지는 시간 증가"),
-        ("번개 플라스크", SpecialKind.Weapon, "터지며 주변 적에게 번개가 튑니다.\n진화: 번개가 더 많이 튐"),
-        ("치유 물약", SpecialKind.Skill, "체력을 25% 회복합니다.\n진화: 40%"),
-        ("변이 폭탄", SpecialKind.Skill, "폭발 안의 약해진 적을 금으로 바꿉니다 (보스 제외, 체력 40% 이하).\n진화: 범위 증가"),
-        ("산성 비", SpecialKind.Skill, "마우스 둘레에 산성 웅덩이가 쏟아집니다.\n진화: 웅덩이 두 배"),
-        ("촉매", SpecialKind.Passive, "모든 폭발 범위가 30% 커집니다.\n진화: 50%"),
-        ("황금 손", SpecialKind.Passive, "코인을 더 얻고, 적을 처치하면 체력을 조금 회복합니다.\n진화: 두 배"),
+        ("수은 구슬", SpecialKind.Weapon, "벽과 적에게 튕겨 다니는 수은 구슬. 네 번 튕기면 터집니다.\n진화: 일곱 번 튕김"),
+        ("자석 폭탄", SpecialKind.Weapon, "떨어진 자리로 주변 적을 끌어모은 뒤 폭발합니다. (공격력 220%)\n진화: 더 넓게 끌어당기고 두 번 폭발"),
+        ("폭죽 발사기", SpecialKind.Weapon, "마우스 위치로 폭죽을 쏘아 올려 색색의 불꽃으로 터뜨립니다.\n진화: 불꽃 다섯 → 여덟 갈래"),
+        ("현자의 돌", SpecialKind.Skill, "6초 동안 던지는 플라스크가 모두 불안정해져 크게 폭발합니다.\n진화: 9초"),
+        ("시간 역행 물약", SpecialKind.Skill, "3초 전의 자리로 되돌아가고, 그때 체력이 더 많았다면 되찾습니다.\n진화: 쿨타임 감소"),
+        ("거대화 물약", SpecialKind.Skill, "5초 동안 몸이 커져 받는 피해가 절반, 닿는 적을 밀쳐내며 피해를 줍니다.\n진화: 8초"),
+        ("연금 순환", SpecialKind.Passive, "스킬을 쓸 때마다 체력 5% 회복, 다른 스킬 쿨타임 1초 감소.\n진화: 체력 8%, 2초 감소"),
+        ("불안정 연구", SpecialKind.Passive, "불안정한 플라스크가 나올 확률이 15% → 35%, 불안정 폭발이 불을 붙입니다.\n진화: 50%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -81,17 +82,17 @@ public partial class SpecialAbilities
     // ================================================================= 탄창 · 간격 · 장전 (0 = 탄약 없음)
     static int KitMag(int id) => id switch
     {
-        KitKnifeFan => 10, KitBlazeStar => 18, KitRepeater => 20, KitBlastArrow => 6,
-        KitFireFlask => 6, KitFrostFlask => 6, KitShockFlask => 6, _ => 0,
+        KitBlowgun => 12, KitCards => 9, KitNetBow => 5, KitBurstBow => 6,
+        KitQuicksilver => 6, KitMagnet => 4, KitFirework => 5, _ => 0,
     };
     static float KitInterval(int id) => id switch
     {
-        KitGreatsword => 0.9f, KitTwinBlades => 0.22f, KitSpear => 0.55f,
-        KitKnifeFan => 0.5f, KitBlazeStar => 0.28f, KitChakram => 0.3f,
-        KitLongbow => 0.9f, KitRepeater => 0.12f, KitBlastArrow => 0.7f,
-        KitFireFlask => 0.8f, KitFrostFlask => 0.8f, KitShockFlask => 0.7f, _ => 0.45f,
+        KitHammer => 1f, KitWhip => 0.45f, KitLance => 0.8f,
+        KitBlowgun => 0.3f, KitCards => 0.45f, KitWire => 0.25f,
+        KitNetBow => 0.8f, KitJavelin => 1f, KitBurstBow => 0.6f,
+        KitQuicksilver => 0.5f, KitMagnet => 1.1f, KitFirework => 0.7f, _ => 0.45f,
     };
-    static float KitReload(int id) => id switch { KitRepeater => 2f, KitKnifeFan => 1.8f, _ => 1.8f };
+    static float KitReload(int id) => id switch { KitBlowgun => 1.6f, KitMagnet => 2.2f, _ => 1.8f };
     static Color KitColor(int id) => id switch
     {
         >= 20 and < 28 => new Color(0.6f, 0.8f, 1f),
@@ -100,8 +101,6 @@ public partial class SpecialAbilities
         >= 44 and < 52 => new Color(0.7f, 1f, 0.5f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
-
-    float KitExplodeMul => CharacterKit.Instance != null ? CharacterKit.Instance.CatalystMul : 1f;
 
     // ================================================================= 범위 피해 도우미
     int DamageArc(Vector3 origin, Vector2 dir, float range, float halfAngle, float damage, float knock)
@@ -113,7 +112,6 @@ public partial class SpecialAbilities
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > halfAngle) continue;
             Specials.Damage(c.gameObject, damage, to.normalized, knock);
-            OnKitHit();
             n++;
         }
         return n;
@@ -127,17 +125,44 @@ public partial class SpecialAbilities
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             Specials.Damage(c.gameObject, damage, (b - a).normalized, knock);
-            OnKitHit();
             n++;
         }
         return n;
     }
 
-    // 흡혈의 검
-    void OnKitHit()
+    void DamageCircle(Vector3 pos, float r, float dmg, float knock)
     {
-        if (!Has(KitBloodBlade) || player == null || player.PlayerHealth <= 0f) return;
-        player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + (IsEvolved(KitBloodBlade) ? 1f : 0.5f));
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, r))
+        {
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            Specials.Damage(c.gameObject, dmg, (c.transform.position - pos).normalized, knock);
+        }
+    }
+
+    // 반지름 안의 살아 있는 일반 적 (보스 제외)
+    static IEnumerable<EnermyController> EnemiesIn(Vector3 pos, float r)
+    {
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, r))
+        {
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null && !e.IsDead) yield return e;
+        }
+    }
+
+    // 마우스에 가까운 적부터 n 마리 (range 안)
+    static List<Transform> NearestEnemies(Vector3 from, float range, int n)
+    {
+        List<Transform> list = new List<Transform>();
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(from, range))
+        {
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null && e.IsDead) continue;
+            list.Add(c.transform);
+        }
+        list.Sort((a, b) => (a.position - from).sqrMagnitude.CompareTo((b.position - from).sqrMagnitude));
+        if (list.Count > n) list.RemoveRange(n, list.Count - n);
+        return list;
     }
 
     Bullet KitProjectile(Vector3 start, Vector2 dir, float dmg, int pene, float speed, string fxName, float size, Color tint, bool spin)
@@ -160,9 +185,27 @@ public partial class SpecialAbilities
         return b;
     }
 
-    GameObject activeChakram;
+    Vector3 KitClamp(Vector3 p)
+    {
+        Vector3 c = Hostile.ClampArena(p);
+        return Hostile.IsWall(c) ? player.transform.position : c;
+    }
+
+    // from 에서 dir 로 dist 만큼, 벽 · 경기장 끝 앞에서 멈춘 자리
+    Vector3 KitReach(Vector3 from, Vector2 dir, float dist)
+    {
+        float len = dist;
+        for (float d = 0.5f; d <= dist; d += 0.5f)
+        {
+            Vector3 p = from + (Vector3)(dir * d);
+            if (Hostile.IsWall(p) || (Hostile.ClampArena(p) - p).sqrMagnitude > 0.01f) { len = d - 0.5f; break; }
+        }
+        return from + (Vector3)(dir * Mathf.Max(0f, len));
+    }
 
     // ================================================================= 무기 (Q로 교체, 좌클릭)
+    bool whipAlt, lancing;
+
     void KitUpdateWeapon(int id, bool down, bool held, bool up)
     {
         Vector3 m = player.MuzzlePosition;
@@ -172,156 +215,359 @@ public partial class SpecialAbilities
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         switch (id)
         {
-            case KitGreatsword:
+            // ---------------- 검사
+            case KitHammer:
                 {
-                    float range = evo ? 15f : 13f;
-                    fx.SetCone(previewCone, player.transform.position, dir, 75f, range, new Color(col.r, col.g, col.b, 0.35f), 0.08f);
+                    Vector3 me = player.transform.position;
+                    Vector3 at = me + Vector3.ClampMagnitude(MouseWorld() - me, 4f);
+                    float r = evo ? 3.2f : 2.5f;
+                    fx.SetRing(previewRing, at, r, new Color(col.r, col.g, col.b, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
-                    DamageArc(player.transform.position, dir, range, 75f, WDamage * (evo ? 3f : 2.2f), 2.5f);
-                    Fx.Play("fx_swordswing", player.transform.position, range * 2.03f, new Color(1f, 0.85f, 0.6f), 24f, rot, 15);
-                    fx.Play("slash", 0.9f, 0.7f);
+                    Smash(at, r, WDamage * 2.5f, evo ? 1f : 0.5f);
                     break;
                 }
-            case KitTwinBlades:
-                if (!held || !Ready()) break;
-                BeginShot(0, out _, out _);
-                for (int i = 0; i < (evo ? 2 : 1); i++)
+            case KitWhip:
                 {
-                    DamageArc(player.transform.position, dir, 3f, 55f, WDamage * 0.8f, 0.6f);
-                    Fx.Play("fx_swordwave", player.transform.position + (Vector3)(dir * 1.7f), 2.6f, new Color(0.8f, 0.9f, 1f), 26f, rot + (dualToggle ? 20f : -20f), 15);
-                    dualToggle = !dualToggle;
+                    float len = evo ? 12f : 10f;
+                    fx.SetLine(aimLine, m, m + (Vector3)(dir * len), new Color(col.r, col.g, col.b, 0.3f), 0.06f);
+                    if (!held || !Ready()) break;
+                    BeginShot(0, out _, out _);
+                    Whip(m, dir, len, WDamage * 0.9f, evo ? 2.5f : 1.8f);
+                    break;
                 }
-                fx.Play("slash", 0.4f, 1.4f);
-                break;
-            case KitSpear:
+            case KitLance:
                 {
-                    float len = evo ? 10f : 7f;
+                    float dist = evo ? 4.5f : 3f;
+                    fx.SetLine(aimLine, m, m + (Vector3)(dir * (dist + 1.5f)), new Color(col.r, col.g, col.b, 0.4f), 0.1f);
+                    if (!down || lancing || !Ready()) break;
+                    BeginShot(0, out _, out _);
+                    StartCoroutine(LanceCharge(dir, dist, 0.12f, WDamage * 1.8f, 2.5f, evo));
+                    break;
+                }
+
+            // ---------------- 도적
+            case KitBlowgun:
+                if (!held || !Ready()) break;
+                {
+                    BeginShot(1, out Vector3 s, out _);
+                    Bullet b = KitProjectile(s, dir, WDamage * 0.4f, player.pene, 55f, "fx_arrow", 0.3f, new Color(0.55f, 1f, 0.4f), false);
+                    int max = evo ? 10 : 5;
+                    float per = WDamage * 0.25f;
+                    if (b != null) b.onHitEnemy += (bb, c) => Poison.Apply(c.gameObject, per, max);
+                }
+                break;
+            case KitCards:
+                if (!down || !Ready()) break;
+                {
+                    BeginShot(1, out Vector3 s, out _);
+                    int n = evo ? 5 : 3;
+                    for (int i = 0; i < n; i++)
+                        ThrowCard(s, Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 12f) * dir, WDamage, evo ? 0.2f : 0.1f);
+                }
+                break;
+            case KitWire:
+                {
+                    int max = evo ? 5 : 3;
+                    Vector3 at = MouseWorld();
+                    fx.SetRing(previewRing, at, 0.45f, new Color(col.r, col.g, col.b, 0.8f), 0.08f);
+                    if (wires.Count > 0) fx.SetLine(aimLine, wires[wires.Count - 1].pos, at, new Color(0.85f, 0.8f, 1f, 0.35f), 0.05f);
+                    player.ammoTextOverride = Loc.T("와이어") + " " + wires.Count + " / " + max;
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
-                    DamageLine(m, m + (Vector3)(dir * len), 0.9f, WDamage * (evo ? 2.2f : 1.6f), 1.5f);
-                    Fx.Play("fx_trail_dot", m + (Vector3)(dir * len * 0.5f), 1.2f, col, 1f, rot, 16, false, 0.12f);
-                    for (float k = 1f; k < len; k += 1f) Fx.Play("fx_trail_dot", m + (Vector3)(dir * k), 0.7f, col, 1f, rot, 16, false, 0.1f + k * 0.01f);
-                    fx.Play("whoosh", 0.6f, 1.6f);
+                    wires.Add((KitClamp(at), Time.time + 10f));
+                    while (wires.Count > max) wires.RemoveAt(0);
+                    Fx.Play("fx_spark", at, 1f, new Color(0.9f, 0.85f, 1f), 24f);
+                    fx.Play("clank", 0.45f, 1.9f);
                     break;
                 }
-            case KitKnifeFan:
+
+            // ---------------- 궁수
+            case KitNetBow:
                 if (!down || !Ready()) break;
-                BeginShot(1, out Vector3 s0, out _);
-                int knives = evo ? 7 : 5;
-                for (int i = 0; i < knives; i++)
                 {
-                    Vector2 d = Quaternion.Euler(0f, 0f, (i - (knives - 1) * 0.5f) * 10f) * dir;
-                    KitProjectile(s0, d, WDamage * 0.6f, player.pene, 40f, "fx_arrow", 0.35f, new Color(0.85f, 0.85f, 0.95f), false);
+                    BeginShot(1, out Vector3 s, out _);
+                    Bullet b = KitProjectile(s, dir, WDamage, 1, 45f, "fx_arrow", 0.55f, new Color(0.95f, 0.9f, 0.65f), false);
+                    float r = evo ? 3f : 2f, hold = evo ? 2f : 1.2f;
+                    if (b != null) b.onHitEnemy += (bb, c) => NetAt(c.transform.position, r, hold, 0f);
                 }
                 break;
-            case KitBlazeStar:
-                if (!held || !Ready()) break;
-                {
-                    BeginShot(1, out Vector3 s1, out _);
-                    Bullet b = KitProjectile(s1, dir, WDamage * 0.6f, player.pene, 45f, "fx_shuriken", 0.7f, new Color(1f, 0.7f, 0.4f), true);
-                    float burn = WDamage * (evo ? 0.6f : 0.3f);
-                    if (b != null) b.onHitEnemy += (bullet, c) => Burn.Apply(c.gameObject, burn, 2f);
-                }
-                break;
-            case KitChakram:
-                if (activeChakram == null)
-                    fx.SetLine(aimLine, m, m + (Vector3)(dir * 12f), new Color(col.r, col.g, col.b, 0.5f), 0.1f);
-                player.ammoTextOverride = activeChakram == null ? Loc.T("원반 준비") : Loc.T("원반 회수 중");
-                if (!down || activeChakram != null || !Ready()) break;
-                {
-                    BeginShot(0, out Vector3 s2, out _);
-                    Bullet b = KitProjectile(s2, dir, WDamage * 1.3f, 9999, 0f, "fx_shuriken", evo ? 2.2f : 1.6f, new Color(0.6f, 0.95f, 1f), true);
-                    if (b == null) break;
-                    b.hitOnce = new HashSet<int>();
-                    Scythe s = b.gameObject.AddComponent<Scythe>();
-                    s.distance = evo ? 15f : 11f;
-                    s.outTime = 0.4f;
-                    s.owner = player.transform;
-                    s.direction = dir;
-                    s.returnsTo = this;
-                    activeChakram = b.gameObject;
-                    fx.Play("whoosh", 0.6f, 1.2f);
-                }
-                break;
-            case KitLongbow:
+            case KitJavelin:
                 if (!down || !Ready()) break;
-                BeginShot(0, out Vector3 s3, out _);
-                KitProjectile(s3, dir, WDamage * 2.4f, evo ? 9999 : 6, 70f, "fx_arrow", 0.6f, new Color(1f, 1f, 0.8f), false);
-                fx.Play("bowtwang", 0.9f, 0.8f);
-                fx.Play("arrowfly", 0.7f, 1.1f);
-                break;
-            case KitRepeater:
-                if (!held || !Ready()) break;
                 {
-                    BeginShot(1, out Vector3 s4, out _);
-                    for (int i = 0; i < (evo ? 2 : 1); i++)
+                    BeginShot(0, out Vector3 s, out _);
+                    Bullet b = KitProjectile(s, dir, WDamage, 9999, 32f, "fx_arrow", 1.3f, new Color(0.95f, 0.8f, 0.55f), false);
+                    if (b != null)
                     {
-                        Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-4f, 4f)) * dir;
-                        KitProjectile(s4, d, WDamage * 0.45f, player.pene, 65f, "fx_arrow", 0.35f, Color.white, false);
+                        b.hitOnce = new HashSet<int>();
+                        JavelinGrow g = b.gameObject.AddComponent<JavelinGrow>();
+                        g.baseDamage = WDamage;
+                        g.maxMul = evo ? 4f : 3f;
                     }
-                    fx.Play("bowtwang", 0.4f, 1.9f);          // 석궁: 짧고 높은 "탕"
-                    fx.Play("arrowfly", 0.25f, 1.4f);
+                    fx.Play("whoosh", 0.7f, 0.8f);
                 }
                 break;
-            case KitBlastArrow:
+            case KitBurstBow:
+                if (!down || !Ready()) break;
+                BeginShot(1, out _, out _);
+                StartCoroutine(BurstRoutine(evo ? 5 : 3, WDamage * 0.7f));
+                break;
+
+            // ---------------- 연금술사
+            case KitQuicksilver:
                 if (!down || !Ready()) break;
                 {
-                    BeginShot(1, out Vector3 s5, out _);
-                    Bullet b = KitProjectile(s5, dir, WDamage * 1.4f, 1, 55f, "fx_arrow", 0.5f, new Color(1f, 0.6f, 0.3f), false);
-                    float boom = WDamage * 1.2f, r = (evo ? 3.2f : 2.5f) * KitExplodeMul;
-                    if (b != null) b.onHitEnemy += (bullet, c) => Explode(c.transform.position, r, boom, 1.5f, new Color(1f, 0.55f, 0.2f, 0.85f));
+                    BeginShot(1, out Vector3 s, out _);
+                    Bullet b = KitProjectile(s, dir, WDamage * 0.9f, 9999, 26f, "fx_orb", 0.6f, new Color(0.85f, 0.9f, 1f), false);
+                    if (b != null) Quicksilver(b, evo ? 7 : 4, WDamage);
                 }
                 break;
-            case KitFireFlask:
-            case KitFrostFlask:
-            case KitShockFlask:
+            case KitMagnet:
                 {
                     Vector3 land = GrenadeLanding();
-                    float r = (id == KitShockFlask ? 2f : 2.4f) * KitExplodeMul * (evo && id == KitFireFlask ? 1.3f : 1f);
+                    float pull = evo ? 6f : 4.5f;
                     fx.SetLine(aimLine, m, land, new Color(col.r, col.g, col.b, 0.4f), 0.08f);
-                    fx.SetRing(previewRing, land, r, new Color(col.r, col.g, col.b, Ready() ? 0.7f : 0.3f), 0.1f);
+                    fx.SetRing(previewRing, land, pull, new Color(0.7f, 0.6f, 1f, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
-                    BeginShot(1, out Vector3 s6, out _);
-                    float dmg = WDamage * 1.2f;
-                    Color tint = id == KitFireFlask ? new Color(1f, 0.6f, 0.3f) : id == KitFrostFlask ? new Color(0.6f, 0.9f, 1f) : new Color(1f, 0.95f, 0.5f);
-                    int flaskId = id;
-                    FlaskLob.Throw(s6, land, 0.45f, 0.9f, tint, p => KitFlaskLand(flaskId, p, r, dmg, evo));
+                    BeginShot(1, out Vector3 s, out _);
+                    float dmg = WDamage * 2.2f;
+                    int blasts = evo ? 2 : 1;
+                    FlaskLob.Throw(s, land, 0.4f, 0.8f, new Color(0.7f, 0.6f, 1f), p => StartCoroutine(MagnetPull(p, pull, 1.2f, dmg, blasts, 2.6f)));
+                    break;
+                }
+            case KitFirework:
+                {
+                    Vector3 land = GrenadeLanding();
+                    fx.SetLine(aimLine, m, land, new Color(1f, 0.8f, 0.4f, 0.35f), 0.06f);
+                    fx.SetRing(previewRing, land, 2.2f, new Color(1f, 0.8f, 0.4f, Ready() ? 0.6f : 0.25f), 0.1f);
+                    if (!down || !Ready()) break;
+                    BeginShot(1, out Vector3 s, out _);
+                    StartCoroutine(FireworkRoutine(s, land, evo ? 8 : 5, WDamage * 0.7f));
                     break;
                 }
         }
     }
 
-    void KitFlaskLand(int id, Vector3 p, float r, float dmg, bool evo)
+    // 검사 전쟁 망치 · 심판의 대검: 원 안의 적에게 피해 + 기절
+    void Smash(Vector3 at, float r, float dmg, float stun)
     {
-        fx.Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
-        switch (id)
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(at, r))
         {
-            case KitFireFlask:
-                Explode(p, r, dmg, 1f, new Color(1f, 0.5f, 0.15f, 0.85f));
-                DamageZone z = SpawnZone(p, r, evo ? 5f : 3.5f, dmg * 0.4f, new Color(1f, 0.4f, 0.1f, 0.75f));
-                z.lava = true;
-                break;
-            case KitFrostFlask:
-                foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
-                {
-                    if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
-                    Specials.Damage(c.gameObject, dmg, (c.transform.position - p).normalized, 0.5f);
-                    EnermyController e = c.GetComponent<EnermyController>();
-                    if (e != null) e.Slow(0.35f, evo ? 4f : 2.5f);
-                }
-                Fx.Play("fx_alchemyblast", p, r * 2.2f, new Color(0.6f, 0.9f, 1f), 18f);
-                Fx.Play("fx_sparkle", p, 1.2f, Color.white, 16f);
-                fx.Play("shimmer", 0.6f, 1.4f);
-                break;
-            case KitShockFlask:
-                Explode(p, r, dmg, 1f, new Color(1f, 0.95f, 0.5f, 0.85f));
-                Collider2D first = null;
-                foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r + 2f))
-                    if (c.CompareTag("enermy") || c.CompareTag("boss")) { first = c; break; }
-                if (first != null) ChainLightning(p, first, dmg * 0.8f, evo ? 6 : 3);
-                break;
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            Specials.Damage(c.gameObject, dmg, (c.transform.position - at).normalized, 1.5f);
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null && stun > 0f) e.Slow(0f, stun);
         }
+        Fx.Play("fx_shock", at, r * 2.2f, new Color(1f, 0.85f, 0.55f, 0.9f), 20f);
+        Fx.Play("fx_fissure", at, r * 1.6f, Color.white, 16f);
+        Hostile.Shake(0.12f);
+        fx.Play("boom", 0.5f, 0.7f);
+        fx.Play("thump", 0.7f, 0.8f);
+    }
+
+    // 검사 채찍검: 한 줄을 휘감고 끝부분은 더 아프게
+    void Whip(Vector3 a, Vector2 dir, float len, float dmg, float tipMul)
+    {
+        whipAlt = !whipAlt;
+        Vector2 side = new Vector2(-dir.y, dir.x) * (whipAlt ? 1f : -1f);
+        Vector3 b = a + (Vector3)(dir * len);
+        foreach (Collider2D c in Physics2D.OverlapCircleAll((a + b) * 0.5f, len * 0.5f + 1f))
+        {
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            if (Hostile.DistanceToSegment(c.transform.position, a, b) > 0.9f) continue;
+            bool tip = Vector2.Dot(c.transform.position - a, dir) >= len * 0.66f;
+            Specials.Damage(c.gameObject, dmg * (tip ? tipMul : 1f), dir, tip ? 1.2f : 0.4f);
+            if (tip) Fx.Play("fx_spark", c.transform.position, 1.3f, new Color(1f, 0.9f, 0.5f), 24f);
+        }
+        float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        for (float t = 0.6f; t <= len; t += 0.6f)
+        {
+            Vector3 p = a + (Vector3)(dir * t + side * Mathf.Sin(t / len * Mathf.PI) * 0.9f);
+            Fx.Play("fx_trail_dot", p, t > len * 0.66f ? 0.9f : 0.6f, new Color(0.75f, 0.85f, 1f), 1f, rot, 16, false, 0.08f + t * 0.012f);
+        }
+        Fx.Play("fx_spark", b, 1.4f, new Color(1f, 0.9f, 0.5f), 24f);
+        fx.Play("whoosh", 0.55f, 1.5f);
+        fx.Play("crack", 0.45f, 1.7f);
+    }
+
+    // 검사 기창: 창을 앞세운 짧은 돌격
+    IEnumerator LanceCharge(Vector2 dir, float dist, float time, float dmg, float knock, bool invincible)
+    {
+        lancing = true;
+        Vector3 from = player.transform.position;
+        Vector3 to = KitReach(from, dir, dist);
+        if (invincible) player.GrantInvincibility(time + 0.15f);
+        float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        fx.Play("whoosh", 0.8f, 1.1f);
+        for (float t = 0f; t < time; t += Time.deltaTime)
+        {
+            player.transform.position = Vector3.Lerp(from, to, t / time);
+            yield return null;
+        }
+        player.transform.position = to;
+        Vector3 tip = to + (Vector3)(dir * 1.8f);
+        DamageLine(from, tip, 1.1f, dmg, knock);
+        for (float k = 0f; k <= 1f; k += 0.2f) Fx.Play("fx_trail_dot", Vector3.Lerp(from, tip, k), 0.9f, new Color(0.8f, 0.9f, 1f), 1f, rot, 16, false, 0.15f);
+        Fx.Play("fx_spark", tip, 1.4f, Color.white, 24f);
+        fx.Play("crack", 0.6f, 1.2f);
+        lancing = false;
+    }
+
+    // 도적 도박 카드: 피해 30% ~ 250% 무작위, 조커는 맞으면 터짐
+    void ThrowCard(Vector3 s, Vector2 d, float baseDmg, float jokerChance)
+    {
+        bool joker = Random.value < jokerChance;
+        float mul = joker ? 1f : Random.Range(0.3f, 2.5f);
+        Color tint = joker ? new Color(1f, 0.35f, 0.4f) : mul > 1.8f ? new Color(1f, 0.85f, 0.35f) : Color.white;
+        Bullet b = KitProjectile(s, d, baseDmg * mul, player.pene, 42f, "fx_card", 0.8f, tint, true);
+        if (b == null || !joker) return;
+        float boom = baseDmg * 2f;
+        b.onHitEnemy += (bb, c) => Explode(c.transform.position, 2.2f, boom, 1.5f, new Color(1f, 0.3f, 0.4f, 0.85f));
+    }
+
+    // 도적 살상 와이어: 고리(끝나는 시각)들을 잇는 줄에 닿은 적을 계속 벰
+    readonly List<(Vector3 pos, float until)> wires = new List<(Vector3, float)>();
+    LineRenderer wireLine;
+    float wireTick;
+
+    void UpdateWires()
+    {
+        wires.RemoveAll(w => Time.time > w.until);
+        if (wires.Count < 2)
+        {
+            if (wireLine != null) wireLine.enabled = false;
+            return;
+        }
+        if (wireLine == null) wireLine = fx.NewLine("Wire", false, 17);
+        bool loop = wires.Count >= 3;
+        wireLine.enabled = true;
+        wireLine.positionCount = wires.Count + (loop ? 1 : 0);
+        for (int i = 0; i < wires.Count; i++) wireLine.SetPosition(i, wires[i].pos);
+        if (loop) wireLine.SetPosition(wires.Count, wires[0].pos);
+        float shine = 0.55f + 0.25f * Mathf.Sin(Time.time * 12f);
+        wireLine.startColor = wireLine.endColor = new Color(0.85f, 0.8f, 1f, shine);
+        wireLine.startWidth = wireLine.endWidth = 0.07f;
+
+        wireTick -= Time.deltaTime;
+        if (wireTick > 0f) return;
+        wireTick = 0.2f;
+        float dmg = Damage * WeaponDamageMul(KitWire) * 0.5f;
+        for (int i = 0; i < wires.Count - (loop ? 0 : 1); i++)
+        {
+            Vector3 a = wires[i].pos, b = wires[(i + 1) % wires.Count].pos;
+            if (DamageLine(a, b, 0.5f, dmg, 0f) > 0) Fx.Play("fx_spark", Vector3.Lerp(a, b, Random.value), 0.8f, new Color(1f, 0.5f, 0.6f), 24f);
+        }
+    }
+
+    // 궁수 그물: 원 안의 적을 묶음
+    void NetAt(Vector3 p, float r, float hold, float dmg)
+    {
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
+        {
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+            if (dmg > 0f) Specials.Damage(c.gameObject, dmg, Vector3.zero, 0f);
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null) e.Slow(0f, hold);
+        }
+        Fx.Play("fx_net", p, r * 2.2f, Color.white, 10f, Random.Range(0f, 90f), 11);
+        fx.Play("clank", 0.35f, 1.4f);
+        fx.Play("whoosh", 0.3f, 0.8f);
+    }
+
+    // 궁수 속사 활: 조준 방향으로 빠르게 연달아
+    IEnumerator BurstRoutine(int n, float dmg)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-2f, 2f)) * AimDir();
+            KitProjectile(player.MuzzlePosition, d, dmg, player.pene, 65f, "fx_arrow", 0.4f, Color.white, false);
+            fx.Play("bowtwang", 0.35f, 1.6f + 0.08f * i);
+            if (i == 0) fx.Play("arrowfly", 0.3f, 1.3f);
+            yield return new WaitForSeconds(0.07f);
+        }
+    }
+
+    // 연금술사 수은 구슬: 벽 · 적에 튕길 때마다 한 번 세고, 다 튕기면 터짐
+    void Quicksilver(Bullet b, int bounces, float boom)
+    {
+        int left = bounces;
+        b.lifetime = 8f;
+        System.Action bounce = () =>
+        {
+            left--;
+            fx.Play("clank", 0.2f, 2.1f);
+            if (left > 0 || b == null) return;
+            Explode(b.transform.position, 1.8f, boom * 1.2f, 1f, new Color(0.85f, 0.9f, 1f, 0.85f));
+            Destroy(b.gameObject);
+        };
+        b.onHitWall = () =>
+        {
+            if (b == null) return;
+            b.Dir = Quaternion.Euler(0f, 0f, 180f + Random.Range(-35f, 35f)) * b.Direction;
+            b.transform.position += (Vector3)(b.Direction * 0.3f);
+            bounce();
+        };
+        b.onHitEnemy += (bb, c) =>
+        {
+            Vector2 away = bb.transform.position - c.transform.position;
+            if (away.sqrMagnitude < 0.01f) away = -bb.Direction;
+            bb.Dir = Quaternion.Euler(0f, 0f, Random.Range(-40f, 40f)) * away.normalized;
+            bounce();
+        };
+    }
+
+    // 연금술사 자석: 한 점으로 적을 끌어당긴 뒤 터짐
+    IEnumerator MagnetPull(Vector3 p, float r, float time, float dmg, int blasts, float blastR)
+    {
+        Fx.Play("fx_vortex", p, r * 2f, new Color(0.7f, 0.6f, 1f, 0.8f), 16f, 0f, 12, true, time);
+        fx.Play("hum", 0.5f, 1.4f);
+        for (float t = 0f; t < time; t += Time.deltaTime)
+        {
+            Pull(p, r, 7f);
+            yield return null;
+        }
+        for (int i = 0; i < blasts; i++)
+        {
+            Explode(p, blastR, dmg, 2f, new Color(0.7f, 0.55f, 1f, 0.9f));
+            if (i + 1 < blasts) yield return new WaitForSeconds(0.25f);
+        }
+    }
+
+    static void Pull(Vector3 p, float r, float speed)
+    {
+        foreach (EnermyController e in EnemiesIn(p, r))
+            e.transform.position = Vector3.MoveTowards(e.transform.position, p, speed * Time.deltaTime);
+    }
+
+    // 연금술사 폭죽: 솟아올라 색색으로 터짐
+    static readonly Color[] FireworkColors = { new Color(1f, 0.4f, 0.4f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 1f, 0.5f), new Color(0.4f, 0.7f, 1f), new Color(0.9f, 0.5f, 1f) };
+
+    IEnumerator FireworkRoutine(Vector3 from, Vector3 to, int sparks, float dmg)
+    {
+        const float rise = 0.35f;
+        for (float t = 0f; t < rise; t += Time.deltaTime)
+        {
+            Vector3 p = Vector3.Lerp(from, to, t / rise) + Vector3.up * Mathf.Sin(t / rise * Mathf.PI) * 1.5f;
+            if (Random.value < 0.6f) Fx.Play("fx_spark", p, 0.6f, new Color(1f, 0.9f, 0.6f), 24f);
+            yield return null;
+        }
+        FireworkBurst(to, sparks, dmg);
+    }
+
+    void FireworkBurst(Vector3 at, int sparks, float dmg)
+    {
+        float spin = Random.Range(0f, 360f);
+        for (int i = 0; i < sparks; i++)
+        {
+            float a = (spin + 360f / sparks * i) * Mathf.Deg2Rad;
+            Vector3 q = at + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 1.8f;
+            Color c = FireworkColors[i % FireworkColors.Length];
+            DamageCircle(q, 1.4f, dmg, 0.8f);
+            Fx.Play("fx_explosion", q, 2.2f, c, 20f);
+        }
+        Fx.Play("fx_sparkle", at, 3f, Color.white, 16f);
+        fx.Play("boom", 0.4f, 1.5f);
+        fx.Play("crackle", 0.4f, 1.3f);
     }
 
     // ================================================================= 스킬 (E · F · C)
@@ -332,274 +578,491 @@ public partial class SpecialAbilities
         Vector3 pos = player.transform.position;
         Vector3 mouse = MouseWorld();
         Vector2 dir = ((Vector2)(mouse - pos)).normalized;
+        if (dir.sqrMagnitude < 0.01f) dir = Vector2.right;
         switch (id)
         {
-            case KitDashSlash:
-                StartCoroutine(KitDash(dir, evo ? 9f : 7f, Damage * 3f));
-                StartCooldown(id, evo ? 3.5f : 5f);
+            case KitWarCry:
+                warCryUntil = Time.time + 6f;
+                foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 5f))
+                    if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, Damage * 0.5f, (c.transform.position - pos).normalized, 4f);
+                Fx.Play("fx_shock", pos, 11f, new Color(1f, 0.75f, 0.4f, 0.85f), 16f);
+                fx.FloatText(pos, Loc.T("전투 함성!"), new Color(1f, 0.75f, 0.4f), 5f, 0f);
+                fx.Play("roar", 0.9f, 1.1f);
+                Hostile.Shake(0.2f);
+                StartCooldown(id, 15f);
                 break;
-            case KitWhirlwind:
-                StartCoroutine(KitWhirl(evo ? 3.5f : 2.5f, evo ? 3.8f : 3f));
-                StartCooldown(id, 12f);
+            case KitJudgment:
+                StartCoroutine(JudgmentRoutine(KitClamp(mouse), evo));
+                StartCooldown(id, 10f);
                 break;
-            case KitSwordWave:
-                for (int i = 0; i < (evo ? 3 : 1); i++)
-                {
-                    Vector2 d = Quaternion.Euler(0f, 0f, (i - (evo ? 1 : 0)) * 15f) * dir;
-                    Bullet b = KitProjectile(player.MuzzlePosition, d, Damage * 4f, 9999, 26f, "fx_swordwave", 6f, new Color(0.7f, 0.9f, 1f), false);
-                    if (b != null) { b.hitOnce = new HashSet<int>(); b.lifetime = 20f / 26f; }
-                }
-                fx.Play("slash", 1f, 0.6f);
-                StartCooldown(id, 6f);
-                break;
-            case KitShadowStep:
-                {
-                    Vector3 to = KitClamp(pos + Vector3.ClampMagnitude(mouse - pos, 10f));
-                    Fx.Play("fx_stealth", pos, 3f, Color.white, 16f);
-                    player.transform.position = to;
-                    player.GrantInvincibility(0.5f);
-                    Fx.Play("fx_stealth", to, 3f, Color.white, 16f);
-                    if (evo) Explode(to, 3f, Damage * 2f, 2f, new Color(0.7f, 0.5f, 1f, 0.85f));
-                    fx.Play("whoosh", 0.8f, 1.4f);
-                    StartCooldown(id, evo ? 2.5f : 4f);
-                    break;
-                }
-            case KitSmokeBomb:
-                StartCoroutine(KitSmoke(pos, evo));
-                StartCooldown(id, 12f);
-                break;
-            case KitAssassinate:
-                {
-                    Transform t = Specials.NearestEnemy(pos, 12f);
-                    if (t == null) { fx.Play("buzz", 0.6f); fx.FloatText(pos, Loc.T("대상 없음"), new Color(0.7f, 0.66f, 0.72f), 4f, 0.4f); return true; }
-                    StartCoroutine(KitAssassin(t, evo ? 2 : 1));
-                    StartCooldown(id, 8f);
-                    break;
-                }
-            case KitBackstep:
-                {
-                    player.transform.position = KitClamp(pos - (Vector3)(dir * 4f));
-                    int n = evo ? 9 : 5;
-                    for (int i = 0; i < n; i++)
-                    {
-                        Vector2 d = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 9f) * dir;
-                        KitProjectile(player.MuzzlePosition, d, Damage * 1.2f, player.pene + 1, 60f, "fx_arrow", 0.45f, Color.white, false);
-                    }
-                    Fx.Play("fx_smoke", pos, 2f, new Color(0.7f, 0.7f, 0.6f, 0.6f), 16f);
-                    fx.Play("whoosh", 0.7f, 1.1f);
-                    StartCooldown(id, 5f);
-                    break;
-                }
-            case KitHunterTrap:
-                for (int i = 0; i < (evo ? 3 : 1); i++)
-                {
-                    Vector3 at = KitClamp(mouse + (i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle.normalized * 2.5f)));
-                    HunterTrap.Place(at, Damage * 4f, this);
-                }
-                fx.Play("clank", 0.7f, 0.9f);
+            case KitEarthsplit:
+                for (int k = 0; k < (evo ? 3 : 1); k++)
+                    StartCoroutine(EarthsplitRoutine(pos, Quaternion.Euler(0f, 0f, (evo ? k - 1 : 0) * 20f) * dir));
                 StartCooldown(id, 8f);
                 break;
-            case KitPiercingVolley:
-                StartCoroutine(KitVolley(dir, evo ? 5 : 3));
-                StartCooldown(id, 7f);
-                break;
-            case KitHealPotion:
-                player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (evo ? 0.4f : 0.25f));
-                Fx.Play("fx_levelup", pos + Vector3.up, 4f, new Color(0.6f, 1f, 0.6f), 14f, 0f, 30);
-                fx.FloatText(pos, Loc.T("회복!"), new Color(0.5f, 1f, 0.5f), 5f, 0f);
-                fx.Play("chime", 0.8f, 1.2f);
-                StartCooldown(id, 18f);
-                break;
-            case KitTransmute:
+            case KitDeathMark:
                 {
-                    float r = (evo ? 5f : 4f) * KitExplodeMul;
-                    Vector3 at = KitClamp(pos + Vector3.ClampMagnitude(mouse - pos, 12f));
-                    foreach (Collider2D c in Physics2D.OverlapCircleAll(at, r))
-                    {
-                        EnermyController e = c.GetComponent<EnermyController>();
-                        if (e != null && !e.IsDead && e.EnemyHealth <= e.setEnemyHP * 0.4f)
-                        {
-                            Fx.Play("fx_sparkle", c.transform.position, 1.2f, new Color(1f, 0.85f, 0.3f), 16f);
-                            e.coinDrop += 2;
-                            e.TakeDamage(e.EnemyHealth + 1f, 0f, Vector3.zero);
-                        }
-                        else if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, Damage * 2f, (c.transform.position - at).normalized, 1f);
-                    }
-                    Fx.Play("fx_alchemyblast", at, r * 2.2f, new Color(1f, 0.9f, 0.4f), 16f);
-                    fx.Play("chime", 0.7f, 0.8f);
-                    StartCooldown(id, 14f);
+                    List<Transform> targets = NearestEnemies(mouse, 12f, evo ? 3 : 1);
+                    if (targets.Count == 0) { NoTarget(pos); return true; }
+                    markResetUsed = false;
+                    foreach (Transform t in targets) StartCoroutine(DeathMarkRoutine(t, id));
+                    fx.Play("crack", 0.5f, 0.6f);
+                    StartCooldown(id, 10f);
                     break;
                 }
-            case KitAcidRain:
-                StartCoroutine(KitAcidRainRoutine(mouse, evo ? 12 : 6));
-                StartCooldown(id, 12f);
+            case KitCaltrops:
+                for (int i = 0; i < (evo ? 20 : 12); i++)
+                {
+                    Vector3 at = KitClamp(pos + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(1.2f, 5f)));
+                    Caltrop.Place(at, Damage * 0.8f);
+                }
+                fx.Play("clank", 0.6f, 1.6f);
+                fx.Play("crackle", 0.4f, 1.8f);
+                StartCooldown(id, 10f);
+                break;
+            case KitPickpocket:
+                {
+                    List<Transform> targets = NearestEnemies(pos, 7f, evo ? 10 : 6);
+                    if (targets.Count == 0) { NoTarget(pos); return true; }
+                    StartCoroutine(PickpocketRoutine(targets, evo ? 2 : 1));
+                    StartCooldown(id, 12f);
+                    break;
+                }
+            case KitFalcon:
+                {
+                    List<Transform> targets = NearestEnemies(mouse, 14f, evo ? 8 : 5);
+                    if (targets.Count == 0) { NoTarget(pos); return true; }
+                    StartCoroutine(FalconRoutine(targets));
+                    StartCooldown(id, 9f);
+                    break;
+                }
+            case KitGale:
+                {
+                    Bullet b = KitProjectile(player.MuzzlePosition, dir, Damage * 3f, 9999, 38f, "fx_arrow", evo ? 3f : 1.6f, new Color(0.7f, 1f, 0.95f), false);
+                    if (b != null)
+                    {
+                        b.hitOnce = new HashSet<int>();
+                        b.knockBack = 6f;
+                        b.gameObject.AddComponent<WindTrail>();
+                    }
+                    fx.Play("whoosh", 1f, 0.6f);
+                    fx.Play("bowtwang", 0.9f, 0.7f);
+                    StartCooldown(id, 7f);
+                    break;
+                }
+            case KitFocus:
+                focusUntil = Time.time + (evo ? 8f : 5f);
+                Fx.Play("fx_levelup", pos + Vector3.up, 3.5f, new Color(0.7f, 1f, 0.6f), 14f, 0f, 30);
+                fx.FloatText(pos, Loc.T("집중!"), new Color(0.7f, 1f, 0.6f), 5f, 0f);
+                fx.Play("chime", 0.7f, 1.4f);
+                StartCooldown(id, 16f);
+                break;
+            case KitStone:
+                stoneUntil = Time.time + (evo ? 9f : 6f);
+                Fx.Play("fx_rune", pos, 4f, new Color(0.9f, 0.5f, 1f), 14f, 0f, 3);
+                fx.FloatText(pos, Loc.T("현자의 돌!"), new Color(0.9f, 0.55f, 1f), 5f, 0f);
+                fx.Play("shimmer", 0.8f, 0.9f);
+                StartCooldown(id, 18f);
+                break;
+            case KitRewind:
+                {
+                    if (rewindLog.Count == 0) { NoTarget(pos); return true; }
+                    var past = rewindLog.Peek();
+                    Fx.Play("fx_vortex", pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
+                    player.transform.position = past.pos;
+                    if (past.hp > player.PlayerHealth) player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, past.hp);
+                    player.GrantInvincibility(0.5f);
+                    Fx.Play("fx_vortex", past.pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
+                    fx.FloatText(past.pos, Loc.T("시간 역행!"), new Color(0.6f, 0.9f, 1f), 5f, 0f);
+                    fx.Play("shimmer", 0.9f, 0.6f);
+                    rewindLog.Clear();
+                    StartCooldown(id, evo ? 12f : 20f);
+                    break;
+                }
+            case KitGiant:
+                StartGiant(evo ? 8f : 5f);
+                StartCooldown(id, 18f);
                 break;
             default:
                 return false;
         }
+        // 연금 순환: 스킬을 쓸 때마다 회복 · 다른 스킬 쿨타임 감소
+        if (Has(KitCycle))
+        {
+            bool e = IsEvolved(KitCycle);
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.08f : 0.05f));
+            ReduceCooldowns(e ? 2f : 1f, id);
+            Fx.Play("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
+        }
         return true;
     }
 
-    Vector3 KitClamp(Vector3 p)
+    void NoTarget(Vector3 pos)
     {
-        Vector3 c = Hostile.ClampArena(p);
-        return Hostile.IsWall(c) ? player.transform.position : c;
+        fx.Play("buzz", 0.6f);
+        fx.FloatText(pos, Loc.T("대상 없음"), new Color(0.7f, 0.66f, 0.72f), 4f, 0.4f);
     }
 
-    IEnumerator KitDash(Vector2 dir, float dist, float dmg)
+    // 쿨타임 줄이기 (except 는 빼고)
+    void ReduceCooldowns(float seconds, int except = -1)
     {
-        Vector3 from = player.transform.position;
-        Vector3 to = KitClamp(from + (Vector3)(dir * dist));
-        player.GrantInvincibility(0.3f);
-        fx.Play("whoosh", 0.9f, 1.3f);
-        for (float t = 0f; t < 0.15f; t += Time.deltaTime)
+        foreach (int k in new List<int>(cooldownUntil.Keys))
+            if (k != except) cooldownUntil[k] -= seconds;
+    }
+
+    IEnumerator JudgmentRoutine(Vector3 at, bool evo)
+    {
+        List<Vector3> spots = new List<Vector3> { at };
+        if (evo)
+            for (int i = 0; i < 2; i++) spots.Add(KitClamp(at + (Vector3)(Random.insideUnitCircle.normalized * 4f)));
+        foreach (Vector3 s in spots) Hostile.Circle(s, 3.5f, 0.6f, new Color(1f, 0.85f, 0.4f, 0.7f));
+        fx.Play("railcharge", 0.5f, 1.2f);
+        yield return new WaitForSeconds(0.45f);
+        foreach (Vector3 s in spots)
         {
-            player.transform.position = Vector3.Lerp(from, to, t / 0.15f);
-            yield return null;
+            FxAnim sword = Fx.Play("fx_bigsword", s + Vector3.up * 8f, 5f, Color.white, 1f, 0f, 18, true, 0.35f);
+            for (float t = 0f; t < 0.12f && sword != null; t += Time.deltaTime)
+            {
+                sword.transform.position = Vector3.Lerp(s + Vector3.up * 8f, s + Vector3.up * 1.5f, t / 0.12f);
+                yield return null;
+            }
+            if (sword != null) sword.transform.position = s + Vector3.up * 1.5f;
+            Smash(s, 3.5f, Damage * 8f, 1f);
+            fx.Play("bigboom", 0.7f, 0.9f);
+            Hostile.Shake(0.3f);
+            yield return new WaitForSeconds(0.1f);
         }
-        player.transform.position = to;
-        DamageLine(from, to, 1.4f, dmg, 1.5f);
+    }
+
+    IEnumerator EarthsplitRoutine(Vector3 from, Vector2 dir)
+    {
+        HashSet<Collider2D> hit = new HashSet<Collider2D>();
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        for (float k = 0f; k <= 1f; k += 0.25f)
-            Fx.Play("fx_swordwave", Vector3.Lerp(from, to, k), 2.4f, new Color(0.7f, 0.9f, 1f, 0.9f), 20f, rot, 15);
-        fx.Play("slash", 1f, 0.9f);
+        fx.Play("thump", 0.8f, 0.6f);
+        for (float d = 1.2f; d <= 14f; d += 1.2f)
+        {
+            Vector3 p = from + (Vector3)(dir * d);
+            if (Hostile.IsWall(p)) break;
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, 1.3f))
+            {
+                if ((!c.CompareTag("enermy") && !c.CompareTag("boss")) || !hit.Add(c)) continue;
+                Specials.Damage(c.gameObject, Damage * 3f, Vector3.up, 1f);
+                EnermyController e = c.GetComponent<EnermyController>();
+                if (e != null) e.Slow(0.4f, 2f);
+            }
+            Fx.Play("fx_fissure", p, 2.2f, Color.white, 18f, rot, 11);
+            if (d % 3.6f < 1.2f) fx.Play("crack", 0.35f, 0.7f);
+            yield return new WaitForSeconds(0.03f);
+        }
     }
 
-    IEnumerator KitWhirl(float duration, float radius)
+    bool markResetUsed;
+
+    IEnumerator DeathMarkRoutine(Transform t, int id)
     {
-        float tick = 0f;
-        for (float t = 0f; t < duration; t += Time.deltaTime)
+        FxAnim mark = Fx.Play("fx_markskull", t.position + Vector3.up * 1.4f, 1.4f, new Color(1f, 0.35f, 0.4f), 8f, 0f, 18, true, 3f);
+        EnermyController e = t.GetComponent<EnermyController>();
+        for (float k = 0f; k < 3f; k += Time.deltaTime)
         {
-            tick -= Time.deltaTime;
-            if (tick <= 0f)
+            if (t == null || (e != null && e.IsDead))
             {
-                tick = 0.25f;
-                DamageCircle(player.transform.position, radius, Damage * 0.8f, 0.8f);
-                Fx.Play("fx_spinslash", player.transform.position, radius * 2.3f, new Color(1f, 1f, 1f, 0.8f), 24f);
-                fx.Play("slash", 0.4f, 1.2f + Random.Range(-0.1f, 0.1f));
+                // 표식이 터지기 전에 쓰러짐: 쿨타임 초기화 (한 번 쓸 때 한 번만)
+                if (!markResetUsed)
+                {
+                    markResetUsed = true;
+                    cooldownUntil[id] = Time.time;
+                    fx.FloatText(player.transform.position, Loc.T("표식 초기화!"), new Color(1f, 0.45f, 0.5f), 4.5f, 0f);
+                    fx.Play("ding", 0.6f, 1.6f);
+                }
+                if (mark != null) Destroy(mark.gameObject);
+                yield break;
             }
+            if (mark != null) mark.transform.position = t.position + Vector3.up * 1.4f;
             yield return null;
         }
+        if (mark != null) Destroy(mark.gameObject);
+        Specials.Damage(t.gameObject, Damage * 10f, Vector3.zero, 1f);
+        Fx.Play("fx_deathburst", t.position, 3f, new Color(1f, 0.35f, 0.4f), 18f);
+        fx.Play("crack", 0.9f, 0.8f);
+        Hostile.Shake(0.15f);
     }
 
-    void DamageCircle(Vector3 pos, float r, float dmg, float knock)
+    IEnumerator PickpocketRoutine(List<Transform> targets, int coins)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, r))
+        Vector3 home = player.transform.position;
+        player.GrantInvincibility(targets.Count * 0.09f + 0.4f);
+        foreach (Transform t in targets)
         {
-            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
-            Specials.Damage(c.gameObject, dmg, (c.transform.position - pos).normalized, knock);
-            OnKitHit();
-        }
-    }
-
-    IEnumerator KitSmoke(Vector3 at, bool evo)
-    {
-        const float r = 4f;
-        FxAnim cloud = Fx.Play("fx_stealth", at, r * 2.4f, new Color(1f, 1f, 1f, 0.8f), 4f, 0f, 3, true, 4.2f);
-        fx.Play("hiss", 0.8f, 0.7f);
-        for (float t = 0f; t < 4f; t += 0.3f)
-        {
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(at, r))
-            {
-                EnermyController e = c.GetComponent<EnermyController>();
-                if (e == null) continue;
-                e.Slow(0.3f, 0.5f);
-                if (evo) e.TakeDamage(Damage * 0.3f, 0f, Vector3.zero);
-            }
-            if (Random.value < 0.5f) Fx.Play("fx_stealth", at + (Vector3)(Random.insideUnitCircle * r), 2.5f, new Color(1f, 1f, 1f, 0.6f), 10f);
-            yield return new WaitForSeconds(0.3f);
-        }
-    }
-
-    IEnumerator KitAssassin(Transform target, int strikes)
-    {
-        for (int i = 0; i < strikes && target != null; i++)
-        {
-            Vector3 p = target.position;
-            Fx.Play("fx_stealth", player.transform.position, 2.5f, Color.white, 16f);
-            player.transform.position = KitClamp(p + (Vector3)(Random.insideUnitCircle.normalized * 1.2f));
-            player.GrantInvincibility(0.4f);
-            bool boss = target.CompareTag("boss");
-            Specials.Damage(target.gameObject, Damage * (boss ? 3f : 6f), (p - player.transform.position).normalized, 2f);
-            Fx.Play("fx_swordwave", p, 3f, new Color(1f, 0.4f, 0.5f), 22f, Random.Range(0f, 360f), 16);
-            Fx.Play("fx_sparkle", p, 1.5f, new Color(1f, 0.3f, 0.3f), 18f);
-            fx.Play("slash", 1f, 1.3f);
-            yield return new WaitForSeconds(0.2f);
-        }
-    }
-
-    IEnumerator KitVolley(Vector2 dir, int n)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            KitProjectile(player.MuzzlePosition, dir, Damage * 3f, 9999, 70f, "fx_arrow", 1.1f, new Color(1f, 1f, 0.7f), false);
-            fx.Play("crack", 0.6f, 1.2f);
+            if (t == null) continue;
+            Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
+            player.transform.position = KitClamp(t.position + (Vector3)(Random.insideUnitCircle.normalized * 1f));
+            Specials.Damage(t.gameObject, Damage * 1.5f, Vector3.zero, 0.5f);
+            EnermyController e = t.GetComponent<EnermyController>();
+            if (e != null) e.coinDrop += coins;
+            Fx.Play("fx_sparkle", t.position, 1.2f, new Color(1f, 0.85f, 0.3f), 20f);
+            fx.Play("pop", 0.4f, 1.6f);
             yield return new WaitForSeconds(0.08f);
         }
+        Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
+        player.transform.position = home;
+        fx.Play("whoosh", 0.7f, 1.6f);
     }
 
-    IEnumerator KitAcidRainRoutine(Vector3 center, int n)
+    IEnumerator FalconRoutine(List<Transform> targets)
     {
-        float r = 5f * KitExplodeMul;
-        for (int i = 0; i < n; i++)
+        Sprite[] f = Fx.Frames("fx_falcon");
+        if (f.Length == 0) yield break;
+        GameObject bird = MakeSprite("Falcon", f[0], player.transform.position + Vector3.up * 1.5f, 1.4f / f[0].bounds.size.y, Color.white, "Effect", 20);
+        FrameLoop loop = bird.AddComponent<FrameLoop>();
+        loop.frames = f;
+        loop.fps = 10f;
+        SpriteRenderer sr = bird.GetComponent<SpriteRenderer>();
+        fx.Play("whoosh", 0.8f, 1.8f);
+        foreach (Transform t in targets)
         {
-            Vector3 at = Hostile.ClampArena(center + (Vector3)(Random.insideUnitCircle * r));
-            Fx.Play("fx_geyser", at + Vector3.up * 1.2f, 2.6f, Color.white, 18f, 0f, 14);
-            SpawnZone(at, 1.6f * KitExplodeMul, 4f, Damage * 0.5f, new Color(0.45f, 1f, 0.35f, 0.7f));
-            yield return new WaitForSeconds(0.12f);
+            if (t == null) continue;
+            Vector3 from = bird.transform.position;
+            for (float k = 0f; k < 0.13f && t != null; k += Time.deltaTime)
+            {
+                bird.transform.position = Vector3.Lerp(from, t.position, k / 0.13f);
+                sr.flipX = t.position.x < from.x;
+                yield return null;
+            }
+            if (t == null) continue;
+            Specials.Damage(t.gameObject, Damage * 2.5f, (t.position - from).normalized, 1f);
+            Fx.Play("fx_slash", t.position, 1.8f, new Color(1f, 0.9f, 0.7f), 24f, Random.Range(0f, 360f), 16);
+            fx.Play("slash", 0.5f, 1.8f);
+            yield return new WaitForSeconds(0.04f);
         }
-        fx.Play("hiss", 0.6f, 1f);
+        bird.AddComponent<FadeOut>().duration = 0.4f;
     }
 
-    // ================================================================= 패시브 (장착 · 진화 때 한 번)
-    void KitOnEquip(int id, bool evolving)
+    // ================================================================= 캐릭터 상태 (스킬 · 패시브)
+    float warCryUntil, focusUntil, stoneUntil, spreeUntil, fervorUntil, giantUntil;
+    int fervor;
+    float trophyHp;
+    // 3초 전 기록 (시간 역행 물약)
+    readonly Queue<(float t, Vector3 pos, float hp)> rewindLog = new Queue<(float, Vector3, float)>();
+    float rewindRecord;
+    // 매 프레임 곱해 둔 값 (다음 프레임에 되돌리고 다시 곱함)
+    float appliedDmg = 1f, appliedRate = 1f, appliedSpeed = 1f;
+    Vector3 giantBaseScale;
+    float giantTick;
+
+    public bool KitFocusActive => Time.time < focusUntil;
+    public bool KitStoneActive => Time.time < stoneUntil;
+    public float KitUnstableChance => Has(KitVolatile) ? (IsEvolved(KitVolatile) ? 0.5f : 0.35f) : 0.15f;
+    public bool KitUnstableBurns => Has(KitVolatile);
+
+    void KitTick()
     {
         if (player == null) return;
-        float k = evolving ? 0.5f : 1f;          // 진화 때는 절반만 더 (설명의 "진화: ..." 값에 맞춤)
-        switch (id)
+        float dmg = 1f, rate = 1f, speed = 1f;
+        if (Has(KitUnyielding))
         {
-            case KitIronWill: player.def += evolving ? 0.1f : 0.2f; break;
-            case KitVitalStrike: player.damage *= evolving ? 1.16f : 1.25f; break;
-            case KitAfterimage: player.speed *= evolving ? 1.13f : 1.15f; player.hurtInvincibleTime += 0.3f * k; break;
-            case KitEagleEye: player.damage *= evolving ? 1.13f : 1.15f; if (!evolving) player.pene += 1; break;
-            case KitTailwind: player.fireRateMultiplier *= evolving ? 1.13f : 1.15f; if (!evolving) player.speed *= 1.1f; break;
-            case KitGoldTouch: player.bonusCoin += 1; player.healOnKill += evolving ? 0.5f : 0.5f; break;
+            bool e = IsEvolved(KitUnyielding);
+            float lost = 1f - Mathf.Clamp01(player.PlayerHealth / Mathf.Max(1f, player.PlayerMaxHealth));
+            dmg *= 1f + Mathf.Min(e ? 0.8f : 0.5f, lost * (e ? 1f : 0.6f));
+        }
+        if (Time.time > fervorUntil) fervor = 0;
+        rate *= 1f + fervor * (IsEvolved(KitFervor) ? 0.08f : 0.06f);
+        if (Time.time < warCryUntil) dmg *= IsEvolved(KitWarCry) ? 1.6f : 1.4f;
+        if (Time.time < spreeUntil) speed *= 1.2f;
+        if (Has(KitKeepDistance) && Specials.NearestEnemy(player.transform.position, 5f) == null)
+            dmg *= IsEvolved(KitKeepDistance) ? 1.5f : 1.3f;
+        ApplyDynamic(dmg, rate, speed);
+
+        UpdateWires();
+        if (Has(KitRewind)) RecordRewind();
+        UpdateGiant();
+    }
+
+    void ApplyDynamic(float dmg, float rate, float speed)
+    {
+        player.damage *= dmg / appliedDmg; appliedDmg = dmg;
+        player.fireRateMultiplier *= rate / appliedRate; appliedRate = rate;
+        player.speed *= speed / appliedSpeed; appliedSpeed = speed;
+    }
+
+    void RecordRewind()
+    {
+        rewindRecord -= Time.deltaTime;
+        if (rewindRecord > 0f) return;
+        rewindRecord = 0.1f;
+        rewindLog.Enqueue((Time.time, player.transform.position, player.PlayerHealth));
+        while (rewindLog.Count > 0 && Time.time - rewindLog.Peek().t > 3f) rewindLog.Dequeue();
+    }
+
+    void StartGiant(float seconds)
+    {
+        if (Time.time >= giantUntil)
+        {
+            giantBaseScale = player.transform.localScale;
+            player.transform.localScale = giantBaseScale * 1.5f;
+            player.def += 0.5f;
+        }
+        giantUntil = Time.time + seconds;
+        Fx.Play("fx_alchemyblast", player.transform.position, 4f, new Color(0.7f, 1f, 0.5f), 16f);
+        fx.Play("bubble", 0.8f, 0.6f);
+        fx.Play("roar", 0.5f, 0.7f);
+    }
+
+    void UpdateGiant()
+    {
+        if (giantUntil <= 0f) return;
+        if (Time.time >= giantUntil)
+        {
+            giantUntil = 0f;
+            player.transform.localScale = giantBaseScale;
+            player.def -= 0.5f;
+            fx.Play("pop", 0.6f, 0.8f);
+            return;
+        }
+        giantTick -= Time.deltaTime;
+        if (giantTick > 0f) return;
+        giantTick = 0.3f;
+        DamageCircle(player.transform.position, 2f, Damage, 3f);
+    }
+
+    void KitOnKill(Vector3 pos)
+    {
+        if (player == null) return;
+        if (Has(KitFervor))
+        {
+            fervor = Mathf.Min(IsEvolved(KitFervor) ? 8 : 5, fervor + 1);
+            fervorUntil = Time.time + 4f;
+        }
+        if (Has(KitSpree))
+        {
+            spreeUntil = Time.time + 2f;
+            ReduceCooldowns(IsEvolved(KitSpree) ? 0.6f : 0.3f);
+        }
+        if (Has(KitTrophy))
+        {
+            bool e = IsEvolved(KitTrophy);
+            float add = e ? 1f : 0.5f;
+            if (trophyHp < (e ? 80f : 40f))
+            {
+                trophyHp += add;
+                player.PlayerMaxHealth += add;
+                player.PlayerHealth += add;
+            }
+        }
+    }
+
+    // 도적 회피 본능 (PlayerController.TryHit)
+    public bool KitDodge()
+    {
+        if (!Has(KitEvasion) || Random.value >= (IsEvolved(KitEvasion) ? 0.3f : 0.2f)) return false;
+        fx.FloatText(player.transform.position, Loc.T("회피!"), new Color(0.8f, 0.7f, 1f), 4.5f, 0.2f);
+        Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.8f, 0.7f, 1f, 0.7f), 20f);
+        fx.Play("whoosh", 0.5f, 2f);
+        player.GrantInvincibility(0.3f);
+        return true;
+    }
+
+    // 패시브는 KitTick · KitOnKill · KitDodge 에서 그때그때 적용
+    void KitOnEquip(int id, bool evolving) { }
+}
+
+// 중독: 쌓일수록 강해지는 초록 도트 피해 (4초 동안 새로 안 맞으면 사라짐)
+public class Poison : MonoBehaviour
+{
+    public float perStack;
+    public int stacks;
+    float until, tick, drip;
+
+    public static void Apply(GameObject target, float perStack, int maxStacks)
+    {
+        if (target == null) return;
+        Poison p = target.GetComponent<Poison>();
+        if (p == null) p = target.AddComponent<Poison>();
+        p.perStack = Mathf.Max(p.perStack, perStack);
+        p.stacks = Mathf.Min(maxStacks, p.stacks + 1);
+        p.until = Time.time + 4f;
+    }
+
+    void Update()
+    {
+        if (Time.time > until) { Destroy(this); return; }
+        drip += Time.deltaTime;
+        if (drip >= 0.35f)
+        {
+            drip = 0f;
+            Fx.Play("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.2f, new Color(0.5f, 1f, 0.35f), 14f);
+        }
+        tick += Time.deltaTime;
+        if (tick >= 0.5f)
+        {
+            tick = 0f;
+            Specials.Damage(gameObject, perStack * stacks * 0.5f, Vector3.zero, 0f);
         }
     }
 }
 
-// 사냥 덫: 밟은 적을 묶고 크게 피해 (한 번 발동하면 사라짐)
-public class HunterTrap : MonoBehaviour
+// 마름쇠: 밟은 적에게 피해 + 느리게, 세 번 밟히거나 8초가 지나면 사라짐
+public class Caltrop : MonoBehaviour
 {
-    float damage;
-    SpecialAbilities owner;
-    float life = 20f;
-    bool sprung;
+    float damage, life = 8f, cooldown;
+    int uses = 3;
 
-    public static void Place(Vector3 at, float damage, SpecialAbilities owner)
+    public static void Place(Vector3 at, float damage)
     {
-        FxAnim a = Fx.Play("fx_target_rune", at, 2.2f, new Color(0.8f, 0.7f, 0.5f, 0.9f), 1f, 0f, 3, true, 20f);
+        FxAnim a = Fx.Play("fx_caltrop", at, 0.7f, Color.white, 1f, Random.Range(0f, 360f), 3, true, 8f);
         if (a == null) return;
-        HunterTrap t = a.gameObject.AddComponent<HunterTrap>();
-        t.damage = damage;
-        t.owner = owner;
+        a.gameObject.AddComponent<Caltrop>().damage = damage;
     }
 
     void Update()
     {
         life -= Time.deltaTime;
-        if (sprung || life <= 0f) return;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, 1.2f))
+        cooldown -= Time.deltaTime;
+        if (life <= 0f || uses <= 0) { Destroy(gameObject); return; }
+        if (cooldown > 0f) return;
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, 0.6f))
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
-            sprung = true;
             Specials.Damage(c.gameObject, damage, Vector3.zero, 0f);
             EnermyController e = c.GetComponent<EnermyController>();
-            if (e != null) e.Slow(0f, 2f);
-            Fx.Play("fx_bonehand", transform.position + Vector3.up * 0.4f, 1.8f, new Color(0.8f, 0.7f, 0.5f), 16f);
-            Hostile.Play("clank", 0.8f, 0.7f);
-            Destroy(gameObject, 0.1f);
+            if (e != null) e.Slow(0.4f, 1.5f);
+            uses--;
+            cooldown = 0.4f;
+            Fx.Play("fx_spark", transform.position, 0.8f, new Color(1f, 0.6f, 0.6f), 24f);
             break;
         }
+    }
+}
+
+// 투창: 날아간 거리만큼 피해가 커짐 (15칸에서 최대)
+public class JavelinGrow : MonoBehaviour
+{
+    public float baseDamage, maxMul = 3f;
+    Bullet b;
+    Vector3 start;
+
+    void Start()
+    {
+        b = GetComponent<Bullet>();
+        start = transform.position;
+    }
+
+    void Update()
+    {
+        if (b == null) return;
+        b.damage = baseDamage * Mathf.Lerp(1f, maxMul, Vector2.Distance(start, transform.position) / 15f);
+    }
+}
+
+// 돌풍 화살: 날아가며 바람 자국을 남김
+public class WindTrail : MonoBehaviour
+{
+    float t;
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        if (t < 0.05f) return;
+        t = 0f;
+        Fx.Play("fx_smoke", transform.position, 1.6f, new Color(0.75f, 1f, 0.95f, 0.5f), 18f);
     }
 }

@@ -273,7 +273,9 @@ public class CharacterKit : MonoBehaviour
             }
         }
 
-        draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.2f, fullTime));
+        // 사냥꾼의 집중: 순식간에 가득 당김
+        if (Special != null && Special.KitFocusActive) fullTime = 0.05f;
+        draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
         Vector3 start = player.MuzzlePosition;
         Vector3 target = Mouse;
         player.FaceTowards(target);
@@ -332,11 +334,12 @@ public class CharacterKit : MonoBehaviour
     {
         int kind = reagent;
         reagent = (reagent + 1) % 3;
-        bool unstable = Random.value < 0.15f;
+        // 현자의 돌이면 모두 불안정, 불안정 연구면 확률이 오름
+        bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
         FlaskLob.Throw(from, land, 0.4f, unstable ? 1.05f : 0.8f, tint, (p) =>
         {
-            float r = 1.8f * CatalystMul * blastMul * (unstable ? 1.6f : 1f);
+            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f);
             float hit = dmg * 1.6f * (unstable ? 1.8f : 1f);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
@@ -346,8 +349,10 @@ public class CharacterKit : MonoBehaviour
                 DamageCircle(p, r, hit, 2.2f);
                 foreach (Collider2D c in caught)
                 {
-                    EnermyController e = c != null ? c.GetComponent<EnermyController>() : null;
+                    if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
+                    EnermyController e = c.GetComponent<EnermyController>();
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
+                    else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
                 Fx.Play("fx_alchemyblast", p, r * 2.4f, new Color(0.9f, 0.55f, 1f), 16f);
                 Fx.Play("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
@@ -376,8 +381,6 @@ public class CharacterKit : MonoBehaviour
             }
         });
     }
-
-    public float CatalystMul => Special != null && Special.Has(SpecialAbilities.KitCatalyst) ? (Special.IsEvolved(SpecialAbilities.KitCatalyst) ? 1.5f : 1.3f) : 1f;
 
     static Vector3 ClampRange(Vector3 from, Vector3 to, float range)
     {
@@ -440,7 +443,7 @@ public class CharacterKit : MonoBehaviour
         charge = Mathf.Min(1f, charge + Time.deltaTime / 1.5f);
         bool sword = Id == CharacterId.Swordsman;
         Vector3 at = sword ? transform.position : ClampRange(transform.position, Mouse, 14f);
-        float radius = (sword ? 5f : (2f + 4f * charge) * CatalystMul) * UltMul;
+        float radius = (sword ? 5f : (2f + 4f * charge)) * UltMul;
         Hostile.SetArc(ring, at, radius, 0f, 360f);
         Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));

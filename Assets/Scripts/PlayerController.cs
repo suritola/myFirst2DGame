@@ -893,6 +893,8 @@ void Shoot()
     public bool TryHit(float amount)
     {
         if (IsInvincible) return false;
+        // 도적 회피 본능: 확률로 공격을 피함
+        if (special != null && special.KitDodge()) return false;
 
         invincibleUntil = Time.time + hurtInvincibleTime;
 

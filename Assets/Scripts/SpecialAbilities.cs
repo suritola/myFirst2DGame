@@ -881,6 +881,7 @@ public partial class SpecialAbilities : MonoBehaviour
         if (aimingSkill >= 0) ShowSkillPreview(aimingSkill);
 
         if (Has(OrbsId)) UpdateOrbs();
+        KitTick();
         if (CurrentWeapon != FlameId) heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
 
         UpdateReadyChimes();
@@ -1743,6 +1744,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     void OnEnemyKilled(Vector3 pos)
     {
+        KitOnKill(pos);
         if (!Has(SoulBurstId)) return;
         souls = Mathf.Min(40, souls + 1);
         if (souls == SoulsNeeded)
@@ -1852,8 +1854,6 @@ public partial class SpecialAbilities : MonoBehaviour
         if (sp == null) return p;
         return new Vector3(Mathf.Clamp(p.x, sp.spawnAreaMin.x, sp.spawnAreaMax.x), Mathf.Clamp(p.y, sp.spawnAreaMin.y, sp.spawnAreaMax.y + 1.5f), 0f);
     }
-
-    public void ChakramReturned() => activeChakram = null;
 
     public void ScytheReturned()
     {
@@ -2352,12 +2352,8 @@ public class Scythe : MonoBehaviour
         }
     }
 
-    // 차크람(도적)은 자기 주인에게 회수를 알림
-    public SpecialAbilities returnsTo;
-
     void OnDestroy()
     {
-        if (returnsTo != null) { returnsTo.ChakramReturned(); return; }
         SpecialAbilities s = Object.FindFirstObjectByType<SpecialAbilities>();
         if (s != null) s.ScytheReturned();
     }
