@@ -141,6 +141,15 @@ public static class CharacterData
         PlayerPrefs.SetInt(PointsKey, Points + n);
     }
 
+    // 포인트 쓰기 (스킨 상점). 모자라면 false
+    public static bool SpendPoints(int n)
+    {
+        if (n <= 0 || Points < n) return false;
+        PlayerPrefs.SetInt(PointsKey, Points - n);
+        PlayerPrefs.Save();
+        return true;
+    }
+
     // 사면 true
     public static bool Buy(CharacterId id)
     {

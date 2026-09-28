@@ -490,7 +490,7 @@ void Shoot()
         FaceTowards(mousePosition);
         PlayerLook.Fired(-1);
 
-        if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
+        if (!SkinAudio.PlayPistol() && audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
         Vector3 startPosition = MuzzlePosition;
 
@@ -557,6 +557,7 @@ void Shoot()
         GameObject newBullet = Instantiate(bulletPrefab, startPosition, Quaternion.identity);
 
         Bullet bullet = newBullet.GetComponent<Bullet>();
+        if (SkinFx.WeaponSkin != null) newBullet.AddComponent<SkinTint>();        // 무기 스킨: 총알 · 투사체 색
 
         if (bullet != null)
         {
@@ -929,7 +930,7 @@ void Shoot()
 
         invincibleUntil = Time.time + hurtInvincibleTime;
 
-        if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);
+        if (!SkinAudio.PlayHurt() && audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);      // 캐릭터 스킨 피격 소리
 
         // 피해 감소는 합쳐도 최대 70% (단단한 신체 + 강철 갑옷 + 거대화 물약이 겹쳐 무적이 되지 않게)
         float taken = amount * GameMode.DamageMul * (1f - Mathf.Clamp(def, 0f, MaxDef));

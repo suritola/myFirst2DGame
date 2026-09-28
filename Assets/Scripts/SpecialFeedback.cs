@@ -47,6 +47,13 @@ public class SpecialFeedback : MonoBehaviour
     // ================================================================= sound
     public void Play(string name, float vol = 1f, float pitch = 1f)
     {
+        SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
+        PlayRaw(name, vol, pitch);
+    }
+
+    // 스킨 조정 없이 그대로 (스킨 덧소리 · 피격 소리)
+    public void PlayRaw(string name, float vol = 1f, float pitch = 1f)
+    {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
         oneShot.pitch = pitch;
         oneShot.PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
@@ -81,6 +88,13 @@ public class SpecialFeedback : MonoBehaviour
         clip.SetData(data, 0);
         clips[name] = clip;
         return clip;
+    }
+
+    // 밖에서 소리를 더함 (스킨 소리 · SkinAudio). 이미 있으면 그대로
+    public void MakeClip(string name, float dur, System.Func<float, float, System.Random, float> wave)
+    {
+        if (clips.ContainsKey(name)) return;
+        Make(name, dur, (t, d, r) => wave(t, d, r));
     }
 
     static float Sin(float f, float t) => Mathf.Sin(2f * Mathf.PI * f * t);

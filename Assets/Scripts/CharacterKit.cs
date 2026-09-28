@@ -101,7 +101,8 @@ public partial class CharacterKit : MonoBehaviour
         // 새 몸 그림 (애니메이터는 거너 그림을 쓰므로 끔)
         Animator anim = GetComponent<Animator>();
         if (anim != null) anim.enabled = false;
-        List<Sprite> list = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + def.body));
+        List<Sprite> list = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + SkinData.BodySheet(def.body)));     // 캐릭터 스킨
+        if (list.Count == 0) list.AddRange(Resources.LoadAll<Sprite>("Characters/" + def.body));
         list.Sort((a, b) => Index(a.name).CompareTo(Index(b.name)));
         frames = list.ToArray();
         if (frames.Length > 0) body.sprite = frames[0];
@@ -259,7 +260,7 @@ public partial class CharacterKit : MonoBehaviour
         SwingFormAfter(origin, reach);
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f), 24f, rot, 15);
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f)), 24f, rot, 15);
         if (combo)
         {
             Play("crack", 0.6f, 0.9f);
@@ -275,8 +276,8 @@ public partial class CharacterKit : MonoBehaviour
         if (half > 52f)
         {
             // 넓어진 폭: 양옆으로 한 번씩 더 그림
-            FxAnim b = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(0.8f, 0.9f, 1f, 0.5f), 24f, rot + (half - 50f), 14);
-            FxAnim c = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(0.8f, 0.9f, 1f, 0.5f), 24f, rot - (half - 50f), 14);
+            FxAnim b = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.8f, 0.9f, 1f, 0.5f)), 24f, rot + (half - 50f), 14);
+            FxAnim c = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.8f, 0.9f, 1f, 0.5f)), 24f, rot - (half - 50f), 14);
             if (b != null) b.sr.flipY = a != null && a.sr.flipY;
             if (c != null) c.sr.flipY = a != null && a.sr.flipY;
         }
@@ -393,7 +394,7 @@ public partial class CharacterKit : MonoBehaviour
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
                     else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
-                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, new Color(0.9f, 0.55f, 1f), 16f);
+                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f);
                 Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
@@ -401,7 +402,7 @@ public partial class CharacterKit : MonoBehaviour
             }
             Collider2D[] inside = Physics2D.OverlapCircleAll(p, r);
             DamageCircle(p, r, hit, 1.2f);
-            Fx.Spawn("fx_alchemyblast", p, r * 2.2f, ReagentColors[kind], 18f);
+            Fx.Spawn("fx_alchemyblast", p, r * 2.2f, SkinFx.Tint(ReagentColors[kind]), 18f);
             foreach (Collider2D c in inside)
             {
                 if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;

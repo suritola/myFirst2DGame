@@ -1,0 +1,277 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+// 메인 메뉴 스킨 상점: 종류(캐릭터 · 무기 · 이펙트) → 캐릭터 → 스킨 카드. 카드를 누르면 아래에 설명 · 소리 듣기 · 구매/장착
+// 비싼 물건이라 구매는 두 번 눌러야 함 (처음 누르면 "한 번 더 누르면 구매")
+public class SkinShopUI : MonoBehaviour
+{
+    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
+    static readonly Color Dim = new Color(0.6f, 0.56f, 0.62f);
+
+    static GameObject open;
+    RectTransform win;
+    TMP_Text pointsText, descText, titleText;
+    Button actionButton, soundButton;
+    TMP_Text actionLabel;
+    readonly List<GameObject> dynamic = new List<GameObject>();
+    readonly List<Button> tabButtons = new List<Button>(), whoButtons = new List<Button>();
+    readonly List<(Image img, Sprite[] frames)> anims = new List<(Image, Sprite[])>();
+    readonly List<(Image frame, Color c)> pulses = new List<(Image, Color)>();
+    SkinKind kind = SkinKind.Character;
+    int who;
+    SkinDef selected;           // null = 기본
+    bool confirm;
+    float confirmUntil;
+    SpecialFeedback audioFx;
+
+    public static void Open(Transform root)
+    {
+        if (open != null) return;
+        RectTransform w = UIKit.Modal(root, "SkinShop", new Vector2(1640f, 960f), out open);
+        SkinShopUI ui = open.AddComponent<SkinShopUI>();
+        ui.win = w;
+        ui.who = (int)CharacterData.Selected;
+        ui.Build();
+    }
+
+    public static void Close()
+    {
+        if (open == null) return;
+        Destroy(open);
+        open = null;
+        SkinFx.Refresh();
+    }
+
+    void OnDestroy()
+    {
+        if (audioFx != null) Destroy(audioFx.gameObject);
+    }
+
+    void Build()
+    {
+        UIKit.Text(win, "스킨 상점", 50f, Gold, new Vector2(0f, 425f), new Vector2(600f, 70f));
+        UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
+        pointsText = UIKit.Text(win, "", 26f, Gold, new Vector2(-590f, 425f), new Vector2(420f, 50f), TextAlignmentOptions.Left);
+
+        string[] tabs = { "캐릭터", "무기", "이펙트" };
+        for (int i = 0; i < tabs.Length; i++)
+        {
+            SkinKind k = (SkinKind)i;
+            tabButtons.Add(UIKit.MakeButton(win, tabs[i], new Vector2(-520f + 220f * i, 345f), new Vector2(200f, 56f), () => { kind = k; selected = null; Rebuild(); }, 24f));
+        }
+        // 캐릭터 고르기 (해금한 캐릭터만)
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c)) continue;
+            int id = i;
+            Button b = UIKit.MakeButton(win, CharacterData.Def(c).name, new Vector2(-560f + 190f * whoButtons.Count, 270f), new Vector2(175f, 50f), () => { who = id; selected = null; Rebuild(); }, 20f);
+            b.name = "Who_" + id;
+            whoButtons.Add(b);
+        }
+
+        // 아래 설명줄
+        Image bar = UIKit.Rect("DetailBar", win, new Vector2(0f, -360f), new Vector2(1560f, 150f)).gameObject.AddComponent<Image>();
+        bar.color = new Color(0.05f, 0.04f, 0.08f, 0.9f);
+        titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-280f, -318f), new Vector2(980f, 44f), TextAlignmentOptions.Left);
+        descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-280f, -382f), new Vector2(980f, 80f), TextAlignmentOptions.TopLeft);
+        soundButton = UIKit.MakeButton(win, "소리 듣기", new Vector2(390f, -360f), new Vector2(200f, 64f), PlayPreview, 22f);
+        actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -360f), new Vector2(260f, 64f), OnAction, 22f);
+        actionLabel = actionButton.GetComponentInChildren<TMP_Text>();
+
+        // 소리 미리 듣기용 합성기 (메인 메뉴에는 게임의 합성기가 없음)
+        GameObject a = new GameObject("SkinPreviewAudio");
+        audioFx = a.AddComponent<SpecialFeedback>();
+        audioFx.Init(UIKit.Font, UIKit.FontMaterial);
+        SkinAudio.Register(audioFx);
+
+        Rebuild();
+    }
+
+    void Rebuild()
+    {
+        foreach (GameObject g in dynamic) if (g != null) Destroy(g);
+        dynamic.Clear();
+        anims.Clear();
+        pulses.Clear();
+        confirm = false;
+        pointsText.text = Loc.T("보유 포인트: ") + CharacterData.Points.ToString("N0") + " P";
+        for (int i = 0; i < tabButtons.Count; i++) tabButtons[i].GetComponent<Image>().color = (int)kind == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
+        foreach (Button b in whoButtons)
+        {
+            b.gameObject.SetActive(kind != SkinKind.Effect);
+            b.GetComponent<Image>().color = b.name == "Who_" + who ? Gold : new Color(0.72f, 0.7f, 0.78f);
+        }
+
+        // 카드: 기본 + 이 종류 · 캐릭터의 스킨
+        List<SkinDef> list = new List<SkinDef> { null };
+        foreach (SkinDef s in SkinData.All)
+            if (s.kind == kind && (kind == SkinKind.Effect || s.who == who)) list.Add(s);
+        float w = 290f, gap = 20f;
+        float x0 = -(list.Count - 1) * (w + gap) / 2f;
+        for (int i = 0; i < list.Count; i++) dynamic.Add(Card(list[i], new Vector2(x0 + i * (w + gap), kind == SkinKind.Effect ? 60f : 20f)));
+        ShowDetail();
+    }
+
+    SkinDef EquippedNow => SkinData.Equipped(kind, who);
+
+    GameObject Card(SkinDef s, Vector2 pos)
+    {
+        int tier = s != null ? s.tier : 0;
+        Color tc = s != null ? SkinData.TierColors[tier] : new Color(0.5f, 0.48f, 0.55f);
+        bool owned = s == null || SkinData.Owns(s.id);
+        bool equipped = s == null ? EquippedNow == null : EquippedNow != null && EquippedNow.id == s.id;
+        bool isSel = s == selected;
+
+        Button b = UIKit.MakeButton(win, "", pos, new Vector2(290f, 360f), () => { selected = s; confirm = false; Rebuild(); }, 20f);
+        Image frame = b.GetComponent<Image>();
+        frame.color = isSel ? Color.white : tc;
+        if (tier == 3 && !isSel) pulses.Add((frame, tc));      // 전설: 금빛 테두리가 은은하게 (고른 카드는 흰 테두리 그대로)
+        Transform t = b.transform;
+        Image back = UIKit.Rect("Back", t, Vector2.zero, new Vector2(262f, 332f)).gameObject.AddComponent<Image>();
+        back.color = new Color(0.08f, 0.06f, 0.11f, 0.97f);
+        back.raycastTarget = false;
+        Image tierBand = UIKit.Rect("Tier", t, new Vector2(0f, 150f), new Vector2(262f, 32f)).gameObject.AddComponent<Image>();
+        tierBand.color = new Color(tc.r, tc.g, tc.b, 0.35f);
+        tierBand.raycastTarget = false;
+        TMP_Text tierText = UIKit.Text(t, "", 20f, tc, new Vector2(0f, 150f), new Vector2(250f, 30f));
+        tierText.text = s != null ? Loc.T(SkinData.TierNames[tier]) : Loc.T("기본");
+
+        // 미리보기 그림 (캐릭터는 달리는 모습을 되풀이)
+        Image pic = UIKit.Rect("Preview", t, new Vector2(0f, 40f), new Vector2(170f, 170f)).gameObject.AddComponent<Image>();
+        pic.preserveAspect = true;
+        pic.raycastTarget = false;
+        Sprite[] frames = PreviewFrames(s);
+        if (frames.Length > 0) pic.sprite = frames[0];
+        if (frames.Length > 1) anims.Add((pic, frames));
+
+        TMP_Text name = UIKit.Text(t, "", 26f, s != null && tier == 3 ? Gold : Parch, new Vector2(0f, -80f), new Vector2(260f, 36f));
+        name.text = s != null ? Loc.T(s.name) : Loc.T("기본");
+        TMP_Text state = UIKit.Text(t, "", 22f, equipped ? new Color(0.6f, 1f, 0.5f) : owned ? Parch : Gold, new Vector2(0f, -130f), new Vector2(260f, 32f));
+        state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.Price.ToString("N0") + " P";
+        return b.gameObject;
+    }
+
+    Sprite[] PreviewFrames(SkinDef s)
+    {
+        switch (kind)
+        {
+            case SkinKind.Character:
+                {
+                    CharacterDef d = CharacterData.Def((CharacterId)who);
+                    string sheet = s != null ? s.id : d.body ?? "gunner_nogun";
+                    List<Sprite> l = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + sheet));
+                    l.Sort((a, b) => Num(a.name).CompareTo(Num(b.name)));
+                    // 달리기 프레임 (다른 캐릭터 2~5, 거너는 시트 앞쪽 몇 장)
+                    if (d.body != null && l.Count >= 6) return new[] { l[2], l[3], l[4], l[5] };
+                    return l.Count > 0 ? l.GetRange(0, Mathf.Min(4, l.Count)).ToArray() : new Sprite[0];
+                }
+            case SkinKind.Weapon:
+                {
+                    string held = CharacterData.Def((CharacterId)who).held ?? "pistol";
+                    Sprite sp = Resources.Load<Sprite>("Weapons/weapon_" + (s != null ? s.id : held));
+                    return sp != null ? new[] { sp } : new Sprite[0];
+                }
+            default:
+                {
+                    Sprite sp = s != null ? Resources.Load<Sprite>("Icons/" + s.id) : null;
+                    if (sp == null) { Sprite[] f = Fx.Frames("fx_spark"); return f.Length > 0 ? new[] { f[0] } : new Sprite[0]; }
+                    return new[] { sp };
+                }
+        }
+    }
+
+    static int Num(string n)
+    {
+        int i = n.LastIndexOf('_');
+        return i >= 0 && int.TryParse(n.Substring(i + 1), out int v) ? v : 0;
+    }
+
+    void ShowDetail()
+    {
+        SkinDef s = selected;
+        bool owned = s == null || SkinData.Owns(s.id);
+        bool equipped = s == null ? EquippedNow == null : EquippedNow != null && EquippedNow.id == s.id;
+        titleText.text = s != null ? Loc.T(s.name) + "  <size=70%><color=#" + ColorUtility.ToHtmlStringRGB(SkinData.TierColors[s.tier]) + ">" + Loc.T(SkinData.TierNames[s.tier]) + "</color></size>"
+                                   : Loc.T("기본");
+        descText.text = s != null ? Loc.T(s.desc) : Loc.T("원래 모습 · 원래 소리");
+        soundButton.gameObject.SetActive(s != null);
+        if (equipped) actionLabel.text = Loc.T("장착 중");
+        else if (owned) actionLabel.text = Loc.T("장착");
+        else if (confirm) actionLabel.text = Loc.T("한 번 더 누르면 구매");
+        else actionLabel.text = Loc.T("구매") + "  " + s.Price.ToString("N0") + " P";
+        actionButton.interactable = !equipped && (owned || CharacterData.Points >= s.Price);
+        actionLabel.color = !owned && CharacterData.Points < (s != null ? s.Price : 0) ? new Color(1f, 0.5f, 0.45f) : new Color(0.96f, 0.9f, 0.8f);
+        if (!owned && CharacterData.Points < s.Price) actionLabel.text = Loc.T("포인트 부족") + "  " + s.Price.ToString("N0") + " P";
+    }
+
+    void OnAction()
+    {
+        SkinDef s = selected;
+        if (s == null) { SkinData.Unequip(kind, who); Done("clank"); return; }
+        if (SkinData.Owns(s.id)) { SkinData.Equip(s); Done("clank"); return; }
+        if (!confirm) { confirm = true; confirmUntil = Time.unscaledTime + 3f; ShowDetail(); return; }
+        if (SkinData.Buy(s)) Done("levelup");
+    }
+
+    void Done(string sound)
+    {
+        audioFx?.PlayRaw(sound, 0.6f);
+        confirm = false;
+        SkinFx.Refresh();
+        Rebuild();
+    }
+
+    void PlayPreview()
+    {
+        if (selected == null || audioFx == null) return;
+        StartCoroutine(Preview(selected));
+    }
+
+    IEnumerator Preview(SkinDef s)
+    {
+        switch (s.kind)
+        {
+            case SkinKind.Character:
+                if (s.hurtSound != null) audioFx.PlayRaw(s.hurtSound, 0.8f);
+                if (s.tier >= 3) { yield return new WaitForSecondsRealtime(0.6f); audioFx.PlayRaw(SkinAudio.UltSound(s.id), 0.6f); }
+                break;
+            case SkinKind.Weapon:
+                for (int i = 0; i < 3; i++)
+                {
+                    audioFx.PlayRaw(s.attackSound ?? BaseAttack(s.who), 0.7f, s.pitch);
+                    if (s.layer != null) audioFx.PlayRaw(s.layer, 0.25f);
+                    yield return new WaitForSecondsRealtime(0.35f);
+                }
+                break;
+            default:
+                float p = s.id == "skin_sakura" ? 1.3f : s.id == "skin_starlight" ? 1.5f : 1f;
+                for (int i = 0; i < 3; i++) { audioFx.PlayRaw("sparkle", 0.4f, p); yield return new WaitForSecondsRealtime(0.12f); }
+                if (s.killSound != null) audioFx.PlayRaw(s.killSound, 0.5f);
+                break;
+        }
+    }
+
+    static string BaseAttack(int who) => (CharacterId)who switch
+    {
+        CharacterId.Swordsman => "slash",
+        CharacterId.Rogue => "whoosh",
+        CharacterId.Archer => "bowtwang",
+        CharacterId.Alchemist => "glassclink",
+        _ => "gunshot",
+    };
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+        int f = (int)(Time.unscaledTime * 8f);
+        foreach (var a in anims) if (a.img != null) a.img.sprite = a.frames[f % a.frames.Length];
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
+        foreach (var p in pulses) if (p.frame != null) p.frame.color = Color.Lerp(p.c, Color.white, pulse * 0.6f);
+        if (confirm && Time.unscaledTime > confirmUntil) { confirm = false; ShowDetail(); }
+    }
+}

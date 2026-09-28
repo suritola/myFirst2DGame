@@ -98,7 +98,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                Fx.Spawn("fx_spark", transform.position, 1.2f, Color.white, 26f);
+                Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
 
 
                 // =========================
@@ -127,7 +127,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                Fx.Spawn("fx_spark", transform.position, 1.2f, Color.white, 26f);
+                Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
 
 
                 // =========================

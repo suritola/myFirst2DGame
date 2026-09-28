@@ -1114,7 +1114,7 @@ public partial class SpecialAbilities : MonoBehaviour
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
         if (mag.ammo <= 0) StartWeaponReload(CurrentWeapon);
         if (kitWeapon) KitShotSound(CurrentWeapon);
-        else if (player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
+        else if (!SkinAudio.PlayPistol() && player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
         return ((Vector2)(target - start)).normalized;
     }
 

@@ -58,6 +58,8 @@ public static class CharacterUI
     {
         CharacterDef d = CharacterData.Def(id);
         string sheet = d.body ?? "gunner_nogun";
+        SkinDef skin = SkinData.Equipped(SkinKind.Character, (int)id);
+        if (skin != null && Resources.LoadAll<Sprite>("Characters/" + skin.id).Length > 0) sheet = skin.id;
         Sprite best = null;
         foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + sheet))
             if (best == null || string.CompareOrdinal(s.name, best.name) < 0) best = s;

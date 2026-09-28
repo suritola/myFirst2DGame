@@ -63,7 +63,7 @@ public class PlayerLook : MonoBehaviour
             held.sortingOrder = body.sortingOrder + 1;
         }
         held.enabled = false;
-        foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/gunner_nogun")) noGun[s.name] = s;
+        foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + SkinData.BodySheet("gunner_nogun"))) noGun[s.name] = s;     // 캐릭터 스킨
     }
 
     void OnDestroy()
@@ -84,10 +84,14 @@ public class PlayerLook : MonoBehaviour
         if (id != shownWeapon)
         {
             shownWeapon = id;
-            Sprite baseHeld = Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
+            // 무기 스킨이 있으면 스킨 그림 (없으면 원래 그림)
+            Sprite baseHeld = Resources.Load<Sprite>(SkinData.HeldSprite(CharacterData.Current.held ?? "pistol"))
+                              ?? Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
             // 다른 캐릭터의 특수 무기는 그림이 따로 없으면 기본 무기를 그대로 듦
             held.sprite = id >= 0 ? (Resources.Load<Sprite>("Weapons/weapon_" + id) ?? baseHeld)
                         : id == -1 ? baseHeld : null;
+            // 진화한 무기는 그림이 따로 없으니 무기 스킨 색을 살짝 입힘
+            held.color = id >= 0 && SkinFx.WeaponSkin != null ? SkinFx.Tint(Color.white) : Color.white;
         }
         // 죽는 연출 · 숨김(시작 연출) 중에는 몸과 함께 숨김
         held.enabled = held.sprite != null && body.enabled;

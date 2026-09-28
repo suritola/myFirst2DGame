@@ -72,19 +72,20 @@ public static class MenuExtras
 
         RectTransform sr = (RectTransform)start.transform;
         GameObject character = UIKit.CloneButton(start, "CharacterButton", "캐릭터", () => CharacterUI.Open(sr.root));
+        GameObject skins = UIKit.CloneButton(start, "SkinButton", "스킨 상점", () => SkinShopUI.Open(sr.root));
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialUI.Open(sr.root));
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
 
-        // 세로로 다시 배치: 시작 · 캐릭터 · 튜토리얼 · 도감 · 설정 · 종료
-        float[] ys = { 0f, -94f, -188f, -282f, -376f, -470f };
-        GameObject[] order = { start, character, tutorial, codex, settings, exit };
+        // 세로로 다시 배치: 시작 · 캐릭터 · 스킨 상점 · 튜토리얼 · 도감 · 설정 · 종료 (일곱 줄이라 간격을 조금 좁힘)
+        float[] ys = { 0f, -80f, -160f, -240f, -320f, -400f, -480f };
+        GameObject[] order = { start, character, skins, tutorial, codex, settings, exit };
         for (int i = 0; i < order.Length; i++)
         {
             if (order[i] == null) continue;
             RectTransform r = (RectTransform)order[i].transform;
             r.anchoredPosition = new Vector2(r.anchoredPosition.x, ys[i]);
-            r.sizeDelta = new Vector2(r.sizeDelta.x, 84f);
+            r.sizeDelta = new Vector2(r.sizeDelta.x, 72f);
         }
 
         InstallDifficulty(sr);
