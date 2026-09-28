@@ -13,6 +13,7 @@ public class PlayerHP : MonoBehaviour
     public float playerHP;
     public float playerMaxHP;
     RectTransform gauge;
+    int shownHp = -1, shownMax = -1;
 
     // Start is called before the first frame update
     void Start()
@@ -31,6 +32,13 @@ public class PlayerHP : MonoBehaviour
         if (gauge == null) gauge = HPgauge.GetComponent<RectTransform>();
         gauge.sizeDelta = new Vector2(playerHP > 0 ? playerHP / playerMaxHP * HPmaxWidth : 0, gauge.sizeDelta.y);
 
-        if (hpText != null) hpText.text = Mathf.CeilToInt(Mathf.Max(playerHP, 0)) + " / " + Mathf.CeilToInt(playerMaxHP);
+        // 숫자가 바뀔 때만 글자를 새로 (매 프레임 문자열을 만들지 않게)
+        int hp = Mathf.CeilToInt(Mathf.Max(playerHP, 0)), max = Mathf.CeilToInt(playerMaxHP);
+        if (hpText != null && (hp != shownHp || max != shownMax))
+        {
+            shownHp = hp;
+            shownMax = max;
+            hpText.text = hp + " / " + max;
+        }
     }
 }

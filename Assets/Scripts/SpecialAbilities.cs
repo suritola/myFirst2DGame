@@ -257,12 +257,22 @@ public partial class SpecialAbilities : MonoBehaviour
         }
     }
 
+    // 탄창 글 (값이 그대로면 전에 만든 글을 다시 씀 — 매 프레임 문자열을 만들지 않게)
+    int ammoTextId = int.MinValue, ammoTextKey;
+    Loc.Lang ammoTextLang;
+    string ammoTextCache;
+
     string AmmoText(int id)
     {
         if (!UsesAmmo(id)) return null;
         WeaponAmmo a = Ammo(id);
-        if (a.Reloading) return Loc.T("장전 중") + new string('.', (int)(Time.unscaledTime / 0.3f) % 3 + 1);
-        return a.ammo + " / " + MagSize(id);
+        int key = a.Reloading ? -1 - (int)(Time.unscaledTime / 0.3f) % 3 : a.ammo * 10000 + MagSize(id);
+        if (id == ammoTextId && key == ammoTextKey && ammoTextLang == Loc.Current && ammoTextCache != null) return ammoTextCache;
+        ammoTextId = id;
+        ammoTextKey = key;
+        ammoTextLang = Loc.Current;
+        ammoTextCache = a.Reloading ? Loc.T("장전 중") + new string('.', (int)(Time.unscaledTime / 0.3f) % 3 + 1) : a.ammo + " / " + MagSize(id);
+        return ammoTextCache;
     }
 
     // ================================================================= scythe sprite (코드로 그린 낫)
@@ -396,11 +406,11 @@ public partial class SpecialAbilities : MonoBehaviour
                         for (int k = 1; k <= 3; k++)
                         {
                             Vector2 d = Quaternion.Euler(0, 0, i * half / 2.2f) * dir;
-                            Fx.Play("fx_explosion", start + (Vector3)(d * range * k / 3.4f), 2.2f + k * 0.9f, Color.white, 14f + Random.Range(0f, 6f));
+                            Fx.Spawn("fx_explosion", start + (Vector3)(d * range * k / 3.4f), 2.2f + k * 0.9f, Color.white, 14f + Random.Range(0f, 6f));
                         }
-                    Fx.Play("fx_shock", start, 7f, c, 20f);
-                    Fx.Play("fx_explosion", start + (Vector3)(dir * 2f), 5f, Color.white, 18f);
-                    Fx.Play("fx_muzzle", start + (Vector3)(dir * 0.8f), 4f, c, 20f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg, 16);
+                    Fx.Spawn("fx_shock", start, 7f, c, 20f);
+                    Fx.Spawn("fx_explosion", start + (Vector3)(dir * 2f), 5f, Color.white, 18f);
+                    Fx.Spawn("fx_muzzle", start + (Vector3)(dir * 0.8f), 4f, c, 20f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg, 16);
                     fx.Play("shotgun", 1f, 0.9f - blast * 0.05f);
                     fx.Play("bigboom", 0.6f, 1.3f);
                     fx.Shake(0.55f, 0.18f);
@@ -419,7 +429,7 @@ public partial class SpecialAbilities : MonoBehaviour
                         Vector3 m = player.MuzzlePosition;
                         // 충전 중에는 화면 끝까지 닿는 점선 조준선
                         fx.SetLine(aimLine, m, m + (Vector3)(AimDir() * ScreenEdgeDistance(m, AimDir())), new Color(c.r, c.g, c.b, 0.5f + t), 0.1f + t * 0.3f);
-                        Fx.Play("fx_orb", m, 0.8f + t * 2f, c, 20f);
+                        Fx.Spawn("fx_orb", m, 0.8f + t * 2f, c, 20f);
                         yield return null;
                     }
                     if (aim != null) Destroy(aim.gameObject);
@@ -439,12 +449,12 @@ public partial class SpecialAbilities : MonoBehaviour
                     foreach (Collider2D col in onLine)
                     {
                         Specials.Damage(col.gameObject, dmg * power, (to - from).normalized, 2f);
-                        Fx.Play("fx_spark", col.transform.position, 2f, c, 20f);
+                        Fx.Spawn("fx_spark", col.transform.position, 2f, c, 20f);
                     }
-                    Fx.Play("fx_shock", from, 6f, c, 22f);
+                    Fx.Spawn("fx_shock", from, 6f, c, 22f);
                     for (float k = 4f; k < 45f; k += 5f)
-                        Fx.Play("fx_shock", from + (to - from).normalized * k, 3.5f * wide, c, 18f + k * 0.3f);
-                    Fx.Play("fx_explosion", to - (to - from).normalized * 2f, 4f, Color.white, 16f);
+                        Fx.Spawn("fx_shock", from + (to - from).normalized * k, 3.5f * wide, c, 18f + k * 0.3f);
+                    Fx.Spawn("fx_explosion", to - (to - from).normalized * 2f, 4f, Color.white, 16f);
                     fx.Play("railgun", 1f, 1f);
                     fx.Play("crack", 0.8f, 0.6f);
                     fx.Shake(0.7f, 0.25f);
@@ -463,7 +473,7 @@ public partial class SpecialAbilities : MonoBehaviour
                             Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
                             Bullet b = player.CreateBullet(player.transform.position + (Vector3)(d * 0.6f), d, dmg * 0.3f, player.pene, 0f, true, 0.4f);
                             if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
-                            Fx.Play("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
+                            Fx.Spawn("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }
                         angle += 22f;
                         fx.Play("gunshot", 0.35f, Random.Range(0.95f, 1.25f));
@@ -485,8 +495,8 @@ public partial class SpecialAbilities : MonoBehaviour
                     fx.Play("ignite", 1f, 0.6f);
                     fx.Play("bigboom", 0.7f, 0.8f);
                     fx.Play("roar", 1f, 0.9f);
-                    Fx.Play("fx_explosion", go.transform.position, 6f, Color.white, 14f);
-                    Fx.Play("fx_shock", go.transform.position, 9f, new Color(1f, 0.5f, 0.15f), 16f);
+                    Fx.Spawn("fx_explosion", go.transform.position, 6f, Color.white, 14f);
+                    Fx.Spawn("fx_shock", go.transform.position, 9f, new Color(1f, 0.5f, 0.15f), 16f);
                     fx.Shake(0.4f, 0.2f);
                 }
                 break;
@@ -503,7 +513,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     sw.color = c;
                     fx.Play("shimmer", 1f, 1.1f);
                     fx.Play("pulse", 0.8f, 1.3f);
-                    Fx.Play("fx_soulburst", player.transform.position, 6f, Color.white, 16f);
+                    Fx.Spawn("fx_soulburst", player.transform.position, 6f, Color.white, 16f);
                 }
                 break;
 
@@ -522,13 +532,13 @@ public partial class SpecialAbilities : MonoBehaviour
                         {
                             Vector3 at = target.position;
                             Fx.Bolt(at + new Vector3(Random.Range(-2f, 2f), 14f), at, 1.4f, c, 0.2f);
-                            Fx.Play("fx_shock", at, 3f, c, 24f);
+                            Fx.Spawn("fx_shock", at, 3f, c, 24f);
                             Specials.Damage(target.gameObject, dmg * 0.5f, Vector3.zero, 0f);
                             Collider2D col = target.GetComponent<Collider2D>();
                             if (col != null) ChainLightning(at, col, dmg * 0.25f, 1);
                             fx.Play("thunder", 0.7f, Random.Range(0.9f, 1.2f));
                             fx.Play("zap", 0.5f, Random.Range(0.8f, 1.1f));
-                            Fx.Play("fx_explosion", at, 2.5f, new Color(0.7f, 0.9f, 1f), 22f);
+                            Fx.Spawn("fx_explosion", at, 2.5f, new Color(0.7f, 0.9f, 1f), 22f);
                             fx.Shake(0.25f, 0.08f);
                         }
                         yield return new WaitForSeconds(0.15f);
@@ -567,13 +577,13 @@ public partial class SpecialAbilities : MonoBehaviour
                         Fx.Beam(from, to, 0.3f, new Color(0.8f, 0.55f, 1f, 0.7f), 0.15f);
                         player.transform.position = to;
                         player.FaceTowards(t.transform.position);
-                        Fx.Play("fx_slash", t.transform.position, 5f, c, 30f, Random.Range(0f, 360f), 16);
+                        Fx.Spawn("fx_slash", t.transform.position, 5f, c, 30f, Random.Range(0f, 360f), 16);
                         foreach (Collider2D col in Physics2D.OverlapCircleAll(t.transform.position, 2.5f))
                             if (col.CompareTag("enermy") || col.CompareTag("boss"))
                                 Specials.Damage(col.gameObject, dmg * 1.2f, (col.transform.position - to).normalized, 1.5f);
                         fx.Play("slash", 1f, Random.Range(0.9f, 1.15f));
-                        Fx.Play("fx_slash", t.transform.position, 7f, Color.white, 34f, Random.Range(0f, 360f), 17);
-                        Fx.Play("fx_soulburst", t.transform.position, 3f, Color.white, 22f);
+                        Fx.Spawn("fx_slash", t.transform.position, 7f, Color.white, 34f, Random.Range(0f, 360f), 17);
+                        Fx.Spawn("fx_soulburst", t.transform.position, 3f, Color.white, 22f);
                         fx.Shake(0.2f, 0.06f);
                         yield return new WaitForSeconds(0.12f);
                     }
@@ -589,7 +599,7 @@ public partial class SpecialAbilities : MonoBehaviour
                         Fx.Beam(from, home, 0.3f, new Color(0.8f, 0.55f, 1f, 0.7f), 0.15f);
                         player.transform.position = home;
                     }
-                    Fx.Play("fx_soulburst", player.transform.position, 4f, Color.white, 18f);
+                    Fx.Spawn("fx_soulburst", player.transform.position, 4f, Color.white, 18f);
                     yield return new WaitForSeconds(0.15f);
                     fx.ReleaseCamera();
                 }
@@ -628,7 +638,7 @@ public partial class SpecialAbilities : MonoBehaviour
         }
         if (rock != null) Destroy(rock.gameObject);
         Explode(at, 2f, damage, 1.2f, new Color(1f, 0.45f, 0.1f, 0.9f));
-        Fx.Play("fx_explosion", at, 5f, Color.white, 16f);
+        Fx.Spawn("fx_explosion", at, 5f, Color.white, 16f);
         if (Random.value < 0.4f) fx.Play("bigboom", 0.5f, Random.Range(0.9f, 1.2f));
     }
 
@@ -655,7 +665,7 @@ public partial class SpecialAbilities : MonoBehaviour
         lr.endWidth = 0.15f;
         go.AddComponent<LineFade>().duration = duration;
         Fx.Bolt(a, b, 1.1f, color, duration + 0.05f);
-        Fx.Play("fx_spark", b, 1.6f, color, 20f);
+        Fx.Spawn("fx_spark", b, 1.6f, color, 20f);
     }
 
     // 낫 모양 그림을 총알에 붙임 (판정은 총알 그대로)
@@ -1090,7 +1100,7 @@ public partial class SpecialAbilities : MonoBehaviour
         {
             // 총: 총구 섬광 (검 · 표창 · 활 · 플라스크에는 없음)
             Flash(start, 1.3f, new Color(WeaponColor(CurrentWeapon).r, WeaponColor(CurrentWeapon).g, WeaponColor(CurrentWeapon).b, 0.85f), 0.08f);
-            Fx.Play("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
+            Fx.Spawn("fx_muzzle", start + (Vector3)(aimDir * 0.4f), 1.4f, WeaponColor(CurrentWeapon), 24f, Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg, 15);
         }
         PlayerLook.Fired(CurrentWeapon);
         WeaponAmmo mag = Ammo(CurrentWeapon);
@@ -1410,7 +1420,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 ShockRing.Spawn(zone.transform.position, 0.3f, FireZoneRadius * 1.2f, 0.35f, new Color(1f, 0.55f, 0.2f, 0.9f), 0.3f);
                 FxAnim fireRune = Fx.Play("fx_rune", zone.transform.position, FireZoneRadius * 2f, new Color(1f, 0.55f, 0.2f, 0.7f), 1f, 0f, 2, true, evo ? 6f : 4f);
                 if (fireRune != null) fireRune.spin = 45f;
-                Fx.Play("fx_explosion", zone.transform.position, FireZoneRadius * 1.6f, Color.white, 16f);
+                Fx.Spawn("fx_explosion", zone.transform.position, FireZoneRadius * 1.6f, Color.white, 16f);
                 StartCooldown(id, evo ? 9f : 12f);
                 fx.Play("boom", 0.5f, 0.8f);
                 fx.Play("crackle", 0.8f);
@@ -1530,7 +1540,7 @@ public partial class SpecialAbilities : MonoBehaviour
         Vector3 end = ClampToArena(start + dir * DashDistance);
         player.GrantInvincibility(0.35f);
         ShockRing.Spawn(start, 0.3f, 2.2f, 0.3f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.25f);
-        for (int i = 0; i < 3; i++) Fx.Play("fx_smoke", start + (Vector3)(Random.insideUnitCircle * 0.6f), 1.8f, new Color(0.6f, 0.9f, 1f), 14f);
+        for (int i = 0; i < 3; i++) Fx.Spawn("fx_smoke", start + (Vector3)(Random.insideUnitCircle * 0.6f), 1.8f, new Color(0.6f, 0.9f, 1f), 14f);
         SpriteRenderer body = player.GetComponent<SpriteRenderer>();
         int ghosts = 0;
         for (float t = 0f; t < 0.15f; t += Time.deltaTime)
@@ -1549,7 +1559,7 @@ public partial class SpecialAbilities : MonoBehaviour
         }
         player.transform.position = end;
         ShockRing.Spawn(end, 0.3f, 1.8f, 0.25f, new Color(0.5f, 0.95f, 1f, 0.9f), 0.2f);
-        Fx.Play("fx_shock", end, 4f, new Color(0.55f, 0.95f, 1f), 22f);
+        Fx.Spawn("fx_shock", end, 4f, new Color(0.55f, 0.95f, 1f), 22f);
         for (int i = 0; i < 6; i++) SoulWisp.Spawn(end, end + (Vector3)(Random.insideUnitCircle.normalized * 2.5f), new Color(0.5f, 0.95f, 1f), true);
         // 진화: 도착 지점 충격파
         if (IsEvolved(DashId)) Explode(end, 2.5f, Damage * 1.5f, 2f, new Color(0.5f, 0.95f, 1f, 0.85f));
@@ -1565,7 +1575,7 @@ public partial class SpecialAbilities : MonoBehaviour
         ShockRing.Spawn(player.transform.position, 1f, 14f, 0.7f, new Color(0.55f, 0.85f, 1f, 0.9f), 0.5f);
         FxAnim clock = Fx.Play("fx_rune", player.transform.position, 12f, new Color(0.55f, 0.85f, 1f, 0.45f), 1f, 0f, 1, true, duration);
         if (clock != null) { clock.follow = player.transform; clock.spin = -25f; }
-        Fx.Play("fx_shock", player.transform.position, 14f, new Color(0.6f, 0.9f, 1f), 12f);
+        Fx.Spawn("fx_shock", player.transform.position, 14f, new Color(0.6f, 0.9f, 1f), 12f);
         ShockRing.Spawn(player.transform.position, 0.5f, 9f, 0.5f, Color.white, 0.2f);
         yield return new WaitForSeconds(duration);
         EnermyController.GlobalSpeedMultiplier = 1f;
@@ -1583,8 +1593,8 @@ public partial class SpecialAbilities : MonoBehaviour
         for (int i = 0; i < 14; i++)
             SoulWisp.Spawn(player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f), player.transform.position, new Color(1f, 0.2f, 0.25f));
         ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.3f);
-        Fx.Play("fx_shock", player.transform.position, 7f, new Color(1f, 0.25f, 0.3f), 16f);
-        Fx.Play("fx_spark", player.transform.position, 3f, new Color(1f, 0.3f, 0.3f), 14f);
+        Fx.Spawn("fx_shock", player.transform.position, 7f, new Color(1f, 0.25f, 0.3f), 16f);
+        Fx.Spawn("fx_spark", player.transform.position, 3f, new Color(1f, 0.3f, 0.3f), 14f);
         yield return new WaitForSeconds(evo ? 12f : 8f);
         player.damageMultiplier = 1f;
         player.fireRateMultiplier = 1f;
@@ -1600,7 +1610,7 @@ public partial class SpecialAbilities : MonoBehaviour
         decoy.GetComponent<SpriteRenderer>().flipX = body.flipX;
         EnermyController.Decoy = decoy.transform;
         ShockRing.Spawn(decoy.transform.position, 0.3f, 3f, 0.35f, new Color(0.55f, 0.9f, 1f, 0.9f), 0.25f);
-        Fx.Play("fx_soulburst", decoy.transform.position, 3.5f, Color.white, 18f);
+        Fx.Spawn("fx_soulburst", decoy.transform.position, 3.5f, Color.white, 18f);
         for (int i = 0; i < 8; i++) SoulWisp.Spawn(decoy.transform.position, decoy.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 3f), new Color(0.55f, 0.9f, 1f), true);
         player.bodyAlpha = 0.4f;
         bool evo = IsEvolved(MirrorId);
@@ -1687,7 +1697,7 @@ public partial class SpecialAbilities : MonoBehaviour
             GameObject s = MakeSprite("AllySkeleton", allySprite, pos, 1f, new Color(0.6f, 0.95f, 1f), "Character", 1);
             s.transform.localScale = Vector3.one * 1.1f;
             Flash(pos, 2.2f, new Color(0.6f, 0.95f, 1f, 0.8f), 0.25f);
-            Fx.Play("fx_soulburst", pos, 3f, Color.white, 18f);
+            Fx.Spawn("fx_soulburst", pos, 3f, Color.white, 18f);
             ShockRing.Spawn(pos, 0.2f, 1.6f, 0.3f, new Color(0.6f, 0.95f, 1f, 0.9f), 0.15f);
             AllySkeleton a = s.AddComponent<AllySkeleton>();
             a.owner = this;
@@ -1706,6 +1716,7 @@ public partial class SpecialAbilities : MonoBehaviour
     }
 
     const float OrbRadius = 4.6f;
+    static readonly List<Collider2D> orbHits = new List<Collider2D>(16), orbHitsCopy = new List<Collider2D>(16);
 
     void UpdateOrbs()
     {
@@ -1718,9 +1729,12 @@ public partial class SpecialAbilities : MonoBehaviour
             orbs[i].position = pos;
             orbs[i].Rotate(0f, 0f, -540f * Time.deltaTime);
 
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 1.25f))
+            // 목록을 복사해 두고 돎 (피해 도중 다른 검색이 같은 목록을 써도 안전하게)
+            orbHitsCopy.Clear();
+            orbHitsCopy.AddRange(Specials.Overlap(pos, 1.25f, orbHits));
+            foreach (Collider2D c in orbHitsCopy)
             {
-                if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+                if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
                 if (orbHitTimes.TryGetValue(c, out float last) && Time.time - last < 0.5f) continue;
                 orbHitTimes[c] = Time.time;
                 if (Time.time - lastOrbSound > 0.15f)
@@ -1798,8 +1812,8 @@ public partial class SpecialAbilities : MonoBehaviour
         Flash(pos, radius * 2f, color, 0.3f);
         Flash(pos, radius * 0.9f, new Color(1f, 1f, 1f, 0.9f), 0.12f);
         // 도트 폭발: 따뜻한 색은 화염, 차가운 색은 영혼 폭발
-        Fx.Play(color.r >= color.b ? "fx_explosion" : "fx_soulburst", pos, radius * 2.4f, Color.white, 16f);
-        Fx.Play("fx_shock", pos, radius * 2.6f, color, 20f);
+        Fx.Spawn(color.r >= color.b ? "fx_explosion" : "fx_soulburst", pos, radius * 2.4f, Color.white, 16f);
+        Fx.Spawn("fx_shock", pos, radius * 2.6f, color, 20f);
         ShockRing.Spawn(pos, radius * 0.3f, radius * 1.15f, 0.3f, color, 0.3f);
         for (int i = 0; i < Mathf.Clamp(Mathf.RoundToInt(radius * 3f), 4, 16); i++)
             SoulWisp.Spawn(pos, pos + (Vector3)(Random.insideUnitCircle.normalized * radius * 1.5f), color, true);
@@ -1912,11 +1926,23 @@ public static class Specials
         if (b != null) b.TakeDamage(damage, knock, dir);
     }
 
+    // 물리 검색 결과를 담는 재사용 목록 (OverlapCircleAll 은 부를 때마다 새 배열을 만듦)
+    // OverlapCircleAll 과 같은 조건 (모든 레이어 · 깊이, 트리거 포함 여부는 물리 설정 그대로)
+    public static List<Collider2D> Overlap(Vector3 pos, float radius, List<Collider2D> into)
+    {
+        into.Clear();
+        ContactFilter2D filter = new ContactFilter2D { useTriggers = Physics2D.queriesHitTriggers };
+        Physics2D.OverlapCircle(pos, radius, filter, into);
+        return into;
+    }
+
+    static readonly List<Collider2D> nearestHits = new List<Collider2D>(64);
+
     public static Transform NearestEnemy(Vector3 from, float range)
     {
         Transform best = null;
         float bestDist = range;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(from, range))
+        foreach (Collider2D c in Overlap(from, range, nearestHits))
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             EnermyController e = c.GetComponent<EnermyController>();
@@ -2405,6 +2431,7 @@ public class LineFade : MonoBehaviour
 // 화염 회오리: 가까운 적에게 천천히 다가가며 주변 적을 빨아들이고 태움 (4초)
 public class FireTornado : MonoBehaviour
 {
+    static readonly List<Collider2D> pullHits = new List<Collider2D>(32);
     public SpecialAbilities owner;
     public float damage;
     public float life = 4f;
@@ -2426,8 +2453,8 @@ public class FireTornado : MonoBehaviour
         if (target != null) transform.position = Vector3.MoveTowards(transform.position, target.position, 5f * Time.deltaTime);
         if (body != null) body.transform.position = transform.position + Vector3.up * 1.8f;
 
-        // 빨아들임
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, Radius * 1.6f))
+        // 빨아들임 (재사용 목록, 적을 옮기기만 해서 목록이 바뀌지 않음)
+        foreach (Collider2D c in Specials.Overlap(transform.position, Radius * 1.6f, pullHits))
         {
             if (!c.CompareTag("enermy")) continue;
             c.transform.position = Vector3.MoveTowards(c.transform.position, transform.position, 4f * Time.deltaTime);
@@ -2449,7 +2476,7 @@ public class FireTornado : MonoBehaviour
         }
         if (age >= life)
         {
-            Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
+            Fx.Spawn("fx_explosion", transform.position, 5f, Color.white, 16f);
             Destroy(gameObject);
         }
     }
@@ -2517,7 +2544,7 @@ public class SoulSwarm : MonoBehaviour
                 if (dashT[i] <= 0.8f)
                 {
                     Specials.Damage(t.gameObject, damage, Vector3.zero, 0.5f);
-                    Fx.Play("fx_soulburst", t.position, 2f, Color.white, 22f);
+                    Fx.Spawn("fx_soulburst", t.position, 2f, Color.white, 22f);
                 }
                 chasing[i] = null;
             }

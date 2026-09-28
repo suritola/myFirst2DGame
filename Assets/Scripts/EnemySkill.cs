@@ -157,7 +157,7 @@ public class EnemySkill : MonoBehaviour
         Hostile.Circle(at, 1.4f, 0.8f, new Color(1f, 0.95f, 0.8f, 0.9f));
         yield return Windup(new Color(1f, 1f, 0.8f), 0.8f);
         if (!Alive) yield break;
-        Fx.Play("fx_spike", at + Vector3.up * 0.6f, 2.4f, new Color(1f, 0.97f, 0.88f), 18f);
+        Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.4f, new Color(1f, 0.97f, 0.88f), 18f);
         Hostile.HitCircle(at, 1.4f, Dmg);
         Hostile.Play("crack", 0.4f, 1.5f);
     }
@@ -173,7 +173,7 @@ public class EnemySkill : MonoBehaviour
         if (!Alive) yield break;
 
         Vector3 start = transform.position;
-        Fx.Play("fx_smoke", start, 1.8f, new Color(0.8f, 0.7f, 0.6f), 14f);
+        Fx.Spawn("fx_smoke", start, 1.8f, new Color(0.8f, 0.7f, 0.6f), 14f);
         for (float t = 0f; t < 0.35f; t += Time.deltaTime)
         {
             float k = t / 0.35f;
@@ -183,8 +183,8 @@ public class EnemySkill : MonoBehaviour
         transform.position = target;
         if (!Alive) yield break;
         Hostile.HitCircle(target, r, Dmg * 1.2f);
-        Fx.Play("fx_shock", target, r * 2.4f, new Color(0.9f, 0.75f, 0.55f), 20f);
-        for (int i = 0; i < 4; i++) Fx.Play("fx_smoke", target + (Vector3)(Random.insideUnitCircle * r), 1.6f, new Color(0.75f, 0.65f, 0.55f), 12f);
+        Fx.Spawn("fx_shock", target, r * 2.4f, new Color(0.9f, 0.75f, 0.55f), 20f);
+        for (int i = 0; i < 4; i++) Fx.Spawn("fx_smoke", target + (Vector3)(Random.insideUnitCircle * r), 1.6f, new Color(0.75f, 0.65f, 0.55f), 12f);
         Hostile.Play("thump", 0.6f);
         Hostile.Shake(0.15f);
     }
@@ -198,7 +198,7 @@ public class EnemySkill : MonoBehaviour
         Color purple = new Color(0.7f, 0.4f, 1f, 0.9f);
         Hostile.Circle(dest, r, 0.8f, purple);
         Hostile.Play("shimmer", 0.35f, 1.4f);
-        Fx.Play("fx_soulburst", transform.position, 2.5f, Color.white, 18f);
+        Fx.Spawn("fx_soulburst", transform.position, 2.5f, Color.white, 18f);
 
         for (float t = 0f; t < 0.8f; t += Time.deltaTime)
         {
@@ -212,8 +212,8 @@ public class EnemySkill : MonoBehaviour
         transform.position = dest;
         sr.color = enemy.baseColor;
         Hostile.HitCircle(dest, r, Dmg);
-        Fx.Play("fx_soulburst", dest, r * 2.6f, Color.white, 16f);
-        Fx.Play("fx_shock", dest, r * 2.4f, purple, 20f);
+        Fx.Spawn("fx_soulburst", dest, r * 2.6f, Color.white, 16f);
+        Fx.Spawn("fx_shock", dest, r * 2.4f, purple, 20f);
     }
 
     // 임프: 플레이어 자리에 X자 레이저 (두 줄기가 엇갈림)
@@ -239,7 +239,7 @@ public class EnemySkill : MonoBehaviour
         Hostile.Play("zap", 0.7f, 0.7f);
         Hostile.Play("flame", 0.5f, 1.2f);
         for (int i = 0; i < 2; i++) Fx.Beam(ends[i * 2], ends[i * 2 + 1], 1.2f, new Color(1f, 0.55f, 0.2f), 0.35f);
-        Fx.Play("fx_explosion", c, 2.5f, Color.white, 18f);
+        Fx.Spawn("fx_explosion", c, 2.5f, Color.white, 18f);
         PlayerController pl = Hostile.Player;
         if (pl != null)
             for (int i = 0; i < 2; i++)
@@ -264,8 +264,8 @@ public class EnemySkill : MonoBehaviour
         transform.localScale = baseScale;
         if (!Alive) yield break;
         Hostile.HitCircle(transform.position, r, Dmg * 1.6f);
-        Fx.Play("fx_explosion", transform.position, r * 2.4f, Color.white, 16f);
-        Fx.Play("fx_shock", transform.position, r * 2.6f, new Color(1f, 0.6f, 0.2f), 20f);
+        Fx.Spawn("fx_explosion", transform.position, r * 2.4f, Color.white, 16f);
+        Fx.Spawn("fx_shock", transform.position, r * 2.6f, new Color(1f, 0.6f, 0.2f), 20f);
         Hostile.Play("boom", 0.6f, 1.2f);
         Hostile.Shake(0.2f);
         if (!enemy.survivesContact) enemy.KillBySkill();
@@ -292,7 +292,7 @@ public class EnemySkill : MonoBehaviour
             if (Hostile.IsWall(nextPos)) break;
             transform.position = nextPos;
             dust += Time.deltaTime;
-            if (dust > 0.04f) { dust = 0f; Fx.Play("fx_smoke", transform.position, 1.4f, new Color(0.7f, 0.5f, 0.45f), 16f); }
+            if (dust > 0.04f) { dust = 0f; Fx.Spawn("fx_smoke", transform.position, 1.4f, new Color(0.7f, 0.5f, 0.45f), 16f); }
             if (!hit && Vector2.Distance(transform.position, p.transform.position) < 1.3f * Size) hit = p.TryHit(Dmg);
             yield return null;
         }
@@ -321,9 +321,9 @@ public class EnemySkill : MonoBehaviour
             for (int i = 0; i < n; i++)
             {
                 float a = (i / (float)n * 360f + w * 15f) * Mathf.Deg2Rad;
-                Fx.Play("fx_spike", c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (r - 0.5f) + Vector3.up * 0.5f, 1.8f, new Color(1f, 0.6f, 0.35f), 18f);
+                Fx.Spawn("fx_spike", c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (r - 0.5f) + Vector3.up * 0.5f, 1.8f, new Color(1f, 0.6f, 0.35f), 18f);
             }
-            Fx.Play("fx_shock", c, r * 2.2f, new Color(1f, 0.55f, 0.2f), 18f);
+            Fx.Spawn("fx_shock", c, r * 2.2f, new Color(1f, 0.55f, 0.2f), 18f);
             Hostile.Play("boom", 0.5f, 0.7f + w * 0.1f);
             Hostile.Shake(0.15f);
         }
@@ -351,7 +351,7 @@ public class EnemySkill : MonoBehaviour
             if (slash > 0.12f)
             {
                 slash = 0f;
-                Fx.Play("fx_slash", transform.position, r * 2.2f, new Color(1f, 0.55f, 0.55f), 30f, Random.Range(0f, 360f), 14);
+                Fx.Spawn("fx_slash", transform.position, r * 2.2f, new Color(1f, 0.55f, 0.55f), 30f, Random.Range(0f, 360f), 14);
                 Hostile.Play("whoosh", 0.2f, 1.4f);
             }
             if (Time.time - lastHit > 0.45f && Vector2.Distance(pl.transform.position, transform.position) < r)
@@ -409,8 +409,8 @@ public class EnemySkill : MonoBehaviour
         Hostile.Circle(at, r, fuse, new Color(1f, 0.35f, 0.3f, 0.8f));
         yield return new WaitForSeconds(fuse);
         Hostile.HitCircle(at, r, Dmg * 0.9f);
-        Fx.Play("fx_cloud", at, r * 2.4f, new Color(1f, 0.55f, 0.5f), 18f);
-        Fx.Play("fx_shock", at, r * 2.2f, new Color(1f, 0.4f, 0.35f), 20f);
+        Fx.Spawn("fx_cloud", at, r * 2.4f, new Color(1f, 0.55f, 0.5f), 18f);
+        Fx.Spawn("fx_shock", at, r * 2.2f, new Color(1f, 0.4f, 0.35f), 20f);
         Hostile.Play("boom", 0.35f, 1.5f);
     }
 
@@ -420,7 +420,7 @@ public class EnemySkill : MonoBehaviour
         yield return Windup(new Color(1f, 0.3f, 0.3f), 0.6f, 14f);
         if (!Alive) yield break;
         const float r = 9f;
-        Fx.Play("fx_shock", transform.position, r * 2f, new Color(1f, 0.35f, 0.3f), 14f);
+        Fx.Spawn("fx_shock", transform.position, r * 2f, new Color(1f, 0.35f, 0.3f), 14f);
         ShockRing.Spawn(transform.position, 0.5f, r, 0.5f, new Color(1f, 0.4f, 0.35f, 0.9f), 0.35f);
         Hostile.Play("pulse", 0.7f, 0.8f);
         foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, r))
@@ -428,7 +428,7 @@ public class EnemySkill : MonoBehaviour
             EnermyController e = c.GetComponent<EnermyController>();
             if (e == null || e.IsDead) continue;
             e.Enrage(1.6f, 3.5f);
-            Fx.Play("fx_spark", e.transform.position + Vector3.up, 1.2f, new Color(1f, 0.4f, 0.35f), 14f);
+            Fx.Spawn("fx_spark", e.transform.position + Vector3.up, 1.2f, new Color(1f, 0.4f, 0.35f), 14f);
         }
     }
 
@@ -444,8 +444,8 @@ public class EnemySkill : MonoBehaviour
         for (int i = 0; i < count && Alive; i++)
         {
             Vector3 at = start + (Vector3)(dir * spacing * i);
-            Fx.Play("fx_spike", at + Vector3.up * 0.6f, 2.4f, new Color(0.65f, 0.5f, 0.3f), 18f);
-            Fx.Play("fx_smoke", at, 1.2f, new Color(0.55f, 0.45f, 0.3f), 14f);
+            Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.4f, new Color(0.65f, 0.5f, 0.3f), 18f);
+            Fx.Spawn("fx_smoke", at, 1.2f, new Color(0.55f, 0.45f, 0.3f), 14f);
             Hostile.HitCircle(at, 1.1f, Dmg);
             Hostile.Play("crack", 0.25f, 1.2f + i * 0.05f);
             yield return new WaitForSeconds(0.09f);
@@ -617,11 +617,11 @@ public static class Hostile
     public static void Burst(Vector3 pos, float radius, Color color, bool fire = false)
     {
         // 도트 폭발: 불이면 화염, 아니면 색 입힌 충격파와 불꽃
-        if (fire) Fx.Play("fx_explosion", pos, radius * 2.4f, Color.white, 16f);
+        if (fire) Fx.Spawn("fx_explosion", pos, radius * 2.4f, Color.white, 16f);
         else
         {
-            Fx.Play("fx_shock", pos, radius * 2.4f, color, 20f);
-            Fx.Play("fx_spark", pos, radius * 1.2f, color, 18f);
+            Fx.Spawn("fx_shock", pos, radius * 2.4f, color, 20f);
+            Fx.Spawn("fx_spark", pos, radius * 1.2f, color, 18f);
         }
         if (Glow == null) return;
         GameObject f = SpecialAbilities.MakeSprite("Burst", Glow, pos, radius * 2f / 8f, color, "Effect", 3);

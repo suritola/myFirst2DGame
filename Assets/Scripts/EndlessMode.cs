@@ -26,6 +26,7 @@ public class EndlessMode : MonoBehaviour
     float nextBoss;
     int bossTurn;
     TextMeshProUGUI hud;
+    int shownSec = -1, shownBosses = -1;
 
     public void Init(StageManager sm, GameObject[] bosses)
     {
@@ -56,9 +57,15 @@ public class EndlessMode : MonoBehaviour
     {
         if (spawner == null) return;
         float s = GameMode.EndlessSeconds;
-        if (hud != null)
+        // 초나 보스 수가 바뀔 때만 글자를 새로
+        int sec = Mathf.FloorToInt(s);
+        if (hud != null && (sec != shownSec || BossesDefeated != shownBosses))
+        {
+            shownSec = sec;
+            shownBosses = BossesDefeated;
             hud.text = Loc.T("무한 모드") + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
                      + (BestSeconds > 0f ? "   " + Loc.T("최고 ") + Clock(BestSeconds) : "");
+        }
 
         if (!spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
     }
@@ -312,7 +319,7 @@ public class DesertAmbience : MonoBehaviour
         {
             nextGust = Time.time + Random.Range(2.5f, 5f);
             Vector3 from = new Vector3(c.x - w - 2f, c.y + Random.Range(-h, h), 0f);
-            Fx.Play("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), new Color(0.95f, 0.78f, 0.5f, 0.35f), 10f);
+            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), new Color(0.95f, 0.78f, 0.5f, 0.35f), 10f);
         }
     }
 }

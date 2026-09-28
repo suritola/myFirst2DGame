@@ -271,10 +271,14 @@ public class PlayerController : MonoBehaviour
         // 코인 자석: 주변 코인이 날아옴
         if (coinMagnetRange > 0f && Time.timeScale > 0f)
         {
-            foreach (GameObject c in GameObject.FindGameObjectsWithTag("coin"))
+            // 떨어진 코인 목록 (매 프레임 씬 전체를 태그로 뒤지던 것을 대신함)
+            var coins = CoinTag.All;
+            for (int i = coins.Count - 1; i >= 0; i--)
             {
-                float d = Vector2.Distance(c.transform.position, transform.position);
-                if (d < coinMagnetRange) c.transform.position = Vector3.MoveTowards(c.transform.position, transform.position, (10f + (coinMagnetRange - d) * 3f) * Time.deltaTime);
+                Transform c = coins[i];
+                if (c == null) { coins.RemoveAt(i); continue; }
+                float d = Vector2.Distance(c.position, transform.position);
+                if (d < coinMagnetRange) c.position = Vector3.MoveTowards(c.position, transform.position, (10f + (coinMagnetRange - d) * 3f) * Time.deltaTime);
             }
         }
 

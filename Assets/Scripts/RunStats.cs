@@ -43,6 +43,9 @@ public class RunStats : MonoBehaviour
         Capture();
     }
 
+    static SpecialAbilities sp;
+    static LevelShop shop;
+
     public static void Capture()
     {
         CharacterDef d = CharacterData.Current;
@@ -51,7 +54,8 @@ public class RunStats : MonoBehaviour
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
 
-        SpecialAbilities sp = FindFirstObjectByType<SpecialAbilities>();
+        // 0.5초마다 씬을 뒤지지 않게 한 번 찾아 두고 씀
+        if (sp == null) sp = FindFirstObjectByType<SpecialAbilities>();
         if (sp != null && sp.abilities != null)
         {
             Abilities.Clear();
@@ -59,7 +63,7 @@ public class RunStats : MonoBehaviour
                 if (id >= 0 && id < sp.abilities.Length && sp.abilities[id] != null)
                     Abilities.Add(Loc.T(sp.abilities[id].name) + (sp.IsEvolved(id) ? "+" : ""));
         }
-        LevelShop shop = FindFirstObjectByType<LevelShop>(FindObjectsInactive.Include);
+        if (shop == null) shop = FindFirstObjectByType<LevelShop>(FindObjectsInactive.Include);
         if (shop != null && shop.ability_level != null && shop.ability_name != null)
         {
             Cards.Clear();

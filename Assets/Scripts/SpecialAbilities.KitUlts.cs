@@ -104,7 +104,7 @@ public partial class SpecialAbilities
                 {
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 6f : 5f;
-                    Fx.Play("fx_cloud", at, r * 2.2f, new Color(0.5f, 1f, 0.4f, 0.6f), 6f, 0f, 3, true, 5f);
+                    Fx.Spawn("fx_cloud", at, r * 2.2f, new Color(0.5f, 1f, 0.4f, 0.6f), 6f, 0f, 3, true, 5f);
                     fx.Play("hiss", 0.9f, 0.7f);
                     for (float t = 0f; t < 5f; t += 0.5f)
                     {
@@ -113,7 +113,7 @@ public partial class SpecialAbilities
                             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                             Poison.Apply(c.gameObject, D * 0.3f, 12);
                         }
-                        Fx.Play("fx_cloud", at + (Vector3)(Random.insideUnitCircle * r), 2.5f, new Color(0.5f, 1f, 0.4f, 0.5f), 10f);
+                        Fx.Spawn("fx_cloud", at + (Vector3)(Random.insideUnitCircle * r), 2.5f, new Color(0.5f, 1f, 0.4f, 0.5f), 10f);
                         yield return new WaitForSeconds(0.5f);
                     }
                     break;
@@ -150,7 +150,7 @@ public partial class SpecialAbilities
                                 if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                                 if (Mathf.Abs(Vector2.Distance(c.transform.position, c0) - r) > 1f) continue;
                                 Specials.Damage(c.gameObject, D * 0.8f, (c0 - c.transform.position).normalized, 0.8f);
-                                Fx.Play("fx_spark", c.transform.position, 0.9f, new Color(1f, 0.5f, 0.6f), 24f);
+                                Fx.Spawn("fx_spark", c.transform.position, 0.9f, new Color(1f, 0.5f, 0.6f), 24f);
                             }
                             fx.Play("crackle", 0.3f, 1.8f);
                         }
@@ -166,7 +166,7 @@ public partial class SpecialAbilities
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 8.5f : 7f;
                     NetAt(at, r, 3f, D * 3f);
-                    Fx.Play("fx_net", at, r * 2.4f, new Color(1f, 1f, 1f, 0.9f), 1f, 0f, 11, true, 3f);
+                    Fx.Spawn("fx_net", at, r * 2.4f, new Color(1f, 1f, 1f, 0.9f), 1f, 0f, 11, true, 3f);
                     Hostile.Shake(0.2f);
                     break;
                 }

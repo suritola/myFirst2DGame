@@ -40,7 +40,7 @@ public class WeaponAim
         if (a == null) return null;
         a.follow = target;
         a.spin = spin;
-        Fx.Play("fx_spark", target.position, 2f, c, 20f);
+        Fx.Spawn("fx_spark", target.position, 2f, c, 20f);
         SpecialAbilities.SharedFx?.Play("pew", 0.2f, 2f);
         keep.Add(a.gameObject);
         return a.gameObject;

@@ -16,8 +16,8 @@ public static class Juice
     public static void EnemyDied(Vector3 pos, float size)
     {
         Color c = StageColor();
-        Fx.Play("fx_deathburst", pos, 2.4f * size, c, 22f);
-        if (size > 1.2f) Fx.Play("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f);
+        Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f);
+        if (size > 1.2f) Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f);
         // 한꺼번에 많이 죽어도 소리가 뭉개지지 않게
         if (Time.time - lastPop > 0.045f)
         {
@@ -28,15 +28,15 @@ public static class Juice
 
     public static void LevelUp(Vector3 pos)
     {
-        Fx.Play("fx_levelup", pos + Vector3.up * 1f, 3.2f, Color.white, 14f, 0f, 30);
-        Fx.Play("fx_sparkle", pos + new Vector3(-0.8f, 1.8f, 0f), 0.9f, new Color(1f, 0.9f, 0.5f), 12f, 0f, 31);
-        Fx.Play("fx_sparkle", pos + new Vector3(0.9f, 2.4f, 0f), 0.7f, new Color(1f, 0.9f, 0.5f), 10f, 0f, 31);
+        Fx.Spawn("fx_levelup", pos + Vector3.up * 1f, 3.2f, Color.white, 14f, 0f, 30);
+        Fx.Spawn("fx_sparkle", pos + new Vector3(-0.8f, 1.8f, 0f), 0.9f, new Color(1f, 0.9f, 0.5f), 12f, 0f, 31);
+        Fx.Spawn("fx_sparkle", pos + new Vector3(0.9f, 2.4f, 0f), 0.7f, new Color(1f, 0.9f, 0.5f), 10f, 0f, 31);
         Hostile.Play("levelup", 0.8f);
     }
 
     public static void CoinPicked(Vector3 pos)
     {
-        Fx.Play("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), 0.8f, new Color(1f, 0.88f, 0.4f), 16f, 0f, 20);
+        Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), 0.8f, new Color(1f, 0.88f, 0.4f), 16f, 0f, 20);
         Hostile.Play("sparkle", 0.3f, Random.Range(0.95f, 1.15f));
     }
 }

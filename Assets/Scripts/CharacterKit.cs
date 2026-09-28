@@ -251,7 +251,7 @@ public class CharacterKit : MonoBehaviour
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
             Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f), to.normalized, combo ? 4f : 3f);
-            Fx.Play("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
+            Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
         SwingCards(origin, dir, reach, half, hits);
@@ -266,7 +266,7 @@ public class CharacterKit : MonoBehaviour
             if (card[6] >= 3)
             {
                 DamageCircle(origin, reach, Damage, 2f);
-                Fx.Play("fx_shock", origin, reach * 2f, new Color(1f, 0.85f, 0.45f, 0.8f), 20f);
+                Fx.Spawn("fx_shock", origin, reach * 2f, new Color(1f, 0.85f, 0.45f, 0.8f), 20f);
             }
         }
         if (a != null) a.sr.flipY = left ^ !swingAlt;
@@ -326,7 +326,7 @@ public class CharacterKit : MonoBehaviour
         {
             fullPlayed = true;
             Play("ding", 0.5f, 1.5f);
-            Fx.Play("fx_sparkle", start, 1f, new Color(1f, 0.9f, 0.5f), 20f);
+            Fx.Spawn("fx_sparkle", start, 1f, new Color(1f, 0.9f, 0.5f), 20f);
         }
 
         if (GameInput.FireHeld && canDraw) return;
@@ -387,15 +387,15 @@ public class CharacterKit : MonoBehaviour
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
                     else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
-                Fx.Play("fx_alchemyblast", p, r * 2.4f, new Color(0.9f, 0.55f, 1f), 16f);
-                Fx.Play("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
+                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, new Color(0.9f, 0.55f, 1f), 16f);
+                Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
                 return;
             }
             Collider2D[] inside = Physics2D.OverlapCircleAll(p, r);
             DamageCircle(p, r, hit, 1.2f);
-            Fx.Play("fx_alchemyblast", p, r * 2.2f, ReagentColors[kind], 18f);
+            Fx.Spawn("fx_alchemyblast", p, r * 2.2f, ReagentColors[kind], 18f);
             foreach (Collider2D c in inside)
             {
                 if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
@@ -412,7 +412,7 @@ public class CharacterKit : MonoBehaviour
                     {
                         Destroy(burn);
                         DamageCircle(c.transform.position, 1.8f, Damage * (0.8f + 0.7f * card[5]), 1.5f);
-                        Fx.Play("fx_cloud", c.transform.position, 3.6f, new Color(1f, 1f, 1f, 0.8f), 16f);
+                        Fx.Spawn("fx_cloud", c.transform.position, 3.6f, new Color(1f, 1f, 1f, 0.8f), 16f);
                         Play("hiss", 0.5f, 1.4f);
                     }
                 }
@@ -498,7 +498,7 @@ public class CharacterKit : MonoBehaviour
         Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
         ring.startWidth = ring.endWidth = 0.1f + 0.15f * charge;
-        if (sword && Random.value < 0.4f) Fx.Play("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
+        if (sword && Random.value < 0.4f) Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         charging = false;
@@ -508,8 +508,8 @@ public class CharacterKit : MonoBehaviour
             // 회전 베기: 누른 만큼 강해짐
             float dmg = Damage * (2f + 4f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
-            Fx.Play("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
-            Fx.Play("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
+            Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
+            Fx.Spawn("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
             Play("slash", 1f, 0.8f);
             Play("whoosh", 0.8f, 0.6f);
             if (card[3] > 0) StartCoroutine(BladeStorm(1f + card[3], radius * 0.7f));
@@ -520,7 +520,7 @@ public class CharacterKit : MonoBehaviour
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {
                 DamageCircle(p, radius, dmg, 3f);
-                Fx.Play("fx_alchemyblast", p, radius * 2.4f, Color.white, 16f);
+                Fx.Spawn("fx_alchemyblast", p, radius * 2.4f, Color.white, 16f);
                 if (Special != null) Special.SpawnZone(p, radius * 0.7f, 4f, Damage * 0.5f, new Color(0.45f, 1f, 0.35f, 0.7f));
                 Play("boom", 1f, 0.9f);
                 Play("shatter", 0.8f, 0.8f);
@@ -551,7 +551,7 @@ public class CharacterKit : MonoBehaviour
         player.GrantInvincibility(time + 0.4f);
         if (card[2] > 0) StartCoroutine(ShadowClone(from, 1f + card[2]));
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        Fx.Play("fx_stealth", from, 3f, Color.white, 16f);
+        Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
         Play("whoosh", 1f, 1.4f);
         Play("slash", 0.7f, 1.5f);
 
@@ -572,13 +572,13 @@ public class CharacterKit : MonoBehaviour
                 g.transform.localScale = transform.lossyScale;
                 g.GetComponent<SpriteRenderer>().flipX = body.flipX;
                 g.AddComponent<FadeOut>().duration = 0.3f;
-                Fx.Play("fx_shadowdash", p - (Vector3)(dir * 1.2f), 1.2f, Color.white, 24f, rot, 13);
+                Fx.Spawn("fx_shadowdash", p - (Vector3)(dir * 1.2f), 1.2f, Color.white, 24f, rot, 13);
             }
             yield return null;
         }
         transform.position = to;
         Cut(prev, to, width, dir, hit);
-        Fx.Play("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
+        Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
     }
@@ -593,7 +593,7 @@ public class CharacterKit : MonoBehaviour
             if (!hit.Add(c)) continue;
             Specials.Damage(c.gameObject, Damage * 1.5f * UltMul, dir, 1f);
             Bleed.Apply(c.gameObject, Damage * 1.2f * UltMul, 4f);
-            Fx.Play("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
+            Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
     }
@@ -608,7 +608,7 @@ public class CharacterKit : MonoBehaviour
         for (int i = 0; i < Mathf.RoundToInt(20 * UltMul); i++)
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
-            Fx.Play("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
+            Fx.Spawn("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
             DamageCircle(at, 1.3f, Damage * 2.5f, 0.5f);
             if (i % 4 == 0) Play("arrowfly", 0.35f, Random.Range(0.8f, 1.2f));
             yield return new WaitForSeconds(0.06f);
@@ -675,7 +675,7 @@ public class CharacterKit : MonoBehaviour
     {
         if (Id != CharacterId.Rogue || card[6] <= 0 || Random.value >= 0.25f * card[6]) return;
         player.NowBullet = Mathf.Max(1, player.MaxBullet / 2);
-        Fx.Play("fx_sparkle", transform.position, 1.2f, new Color(0.85f, 0.7f, 1f), 20f);
+        Fx.Spawn("fx_sparkle", transform.position, 1.2f, new Color(0.85f, 0.7f, 1f), 20f);
         Play("clank", 0.4f, 1.8f);
     }
 
@@ -726,7 +726,7 @@ public class CharacterKit : MonoBehaviour
         {
             float heal = Mathf.Min(hits, 3) * (0.3f + card[1]);
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
-            if (card[1] > 0) Fx.Play("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
+            if (card[1] > 0) Fx.Spawn("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
         }
         if (card[2] > 0)
         {
@@ -736,7 +736,7 @@ public class CharacterKit : MonoBehaviour
             {
                 Vector2 to = hp.transform.position - origin;
                 if (to.magnitude > reach + 0.5f || (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half + 10f)) continue;
-                Fx.Play("fx_spark", hp.transform.position, 1.2f, new Color(1f, 0.95f, 0.6f), 24f);
+                Fx.Spawn("fx_spark", hp.transform.position, 1.2f, new Color(1f, 0.95f, 0.6f), 24f);
                 Destroy(hp.gameObject);
                 parried++;
             }
@@ -793,7 +793,7 @@ public class CharacterKit : MonoBehaviour
         g.transform.localScale = transform.lossyScale;
         SpriteRenderer sr = g.GetComponent<SpriteRenderer>();
         sr.flipX = body.flipX;
-        Fx.Play("fx_stealth", at, 2f, new Color(0.8f, 0.6f, 1f), 18f);
+        Fx.Spawn("fx_stealth", at, 2f, new Color(0.8f, 0.6f, 1f), 18f);
         float next = 0.1f;
         for (float t = 0f; t < duration && g != null; t += Time.deltaTime)
         {
@@ -878,7 +878,7 @@ public class CharacterKit : MonoBehaviour
         if (len <= 0f) yield break;
         Vector3 to = from + (Vector3)(dir * len);
         dashUntil = Time.time + time;
-        Fx.Play("fx_smoke", from, 1.4f, new Color(0.8f, 1f, 0.8f, 0.7f), 18f);
+        Fx.Spawn("fx_smoke", from, 1.4f, new Color(0.8f, 1f, 0.8f, 0.7f), 18f);
         for (float t = 0f; t < time; t += Time.deltaTime)
         {
             transform.position = Vector3.Lerp(from, to, t / time);
@@ -898,7 +898,7 @@ public class CharacterKit : MonoBehaviour
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null && !e.IsDead) e.Slow(0.45f, 0.4f);
             }
-            Fx.Play("fx_spike", center + (Vector3)(Random.insideUnitCircle * radius), 1.2f, new Color(0.6f, 0.9f, 0.4f), 18f);
+            Fx.Spawn("fx_spike", center + (Vector3)(Random.insideUnitCircle * radius), 1.2f, new Color(0.6f, 0.9f, 0.4f), 18f);
             yield return new WaitForSeconds(0.25f);
         }
     }
@@ -908,7 +908,7 @@ public class CharacterKit : MonoBehaviour
     {
         if (card[0] <= 0) return;
         DamageCircle(pos, 1.5f, hit * (0.2f + 0.2f * card[0]), 1f);
-        Fx.Play("fx_alchemyblast", pos, 3.4f, new Color(1f, 0.8f, 0.4f), 20f);
+        Fx.Spawn("fx_alchemyblast", pos, 3.4f, new Color(1f, 0.8f, 0.4f), 20f);
         Play("shatter", 0.3f, 1.4f);
     }
 
@@ -923,7 +923,7 @@ public class CharacterKit : MonoBehaviour
             FlaskLob.Throw(p, land, 0.35f, 0.6f, new Color(0.7f, 1f, 0.5f), (q) =>
             {
                 DamageCircle(q, 1.5f, dmg, 1f);
-                Fx.Play("fx_alchemyblast", q, 3.4f, new Color(0.6f, 1f, 0.45f), 18f);
+                Fx.Spawn("fx_alchemyblast", q, 3.4f, new Color(0.6f, 1f, 0.45f), 18f);
                 Play("shatter", 0.3f, 1.3f);
             });
         }
@@ -954,7 +954,7 @@ public class CharacterKit : MonoBehaviour
                     FlaskLob.Throw(homunculus.transform.position, e.position, 0.45f, 0.55f, new Color(0.6f, 1f, 0.5f), (q) =>
                     {
                         DamageCircle(q, 1.4f, dmg, 1f);
-                        Fx.Play("fx_alchemyblast", q, 3f, new Color(0.6f, 1f, 0.45f), 18f);
+                        Fx.Spawn("fx_alchemyblast", q, 3f, new Color(0.6f, 1f, 0.45f), 18f);
                         Play("shatter", 0.3f, 1.4f);
                     });
                 }
@@ -1021,7 +1021,7 @@ public class Bleed : MonoBehaviour
         if (drip >= 0.25f)
         {
             drip = 0f;
-            Fx.Play("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.4f, Color.white, 14f);
+            Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.4f, Color.white, 14f);
         }
         tick += Time.deltaTime;
         if (tick >= 0.25f)

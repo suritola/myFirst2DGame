@@ -16,6 +16,14 @@ public static class Fx
         return frames;
     }
 
+    // 정렬 층 이름 → 번호 (이펙트마다 이름으로 찾지 않게 한 번만)
+    static readonly Dictionary<string, int> layerIds = new Dictionary<string, int>();
+    static int LayerId(string layer)
+    {
+        if (!layerIds.TryGetValue(layer, out int id)) layerIds[layer] = id = SortingLayer.NameToID(layer);
+        return id;
+    }
+
     static int Index(string spriteName)
     {
         int i = spriteName.LastIndexOf('_');
@@ -35,7 +43,7 @@ public static class Fx
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = frames[0];
         sr.color = color ?? Color.white;
-        sr.sortingLayerName = layer;
+        sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
         float h = frames[0].bounds.size.y;
         go.transform.localScale = Vector3.one * (h > 0f ? size / h : 1f);
@@ -47,6 +55,47 @@ public static class Fx
         a.life = life;
         a.sr = sr;
         return a;
+    }
+
+    // ================================================================= 만들고 잊는 이펙트 (다시 쓰기)
+    // 돌려받은 값을 쓰지 않는 호출 전용: 다 끝난 이펙트를 지우지 않고 꺼 두었다가 다음에 다시 씀
+    // (보이는 모습 · 시간 · 크기는 Play 와 똑같음. 누가 붙잡고 있는 이펙트는 Play 를 그대로 씀)
+    internal static readonly Stack<FxAnim> pool = new Stack<FxAnim>();
+
+    public static void Spawn(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
+                             float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
+    {
+        Sprite[] frames = Frames(name);
+        if (frames == null || frames.Length == 0) return;
+
+        FxAnim a = null;
+        while (pool.Count > 0 && a == null) a = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        if (a == null)
+        {
+            GameObject fresh = new GameObject("Fx");
+            SpriteRenderer fsr = fresh.AddComponent<SpriteRenderer>();
+            a = fresh.AddComponent<FxAnim>();
+            a.sr = fsr;
+            a.pooled = true;
+        }
+        Transform tr = a.transform;
+        tr.position = new Vector3(pos.x, pos.y, 0f);
+        tr.rotation = Quaternion.Euler(0f, 0f, rotation);
+        SpriteRenderer sr = a.sr;
+        sr.sprite = frames[0];
+        sr.color = color ?? Color.white;
+        sr.sortingLayerID = LayerId(layer);
+        sr.sortingOrder = order;
+        float h = frames[0].bounds.size.y;
+        tr.localScale = Vector3.one * (h > 0f ? size / h : 1f);
+        a.frames = frames;
+        a.fps = fps;
+        a.loop = loop;
+        a.life = life;
+        a.spin = 0f;
+        a.follow = null;
+        a.Restart();
+        a.gameObject.SetActive(true);
     }
 
     // 두 점 사이를 잇는 도트 빔 (fx_beam을 길이 방향으로 늘림)
@@ -90,13 +139,35 @@ public class FxAnim : MonoBehaviour
     public float spin;             // 초당 회전 (룬 등)
     public Transform follow;       // 따라다닐 대상
     public SpriteRenderer sr;
+    public bool pooled;             // Fx.Spawn 으로 만든 것: 끝나면 지우지 않고 다시 씀
     float t;
     float age;
     Color baseColor;
     bool started;
 
+    // 다시 쓸 때 처음부터
+    public void Restart()
+    {
+        t = 0f;
+        age = 0f;
+        started = false;
+        spawnFrame = Time.frameCount;
+    }
+
+    int spawnFrame = -1;
+
+    // 끝남: 다시 쓰는 이펙트는 꺼서 보관, 아니면 지움
+    void Finish()
+    {
+        if (!pooled) { Destroy(gameObject); return; }
+        gameObject.SetActive(false);
+        Fx.pool.Push(this);
+    }
+
     void Update()
     {
+        // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
+        if (Time.frameCount == spawnFrame) return;
         if (!started)
         {
             started = true;
@@ -107,7 +178,7 @@ public class FxAnim : MonoBehaviour
         int i = (int)t;
         if (i >= frames.Length)
         {
-            if (!loop) { Destroy(gameObject); return; }
+            if (!loop) { Finish(); return; }
             i %= frames.Length;
         }
         sr.sprite = frames[i];
@@ -119,7 +190,7 @@ public class FxAnim : MonoBehaviour
             // 끝나기 직전 0.15초 동안 흐려짐
             float left = life - age;
             if (left < 0.15f) sr.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * Mathf.Clamp01(left / 0.15f));
-            if (left <= 0f) Destroy(gameObject);
+            if (left <= 0f) Finish();
         }
     }
 }

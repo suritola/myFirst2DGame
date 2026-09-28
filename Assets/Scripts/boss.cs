@@ -101,9 +101,9 @@ public class bosss : MonoBehaviour
             b.enragedSummonCount = 2;
             clone.GetComponent<SpriteRenderer>().color = Color.white;
             if (slimeGen + 1 == 3) gen3Spawned++;
-            Fx.Play("fx_puddle", clone.transform.position, 3f, new Color(0.55f, 1f, 0.35f), 12f);
+            Fx.Spawn("fx_puddle", clone.transform.position, 3f, new Color(0.55f, 1f, 0.35f), 12f);
         }
-        Fx.Play("fx_shock", transform.position, 9f, new Color(0.55f, 1f, 0.35f), 16f);
+        Fx.Spawn("fx_shock", transform.position, 9f, new Color(0.55f, 1f, 0.35f), 16f);
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? Loc.T("킹 슬라임이 둘로 갈라졌다!") : Loc.T("슬라임이 또 갈라진다!"), 2f);
     }
     public bool IsDead => isDead;
@@ -216,7 +216,6 @@ public class bosss : MonoBehaviour
         // 피격 색상 효과
         StartCoroutine(HitEffect());
 
-        Debug.Log("적 체력: " + EnemyHealth);
 
         hitCount++;
         if (hitCount >= hitsPerSummon)
@@ -316,7 +315,7 @@ public class bosss : MonoBehaviour
                 float rx = Random.Range(-5f, 5f);
                 float ry = Random.Range(-5f, 5f);
                 Vector2 drop = new Vector2(transform.position.x + rx, transform.position.y + ry);
-                Instantiate(coin, drop, Quaternion.identity);
+                CoinTag.Register(Instantiate(coin, drop, Quaternion.identity));
             }
         }
 

@@ -16,6 +16,7 @@ public class Level : MonoBehaviour
 
     public TextMeshProUGUI levelText;
     RectTransform gauge;
+    int shownLevel = -1;
     void Start()
     {
         EXPmaxWidth = GetComponent<RectTransform>().sizeDelta.x;
@@ -30,7 +31,7 @@ public class Level : MonoBehaviour
 
         PlayerController player = Cache<PlayerController>.Get;
         playerLevel = player.level;
-        levelText.text = "Lv. " + playerLevel;
+        if (playerLevel != shownLevel) { shownLevel = playerLevel; levelText.text = "Lv. " + playerLevel; }
         playerEXP = player.nowEXP;
         playerMaxEXP = player.needEXP;
         if (gauge == null) gauge = EXPgauge.GetComponent<RectTransform>();

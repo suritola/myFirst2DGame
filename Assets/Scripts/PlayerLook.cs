@@ -187,35 +187,35 @@ public class PlayerLook : MonoBehaviour
                     Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-30f, 30f)) * aim;
                     FlameParticle.Spawn(Hostile.Glow, tip, d * Random.Range(5f, 9f), Random.Range(0.18f, 0.3f), 0.06f, 0.02f, false);
                 }
-                Fx.Play("fx_smoke", tip, 1.6f, new Color(0.6f, 0.55f, 0.5f, 0.6f), 16f);
+                Fx.Spawn("fx_smoke", tip, 1.6f, new Color(0.6f, 0.55f, 0.5f, 0.6f), 16f);
                 Eject(new Color(0.85f, 0.25f, 0.15f));
                 break;
             case SpecialAbilities.SniperId:
                 // 청록 고리가 총구에서 퍼지고 긴 섬광
-                Fx.Play("fx_shock", tip, 1.8f, new Color(0.5f, 0.95f, 1f, 0.9f), 24f);
-                Fx.Play("fx_trail_dot", tip + (Vector3)(aim * 0.6f), 1f, new Color(0.8f, 1f, 1f), 1f, rot, 16, false, 0.08f);
+                Fx.Spawn("fx_shock", tip, 1.8f, new Color(0.5f, 0.95f, 1f, 0.9f), 24f);
+                Fx.Spawn("fx_trail_dot", tip + (Vector3)(aim * 0.6f), 1f, new Color(0.8f, 1f, 1f), 1f, rot, 16, false, 0.08f);
                 Eject(new Color(0.6f, 0.9f, 1f));
                 break;
             case SpecialAbilities.DualId:
                 Eject(new Color(1f, 0.85f, 0.4f));
-                Fx.Play("fx_sparkle", tip, 0.7f, new Color(1f, 0.9f, 0.5f), 24f, 0f, 16);
+                Fx.Spawn("fx_sparkle", tip, 0.7f, new Color(1f, 0.9f, 0.5f), 24f, 0f, 16);
                 break;
             case SpecialAbilities.FlameId:
                 FlameParticle.Spawn(Hostile.Glow, tip, aim * 3f + side * Random.Range(-1f, 1f), 0.25f, 0.05f, 0.12f, false);
                 break;
             case SpecialAbilities.SeekerId:
-                Fx.Play("fx_orb", tip, 1.2f, new Color(0.8f, 0.6f, 1f), 20f);
-                Fx.Play("fx_sparkle", tip + (Vector3)(side * 0.3f), 0.6f, new Color(0.85f, 0.7f, 1f), 18f, 0f, 16);
+                Fx.Spawn("fx_orb", tip, 1.2f, new Color(0.8f, 0.6f, 1f), 20f);
+                Fx.Spawn("fx_sparkle", tip + (Vector3)(side * 0.3f), 0.6f, new Color(0.85f, 0.7f, 1f), 18f, 0f, 16);
                 break;
             case SpecialAbilities.ChainId:
-                Fx.Play("fx_markbolt", tip, 1f, new Color(0.7f, 0.95f, 1f), 24f, Random.Range(-20f, 20f), 16);
+                Fx.Spawn("fx_markbolt", tip, 1f, new Color(0.7f, 0.95f, 1f), 24f, Random.Range(-20f, 20f), 16);
                 break;
             case SpecialAbilities.ScytheId:
                 // 던지는 동작: 낫이 한 바퀴 휘둘러짐 (손에 든 낫은 잠깐 사라졌다 돌아옴)
-                Fx.Play("fx_slash", transform.position + (Vector3)(aim * 0.8f), 2.4f, new Color(0.85f, 0.6f, 1f), 26f, rot, 16);
+                Fx.Spawn("fx_slash", transform.position + (Vector3)(aim * 0.8f), 2.4f, new Color(0.85f, 0.6f, 1f), 26f, rot, 16);
                 break;
             case SpecialAbilities.GrenadeId:
-                Fx.Play("fx_smoke", tip, 2f, new Color(0.45f, 0.35f, 0.3f, 0.7f), 14f);
+                Fx.Spawn("fx_smoke", tip, 2f, new Color(0.45f, 0.35f, 0.3f, 0.7f), 14f);
                 FlameParticle.Spawn(Hostile.Glow, tip, aim * 4f, 0.25f, 0.08f, 0.02f, false);
                 break;
             default:

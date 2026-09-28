@@ -20,6 +20,8 @@ public class bossbar : MonoBehaviour
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임 (보스가 매 프레임 알려줌)
 
     TMP_Text nameText;
+    RectTransform barRect;
+    float nextNameSearch;
     int shownKind = -1;
     Loc.Lang shownLang;
 
@@ -47,7 +49,8 @@ public class bossbar : MonoBehaviour
             UpdateName();
             if (MaxHealth <= 0) return;
             BarX = Mathf.Clamp01((float)NowHealth / (float)MaxHealth) * MaxBarX;
-            bar.GetComponent<RectTransform>().sizeDelta = new Vector2(BarX, BarY);
+            if (barRect == null) barRect = bar.GetComponent<RectTransform>();
+            barRect.sizeDelta = new Vector2(BarX, BarY);
         }
     }
 
@@ -56,6 +59,9 @@ public class bossbar : MonoBehaviour
     {
         if (nameText == null)
         {
+            // 이름 글자를 못 찾았을 때 매 프레임 씬 전체를 뒤지지 않게 1초에 한 번만
+            if (Time.unscaledTime < nextNameSearch) return;
+            nextNameSearch = Time.unscaledTime + 1f;
             foreach (TMP_Text t in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (t.name == "BossName") { nameText = t; break; }
             if (nameText == null) return;

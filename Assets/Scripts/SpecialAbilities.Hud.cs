@@ -235,14 +235,51 @@ public partial class SpecialAbilities
     }
 
     // ================================================================= 매 프레임 상태
+    HudGroup[] hudGroups;
+    float nextHudText;
+
     void UpdateHud()
     {
         if (weaponGroup == null) return;
-        foreach (HudGroup g in new[] { weaponGroup, skillGroup, passiveGroup })
+        if (hudGroups == null) hudGroups = new[] { weaponGroup, skillGroup, passiveGroup };
+        bool full = Time.unscaledTime >= nextHudText;
+        if (full) nextHudText = Time.unscaledTime + 0.1f;
+        foreach (HudGroup g in hudGroups)
         {
             if (g.collapsed) continue;
-            foreach (HudTile t in g.list) UpdateTile(t);
+            foreach (HudTile t in g.list)
+            {
+                if (full) UpdateTile(t);
+                else t.cooldown.fillAmount = TileCool(t.id);
+            }
         }
+    }
+
+    // 쿨타임 원만 (글자를 만들지 않음)
+    float TileCool(int id)
+    {
+        if (id == PistolRow)
+        {
+            CharacterKit kit = CharacterKit.Instance;
+            if (kit != null && !kit.UsesAmmo) return 0f;
+            return player.reload > 0f ? 1f - Mathf.Clamp01(player.reload / Mathf.Max(0.01f, player.reloadTime)) : 0f;
+        }
+        SpecialKind kind = abilities[id].kind;
+        if (kind == SpecialKind.Weapon)
+        {
+            if (id == FlameId) return heat;
+            if (id == ScytheId) return activeScythe == null ? 0f : 1f;
+            if (MagSize(id) <= 0) return 0f;
+            WeaponAmmo a = Ammo(id);
+            return a.Reloading ? Mathf.Clamp01((a.reloadEnd - Time.time) / BaseReload(id)) : 0f;
+        }
+        if (kind == SpecialKind.Skill)
+        {
+            float left = CooldownUntil(id) - Time.time;
+            float length = cooldownLength.TryGetValue(id, out float l) ? l : 1f;
+            return left > 0f ? Mathf.Clamp01(left / length) : 0f;
+        }
+        return 0f;
     }
 
     void UpdateTile(HudTile t)
@@ -276,13 +313,14 @@ public partial class SpecialAbilities
         bool flash = rowFlashUntil.TryGetValue(id, out float until) && Time.time < until;
         t.border.color = flash ? Color.white : active ? TileActive : TileBorder;
         t.cooldown.fillAmount = cool;
-        t.label.text = label;
+        if (t.label.text != label) t.label.text = label;
         bool cap = GameSettings.KeyIcons && key.Length > 0;
         if (t.keyCap.gameObject.activeSelf != cap) t.keyCap.gameObject.SetActive(cap);
         if (cap) t.keyCap.rectTransform.sizeDelta = new Vector2(Mathf.Max(20f, 10f + key.Length * 9f), 18f);
         t.key.color = cap ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.85f, 0.45f);
         t.key.margin = new Vector4(cap ? 7f : 5f, cap ? 1f : 0f, 0f, 0f);
-        t.key.text = key + (id >= 0 && IsEvolved(id) ? (key.Length > 0 ? " " : "") + "+" : "");
+        string keyText = key + (id >= 0 && IsEvolved(id) ? (key.Length > 0 ? " " : "") + "+" : "");
+        if (t.key.text != keyText) t.key.text = keyText;
     }
 
     // 무기 칸: 짧은 상태 (탄창 · 장전 · 열기)와 가려질 비율
@@ -372,6 +410,7 @@ public class RunClock : MonoBehaviour
 {
     TextMeshProUGUI text;
     float start;
+    int shown = -1;
 
     public static void Create()
     {
@@ -414,6 +453,7 @@ public class RunClock : MonoBehaviour
 
     void Update()
     {
-        if (text != null) text.text = EndlessMode.Clock(Time.time - start);
+        int s = Mathf.FloorToInt(Time.time - start);
+        if (text != null && s != shown) { shown = s; text.text = EndlessMode.Clock(s); }
     }
 }

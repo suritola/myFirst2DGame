@@ -52,7 +52,7 @@ public class Bullet : MonoBehaviour
     void Start()
     {
         remainPene = pene;
-        playerC = FindAnyObjectByType<PlayerController>();
+        playerC = Hostile.Player;                  // 총알마다 씬 전체를 뒤지지 않게 (캐시)
         mainCamera = Camera.main;
         Destroy(gameObject, lifetime);
     }
@@ -98,7 +98,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                Fx.Play("fx_spark", transform.position, 1.2f, Color.white, 26f);
+                Fx.Spawn("fx_spark", transform.position, 1.2f, Color.white, 26f);
 
 
                 // =========================
@@ -127,7 +127,7 @@ public class Bullet : MonoBehaviour
 
                 enemy.TakeDamage(damage, knockBack, dir);
                 remainPene--;
-                Fx.Play("fx_spark", transform.position, 1.2f, Color.white, 26f);
+                Fx.Spawn("fx_spark", transform.position, 1.2f, Color.white, 26f);
 
 
                 // =========================

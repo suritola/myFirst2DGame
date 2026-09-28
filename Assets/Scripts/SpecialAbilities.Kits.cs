@@ -288,7 +288,7 @@ public partial class SpecialAbilities
                     BeginShot(0, out _, out _);
                     wires.Add((KitClamp(at), Time.time + 10f));
                     while (wires.Count > max) wires.RemoveAt(0);
-                    Fx.Play("fx_spark", at, 1f, new Color(0.9f, 0.85f, 1f), 24f);
+                    Fx.Spawn("fx_spark", at, 1f, new Color(0.9f, 0.85f, 1f), 24f);
                     fx.Play("clank", 0.45f, 1.9f);
                     break;
                 }
@@ -369,8 +369,8 @@ public partial class SpecialAbilities
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null && stun > 0f) e.Slow(0f, stun);
         }
-        Fx.Play("fx_shock", at, r * 2.2f, new Color(1f, 0.85f, 0.55f, 0.9f), 20f);
-        Fx.Play("fx_fissure", at, r * 1.6f, Color.white, 16f);
+        Fx.Spawn("fx_shock", at, r * 2.2f, new Color(1f, 0.85f, 0.55f, 0.9f), 20f);
+        Fx.Spawn("fx_fissure", at, r * 1.6f, Color.white, 16f);
         Hostile.Shake(0.12f);
         fx.Play("boom", 0.5f, 0.7f);
         fx.Play("thump", 0.7f, 0.8f);
@@ -388,15 +388,15 @@ public partial class SpecialAbilities
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > 0.9f) continue;
             bool tip = Vector2.Dot(c.transform.position - a, dir) >= len * 0.66f;
             Specials.Damage(c.gameObject, dmg * (tip ? tipMul : 1f), dir, tip ? 1.2f : 0.4f);
-            if (tip) Fx.Play("fx_spark", c.transform.position, 1.3f, new Color(1f, 0.9f, 0.5f), 24f);
+            if (tip) Fx.Spawn("fx_spark", c.transform.position, 1.3f, new Color(1f, 0.9f, 0.5f), 24f);
         }
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         for (float t = 0.6f; t <= len; t += 0.6f)
         {
             Vector3 p = a + (Vector3)(dir * t + side * Mathf.Sin(t / len * Mathf.PI) * 0.9f);
-            Fx.Play("fx_trail_dot", p, t > len * 0.66f ? 0.9f : 0.6f, new Color(0.75f, 0.85f, 1f), 1f, rot, 16, false, 0.08f + t * 0.012f);
+            Fx.Spawn("fx_trail_dot", p, t > len * 0.66f ? 0.9f : 0.6f, new Color(0.75f, 0.85f, 1f), 1f, rot, 16, false, 0.08f + t * 0.012f);
         }
-        Fx.Play("fx_spark", b, 1.4f, new Color(1f, 0.9f, 0.5f), 24f);
+        Fx.Spawn("fx_spark", b, 1.4f, new Color(1f, 0.9f, 0.5f), 24f);
         fx.Play("whoosh", 0.55f, 1.5f);
         fx.Play("crack", 0.45f, 1.7f);
     }
@@ -418,8 +418,8 @@ public partial class SpecialAbilities
         player.transform.position = to;
         Vector3 tip = to + (Vector3)(dir * 1.8f);
         DamageLine(from, tip, 1.1f, dmg, knock);
-        for (float k = 0f; k <= 1f; k += 0.2f) Fx.Play("fx_trail_dot", Vector3.Lerp(from, tip, k), 0.9f, new Color(0.8f, 0.9f, 1f), 1f, rot, 16, false, 0.15f);
-        Fx.Play("fx_spark", tip, 1.4f, Color.white, 24f);
+        for (float k = 0f; k <= 1f; k += 0.2f) Fx.Spawn("fx_trail_dot", Vector3.Lerp(from, tip, k), 0.9f, new Color(0.8f, 0.9f, 1f), 1f, rot, 16, false, 0.15f);
+        Fx.Spawn("fx_spark", tip, 1.4f, Color.white, 24f);
         fx.Play("crack", 0.6f, 1.2f);
         lancing = false;
     }
@@ -466,7 +466,7 @@ public partial class SpecialAbilities
         for (int i = 0; i < wires.Count - (loop ? 0 : 1); i++)
         {
             Vector3 a = wires[i].pos, b = wires[(i + 1) % wires.Count].pos;
-            if (DamageLine(a, b, 0.5f, dmg, 0f) > 0) Fx.Play("fx_spark", Vector3.Lerp(a, b, Random.value), 0.8f, new Color(1f, 0.5f, 0.6f), 24f);
+            if (DamageLine(a, b, 0.5f, dmg, 0f) > 0) Fx.Spawn("fx_spark", Vector3.Lerp(a, b, Random.value), 0.8f, new Color(1f, 0.5f, 0.6f), 24f);
         }
     }
 
@@ -480,7 +480,7 @@ public partial class SpecialAbilities
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null) e.Slow(0f, hold);
         }
-        Fx.Play("fx_net", p, r * 2.2f, Color.white, 10f, Random.Range(0f, 90f), 11);
+        Fx.Spawn("fx_net", p, r * 2.2f, Color.white, 10f, Random.Range(0f, 90f), 11);
         fx.Play("clank", 0.35f, 1.4f);
         fx.Play("whoosh", 0.3f, 0.8f);
     }
@@ -530,7 +530,7 @@ public partial class SpecialAbilities
     // 연금술사 자석: 한 점으로 적을 끌어당긴 뒤 터짐
     IEnumerator MagnetPull(Vector3 p, float r, float time, float dmg, int blasts, float blastR)
     {
-        Fx.Play("fx_vortex", p, r * 2f, new Color(0.7f, 0.6f, 1f, 0.8f), 16f, 0f, 12, true, time);
+        Fx.Spawn("fx_vortex", p, r * 2f, new Color(0.7f, 0.6f, 1f, 0.8f), 16f, 0f, 12, true, time);
         fx.Play("hum", 0.5f, 1.4f);
         for (float t = 0f; t < time; t += Time.deltaTime)
         {
@@ -544,10 +544,16 @@ public partial class SpecialAbilities
         }
     }
 
+    static readonly List<Collider2D> pullHits = new List<Collider2D>(64);
+
+    // 매 프레임 부르므로 재사용 목록으로 (적을 옮기기만 해서 목록이 바뀌지 않음)
     static void Pull(Vector3 p, float r, float speed)
     {
-        foreach (EnermyController e in EnemiesIn(p, r))
-            e.transform.position = Vector3.MoveTowards(e.transform.position, p, speed * Time.deltaTime);
+        foreach (Collider2D c in Specials.Overlap(p, r, pullHits))
+        {
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null && !e.IsDead) e.transform.position = Vector3.MoveTowards(e.transform.position, p, speed * Time.deltaTime);
+        }
     }
 
     // 연금술사 폭죽: 솟아올라 색색으로 터짐
@@ -559,7 +565,7 @@ public partial class SpecialAbilities
         for (float t = 0f; t < rise; t += Time.deltaTime)
         {
             Vector3 p = Vector3.Lerp(from, to, t / rise) + Vector3.up * Mathf.Sin(t / rise * Mathf.PI) * 1.5f;
-            if (Random.value < 0.6f) Fx.Play("fx_spark", p, 0.6f, new Color(1f, 0.9f, 0.6f), 24f);
+            if (Random.value < 0.6f) Fx.Spawn("fx_spark", p, 0.6f, new Color(1f, 0.9f, 0.6f), 24f);
             yield return null;
         }
         FireworkBurst(to, sparks, dmg);
@@ -574,9 +580,9 @@ public partial class SpecialAbilities
             Vector3 q = at + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 1.8f;
             Color c = FireworkColors[i % FireworkColors.Length];
             DamageCircle(q, 1.4f, dmg, 0.8f);
-            Fx.Play("fx_explosion", q, 2.2f, c, 20f);
+            Fx.Spawn("fx_explosion", q, 2.2f, c, 20f);
         }
-        Fx.Play("fx_sparkle", at, 3f, Color.white, 16f);
+        Fx.Spawn("fx_sparkle", at, 3f, Color.white, 16f);
         fx.Play("boom", 0.4f, 1.5f);
         fx.Play("crackle", 0.4f, 1.3f);
     }
@@ -596,7 +602,7 @@ public partial class SpecialAbilities
                 warCryUntil = Time.time + 6f;
                 foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 5f))
                     if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, Damage * 0.5f, (c.transform.position - pos).normalized, 4f);
-                Fx.Play("fx_shock", pos, 11f, new Color(1f, 0.75f, 0.4f, 0.85f), 16f);
+                Fx.Spawn("fx_shock", pos, 11f, new Color(1f, 0.75f, 0.4f, 0.85f), 16f);
                 fx.FloatText(pos, Loc.T("전투 함성!"), new Color(1f, 0.75f, 0.4f), 5f, 0f);
                 fx.Play("roar", 0.9f, 1.1f);
                 Hostile.Shake(0.2f);
@@ -663,14 +669,14 @@ public partial class SpecialAbilities
                 }
             case KitFocus:
                 focusUntil = Time.time + (evo ? 8f : 5f);
-                Fx.Play("fx_levelup", pos + Vector3.up, 3.5f, new Color(0.7f, 1f, 0.6f), 14f, 0f, 30);
+                Fx.Spawn("fx_levelup", pos + Vector3.up, 3.5f, new Color(0.7f, 1f, 0.6f), 14f, 0f, 30);
                 fx.FloatText(pos, Loc.T("집중!"), new Color(0.7f, 1f, 0.6f), 5f, 0f);
                 fx.Play("chime", 0.7f, 1.4f);
                 StartCooldown(id, 16f);
                 break;
             case KitStone:
                 stoneUntil = Time.time + (evo ? 9f : 6f);
-                Fx.Play("fx_rune", pos, 4f, new Color(0.9f, 0.5f, 1f), 14f, 0f, 3);
+                Fx.Spawn("fx_rune", pos, 4f, new Color(0.9f, 0.5f, 1f), 14f, 0f, 3);
                 fx.FloatText(pos, Loc.T("현자의 돌!"), new Color(0.9f, 0.55f, 1f), 5f, 0f);
                 fx.Play("shimmer", 0.8f, 0.9f);
                 StartCooldown(id, 18f);
@@ -679,11 +685,11 @@ public partial class SpecialAbilities
                 {
                     if (rewindLog.Count == 0) { NoTarget(pos); return true; }
                     var past = rewindLog.Peek();
-                    Fx.Play("fx_vortex", pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
+                    Fx.Spawn("fx_vortex", pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
                     player.transform.position = past.pos;
                     if (past.hp > player.PlayerHealth) player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, past.hp);
                     player.GrantInvincibility(0.5f);
-                    Fx.Play("fx_vortex", past.pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
+                    Fx.Spawn("fx_vortex", past.pos, 3f, new Color(0.6f, 0.9f, 1f, 0.8f), 18f);
                     fx.FloatText(past.pos, Loc.T("시간 역행!"), new Color(0.6f, 0.9f, 1f), 5f, 0f);
                     fx.Play("shimmer", 0.9f, 0.6f);
                     rewindLog.Clear();
@@ -703,7 +709,7 @@ public partial class SpecialAbilities
             bool e = IsEvolved(KitCycle);
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.08f : 0.05f));
             ReduceCooldowns(e ? 2f : 1f, id);
-            Fx.Play("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
+            Fx.Spawn("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
         }
         return true;
     }
@@ -761,7 +767,7 @@ public partial class SpecialAbilities
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null) e.Slow(0.4f, 2f);
             }
-            Fx.Play("fx_fissure", p, 2.2f, Color.white, 18f, rot, 11);
+            Fx.Spawn("fx_fissure", p, 2.2f, Color.white, 18f, rot, 11);
             if (d % 3.6f < 1.2f) fx.Play("crack", 0.35f, 0.7f);
             yield return new WaitForSeconds(0.03f);
         }
@@ -793,7 +799,7 @@ public partial class SpecialAbilities
         }
         if (mark != null) Destroy(mark.gameObject);
         Specials.Damage(t.gameObject, Damage * 10f, Vector3.zero, 1f);
-        Fx.Play("fx_deathburst", t.position, 3f, new Color(1f, 0.35f, 0.4f), 18f);
+        Fx.Spawn("fx_deathburst", t.position, 3f, new Color(1f, 0.35f, 0.4f), 18f);
         fx.Play("crack", 0.9f, 0.8f);
         Hostile.Shake(0.15f);
     }
@@ -805,16 +811,16 @@ public partial class SpecialAbilities
         foreach (Transform t in targets)
         {
             if (t == null) continue;
-            Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
+            Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
             player.transform.position = KitClamp(t.position + (Vector3)(Random.insideUnitCircle.normalized * 1f));
             Specials.Damage(t.gameObject, Damage * 1.5f, Vector3.zero, 0.5f);
             EnermyController e = t.GetComponent<EnermyController>();
             if (e != null) e.coinDrop += coins;
-            Fx.Play("fx_sparkle", t.position, 1.2f, new Color(1f, 0.85f, 0.3f), 20f);
+            Fx.Spawn("fx_sparkle", t.position, 1.2f, new Color(1f, 0.85f, 0.3f), 20f);
             fx.Play("pop", 0.4f, 1.6f);
             yield return new WaitForSeconds(0.08f);
         }
-        Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
+        Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
         player.transform.position = home;
         fx.Play("whoosh", 0.7f, 1.6f);
     }
@@ -841,7 +847,7 @@ public partial class SpecialAbilities
             }
             if (t == null) continue;
             Specials.Damage(t.gameObject, Damage * 2.5f, (t.position - from).normalized, 1f);
-            Fx.Play("fx_slash", t.position, 1.8f, new Color(1f, 0.9f, 0.7f), 24f, Random.Range(0f, 360f), 16);
+            Fx.Spawn("fx_slash", t.position, 1.8f, new Color(1f, 0.9f, 0.7f), 24f, Random.Range(0f, 360f), 16);
             fx.Play("slash", 0.5f, 1.8f);
             yield return new WaitForSeconds(0.04f);
         }
@@ -915,7 +921,7 @@ public partial class SpecialAbilities
             player.def += 0.5f;
         }
         giantUntil = Time.time + seconds;
-        Fx.Play("fx_alchemyblast", player.transform.position, 4f, new Color(0.7f, 1f, 0.5f), 16f);
+        Fx.Spawn("fx_alchemyblast", player.transform.position, 4f, new Color(0.7f, 1f, 0.5f), 16f);
         fx.Play("bubble", 0.8f, 0.6f);
         fx.Play("roar", 0.5f, 0.7f);
     }
@@ -965,7 +971,7 @@ public partial class SpecialAbilities
         {
             Coin c = FindFirstObjectByType<Coin>();
             if (c != null) c.AddCoin(3);
-            Fx.Play("fx_sparkle", pos, 1.4f, new Color(1f, 0.85f, 0.3f), 18f);
+            Fx.Spawn("fx_sparkle", pos, 1.4f, new Color(1f, 0.85f, 0.3f), 18f);
             fx.FloatText(pos, "+3", new Color(1f, 0.85f, 0.3f), 4f, 0.2f);
         }
         if (Has(KitTrophy))
@@ -986,7 +992,7 @@ public partial class SpecialAbilities
     {
         if (!Has(KitEvasion) || Random.value >= (IsEvolved(KitEvasion) ? 0.3f : 0.2f)) return false;
         fx.FloatText(player.transform.position, Loc.T("회피!"), new Color(0.8f, 0.7f, 1f), 4.5f, 0.2f);
-        Fx.Play("fx_stealth", player.transform.position, 2f, new Color(0.8f, 0.7f, 1f, 0.7f), 20f);
+        Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.8f, 0.7f, 1f, 0.7f), 20f);
         fx.Play("whoosh", 0.5f, 2f);
         player.GrantInvincibility(0.3f);
         return true;
@@ -1005,7 +1011,7 @@ public partial class SpecialAbilities
         bool evo = IsEvolved(KitVeil);
         if (Time.time - lastHurt < (evo ? 2f : 3f)) return 1f;
         lastHurt = Time.time;                   // 한 번 쓰면 다시 기다림
-        Fx.Play("fx_stealth", player.transform.position, 1.6f, new Color(0.7f, 0.5f, 1f, 0.8f), 20f);
+        Fx.Spawn("fx_stealth", player.transform.position, 1.6f, new Color(0.7f, 0.5f, 1f, 0.8f), 20f);
         return evo ? 2.5f : 2f;
     }
 
@@ -1018,7 +1024,7 @@ public partial class SpecialAbilities
         {
             emergencyReady = Time.time + (IsEvolved(KitEmergency) ? 30f : 45f);
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.3f);
-            Fx.Play("fx_levelup", player.transform.position + Vector3.up, 3.5f, new Color(0.6f, 1f, 0.6f), 14f, 0f, 30);
+            Fx.Spawn("fx_levelup", player.transform.position + Vector3.up, 3.5f, new Color(0.6f, 1f, 0.6f), 14f, 0f, 30);
             fx.FloatText(player.transform.position, Loc.T("비상 물약!"), new Color(0.5f, 1f, 0.5f), 5f, 0f);
             fx.Play("bubble", 0.8f, 1.2f);
         }
@@ -1117,7 +1123,7 @@ public class Poison : MonoBehaviour
         if (drip >= 0.35f)
         {
             drip = 0f;
-            Fx.Play("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.2f, new Color(0.5f, 1f, 0.35f), 14f);
+            Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.2f, new Color(0.5f, 1f, 0.35f), 14f);
         }
         tick += Time.deltaTime;
         if (tick >= 0.5f)
@@ -1131,6 +1137,7 @@ public class Poison : MonoBehaviour
 // 마름쇠: 밟은 적에게 피해 + 느리게, 세 번 밟히거나 8초가 지나면 사라짐
 public class Caltrop : MonoBehaviour
 {
+    static readonly List<Collider2D> hits = new List<Collider2D>(8);
     float damage, life = 8f, cooldown;
     int uses = 3;
 
@@ -1147,7 +1154,8 @@ public class Caltrop : MonoBehaviour
         cooldown -= Time.deltaTime;
         if (life <= 0f || uses <= 0) { Destroy(gameObject); return; }
         if (cooldown > 0f) return;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, 0.6f))
+        // 마름쇠마다 매 프레임이라 재사용 목록 (첫 적에 맞히면 바로 멈추므로 목록이 도중에 바뀌지 않음)
+        foreach (Collider2D c in Specials.Overlap(transform.position, 0.6f, hits))
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Specials.Damage(c.gameObject, damage, Vector3.zero, 0f);
@@ -1155,7 +1163,7 @@ public class Caltrop : MonoBehaviour
             if (e != null) e.Slow(0.4f, 1.5f);
             uses--;
             cooldown = 0.4f;
-            Fx.Play("fx_spark", transform.position, 0.8f, new Color(1f, 0.6f, 0.6f), 24f);
+            Fx.Spawn("fx_spark", transform.position, 0.8f, new Color(1f, 0.6f, 0.6f), 24f);
             break;
         }
     }
@@ -1191,6 +1199,6 @@ public class WindTrail : MonoBehaviour
         t += Time.deltaTime;
         if (t < 0.05f) return;
         t = 0f;
-        Fx.Play("fx_smoke", transform.position, 1.6f, new Color(0.75f, 1f, 0.95f, 0.5f), 18f);
+        Fx.Spawn("fx_smoke", transform.position, 1.6f, new Color(0.75f, 1f, 0.95f, 0.5f), 18f);
     }
 }

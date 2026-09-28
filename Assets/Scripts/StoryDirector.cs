@@ -192,8 +192,8 @@ public class StoryDirector : MonoBehaviour
         // 착지: 먼지 · 흔들림 · 쿵
         if (!skip)
         {
-            Fx.Play("fx_smoke", land + new Vector3(0f, -0.7f, 0f), 3.2f, new Color(0.85f, 0.8f, 0.72f, 0.9f), 18f);
-            Fx.Play("fx_shock", land + new Vector3(0f, -0.8f, 0f), 4f, new Color(1f, 0.9f, 0.7f, 0.7f), 20f);
+            Fx.Spawn("fx_smoke", land + new Vector3(0f, -0.7f, 0f), 3.2f, new Color(0.85f, 0.8f, 0.72f, 0.9f), 18f);
+            Fx.Spawn("fx_shock", land + new Vector3(0f, -0.8f, 0f), 4f, new Color(1f, 0.9f, 0.7f, 0.7f), 20f);
             Hostile.Shake(0.45f);
             Hostile.Play("thump", 1f, 0.8f);
             for (float t = 0f; t < 0.6f && !skip; t += Time.unscaledDeltaTime) yield return null;

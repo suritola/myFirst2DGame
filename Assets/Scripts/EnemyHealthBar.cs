@@ -19,6 +19,7 @@ public class EnemyHealthBar : MonoBehaviour
     Transform fill;
     SpriteRenderer fillRenderer;
     SpriteRenderer backRenderer;
+    float shownRatio = -1f;
 
     public static EnemyHealthBar Attach(EnermyController enemy, SpriteRenderer body)
     {
@@ -88,6 +89,9 @@ public class EnemyHealthBar : MonoBehaviour
         if (enemy == null) return;
 
         float ratio = enemy.setEnemyHP > 0 ? Mathf.Clamp01((float)enemy.EnemyHealth / enemy.setEnemyHP) : 0f;
+        // 체력이 그대로면 다시 그리지 않음 (적마다 매 프레임 하던 크기 · 색 갱신 생략)
+        if (ratio == shownRatio) return;
+        shownRatio = ratio;
 
         // 죽으면 숨김
         bool alive = ratio > 0f;

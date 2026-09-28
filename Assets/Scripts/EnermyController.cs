@@ -77,10 +77,25 @@ public class EnermyController : MonoBehaviour
     public static System.Func<EnermyController, float, float> DamageHook;
 
     private CircleCollider2D bodyCollider;
+    // 살아 있는 적의 콜라이더 → 적 (밀어내기 계산용)
+    static readonly System.Collections.Generic.Dictionary<Collider2D, EnermyController> byCollider = new System.Collections.Generic.Dictionary<Collider2D, EnermyController>();
     private static readonly Collider2D[] nearby = new Collider2D[24];
 
     // 난이도 배율을 이미 적용했는지 (복제돼도 두 번 곱하지 않게)
     [HideInInspector] public bool difficultyApplied;
+
+    // 생기자마자 대응표에 등록 (같은 물리 단계의 다른 적도 바로 알아보게), 사라지면 지움
+    void Awake()
+    {
+        CircleCollider2D c = GetComponent<CircleCollider2D>();
+        if (c != null) byCollider[c] = this;
+    }
+
+    void OnDestroy()
+    {
+        CircleCollider2D c = bodyCollider != null ? bodyCollider : GetComponent<CircleCollider2D>();
+        if (c != null && byCollider.TryGetValue(c, out EnermyController e) && e == this) byCollider.Remove(c);
+    }
 
     void Start()
     {
@@ -96,7 +111,8 @@ public class EnermyController : MonoBehaviour
         bodyCollider = GetComponent<CircleCollider2D>();
 
         // 플레이어 찾기
-        player = FindFirstObjectByType<PlayerController>().transform;
+        PlayerController pc = Hostile.Player;      // 적마다 씬 전체를 뒤지지 않게 (캐시)
+        player = pc != null ? pc.transform : null;
 
         // 컴포넌트 가져오기
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -157,7 +173,8 @@ public class EnermyController : MonoBehaviour
             Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;
 
             // 구조물에 막히면 벽을 따라 미끄러짐 (이미 끼어 있으면 빠져나오도록 그대로 이동)
-            if (!Blocked(transform.position) && Blocked(transform.position + step))
+            // 다음 자리부터 확인 (막힌 경우가 드물어서 대부분 검색 한 번으로 끝남 · 결과는 같음)
+            if (Blocked(transform.position + step) && !Blocked(transform.position))
             {
                 Vector3 alongX = new Vector3(step.x, 0f, 0f);
                 Vector3 alongY = new Vector3(0f, step.y, 0f);
@@ -225,8 +242,8 @@ public class EnermyController : MonoBehaviour
             CircleCollider2D otherCircle = other as CircleCollider2D;
             if (otherCircle == null) continue;
 
-            EnermyController otherEnemy = other.GetComponent<EnermyController>();
-            if (otherEnemy == null || otherEnemy.IsDead) continue;
+            // 콜라이더 → 적 대응표 (주변 적마다 GetComponent 를 부르지 않게)
+            if (!byCollider.TryGetValue(other, out EnermyController otherEnemy) || otherEnemy == null || otherEnemy.IsDead) continue;
 
             Vector2 away = center - (Vector2)other.bounds.center;
             float dist = away.magnitude;
@@ -261,7 +278,6 @@ public class EnermyController : MonoBehaviour
         // 피격 색상 효과
         StartCoroutine(HitEffect());
 
-        Debug.Log("적 체력: " + EnemyHealth);
 
         // 체력이 0 이하이면 사망
         if (EnemyHealth <= 0) Die(1);
@@ -352,7 +368,7 @@ public class EnermyController : MonoBehaviour
             {
                 Vector2 drop = transform.position;
                 if (i > 0) drop += new Vector2(Random.Range(-1.5f, 1.5f), Random.Range(-1.5f, 1.5f));
-                Instantiate(coin, drop, Quaternion.identity);
+                CoinTag.Register(Instantiate(coin, drop, Quaternion.identity));
             }
         }
         Destroy(gameObject);

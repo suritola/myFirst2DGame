@@ -31,24 +31,52 @@ public class DamagePopup : MonoBehaviour
         if (active >= MaxActive || !EnsureFont()) return;
 
         float top = body != null ? body.bounds.max.y : target.position.y + 1f;
-        GameObject go = new GameObject("DamagePopup");
-        go.transform.position = new Vector3(target.position.x + Random.Range(-0.3f, 0.3f), top + 0.35f, 0f);
-        p = go.AddComponent<DamagePopup>();
-        p.key = k;
-        p.start = go.transform.position;
-        p.text = go.AddComponent<TextMeshPro>();
-        p.text.font = font;
-        if (material != null) p.text.fontSharedMaterial = material;
+        Vector3 at = new Vector3(target.position.x + Random.Range(-0.3f, 0.3f), top + 0.35f, 0f);
+
+        // 다 떠오른 숫자를 버리지 않고 다시 씀 (맞을 때마다 글자 오브젝트를 새로 만들고 지우지 않게)
+        p = null;
+        while (pool.Count > 0 && p == null) p = pool.Pop();
+        if (p == null)
+        {
+            GameObject go = new GameObject("DamagePopup");
+            p = go.AddComponent<DamagePopup>();
+            p.text = go.AddComponent<TextMeshPro>();
+            p.text.font = font;
+            if (material != null) p.text.fontSharedMaterial = material;
+            p.text.alignment = TextAlignmentOptions.Center;
+            p.text.enableWordWrapping = false;
+            p.text.rectTransform.sizeDelta = new Vector2(6f, 2f);
+            MeshRenderer mr = go.GetComponent<MeshRenderer>();
+            mr.sortingLayerName = "Effect";
+            mr.sortingOrder = 40;
+        }
+        p.transform.position = at;
+        p.transform.localScale = Vector3.one;
         p.text.fontSize = GameSettings.DamageNumbers == 1 ? 15f : 11f;
-        p.text.alignment = TextAlignmentOptions.Center;
-        p.text.enableWordWrapping = false;
-        p.text.rectTransform.sizeDelta = new Vector2(6f, 2f);
-        MeshRenderer mr = go.GetComponent<MeshRenderer>();
-        mr.sortingLayerName = "Effect";
-        mr.sortingOrder = 40;
+        p.key = k;
+        p.start = at;
+        p.amount = 0f;
+        p.t = 0f;
+        p.size = 1f;
+        p.live = true;
+        p.gameObject.SetActive(true);
         byTarget[k] = p;
         active++;
         p.Add(damage);
+    }
+
+    // 다 쓴 숫자 (다시 쓸 때까지 꺼 둠)
+    static readonly Stack<DamagePopup> pool = new Stack<DamagePopup>();
+    bool live;
+
+    void Release()
+    {
+        if (!live) return;
+        live = false;
+        active--;
+        if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
+        gameObject.SetActive(false);
+        pool.Push(this);
     }
 
     static bool EnsureFont()
@@ -89,7 +117,7 @@ public class DamagePopup : MonoBehaviour
     {
         t += Time.deltaTime;
         float k = t / Life;
-        if (k >= 1f) { Destroy(gameObject); return; }
+        if (k >= 1f) { Release(); return; }
         float up = 1f - (1f - k) * (1f - k);
         float pop = t < 0.08f ? 1.35f - 0.35f * (t / 0.08f) : 1f;
         transform.position = start + new Vector3(0f, Rise * up, 0f);
@@ -99,8 +127,11 @@ public class DamagePopup : MonoBehaviour
         text.color = c;
     }
 
+    // 장면이 바뀌어 지워질 때 (살아 있던 것만 셈에서 뺌)
     void OnDestroy()
     {
+        if (!live) return;
+        live = false;
         active--;
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
     }

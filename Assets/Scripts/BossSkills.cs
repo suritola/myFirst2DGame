@@ -108,8 +108,8 @@ public class BossSkills : MonoBehaviour
             if (!Alive) yield break;
             foreach (Vector3 at in spots)
             {
-                Fx.Play("fx_spike", at + Vector3.up * 0.7f, 2.6f, new Color(0.6f, 0.95f, 1f), 18f);
-                Fx.Play("fx_orb", at, 1f, new Color(0.7f, 0.9f, 1f), 18f);
+                Fx.Spawn("fx_spike", at + Vector3.up * 0.7f, 2.6f, new Color(0.6f, 0.95f, 1f), 18f);
+                Fx.Spawn("fx_orb", at, 1f, new Color(0.7f, 0.9f, 1f), 18f);
                 Hostile.HitCircle(at, 1.3f, 15f * Power);
             }
             Hostile.Play("crack", 0.5f, 1.2f + w * 0.1f);
@@ -154,7 +154,7 @@ public class BossSkills : MonoBehaviour
             if (pass == 0) yield return Windup(bone, 0.8f);
             else yield return new WaitForSeconds(0.8f);
             if (!Alive) yield break;
-            foreach (Vector3 at in spots) Fx.Play("fx_spike", at + Vector3.up * 0.6f, 2.2f, new Color(1f, 0.97f, 0.88f), 20f);
+            foreach (Vector3 at in spots) Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.2f, new Color(1f, 0.97f, 0.88f), 20f);
             PlayerController pl = Hostile.Player;
             if (pl != null)
                 foreach (Vector3 at in spots)
@@ -276,13 +276,13 @@ public class BossSkills : MonoBehaviour
         Hostile.Burst(home, blastRadius, violet);
         ShockRing.Spawn(home, 1f, blastRadius * 1.6f, 0.6f, cyan, 0.5f);
         ShockRing.Spawn(home, 0.5f, blastRadius * 1.1f, 0.45f, Color.white, 0.3f);
-        Fx.Play("fx_soulburst", home, blastRadius * 2.4f, Color.white, 14f);
+        Fx.Spawn("fx_soulburst", home, blastRadius * 2.4f, Color.white, 14f);
         // 폭발 뒤 바깥 고리에서 가시가 솟음
         for (int i = 0; i < 20; i++)
         {
             float a = i * 18f * Mathf.Deg2Rad;
             Vector3 at = home + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (blastRadius + 1.5f);
-            Fx.Play("fx_spike", at + Vector3.up * 0.7f, 2.6f, i % 2 == 0 ? cyan : violet, 16f);
+            Fx.Spawn("fx_spike", at + Vector3.up * 0.7f, 2.6f, i % 2 == 0 ? cyan : violet, 16f);
         }
         for (int i = 0; i < 16; i++) SoulWisp.Spawn(home, home + (Vector3)(Random.insideUnitCircle.normalized * 9f), Random.value < 0.5f ? cyan : violet, true);
         Hostile.Play("boom", 1f, 0.6f);
@@ -325,7 +325,7 @@ public class BossSkills : MonoBehaviour
 
         Vector3 start = transform.position;
         Hostile.Play("whoosh", 0.7f, 0.6f);
-        Fx.Play("fx_puddle", start, 3f * SlimeSize, Acid, 14f);
+        Fx.Spawn("fx_puddle", start, 3f * SlimeSize, Acid, 14f);
         // 위로 솟구침
         for (float t = 0f; t < 0.3f; t += Time.deltaTime)
         {
@@ -342,8 +342,8 @@ public class BossSkills : MonoBehaviour
         transform.position = target;
         if (!Alive) yield break;
         Hostile.HitCircle(target, r, 30f * Power);
-        Fx.Play("fx_shock", target, r * 2.6f, Acid, 18f);
-        Fx.Play("fx_puddle", target, r * 1.3f, Acid, 12f);
+        Fx.Spawn("fx_shock", target, r * 2.6f, Acid, 18f);
+        Fx.Spawn("fx_puddle", target, r * 1.3f, Acid, 12f);
         HazardZone.Spawn(target, r * 0.8f, 3f, 10f, Acid, "fx_puddle", 0.7f);
         Hostile.Play("thump", 1f, 0.6f);
         Hostile.Shake(0.2f);           // 킹 슬라임의 유일한 화면 흔들림
@@ -367,7 +367,7 @@ public class BossSkills : MonoBehaviour
         foreach (Vector3 at in spots)
         {
             Hostile.HitCircle(at, 2.2f, 14f * Power);
-            Fx.Play("fx_cloud", at, 4f, Acid, 16f);
+            Fx.Spawn("fx_cloud", at, 4f, Acid, 16f);
             HazardZone.Spawn(at, 1.8f, 3.5f, 8f, Acid, "fx_puddle", 0.75f);
         }
         Hostile.Play("boom", 0.4f, 1.4f);
@@ -399,7 +399,7 @@ public class BossSkills : MonoBehaviour
             yield return null;
         }
         transform.rotation = Quaternion.identity;
-        Fx.Play("fx_shock", transform.position, 6f * SlimeSize, Acid, 18f);
+        Fx.Spawn("fx_shock", transform.position, 6f * SlimeSize, Acid, 18f);
     }
 
     // 특수: 슬라임 폭우 - 빠른 대점프 3연속
@@ -432,12 +432,12 @@ public class BossSkills : MonoBehaviour
             transform.position = Vector3.Lerp(start, end, t / 0.45f);
             if (Hostile.Glow != null)
                 FlameParticle.Spawn(Hostile.Glow, transform.position + (Vector3)Random.insideUnitCircle, Random.insideUnitCircle * 2f, 0.5f, 0.08f, 0.35f, false);
-            if (Random.value < 0.3f) Fx.Play("fx_explosion", transform.position + (Vector3)(Random.insideUnitCircle * 1.2f), 2.2f, Color.white, 20f);
+            if (Random.value < 0.3f) Fx.Spawn("fx_explosion", transform.position + (Vector3)(Random.insideUnitCircle * 1.2f), 2.2f, Color.white, 20f);
             if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.4f) hit = p.TryHit(35f * Power);
             yield return null;
         }
         Hostile.Burst(transform.position, 3f, Fire, true);
-        Fx.Play("fx_shock", transform.position, 7f, new Color(1f, 0.55f, 0.2f), 18f);
+        Fx.Spawn("fx_shock", transform.position, 7f, new Color(1f, 0.55f, 0.2f), 18f);
     }
 
     // 운석 낙하: 플레이어 주변에 차례로 떨어지는 운석
@@ -472,7 +472,7 @@ public class BossSkills : MonoBehaviour
         }
         if (rock != null) Destroy(rock);
         Hostile.HitCircle(spot, r, 28f * Power);
-        Fx.Play("fx_explosion", spot, r * 2.6f, Color.white, 16f);
+        Fx.Spawn("fx_explosion", spot, r * 2.6f, Color.white, 16f);
         Hostile.Burst(spot, r, Fire, true);
         Hostile.Play("boom", 0.6f, 0.9f);
         Hostile.Shake(0.15f);          // 지옥의 군주의 유일한 화면 흔들림
@@ -494,7 +494,7 @@ public class BossSkills : MonoBehaviour
         if (!Alive) yield break;
 
         Hostile.Play("boom", 0.8f, 0.6f);
-        Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
+        Fx.Spawn("fx_explosion", transform.position, 5f, Color.white, 16f);
         LineRenderer[] wave = Arcs(gapAt, gapSize, 1f, Fire, 1.2f);
         bool hit = false;
         Vector3 center = transform.position;
@@ -554,7 +554,7 @@ public class BossSkills : MonoBehaviour
         Hostile.Play("flame", 0.9f, 0.7f);
         foreach (LineRenderer b in beams) b.startWidth = b.endWidth = 0.6f;
         FxAnim[] pixelBeams = new FxAnim[4];
-        Fx.Play("fx_explosion", transform.position, 5f, Color.white, 16f);
+        Fx.Spawn("fx_explosion", transform.position, 5f, Color.white, 16f);
         for (float t = 0f; t < 5f && Alive; t += Time.deltaTime)
         {
             angle += spin * Time.deltaTime;
@@ -622,7 +622,7 @@ public class BossSkills : MonoBehaviour
                 Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
                 Vector3 at = c + (Vector3)(d * k);
                 if (Hostile.IsWall(at)) continue;
-                Fx.Play("fx_soulchain", at + Vector3.up * 1.5f, 3.2f, Color.white, 18f, 0f, 14);
+                Fx.Spawn("fx_soulchain", at + Vector3.up * 1.5f, 3.2f, Color.white, 18f, 0f, 14);
                 if (!hit) hit = Hostile.HitCircle(at, 0.9f, 16f * Power);
             }
             Hostile.Play("clank", 0.25f, 1.3f + k * 0.03f);
@@ -648,8 +648,8 @@ public class BossSkills : MonoBehaviour
         bool hit = false;
         foreach (Vector3 s in spots)
         {
-            Fx.Play("fx_bonehand", s + Vector3.up * 0.9f, 2.6f, Color.white, 14f, 0f, 14);
-            Fx.Play("fx_smoke", s, 2f, new Color(0.5f, 0.45f, 0.5f, 0.7f), 18f);
+            Fx.Spawn("fx_bonehand", s + Vector3.up * 0.9f, 2.6f, Color.white, 14f, 0f, 14);
+            Fx.Spawn("fx_smoke", s, 2f, new Color(0.5f, 0.45f, 0.5f, 0.7f), 18f);
             if (!hit && Hostile.HitCircle(s, 1.4f, 16f * Power)) { hit = true; p.Slow(0.45f, 1.6f); }
         }
         Hostile.Play("crack", 0.6f, 0.8f);
@@ -674,7 +674,7 @@ public class BossSkills : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         for (int i = 0; i < n && Alive; i++)
         {
-            Fx.Play("fx_firepillar", spots[i] + Vector3.up * 1.8f, 4f, Color.white, 18f, 0f, 14);
+            Fx.Spawn("fx_firepillar", spots[i] + Vector3.up * 1.8f, 4f, Color.white, 18f, 0f, 14);
             Hostile.HitCircle(spots[i], 1.4f, 20f * Power);
             if (i % 3 == 0) Hostile.Play("ignite", 0.4f, 1.1f);
             yield return new WaitForSeconds(0.08f);
@@ -701,7 +701,7 @@ public class BossSkills : MonoBehaviour
             foreach (float s in spread)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
-                Fx.Play("fx_fissure", c + (Vector3)(d * k), 1f, Color.white, 10f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 3);
+                Fx.Spawn("fx_fissure", c + (Vector3)(d * k), 1f, Color.white, 10f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 3);
             }
             yield return new WaitForSeconds(0.03f);
         }
@@ -713,7 +713,7 @@ public class BossSkills : MonoBehaviour
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
                 Vector3 at = c + (Vector3)(d * k);
-                Fx.Play("fx_firepillar", at + Vector3.up * 1.2f, 2.6f, Color.white, 20f, 0f, 14);
+                Fx.Spawn("fx_firepillar", at + Vector3.up * 1.2f, 2.6f, Color.white, 20f, 0f, 14);
                 if (!hit) hit = Hostile.HitCircle(at, 1.1f, 22f * Power);
             }
         Hostile.Play("boom", 0.6f, 0.8f);
@@ -736,7 +736,7 @@ public class BossSkills : MonoBehaviour
             bool hit = false;
             foreach (Vector3 s in spots)
             {
-                Fx.Play("fx_geyser", s + Vector3.up * 1.7f, 3.8f, Color.white, 16f, 0f, 14);
+                Fx.Spawn("fx_geyser", s + Vector3.up * 1.7f, 3.8f, Color.white, 16f, 0f, 14);
                 if (!hit) hit = Hostile.HitCircle(s, 1.5f, 16f * Power);
             }
             Hostile.Play("whoosh", 0.5f, 1.2f);
@@ -762,7 +762,7 @@ public class BossSkills : MonoBehaviour
         }
         if (!Alive) yield break;
         Hostile.HitCircle(c, 2f, 24f * Power);
-        Fx.Play("fx_geyser", c + Vector3.up * 1.7f, 4.2f, Color.white, 16f, 0f, 14);
+        Fx.Spawn("fx_geyser", c + Vector3.up * 1.7f, 4.2f, Color.white, 16f, 0f, 14);
         Hostile.Burst(c, 2f, Acid);
         HazardZone.Spawn(c, 1.6f, 3f, 8f, Acid, "fx_puddle", 0.7f);
         Hostile.Play("boom", 0.5f, 1.4f);

@@ -20,7 +20,6 @@ public class Point : MonoBehaviour
 
         UpdatePointText();
 
-        Debug.Log("현재 점수: " + points);
     }
 
     void UpdatePointText()

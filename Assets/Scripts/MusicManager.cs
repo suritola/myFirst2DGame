@@ -42,10 +42,16 @@ public class MusicManager : MonoBehaviour
         return s;
     }
 
+    int sceneHandle = -1;
+    string sceneName = "";
+
     // 지금 틀어야 할 곡
     string Wanted()
     {
-        string scene = SceneManager.GetActiveScene().name;
+        // 장면 이름은 가져올 때마다 새 문자열이 생기므로, 장면이 바뀔 때만 다시 가져옴
+        Scene active = SceneManager.GetActiveScene();
+        if (active.handle != sceneHandle) { sceneHandle = active.handle; sceneName = active.name; }
+        string scene = sceneName;
         if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null && spawner.bossSpawned && !spawner.bossCleared) return "bgm_boss";

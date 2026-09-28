@@ -84,7 +84,8 @@ public partial class LevelShop : MonoBehaviour
     }
     void Update()
     {
-        setAbilitys();
+        // 카드 글(15장)은 창이 열려 있을 때만 새로 만듦 (닫혀 있을 때 매 프레임 만들던 문자열 쓰레기 제거)
+        if (IsOpen) setAbilitys();
         UpdateSelectLock();
 
         // 클릭으로 고른 카드를 스페이스바로 확정
@@ -300,6 +301,7 @@ public partial class LevelShop : MonoBehaviour
 
     public void openLevelShop()
     {
+        setAbilitys();                      // 창을 열 때 최신 수치로
         
         LvshopPanel.SetActive(true);
         LockSelection();
