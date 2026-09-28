@@ -142,8 +142,7 @@ public class StageManager : MonoBehaviour
         specialPanel.SetActive(true);
         specialTree.Open(specials, OnPickSpecial);
         while (pendingPicks == null) yield return null;
-        chosenSpecials = pendingPicks;
-        if (specials != null) specials.Equip(chosenSpecials);
+        ApplyPicks(pendingPicks);
         TooltipUI.Hide();
         specialPanel.SetActive(false);
         Time.timeScale = before;           // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
@@ -192,8 +191,10 @@ public class StageManager : MonoBehaviour
     }
 
     // 가진 능력은 진화, 새 능력은 장착
-    void OnUpgradeConfirm(int[] ids)
+    // 고른 능력: 가진 것은 진화, 새것은 장착
+    void ApplyPicks(int[] ids)
     {
+        if (specials == null) { chosenSpecials = ids; return; }
         List<int> fresh = new List<int>();
         int evolvedCount = 0;
         foreach (int id in ids)
@@ -203,6 +204,11 @@ public class StageManager : MonoBehaviour
         }
         if (fresh.Count > 0) specials.Equip(fresh);
         chosenSpecials = new List<int>(specials.EquippedIds).ToArray();
+    }
+
+    void OnUpgradeConfirm(int[] ids)
+    {
+        ApplyPicks(ids);
         specialPoints = Mathf.Max(0, specialPoints - ids.Length);
         CloseUpgrade();
     }
@@ -388,8 +394,7 @@ public class StageManager : MonoBehaviour
         if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
         SetFade(0f);
         while (pendingPicks == null) yield return null;
-        chosenSpecials = pendingPicks;
-        if (specials != null) specials.Equip(chosenSpecials);
+        ApplyPicks(pendingPicks);
         TooltipUI.Hide();
         SetFade(1f);
         specialPanel.SetActive(false);

@@ -49,7 +49,8 @@ public class CharacterKit : MonoBehaviour
     //   도적: 0 도탄 표창 · 1 갈고리 표창 · 2 그림자 분신 · 3 표창 폭풍
     //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 바람 걸음 · 3 가시 덤불
     //   연금술사: 0 연쇄 반응 · 1 급속 냉동 · 2 호문쿨루스 · 3 파편 플라스크
-    public readonly int[] card = new int[4];
+    //   도적만 4: 사냥의 기세 (처치할 때마다 스킬 게이지)
+    public readonly int[] card = new int[5];
 
     // 캐릭터 능력치 상점이 올리는 값 (Shop.Kits)
     [HideInInspector] public float reachMul = 1f;     // 검사 긴 칼날: 베기 사거리 · 손에 든 검 크기
@@ -77,6 +78,7 @@ public class CharacterKit : MonoBehaviour
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
+        EnermyController.Killed -= OnKill;
         if (homunculus != null) Destroy(homunculus);
     }
 
@@ -86,6 +88,8 @@ public class CharacterKit : MonoBehaviour
         player.PlayerMaxHealth *= def.hp;
         player.PlayerHealth = player.PlayerMaxHealth;
         player.damage *= def.damage;
+        baseDamage = player.damage;
+        EnermyController.Killed += OnKill;
         player.ShootSpeed /= Mathf.Max(0.1f, def.attackSpeed);
         player.speed *= def.move;
         if (def.mag > 0) player.MaxBullet = def.mag;          // (거너의 mag 는 표시용, 실제 탄창은 인스펙터 값)
@@ -268,7 +272,7 @@ public class CharacterKit : MonoBehaviour
             }
             else
             {
-                if (bowLine != null) bowLine.enabled = false;
+                SpecialFeedback.Hide(bowLine);
                 return;
             }
         }
@@ -282,15 +286,14 @@ public class CharacterKit : MonoBehaviour
         Vector2 dir = ((Vector2)(target - start)).normalized;
         PlayerLook.Draw(draw);
 
-        // 겨누는 선: 당길수록 길고 밝아짐, 가득 당기면 금색으로 반짝
-        if (bowLine == null) bowLine = Hostile.NewLine("BowDraw", Color.white, 0.08f, 17);
-        bowLine.enabled = true;
-        bowLine.positionCount = 2;
-        bowLine.SetPosition(0, start);
-        bowLine.SetPosition(1, start + (Vector3)(dir * (2f + 7f * draw)));
-        Color c = draw >= 1f ? new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f)) : new Color(0.7f, 1f, 0.6f, 0.2f + 0.5f * draw);
-        bowLine.startColor = bowLine.endColor = c;
-        bowLine.startWidth = bowLine.endWidth = 0.05f + 0.1f * draw;
+        // 겨누는 선: 시위를 당기는 동안만, 화면 끝까지 닿는 점선 (당길수록 밝고 굵게, 가득 당기면 금색으로 반짝)
+        Color c = draw >= 1f ? new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f)) : new Color(0.7f, 1f, 0.6f, 0.3f + 0.5f * draw);
+        SpecialFeedback sfx = SpecialAbilities.SharedFx;
+        if (sfx != null && Special != null)
+        {
+            if (bowLine == null) bowLine = sfx.NewLine("BowDraw", true, 17);
+            sfx.SetLine(bowLine, start, start + (Vector3)(dir * Special.ScreenEdgeDistance(start, dir)), c, 0.06f + 0.08f * draw);
+        }
         if (draw >= 1f && !fullPlayed)
         {
             fullPlayed = true;
@@ -302,7 +305,7 @@ public class CharacterKit : MonoBehaviour
 
         // 발사: 피해 30% → 250%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
         drawing = false;
-        bowLine.enabled = false;
+        SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
         float power = 0.3f + 2.2f * draw;
@@ -594,6 +597,19 @@ public class CharacterKit : MonoBehaviour
     }
 
     // ================================================================= 캐릭터 전용 레벨업 카드 (특수 능력)
+    // 도적 사냥의 기세: 처치할 때마다 스킬 게이지 (레벨마다 최대치의 1%, 지금 공격력이 처음보다 높을수록 더 · 최대 4배)
+    float baseDamage;
+    SkillGauge gaugeRef;
+
+    void OnKill(Vector3 pos)
+    {
+        if (card[4] <= 0 || player == null) return;
+        if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
+        if (gaugeRef == null || gaugeRef.IsFull()) return;
+        float power = Mathf.Clamp(Damage / Mathf.Max(0.01f, baseDamage), 1f, 4f);
+        gaugeRef.AddSkillPoint(gaugeRef.MaxSkillPoint * 0.01f * card[4] * power);
+    }
+
     public void CardPicked(int slot)
     {
         if (Id == CharacterId.Alchemist && slot == 2 && homunculus == null) StartCoroutine(Homunculus());

@@ -767,6 +767,17 @@ public partial class SpecialAbilities : MonoBehaviour
         if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
     }
 
+    // 진화 효과 설명 (번역된 문장). 거너 능력은 EvolveTexts, 캐릭터 능력(20~)은 설명의 마지막 "진화:" 줄
+    public static string EvolveText(int id)
+    {
+        if (id >= 0 && id < EvolveTexts.Length) return Loc.T(EvolveTexts[id]);
+        if (!IsKit(id)) return "";
+        string desc = Loc.T(KitDesc(id));
+        string last = desc.Substring(desc.LastIndexOf('\n') + 1);
+        int colon = last.IndexOfAny(new[] { ':', '：' });
+        return colon >= 0 ? last.Substring(colon + 1).Trim() : last;
+    }
+
     // 진화 효과 설명 (ID 순서, 한국어 원문 · 쓸 때 Loc.T로 번역)
     public static readonly string[] EvolveTexts =
     {

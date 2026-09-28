@@ -6,6 +6,8 @@ public partial class LevelShop
 {
     // 바뀌는 카드 번호
     const int PierceId = 0, GlareId = 3, MultiId = 6, KnockId = 7;
+    // 도적만 쓰는 다섯 번째 칸: 모두에게서 빠진 11번(피의 굶주림) 자리를 빌림
+    public const int HungerId = 11;
 
     class KitCard
     {
@@ -22,7 +24,7 @@ public partial class LevelShop
     public static System.Collections.Generic.List<(string name, string desc, int icon)> KitCardsFor(CharacterId who)
     {
         var list = new System.Collections.Generic.List<(string, string, int)>();
-        foreach (int id in new[] { PierceId, MultiId, KnockId, GlareId })
+        foreach (int id in new[] { PierceId, MultiId, KnockId, GlareId, HungerId })
         {
             KitCard c = KitCardOf(who, id);
             if (c != null) list.Add((c.name, c.desc, c.icon));
@@ -49,6 +51,7 @@ public partial class LevelShop
                     PierceId => Card("도탄 표창", "표창이 적에 맞으면 가까운 다른 적에게 튕겨 날아갑니다.\n( 레벨마다 튕기는 횟수 +1 )", 64, 3),
                     MultiId => Card("갈고리 표창", "표창에 맞은 적이 출혈을 입습니다.", 65, 3),
                     KnockId => Card("그림자 분신", "출혈 돌진을 시작한 자리에 분신이 남아 표창을 던집니다.\n( 레벨마다 지속 시간 +1초 )", 66, 3),
+                    HungerId => Card("사냥의 기세", "적을 처치할 때마다 스킬 게이지가 조금 찹니다.\n( 레벨마다 1%, 공격력이 오를수록 더 · 최대 4배 )", 76, 5),
                     GlareId => Card("표창 폭풍", "출혈 돌진이 끝나는 자리에서 표창이 사방으로 퍼집니다.\n( 레벨마다 표창 +4개 )", 67, 3),
                     _ => null,
                 };
@@ -82,7 +85,7 @@ public partial class LevelShop
 
     void KitSetAbilitys()
     {
-        foreach (int id in new[] { PierceId, GlareId, MultiId, KnockId })
+        foreach (int id in new[] { PierceId, GlareId, MultiId, KnockId, HungerId })
         {
             KitCard c = KitCardOf(id);
             if (c == null || id >= ability_name.Length) continue;
@@ -108,7 +111,7 @@ public partial class LevelShop
         if (c == null || kit == null) return false;
 
         // 카드 칸 → CharacterKit.card 번호 (0 관통 · 1 멀티 샷 · 2 밀어내기 · 3 노려보는 눈빛 자리)
-        int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : 3;
+        int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : id == HungerId ? 4 : 3;
         kit.card[slot]++;
         kit.CardPicked(slot);
         if (ability_level[id] >= c.max) ability_selected[id] = true;

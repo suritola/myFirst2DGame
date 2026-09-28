@@ -56,7 +56,7 @@ public partial class LevelShop : MonoBehaviour
         for (int i = 0; i< Total_abilitys; i++)
         {
             // 11번(처치 시 회복)은 더 이상 나오지 않음
-            ability_selected[i] = i == 11;
+            ability_selected[i] = i == 11 && KitIcon(11) == null;
         }
         //레벨업 능력들
         setAbilitys();

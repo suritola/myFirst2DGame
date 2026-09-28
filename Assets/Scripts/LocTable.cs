@@ -716,6 +716,8 @@ public static class LocTable
         { "표식 초기화!", L("Mark reset!", "刻印リセット！", "印记重置！") },
         { "회피!", L("Dodge!", "回避！", "闪避！") },
         // v3.5 캐릭터 전용 레벨업 카드 (특수 능력)
+        { "사냥의 기세", L("Hunter's Momentum", "狩りの勢い", "狩猎气势") },
+        { "적을 처치할 때마다 스킬 게이지가 조금 찹니다.\n( 레벨마다 1%, 공격력이 오를수록 더 · 최대 4배 )", L("Each kill fills the skill gauge a little.\n( 1% per level, more as your attack rises · up to 4x )", "敵を倒すたびにスキルゲージが少し溜まります。\n( レベルごとに1%、攻撃力が上がるほど増加・最大4倍 )", "每次击杀少量充能技能槽。\n( 每级1%，攻击力越高越多 · 最多4倍 )") },
         { "날아가는 검기", L("Flying Slash", "飛ぶ剣気", "飞行剑气") },
         { "평타를 휘두르면 검기가 날아가 적을 꿰뚫습니다.\n( 레벨마다 검기 피해 증가 )", L("Each swing sends out a piercing sword wave.\n( Wave damage up each level )", "通常攻撃で剣気が飛び、敵を貫きます。\n( レベルごとに剣気のダメージ増加 )", "普攻挥剑时射出穿透剑气。\n( 每级提高剑气伤害 )") },
         { "흡혈 베기", L("Vampiric Slash", "吸血斬り", "吸血斩") },

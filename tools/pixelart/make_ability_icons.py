@@ -239,6 +239,12 @@ def glyph(img, g):
     elif g == 'c_homunculus':
         disc(img, 16, 18, 7, GR); disc(img, 13, 16, 1.5, K); disc(img, 19, 16, 1.5, K)
         line(img, 16, 11, 16, 6, GR, 1); disc(img, 16, 5, 1.6, Y)
+    elif g == 'c_momentum':
+        star(img, 12, 12, 7, G)
+        img.rect(7, 22, 18, 4, K)
+        for x in range(8, 22): 
+            for y in range(23, 25): img.set(x, y, C)
+        line(img, 20, 7, 26, 13, Y, 1.4); line(img, 26, 13, 24, 7, Y, 1.4)
     elif g == 'c_shrapnel':
         flask(img, GR)
         for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
@@ -252,7 +258,7 @@ ICONS = {
     60: ('c_wave', 'sw'), 61: ('c_vamp', 'sw'), 62: ('c_parry', 'sw'), 63: ('c_storm', 'sw'),
     64: ('c_ricochet', 'rg'), 65: ('c_barb', 'rg'), 66: ('c_clone', 'rg'), 67: ('c_starstorm', 'rg'),
     68: ('c_split', 'ar'), 69: ('c_echo', 'ar'), 70: ('c_windstep', 'ar'), 71: ('c_thorn', 'ar'),
-    72: ('c_chain', 'al'), 73: ('c_freeze', 'al'), 74: ('c_homunculus', 'al'), 75: ('c_shrapnel', 'al'),
+    72: ('c_chain', 'al'), 73: ('c_freeze', 'al'), 74: ('c_homunculus', 'al'), 75: ('c_shrapnel', 'al'), 76: ('c_momentum', 'rg'),
 }
 BG = {'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 

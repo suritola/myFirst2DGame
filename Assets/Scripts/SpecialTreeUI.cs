@@ -193,6 +193,7 @@ public class SpecialTreeUI : MonoBehaviour
         cb.pressedColor = new Color(0.72f, 0.62f, 0.48f);
         cb.selectedColor = Color.white;
         b.colors = cb;
+        b.navigation = new Navigation { mode = Navigation.Mode.None };
         b.onClick.AddListener(() => Toggle(id));
 
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
@@ -274,6 +275,7 @@ public class SpecialTreeUI : MonoBehaviour
         cb.highlightedColor = new Color(1f, 0.9f, 0.62f);
         cb.disabledColor = new Color(0.45f, 0.42f, 0.48f, 0.8f);
         confirm.colors = cb;
+        confirm.navigation = new Navigation { mode = Navigation.Mode.None };
         confirm.onClick.AddListener(() => { if (CanConfirm) onConfirm?.Invoke(picked.ToArray()); });
         confirmText = Text(brt, "", 26f, Gold, Vector2.zero, new Vector2(210f, 60f), TextAlignmentOptions.Center);
 
@@ -291,12 +293,13 @@ public class SpecialTreeUI : MonoBehaviour
         ColorBlock ccb = close.colors;
         ccb.highlightedColor = new Color(1f, 0.9f, 0.62f);
         close.colors = ccb;
+        close.navigation = new Navigation { mode = Navigation.Mode.None };
         close.onClick.AddListener(() => onCancel?.Invoke());
         Text(crt, Loc.T("닫기"), 24f, Parch, Vector2.zero, new Vector2(150f, 50f), TextAlignmentOptions.Center);
         closeButton.SetActive(false);
     }
 
-    bool IsOwned(int id) => upgradeMode && specials.Has(id);
+    bool IsOwned(int id) => specials.Has(id);
     bool IsMaxed(int id) => IsOwned(id) && specials.IsEvolved(id);
 
     // 새로 고른 스킬까지 합쳐 스킬 칸(E·F·Space)이 가득 찼는지
@@ -311,6 +314,8 @@ public class SpecialTreeUI : MonoBehaviour
     // 노드를 누르면 선택/해제 (포인트 안에서)
     void Toggle(int id)
     {
+        // 누른 노드에 포커스가 남으면 Space · Enter 로 다시 눌리므로 바로 풂
+        if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         string note = null;
         if (picked.Contains(id))
         {
@@ -342,13 +347,16 @@ public class SpecialTreeUI : MonoBehaviour
         for (int i = 0; i < nodeFrames.Count; i++)
         {
             if (nodeFrames[i] == null) continue;
-            nodeFrames[i].color = picked.Contains(i) ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : Color.white;
-            nodeTags[i].text = IsMaxed(i) ? Loc.T("진화 완료") : IsOwned(i) ? (picked.Contains(i) ? Loc.T("진화!") : Loc.T("진화 가능")) : "";
+            bool on = picked.Contains(i);
+            nodeFrames[i].color = on ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : new Color(0.8f, 0.78f, 0.82f);
+            nodeFrames[i].transform.localScale = Vector3.one * (on ? 1.15f : 1f);
+            nodeTags[i].text = IsMaxed(i) ? Loc.T("진화 완료") : IsOwned(i) ? (on ? Loc.T("진화!") : Loc.T("진화 가능")) : on ? Loc.T("선택됨") : "";
             nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
-            nodeTags[i].color = picked.Contains(i) ? Selected : Owned;
+            nodeBadges[i].GetComponent<Image>().color = on ? new Color(0.55f, 0.35f, 0.05f, 0.98f) : new Color(0.25f, 0.2f, 0.3f, 0.95f);
+            nodeTags[i].color = on ? new Color(1f, 0.95f, 0.7f) : IsMaxed(i) ? new Color(0.75f, 0.72f, 0.78f) : Owned;
             nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
-                ? Loc.T("진화: ") + Loc.T(SpecialAbilities.EvolveTexts[i])
-                : specials.abilities[i].description;
+                ? Loc.T("진화: ") + SpecialAbilities.EvolveText(i)
+                : Loc.T(specials.abilities[i].description);
         }
 
         int left = pointsNow - picked.Count;
@@ -380,7 +388,7 @@ public class SpecialTreeUI : MonoBehaviour
         bool evolving = IsOwned(id) && !IsMaxed(id);
         detailName.text = Loc.T(def.name) + (evolving ? Loc.T(" → 진화") : "");
         detailKind.text = KindName(def.kind) + (picked.Contains(id) ? Loc.T("  (선택됨)") : IsMaxed(id) ? Loc.T("  (진화 완료)") : "");
-        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + Loc.T(SpecialAbilities.EvolveTexts[id]) : Loc.T(def.description);
+        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + SpecialAbilities.EvolveText(id) : Loc.T(def.description);
         detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
     }
 
