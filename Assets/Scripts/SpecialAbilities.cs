@@ -946,7 +946,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 특수 능력은 캐릭터 공격력 배율(검사 3배 · 도적 0.7배 …)을 빼고 계산 (캐릭터끼리 특수 능력 세기가 같게)
     float Damage => player.damage * player.damageMultiplier / Mathf.Max(0.1f, CharacterData.Current.damage);
     // 들고 있는 무기의 강화가 반영된 피해
-    float WDamage => Damage * WeaponDamageMul(CurrentWeapon);
+    float WDamage => Damage * WeaponDamageMul(CurrentWeapon) * InertBonus;      // 안 맞게 된 거너 카드 → 무기 피해 (SpecialAbilities.Fit)
     bool OverUI => !GameInput.Auto && UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
 
     // ================================================================= weapons

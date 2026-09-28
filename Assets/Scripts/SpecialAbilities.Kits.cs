@@ -1034,7 +1034,8 @@ public partial class SpecialAbilities
     // 적이 받는 피해 (EnermyController.DamageHook): 약점 간파 · 도적 급소 노리기 · 궁수 사냥감 표식
     float KitDamageHook(EnermyController e, float damage)
     {
-        if (!CharacterData.IsGunner)
+        // 치명타 · 처형: 거너 총알은 총알에서 (GunCards), 그 밖(다른 캐릭터 · 거너 산탄총 · 용암 유탄)은 여기서
+        if (!CharacterData.IsGunner || !BulletWeapon)
         {
             if (TreeCrit > 0f && Random.value < TreeCrit)
             {

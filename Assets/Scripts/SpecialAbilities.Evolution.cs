@@ -324,6 +324,7 @@ public partial class SpecialAbilities
         Chain(t, "g.exp", 2, 3, "g.exp1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", new[] { 28, 46 }, LvIcon(4), () => TreeInsight += 5);
         t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
         t.Add(Node("g.interest2", "g.interest1", 5, "이자 II", "이자 +5%", 56, LvIcon(1), () => interestRate += 0.05f));
+        ApplyFit(t);                                    // 지금 무기에 쓸모없는 칸은 숨김 (SpecialAbilities.Fit)
         string[] rec = RecommendedPrefixes();
         foreach (SoulNode n in t)
             foreach (string r in rec)

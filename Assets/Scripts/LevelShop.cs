@@ -376,7 +376,8 @@ public partial class LevelShop : MonoBehaviour
     {
         // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 비상 보급)
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
-        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i]) open.Add(i);
+        // 지금 무기에 안 맞는 카드는 빼고 (예: 영혼 저격총에 유도 탄두) — 무기가 바뀌면 다시 나옴
+        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i)) open.Add(i);
         int Draw()
         {
             if (open.Count == 0) return SupplyId;

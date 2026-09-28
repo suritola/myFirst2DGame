@@ -1328,5 +1328,8 @@ public static class LocTable
         { "명중하면 노란 전기, 적이 쓰러지면 작은 번개가 칩니다. 코인에 전기 튀는 소리.", L("Yellow sparks on hit, small lightning strikes when enemies fall. Coins crackle with electricity.", "命中すると黄色い電気、敵が倒れると小さな雷が落ちます。コインに電気の弾ける音。", "命中时黄色电光，敌人倒下时落下小闪电。金币带有电流噼啪声。") },
         { "별의 축복", L("Starlight Blessing", "星の祝福", "星辰祝福") },
         { "명중 불꽃이 무지갯빛으로 바뀌고, 적이 쓰러지면 별이 터지며 맑은 종소리가 울립니다. 코인은 별가루로 반짝입니다.", L("Hit sparks turn rainbow, enemies burst into stars with a clear bell when they fall, and coins glitter with stardust.", "命中の火花が虹色になり、敵が倒れると星が弾けて澄んだ鐘の音が響きます。コインは星屑できらめきます。", "命中火花变为彩虹色，敌人倒下时星光迸发并响起清脆钟声。金币闪耀星尘。") },
+        // 1.8.4 무기에 맞게 실시간으로
+        { "지금 무기에는 효과가 없습니다", L("No effect with your current weapon", "今の武器には効果がありません", "对当前武器无效") },
+        { "지금 무기에는 맞지 않아 대신 단계마다 무기 피해 +6%", L("Doesn't fit your current weapon, so it grants +6% weapon damage per level instead", "今の武器に合わないため、代わりに段階ごとに武器ダメージ +6%", "不适合当前武器，改为每级武器伤害 +6%") },
     };
 }

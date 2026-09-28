@@ -152,7 +152,18 @@ public partial class LevelShop
         KitCard c = KitCardOf(id);
         if (c == null) return false;
         tip = KitText(c, ability_level[id]);
+        if (CharacterData.IsGunner && ability_level[id] > 0 && !KitFits(id))
+            tip += "\n<color=#9fd8ff>" + Loc.T("지금 무기에는 맞지 않아 대신 단계마다 무기 피해 +6%") + "</color>";
         return true;
+    }
+
+    // 거너 카드가 지금 무기에 맞는지 (안 맞으면 뽑히지 않음). 다른 카드는 늘 true
+    public static bool KitFits(int id)
+    {
+        if (!CharacterData.IsGunner || SpecialAbilities.SharedInstance == null || KitCardOf(id) == null) return true;
+        int g = id == PierceId ? SpecialAbilities.GunRicochet : id == MultiId ? SpecialAbilities.GunExplosive : id == KnockId ? SpecialAbilities.GunIncendiary
+              : id == GlareId ? SpecialAbilities.GunHoming : id == ExtraAId ? SpecialAbilities.GunShock : SpecialAbilities.GunReloadWave;
+        return SpecialAbilities.SharedInstance.CardFits(g);
     }
 
     // 캐릭터 카드면 효과를 적용하고 true
