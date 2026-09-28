@@ -94,6 +94,72 @@ public partial class LevelShop : MonoBehaviour
             pendingSlot = -1;
             onSelect(what);
         }
+        // 쌓인 레벨업: [Space]로 하나씩 고름 (상점 가판대 옆이면 상점이 먼저)
+        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopStall.PlayerNear && !ShopOpen && KeyBindings.Down(GameAction.Interact))
+        {
+            PendingLevels--;
+            openLevelShop();
+        }
+        UpdatePendingBadge();
+    }
+
+    // ================================================================= 쌓인 레벨업
+    public int PendingLevels { get; private set; }
+
+    public void AddPending(int n = 1)
+    {
+        PendingLevels += n;
+        Hints.Show("levelup", "레벨이 오르면 능력 포인트가 쌓입니다. [{INTERACT}]를 눌러 원할 때 능력을 고르세요.");
+    }
+
+    GameObject pendingBadge;
+    TextMeshProUGUI pendingText;
+
+    void UpdatePendingBadge()
+    {
+        bool show = PendingLevels > 0 && !IsOpen;
+        if (!show)
+        {
+            if (pendingBadge != null && pendingBadge.activeSelf) pendingBadge.SetActive(false);
+            return;
+        }
+        if (pendingBadge == null)
+        {
+            Canvas canvas = LvshopPanel != null ? LvshopPanel.GetComponentInParent<Canvas>(true) : null;
+            if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+            canvas = canvas.rootCanvas;
+            pendingBadge = new GameObject("LevelUpPending", typeof(RectTransform), typeof(Image));
+            RectTransform r = pendingBadge.GetComponent<RectTransform>();
+            r.SetParent(canvas.transform, false);
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+            r.pivot = new Vector2(0.5f, 0f);
+            r.anchoredPosition = new Vector2(0f, 110f);
+            r.sizeDelta = new Vector2(560f, 48f);
+            Image bg = pendingBadge.GetComponent<Image>();
+            bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
+            bg.raycastTarget = false;
+            GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform tr = tg.GetComponent<RectTransform>();
+            tr.SetParent(r, false);
+            tr.anchorMin = Vector2.zero;
+            tr.anchorMax = Vector2.one;
+            tr.offsetMin = new Vector2(12f, 2f);
+            tr.offsetMax = new Vector2(-12f, -2f);
+            pendingText = tg.GetComponent<TextMeshProUGUI>();
+            UIKit.EnsureStyle();
+            if (UIKit.Font != null) pendingText.font = UIKit.Font;
+            if (UIKit.FontMaterial != null) pendingText.fontSharedMaterial = UIKit.FontMaterial;
+            pendingText.enableAutoSizing = true;
+            pendingText.fontSizeMin = 14f;
+            pendingText.fontSizeMax = 24f;
+            pendingText.alignment = TextAlignmentOptions.Center;
+            pendingText.raycastTarget = false;
+        }
+        if (!pendingBadge.activeSelf) pendingBadge.SetActive(true);
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
+        pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
+        pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("능력 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "");
     }
 
     // 클릭한 카드 (0~2, -1 = 아직 없음)

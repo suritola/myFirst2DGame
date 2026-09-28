@@ -468,8 +468,11 @@ public class CharacterKit : MonoBehaviour
         }
     }
 
+    float lastUlt = -99f;
+
     void Spend(SkillGauge gauge)
     {
+        lastUlt = Time.time;
         gauge.ResetSkillPoint();
         player.RaiseUltUsed();
     }
@@ -503,7 +506,7 @@ public class CharacterKit : MonoBehaviour
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐
-            float dmg = Damage * (3f + 6f * charge) * UltMul;
+            float dmg = Damage * (2f + 4f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
             Fx.Play("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Play("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -696,7 +699,7 @@ public class CharacterKit : MonoBehaviour
 
     void OnKill(Vector3 pos)
     {
-        if (card[4] <= 0 || player == null) return;
+        if (card[4] <= 0 || player == null || Time.time - lastUlt < 1f) return;     // 필살기 직후 1초는 쉼
         if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
         if (gaugeRef == null || gaugeRef.IsFull()) return;
         float power = Mathf.Clamp(Damage / Mathf.Max(0.01f, baseDamage), 1f, 4f);

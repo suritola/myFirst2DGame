@@ -28,7 +28,7 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 
 ### 3. Steamworks 설정 (partner.steamgames.com)
 - [ ] **SteamPipe → 디포**: 디포 1개 (Windows, 모든 언어)
-- [ ] **설치 → 일반**: 실행 옵션 — 실행 파일 `Gun Saver.exe`, OS Windows, 64비트
+- [ ] **설치 → 일반**: 실행 옵션 — 실행 파일 `Soul Saver.exe` (1.7.3 전에는 `Gun Saver.exe`), OS Windows, 64비트
 - [ ] **스탯 및 업적**: [achievements.md](achievements.md) 대로 26개 만들고 **게시**
 - [ ] **상점 페이지**: [store-page.md](store-page.md) 글, `art/` 이미지 올리기
 - [ ] **가격** 정하기 · **출시일** 정하기

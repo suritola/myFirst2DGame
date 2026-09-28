@@ -35,7 +35,7 @@ public class EnemySpawner : MonoBehaviour
 
     [Header("중간 보스 (2장부터, 페이즈가 오를 때마다)")]
     public int midBossFromStage = 1;
-    public float midBossHpMultiplier = 12f;
+    public float midBossHpMultiplier = 7f;
     public float midBossDamageMultiplier = 1.5f;
     public float midBossScale = 1.8f;
     public Color midBossColor = new Color(1f, 0.72f, 0.5f);

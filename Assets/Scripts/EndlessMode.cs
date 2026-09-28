@@ -38,21 +38,18 @@ public class EndlessMode : MonoBehaviour
         StartCoroutine(StartAtLevel(10));
     }
 
-    // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 카드를 차례로 고름
+    // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 포인트가 쌓임
     System.Collections.IEnumerator StartAtLevel(int level)
     {
         PlayerController p = FindFirstObjectByType<PlayerController>();
         LevelShop shop = FindFirstObjectByType<LevelShop>();
         if (p == null || shop == null) yield break;
-        while (p.level < level)
-        {
-            while (shop.IsOpen || Time.timeScale == 0f) yield return null;
-            p.level++;
-            p.needEXP = 50 + p.level * 50;
-            Juice.LevelUp(p.transform.position);
-            shop.openLevelShop();
-            yield return null;
-        }
+        while (shop.IsOpen || Time.timeScale == 0f) yield return null;
+        int add = Mathf.Max(0, level - p.level);
+        p.level += add;
+        p.needEXP = 50 + p.level * 50;
+        Juice.LevelUp(p.transform.position);
+        shop.AddPending(add);               // 올라간 레벨만큼 쌓아 두고 [Space]로 하나씩 고름
     }
 
     void Update()

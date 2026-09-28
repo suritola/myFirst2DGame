@@ -36,7 +36,7 @@ public partial class SpecialAbilities
         ("살상 와이어", SpecialKind.Weapon, "클릭한 곳에 와이어 고리를 박습니다. 고리를 잇는 줄에 닿은 적은 계속 베입니다. (고리 3개)\n진화: 고리 5개"),
         ("죽음의 표식", SpecialKind.Skill, "마우스 근처의 적에게 표식. 3초 뒤 큰 피해로 터집니다. 그 전에 쓰러지면 쿨타임 초기화. (공격력 1000%)\n진화: 표식 세 개"),
         ("마름쇠", SpecialKind.Skill, "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 두 배"),
-        ("소매치기", SpecialKind.Skill, "순식간에 주변 적들 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 더 떨어뜨립니다.\n진화: 더 많은 적, 코인 두 배"),
+        ("소매치기", SpecialKind.Skill, "순식간에 주변 적 6명 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 1개 더 떨어뜨립니다.\n진화: 8명"),
         ("회피 본능", SpecialKind.Passive, "받는 공격을 20% 확률로 피합니다.\n진화: 30%"),
         ("연쇄 처치", SpecialKind.Passive, "적을 처치하면 2초 동안 이동 속도 +20%, 모든 스킬 쿨타임 0.3초 감소.\n진화: 쿨타임 0.6초 감소"),
 
@@ -633,9 +633,9 @@ public partial class SpecialAbilities
                 break;
             case KitPickpocket:
                 {
-                    List<Transform> targets = NearestEnemies(pos, 7f, evo ? 10 : 6);
+                    List<Transform> targets = NearestEnemies(pos, 7f, evo ? 8 : 6);
                     if (targets.Count == 0) { NoTarget(pos); return true; }
-                    StartCoroutine(PickpocketRoutine(targets, evo ? 2 : 1));
+                    StartCoroutine(PickpocketRoutine(targets, 1));
                     StartCooldown(id, 12f);
                     break;
                 }

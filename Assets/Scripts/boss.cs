@@ -292,7 +292,7 @@ public class bosss : MonoBehaviour
 
 
         levelS.toggleLevelUp();
-        levelS.openLevelShop();
+        levelS.AddPending();                // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
     public GameObject hp;

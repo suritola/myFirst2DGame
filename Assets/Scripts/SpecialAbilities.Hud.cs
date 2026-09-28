@@ -375,20 +375,36 @@ public class RunClock : MonoBehaviour
 
     public static void Create()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        // 탄약 패널이 있는 화면 캔버스 (HUD 와 같은 곳)
+        Canvas canvas = null;
+        foreach (Canvas cv in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            if (cv.isRootCanvas && cv.renderMode != RenderMode.WorldSpace && cv.transform.Find("AmmoPanel") != null) { canvas = cv; break; }
+        if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null) return;
+        // 어두운 칸 위에 시간
+        GameObject box = new GameObject("RunClockBox", typeof(RectTransform), typeof(Image));
+        RectTransform br = box.GetComponent<RectTransform>();
+        br.SetParent(canvas.transform, false);
+        br.SetAsLastSibling();
+        br.anchorMin = br.anchorMax = new Vector2(0.5f, 1f);
+        br.pivot = new Vector2(0.5f, 1f);
+        br.sizeDelta = new Vector2(150f, 44f);
+        br.anchoredPosition = new Vector2(0f, -10f);
+        Image bg = box.GetComponent<Image>();
+        bg.color = new Color(0.05f, 0.04f, 0.07f, 0.7f);
+        bg.raycastTarget = false;
         GameObject go = new GameObject("RunClock", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform r = go.GetComponent<RectTransform>();
-        r.SetParent(canvas.transform, false);
-        r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
-        r.sizeDelta = new Vector2(300f, 40f);
-        r.anchoredPosition = new Vector2(0f, -30f);
+        r.SetParent(br, false);
+        r.anchorMin = Vector2.zero;
+        r.anchorMax = Vector2.one;
+        r.offsetMin = r.offsetMax = Vector2.zero;
         TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
         UIKit.EnsureStyle();
         if (UIKit.Font != null) t.font = UIKit.Font;
         if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;
-        t.fontSize = 28f;
-        t.color = new Color(1f, 0.9f, 0.7f);
+        t.fontSize = 30f;
+        t.color = new Color(1f, 0.92f, 0.75f);
         t.alignment = TextAlignmentOptions.Center;
         t.raycastTarget = false;
         RunClock c = go.AddComponent<RunClock>();

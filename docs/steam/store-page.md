@@ -4,7 +4,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 이미지는 `docs/steam/art/` (크기는 [README](README.md#이미지-규격) 참고).
 
 > 게임 이름은 v3.2부터 **Soul Saver** 입니다. (예전 이름 Gun Saver)
-> 게임 안의 제품 이름(productName)과 실행 파일 이름(`Gun Saver.exe`)은 저장 데이터 · 스팀 실행 설정이 깨지지 않도록 그대로 둡니다.
+> 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
 
 ## 기본 정보
 

@@ -526,7 +526,7 @@ public class StageManager : MonoBehaviour
         {
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
             r.pivot = new Vector2(0.5f, 1f);
-            r.anchoredPosition = new Vector2(0f, -70f);       // 플레이 시간 바로 아래
+            r.anchoredPosition = new Vector2(0f, -64f);       // 플레이 시간 바로 아래
             r.sizeDelta = new Vector2(760f, 72f);
         }
         Image bg = banner.GetComponent<Image>();
@@ -560,11 +560,11 @@ public class StageManager : MonoBehaviour
         {
             float k = t / 0.2f;
             if (bannerGroup != null) bannerGroup.alpha = k;
-            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(-50f, -70f, k));
+            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(-44f, -64f, k));
             yield return null;
         }
         if (bannerGroup != null) bannerGroup.alpha = 1f;
-        if (r != null) r.anchoredPosition = new Vector2(0f, -70f);
+        if (r != null) r.anchoredPosition = new Vector2(0f, -64f);
         yield return new WaitForSecondsRealtime(Mathf.Max(0.3f, seconds - 0.5f));
         for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
         {

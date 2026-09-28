@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 창 제목을 게임 이름(Soul Saver)으로
-// 제품 이름(productName)은 저장 위치 · 실행 파일 이름이 바뀌지 않도록 예전 이름(Gun Saver)을 그대로 둠
+// 제품 이름(productName)도 Soul Saver (1.7.3부터, 옛 저장은 SaveMigration 이 옮김)
 public static class WindowTitle
 {
     public const string GameName = "Soul Saver";

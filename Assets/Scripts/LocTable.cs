@@ -619,6 +619,10 @@ public static class LocTable
         { "출혈 돌진", L("Bleeding Dash", "出血突進", "出血突进") },
         { "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발)", L("Dash toward the mouse while invincible, making every enemy you pass bleed (instant)", "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（即発動）", "在无敌状态下朝鼠标方向突进，使途经的敌人流血（瞬发）") },
         { "높을수록 늦게 참", L("Higher = fills slower", "高いほど遅く溜まる", "越高积累越慢") },
+        // 1.7.3 레벨업 쌓기
+        { "능력 고르기", L("Choose ability", "能力を選ぶ", "选择能力") },
+        { "레벨업!", L("Level Up!", "レベルアップ！", "升级！") },
+        { "레벨이 오르면 능력 포인트가 쌓입니다. [{INTERACT}]를 눌러 원할 때 능력을 고르세요.", L("Leveling up stores ability points. Press [{INTERACT}] whenever you want to choose.", "レベルが上がると能力ポイントが貯まります。好きな時に[{INTERACT}]で選びましょう。", "升级会积攒能力点，随时按 [{INTERACT}] 选择能力。") },
         // 1.7.2 검사 근접 특성 · 설정 · 도움말 · 결과
         { "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복", L("Swings the longsword in a wide arc, cutting enemies directly. Melee traits: half damage taken while swinging · knocks cut enemies far back · heals a little per hit", "長剣を大きく振り、前方の敵を直接斬ります。近接特性: 振っている間は被ダメージ半減 · 斬った敵を大きく押し返す · 斬った分だけ少し回復", "大幅挥舞长剑直接斩击前方敌人。近战特性：挥砍时受到伤害减半 · 大幅击退被斩敌人 · 按斩中数量少量回复") },
         { "평타로 벤 적 하나당 회복량이 늘어납니다. (한 번에 최대 3마리)", L("Increases healing per enemy your swing hits. (up to 3 per swing)", "通常攻撃で斬った敵1体ごとの回復量が増えます。(1回につき最大3体)", "提高普攻每命中一个敌人的回复量。（每次最多3个）") },
@@ -805,7 +809,7 @@ public static class LocTable
         { "마름쇠", L("Caltrops", "撒菱", "铁蒺藜") },
         { "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 두 배", L("Scatter caltrops around you. Enemies that step on them are hurt and slowed.\nEvolved: double caltrops", "周囲に撒菱をばらまきます。踏んだ敵はダメージを受けて遅くなります。\n進化: 撒菱2倍", "在周围撒下铁蒺藜，踩中的敌人受伤并减速。\n进化：铁蒺藜翻倍") },
         { "소매치기", L("Pickpocket", "スリ", "扒窃") },
-        { "순식간에 주변 적들 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 더 떨어뜨립니다.\n진화: 더 많은 적, 코인 두 배", L("Dart between nearby enemies in an instant, cutting each. Robbed enemies drop extra coins when they fall.\nEvolved: more enemies, double coins", "一瞬で周囲の敵の間を駆け抜けて斬ります。盗まれた敵は倒れるとコインを多く落とします。\n進化: より多くの敵、コイン2倍", "瞬间穿梭于周围敌人之间逐一斩击，被扒窃的敌人倒下时掉落更多金币。\n进化：更多敌人，金币翻倍") },
+        { "순식간에 주변 적 6명 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 1개 더 떨어뜨립니다.\n진화: 8명", L("Dart between up to 6 nearby enemies in an instant, cutting each. Robbed enemies drop 1 extra coin when they fall.\nEvolved: 8 enemies", "一瞬で周囲の敵6体の間を駆け抜けて斬ります。盗まれた敵は倒れるとコインを1枚多く落とします。\n進化: 8体", "瞬间穿梭于周围最多6个敌人之间逐一斩击，被扒窃的敌人倒下时多掉落1枚金币。\n进化：8个") },
         { "회피 본능", L("Evasion", "回避本能", "闪避本能") },
         { "받는 공격을 20% 확률로 피합니다.\n진화: 30%", L("20% chance to dodge incoming attacks.\nEvolved: 30%", "受ける攻撃を20%の確率で回避します。\n進化: 30%", "有20%几率闪避受到的攻击。\n进化：30%") },
         { "연쇄 처치", L("Killing Spree", "連続キル", "连杀") },
