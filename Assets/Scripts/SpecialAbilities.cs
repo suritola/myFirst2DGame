@@ -226,8 +226,18 @@ public partial class SpecialAbilities : MonoBehaviour
         WeaponAmmo a = Ammo(id);
         if (a.Reloading || a.ammo >= MagSize(id)) return;
         a.reloadEnd = Time.time + BaseReload(id);
-        if (player.reloadSound != null && player.TryGetComponent(out AudioSource src)) src.PlayOneShot(player.reloadSound, GameSettings.SfxVolume);
+        fx.Play(ReloadSound(id), 0.8f, Random.Range(0.96f, 1.04f));
     }
+
+    // 무기마다 다른 장전 소리 (SpecialFeedback 이 만든 소리 이름, -1 = 캐릭터 기본 무기)
+    public static string ReloadSound(int id) => id switch
+    {
+        ShotgunId => "rl_shotgun", SniperId => "rl_sniper", DualId => "rl_dual", SeekerId => "rl_seeker",
+        ChainId => "rl_chain", GrenadeId => "rl_grenade",
+        KitBlowgun => "rl_blowgun", KitCards => "rl_cards", KitNetBow => "rl_netbow", KitBurstBow => "rl_burstbow",
+        KitQuicksilver => "rl_quicksilver", KitMagnet => "rl_magnet", KitFirework => "rl_firework",
+        _ => "rl_stars",
+    };
 
     // 들고 있지 않은 무기도 장전은 계속 진행
     void UpdateWeaponReloads()
@@ -756,6 +766,22 @@ public partial class SpecialAbilities : MonoBehaviour
             if (player != null) fx.FloatText(player.transform.position + Vector3.up * (1.4f * order), Loc.T(abilities[id].name) + Loc.T(" 진화!"), new Color(1f, 0.85f, 0.4f), 6f, 0f);
         }
         if (player != null) Flash(player.transform.position, 7f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.6f);
+    }
+
+    // 능력 설명 본문 (번역됨, "진화:" 줄은 뺌)
+    public static string BodyText(int id, string description)
+    {
+        string desc = Loc.T(description);
+        if (!IsKit(id)) return desc;
+        int cut = desc.LastIndexOf('\n');
+        return cut >= 0 ? desc.Substring(0, cut) : desc;
+    }
+
+    // 모든 특수 능력 설명의 모양: 본문 + 파란 "진화" 줄
+    public static string AbilityText(int id, string description)
+    {
+        string evo = EvolveText(id);
+        return BodyText(id, description) + (evo.Length > 0 ? "\n<color=#9fd8ff>" + Loc.T("진화") + "</color>  " + evo : "");
     }
 
     // 진화 효과 설명 (번역된 문장). 거너 능력은 EvolveTexts, 캐릭터 능력(20~)은 설명의 마지막 "진화:" 줄

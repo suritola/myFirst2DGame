@@ -447,7 +447,8 @@ public class PlayerController : MonoBehaviour
         isReloading = true;
         reload = 0f;
 
-        if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
+        if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
+        else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
 
         while (reload < reloadTime)
         {
@@ -876,7 +877,7 @@ void Shoot()
     [Header("피격")]
     public float bossContactDamage = 25f;
     // 맞은 뒤 이 시간 동안은 다시 맞지 않음 (여러 마리에게 동시에 맞는 것 방지)
-    public float hurtInvincibleTime = 0.4f;
+    public float hurtInvincibleTime = 0.6f;
 
     private float invincibleUntil = 0f;
 

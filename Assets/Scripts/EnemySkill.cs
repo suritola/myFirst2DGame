@@ -84,10 +84,21 @@ public class EnemySkill : MonoBehaviour
         StartCoroutine(Run(p));
     }
 
+    // 스킬 이름 (쓰는 동안 머리 위에 보여 줌)
+    static string SkillName(EnemySkillType t) => t switch
+    {
+        EnemySkillType.BoneSpike => "뼈 가시", EnemySkillType.Leap => "도약", EnemySkillType.Blink => "순간이동",
+        EnemySkillType.XLaser => "십자 광선", EnemySkillType.SelfDestruct => "자폭", EnemySkillType.Pounce => "덮치기",
+        EnemySkillType.GroundSlam => "지면 강타", EnemySkillType.Whirlwind => "회전 칼날", EnemySkillType.AcidPool => "산성 웅덩이",
+        EnemySkillType.PollenCloud => "꽃가루", EnemySkillType.MushroomMines => "버섯 지뢰", EnemySkillType.Howl => "울부짖음",
+        EnemySkillType.RootLine => "뿌리 가시", _ => "",
+    };
+
     IEnumerator Run(PlayerController p)
     {
         busy = true;
         enemy.casting = true;
+        GameObject tag = SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 0.9f);
         IEnumerator routine = type switch
         {
             EnemySkillType.BoneSpike => BoneSpike(p),
@@ -106,6 +117,7 @@ public class EnemySkill : MonoBehaviour
             _ => null,
         };
         if (routine != null) yield return StartCoroutine(routine);
+        if (tag != null) Destroy(tag);
         if (enemy != null) enemy.casting = false;
         if (sr != null && Alive) sr.color = enemy.baseColor;
         busy = false;
@@ -115,7 +127,7 @@ public class EnemySkill : MonoBehaviour
     IEnumerator Windup(Color color, float seconds, float speed = 8f)
     {
         GameObject aura = Hostile.Glow != null
-            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.55f), "Effect", 0) : null;
+            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 0) : null;
         FxAnim mark = Fx.Play("fx_warn", transform.position + Vector3.up * 1.6f * Size, 1.1f, Color.white, 1f, 0f, 30, true, seconds);
         if (mark != null) mark.transform.SetParent(transform, true);
         for (float t = 0f; t < seconds; t += Time.deltaTime)
@@ -126,7 +138,7 @@ public class EnemySkill : MonoBehaviour
             if (aura != null)
             {
                 aura.transform.position = transform.position;
-                aura.transform.localScale = Vector3.one * Size * Mathf.Lerp(0.25f, 0.45f, t / seconds) * (0.9f + 0.2f * pulse);
+                aura.transform.localScale = Vector3.one * Size * Mathf.Lerp(0.35f, 0.6f, t / seconds) * (0.85f + 0.3f * pulse);
             }
             yield return null;
         }
@@ -650,6 +662,7 @@ public class Telegraph : MonoBehaviour
     Vector3 a, b;
     float width;
     LineRenderer outline;
+    LineRenderer under, underL, underR;         // 어떤 바닥 색에서도 보이도록 색 테두리 밑에 까만 테두리
     LineRenderer closing;
     LineRenderer edgeL, edgeR;
     LineRenderer fillLine;
@@ -662,7 +675,10 @@ public class Telegraph : MonoBehaviour
         this.radius = radius;
         this.duration = duration;
         this.color = color;
-        outline = Child(Hostile.NewLine("Outline", color, 0.2f, 18));
+        under = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.42f, 17));
+        under.loop = true;
+        Hostile.SetArc(under, transform.position, radius, 0f, 354f);
+        outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18));
         outline.loop = true;
         Hostile.SetArc(outline, transform.position, radius, 0f, 354f);
         closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19));
@@ -676,10 +692,10 @@ public class Telegraph : MonoBehaviour
         }
         if (Hostile.Glow != null)
         {
-            GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.15f), "Effect", 0);
+            GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
             g.transform.SetParent(transform, true);
             glow = g.GetComponent<SpriteRenderer>();
-            GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.6f), "Effect", 1);
+            GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
             d.transform.SetParent(transform, true);
             fillDisc = d.GetComponent<SpriteRenderer>();
         }
@@ -692,18 +708,23 @@ public class Telegraph : MonoBehaviour
         this.width = width;
         this.duration = duration;
         this.color = color;
-        outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.22f), width, 1));
+        outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.3f), width, 1));
         outline.positionCount = 2;
         outline.SetPosition(0, a);
         outline.SetPosition(1, b);
         // 양쪽 가장자리 선
         Vector3 side = Vector3.Cross(b - a, Vector3.forward).normalized * width * 0.5f;
-        edgeL = Child(Hostile.NewLine("Edge", color, 0.1f, 18));
-        edgeR = Child(Hostile.NewLine("Edge", color, 0.1f, 18));
+        underL = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
+        underR = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
+        underL.positionCount = underR.positionCount = 2;
+        underL.SetPosition(0, a + side); underL.SetPosition(1, b + side);
+        underR.SetPosition(0, a - side); underR.SetPosition(1, b - side);
+        edgeL = Child(Hostile.NewLine("Edge", color, 0.14f, 18));
+        edgeR = Child(Hostile.NewLine("Edge", color, 0.14f, 18));
         edgeL.positionCount = edgeR.positionCount = 2;
         edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
         edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
-        fillLine = Child(Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.55f), width * 0.7f, 2));
+        fillLine = Child(Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.7f), width * 0.7f, 2));
         fillLine.positionCount = 2;
         fillLine.SetPosition(0, a);
         fillLine.SetPosition(1, a);
@@ -734,7 +755,7 @@ public class Telegraph : MonoBehaviour
         else
         {
             fillLine.SetPosition(1, Vector3.Lerp(a, b, k));
-            outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.2f * blink + 0.06f);
+            outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.25f * blink + 0.1f);
             edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = c;
         }
 
@@ -744,6 +765,48 @@ public class Telegraph : MonoBehaviour
             if (circle) ShockRing.Spawn(transform.position, radius * 0.9f, radius * 1.15f, 0.18f, Color.white, 0.18f);
             Destroy(gameObject);
         }
+    }
+}
+
+// 적이 스킬을 쓰는 동안 머리 위에 떠 있는 이름 (까만 테두리 글씨라 어떤 바닥에서도 보임)
+public class SkillTag : MonoBehaviour
+{
+    Transform target;
+    float height;
+    TMPro.TextMeshPro text;
+
+    public static GameObject Show(Transform target, string label, float height)
+    {
+        if (target == null || string.IsNullOrEmpty(label) || label == "!") return null;
+        GameObject go = new GameObject("SkillTag", typeof(TMPro.TextMeshPro));
+        TMPro.TextMeshPro t = go.GetComponent<TMPro.TextMeshPro>();
+        UIKit.EnsureStyle();
+        if (UIKit.Font != null) t.font = UIKit.Font;
+        if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;
+        t.text = label;
+        t.fontSize = 4.5f;
+        t.fontStyle = TMPro.FontStyles.Bold;
+        t.color = new Color(1f, 0.35f, 0.3f);
+        t.alignment = TMPro.TextAlignmentOptions.Center;
+        t.outlineWidth = 0.3f;
+        t.outlineColor = new Color32(0, 0, 0, 255);
+        t.rectTransform.sizeDelta = new Vector2(10f, 2f);
+        t.sortingLayerID = SortingLayer.NameToID("Effect");
+        t.sortingOrder = 41;
+        SkillTag s = go.AddComponent<SkillTag>();
+        s.target = target;
+        s.height = height;
+        s.text = t;
+        s.LateUpdate();
+        return go;
+    }
+
+    void LateUpdate()
+    {
+        if (target == null) { Destroy(gameObject); return; }
+        transform.position = target.position + Vector3.up * height;
+        float pop = 1f + 0.08f * Mathf.Sin(Time.time * 12f);
+        transform.localScale = Vector3.one * pop;
     }
 }
 

@@ -34,6 +34,10 @@ public class SpecialTreeUI : MonoBehaviour
     readonly List<TextMeshProUGUI> nodeTags = new List<TextMeshProUGUI>();
     readonly List<GameObject> nodeBadges = new List<GameObject>();
     readonly List<TooltipTrigger> nodeTips = new List<TooltipTrigger>();
+    // 고른 노드 표시: 두꺼운 금빛 테두리(맥박) + 고른 순서 번호
+    readonly List<Image> nodePicks = new List<Image>();
+    readonly List<GameObject> nodeNumbers = new List<GameObject>();
+    readonly List<TextMeshProUGUI> nodeNumberTexts = new List<TextMeshProUGUI>();
     TextMeshProUGUI detailName, detailKind, detailText;
     Button confirm;
     TextMeshProUGUI confirmText;
@@ -172,6 +176,22 @@ public class SpecialTreeUI : MonoBehaviour
         RectTransform ir = ic.GetComponent<RectTransform>();
         ir.SetParent(r, false);
         ir.sizeDelta = new Vector2(size - 28f, size - 28f);
+        // 고른 노드의 금빛 테두리 (틀 위, 아이콘 아래)
+        Image pickGlow = null;
+        if (id >= 0)
+        {
+            GameObject pg = new GameObject("Picked", typeof(RectTransform), typeof(Image));
+            RectTransform pr = pg.GetComponent<RectTransform>();
+            pr.SetParent(r, false);
+            pr.SetAsFirstSibling();
+            pr.sizeDelta = new Vector2(size + 18f, size + 18f);
+            pickGlow = pg.GetComponent<Image>();
+            pickGlow.sprite = nodeSprite;
+            pickGlow.type = Image.Type.Sliced;
+            pickGlow.color = new Color(1f, 0.82f, 0.25f);
+            pickGlow.raycastTarget = false;
+            pg.SetActive(false);
+        }
         Image iconImg = ic.GetComponent<Image>();
         iconImg.sprite = icon;
         iconImg.preserveAspect = true;
@@ -198,7 +218,7 @@ public class SpecialTreeUI : MonoBehaviour
 
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
         tip.title = Loc.T(def.name) + "  · " + KindName(def.kind);
-        tip.body = Loc.T(def.description);
+        tip.body = SpecialAbilities.AbilityText(id, def.description);
 
         // 노드 안쪽 아래의 작은 배지 (진화 가능 / 진화 완료) - 위아래 노드의 이름과 겹치지 않게 틀 안에 둠
         GameObject badge = new GameObject("Badge", typeof(RectTransform), typeof(Image));
@@ -215,7 +235,25 @@ public class SpecialTreeUI : MonoBehaviour
         TextMeshProUGUI tag = Text(br, "", 14f, Owned, Vector2.zero, new Vector2(80f, 20f), TextAlignmentOptions.Center);
         badge.SetActive(false);
 
-        while (nodeFrames.Count <= id) { nodeFrames.Add(null); nodeTags.Add(null); nodeTips.Add(null); nodeBadges.Add(null); }
+        // 오른쪽 위 고른 순서 번호
+        GameObject num = new GameObject("PickNumber", typeof(RectTransform), typeof(Image));
+        RectTransform nr = num.GetComponent<RectTransform>();
+        nr.SetParent(r, false);
+        nr.anchorMin = nr.anchorMax = new Vector2(1f, 1f);
+        nr.sizeDelta = new Vector2(34f, 34f);
+        nr.anchoredPosition = new Vector2(-2f, -2f);
+        Image nimg = num.GetComponent<Image>();
+        nimg.sprite = headerSprite;
+        nimg.type = Image.Type.Sliced;
+        nimg.color = new Color(0.85f, 0.45f, 0.05f);
+        nimg.raycastTarget = false;
+        TextMeshProUGUI ntext = Text(nr, "", 22f, Color.white, Vector2.zero, new Vector2(34f, 34f), TextAlignmentOptions.Center);
+        num.SetActive(false);
+
+        while (nodeFrames.Count <= id) { nodeFrames.Add(null); nodeTags.Add(null); nodeTips.Add(null); nodeBadges.Add(null); nodePicks.Add(null); nodeNumbers.Add(null); nodeNumberTexts.Add(null); }
+        nodePicks[id] = pickGlow;
+        nodeNumbers[id] = num;
+        nodeNumberTexts[id] = ntext;
         nodeFrames[id] = frame;
         nodeTags[id] = tag;
         nodeTips[id] = tip;
@@ -348,15 +386,19 @@ public class SpecialTreeUI : MonoBehaviour
         {
             if (nodeFrames[i] == null) continue;
             bool on = picked.Contains(i);
-            nodeFrames[i].color = on ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : new Color(0.8f, 0.78f, 0.82f);
-            nodeFrames[i].transform.localScale = Vector3.one * (on ? 1.15f : 1f);
+            // 하나라도 골랐으면 안 고른 노드는 더 어둡게
+            Color idle = picked.Count > 0 ? new Color(0.55f, 0.52f, 0.58f) : new Color(0.8f, 0.78f, 0.82f);
+            nodeFrames[i].color = on ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : idle;
+            nodeFrames[i].transform.localScale = Vector3.one * (on ? 1.18f : 1f);
+            if (nodePicks[i] != null) nodePicks[i].gameObject.SetActive(on);
+            nodeNumbers[i].SetActive(on);
+            nodeNumberTexts[i].text = on ? (picked.IndexOf(i) + 1).ToString() : "";
             nodeTags[i].text = IsMaxed(i) ? Loc.T("진화 완료") : IsOwned(i) ? (on ? Loc.T("진화!") : Loc.T("진화 가능")) : on ? Loc.T("선택됨") : "";
             nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
             nodeBadges[i].GetComponent<Image>().color = on ? new Color(0.55f, 0.35f, 0.05f, 0.98f) : new Color(0.25f, 0.2f, 0.3f, 0.95f);
             nodeTags[i].color = on ? new Color(1f, 0.95f, 0.7f) : IsMaxed(i) ? new Color(0.75f, 0.72f, 0.78f) : Owned;
-            nodeTips[i].body = IsOwned(i) && !IsMaxed(i)
-                ? Loc.T("진화: ") + SpecialAbilities.EvolveText(i)
-                : Loc.T(specials.abilities[i].description);
+            nodeTips[i].body = SpecialAbilities.AbilityText(i, specials.abilities[i].description)
+                + (IsOwned(i) && !IsMaxed(i) ? "\n\n<color=#F5D478>" + Loc.T("한 번 더 고르면 진화합니다.") + "</color>" : IsMaxed(i) ? "\n\n<color=#A89C86>" + Loc.T("이미 진화한 능력입니다.") + "</color>" : "");
         }
 
         int left = pointsNow - picked.Count;
@@ -388,8 +430,20 @@ public class SpecialTreeUI : MonoBehaviour
         bool evolving = IsOwned(id) && !IsMaxed(id);
         detailName.text = Loc.T(def.name) + (evolving ? Loc.T(" → 진화") : "");
         detailKind.text = KindName(def.kind) + (picked.Contains(id) ? Loc.T("  (선택됨)") : IsMaxed(id) ? Loc.T("  (진화 완료)") : "");
-        string body = evolving || IsMaxed(id) ? Loc.T("<color=#9fd8ff>진화</color>  ") + SpecialAbilities.EvolveText(id) : Loc.T(def.description);
+        string body = SpecialAbilities.AbilityText(id, def.description);
         detailText.text = note != null ? body + "\n<color=#ff9d8a>" + note + "</color>" : body;
+    }
+
+    // 고른 노드의 금빛 테두리가 맥박침 (창이 열려 있는 동안은 시간이 멈춰 있어서 unscaledTime)
+    void Update()
+    {
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
+        foreach (Image p in nodePicks)
+        {
+            if (p == null || !p.gameObject.activeSelf) continue;
+            p.color = Color.Lerp(new Color(1f, 0.7f, 0.15f), new Color(1f, 0.95f, 0.6f), pulse);
+            p.transform.localScale = Vector3.one * (1f + 0.05f * pulse);
+        }
     }
 
     static string KindName(SpecialKind k) => k == SpecialKind.Weapon ? Loc.T("무기 · {SWAP}로 교체") : k == SpecialKind.Skill ? Loc.T("스킬 · {SKILL1}/{SKILL2}/{SKILL3}") : Loc.T("패시브 · 항상 적용");

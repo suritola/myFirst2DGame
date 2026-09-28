@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -69,47 +69,16 @@ public partial class LevelShop : MonoBehaviour
 
     void setAbilitys()
     {
-        ability_name[0] = Loc.T("관통하는 총알");
-        ability_content[0] = Loc.T("총알의 관통력이 증가합니다 \n( 관통 ") + (bul.pene - 1) + " -> " + bul.pene + " )";
-
-        ability_name[1] = Loc.T("코인충");
-        ability_content[1] = Loc.T("코인을 더 많이 획득합니다.\n( 코인 획득량 ") + ( 1 + bul.bonusCoin) + " -> " + (2 + bul.bonusCoin ) + " )";
-
-        ability_name[2] = Loc.T("재활용 에너지");
-        ability_content[2] = Loc.T("스킬 게이지가 20% 감소합니다\n( 게이지 -20% )");
-
-        ability_name[3] = Loc.T("노려보는 눈빛");
-        ability_content[3] = Loc.T("스킬을 사용하는 동안 타겟이 된 적이 더 느려집니다. \n( 속도 -20% )");
-
-        ability_name[4] = Loc.T("더 많은 경험치");
-        ability_content[4] = Loc.T("킬 경험치 +10%");
-
-        ability_name[5] = Loc.T("코인 자석");
-        ability_content[5] = Loc.T("주변의 코인을 끌어옵니다.\n( 범위 ") + bul.coinMagnetRange.ToString("0") + " -> " + (bul.coinMagnetRange + MagnetStep).ToString("0") + " )";
-
-        ability_name[6] = Loc.T("멀티 샷");
-        ability_content[6] = Loc.T("한 번에 쏘는 총알이 1발 늘어나지만, 한 발당 피해는 줄어듭니다.\n( ")
-            + bul.multiShot + Loc.T("발 ") + Percent(bul.MultiShotDamageRate(bul.multiShot)) + " -> "
-            + (bul.multiShot + 1) + Loc.T("발 ") + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)) + " )";
-
-        ability_name[7] = Loc.T("밀어내기");
-        ability_content[7] = Loc.T("총알이 적을 밀어내는 효과 +25%\n( 최대 ") + KnockBackMaxLevel + Loc.T("번 )");
-
-        ability_name[8] = Loc.T("강철같은 심장");
-        ability_content[8] = Loc.T("체력을 즉시 모두 회복하며, 최대 체력이 12% 증가합니다.");
-
-        ability_name[9] = Loc.T("단단한 신체");
-        ability_content[9] = Loc.T("받는 피해를 12% 감소시킵니다.\n( 최대 ") + DefMaxLevel + Loc.T("번 )");
-
-        ability_name[10] = Loc.T("생명의 샘");
-        ability_content[10] = Loc.T("시간이 지나면 체력이 조금씩 회복됩니다.\n( 초당 ") + bul.regenPerSecond.ToString("0.#") + " -> " + (bul.regenPerSecond + RegenStep).ToString("0.#") + " )";
-
-        ability_name[11] = Loc.T("피의 굶주림");
-        ability_content[11] = Loc.T("적을 처치할 때마다 체력을 회복합니다.\n( 처치당 ") + bul.healOnKill.ToString("0") + " -> " + (bul.healOnKill + HealOnKillStep).ToString("0") + " )";
-
+        // 공용 카드 (0 ~ 11) · 비상 보급: 모두 같은 모양 (한 문장 + 수치 지금 → 다음 + Lv)
+        string[] names = { "관통하는 총알", "코인충", "재활용 에너지", "노려보는 눈빛", "더 많은 경험치", "코인 자석",
+                           "멀티 샷", "밀어내기", "강철같은 심장", "단단한 신체", "생명의 샘", "피의 굶주림" };
+        for (int i = 0; i < names.Length && i < ability_name.Length; i++)
+        {
+            ability_name[i] = Loc.T(names[i]);
+            ability_content[i] = SharedCardText(i);
+        }
         ability_name[SupplyId] = Loc.T("비상 보급");
-        ability_content[SupplyId] = Loc.T("고를 능력을 모두 배웠습니다.\n체력 30%를 회복하고 코인 10개를 얻습니다.");
-
+        ability_content[SupplyId] = SharedCardText(SupplyId);
         KitSetAbilitys();
     }
     void Update()
@@ -327,7 +296,7 @@ public partial class LevelShop : MonoBehaviour
     const float KnockBackGrowth = 1.25f;
     const int KnockBackMaxLevel = 3;
 
-    // 툴팁용: 능력 설명 + 지금 적용 중인 수치
+    // 툴팁용: 카드와 같은 글 (한 문장 + 수치 지금 → 다음 + Lv)
     public string GetAbilityTooltip(int id)
     {
         if (bul == null) bul = FindFirstObjectByType<PlayerController>();
@@ -335,64 +304,64 @@ public partial class LevelShop : MonoBehaviour
         if (skill == null) skill = FindFirstObjectByType<SkillGauge>();
         if (bul == null) return "";
         if (KitTooltip(id, out string kitTip)) return kitTip;
+        return SharedCardText(id);
+    }
 
-        string summary = "";
-        string current = "";
-
+    // 공용 카드 설명: 한 문장 + 금색 "수치  지금 → 다음" + Lv
+    string SharedCardText(int id)
+    {
+        if (bul == null) return "";
+        int n = id < ability_level.Length ? ability_level[id] : 0;
+        string S(string ko) => Loc.T(ko);
         switch (id)
         {
             case 0:
-                summary = Loc.T("총알이 적을 뚫고 지나갑니다.");
-                current = Loc.T("관통: 적 ") + (bul.pene - 1) + Loc.T("마리");
-                break;
+                return CardText(S("총알이 적을 뚫고 지나갑니다."), S("관통"), (bul.pene - 1) + S("마리"), bul.pene + S("마리"), n, 0);
             case 1:
-                summary = Loc.T("코인을 주울 때 더 많이 얻습니다.");
-                current = Loc.T("코인 1개당 획득량: ") + (1 + bul.bonusCoin);
-                break;
+                return CardText(S("코인을 주울 때 더 많이 얻습니다."), S("코인 1개당 획득량"), (1 + bul.bonusCoin).ToString(), (2 + bul.bonusCoin).ToString(), n, CoinMaxLevel);
             case 2:
-                summary = Loc.T("스킬 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)");
-                current = Loc.T("게이지가 가득 차는 시간: ") + (skill != null ? (skill.MaxSkillPoint / skill.pointsPerSecond).ToString("0") : "0") + Loc.T("초");
-                break;
+                {
+                    float pps = skill != null ? skill.pointsPerSecond : 1f;
+                    int max = skill != null ? skill.MaxSkillPoint : 10;
+                    int nextMax = Mathf.Max(MinSkillPoint, Mathf.RoundToInt(max * 0.8f));
+                    return CardText(S("스킬 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)"), S("게이지가 가득 차는 시간"),
+                                    (max / pps).ToString("0") + S("초"), (nextMax / pps).ToString("0") + S("초"), n, 0);
+                }
             case 3:
-                summary = Loc.T("스킬을 쓰는 동안 적이 더 느려집니다.");
-                current = Loc.T("스킬 중 시간 속도: ") + (bul.Skill_setTime * 100f).ToString("0.#") + "%";
-                break;
+                return CardText(S("스킬을 쓰는 동안 적이 더 느려집니다."), S("스킬 중 시간 속도"),
+                                (bul.Skill_setTime * 100f).ToString("0.#") + "%", (bul.Skill_setTime * 80f).ToString("0.#") + "%", n, GlareMaxLevel);
             case 4:
-                summary = Loc.T("적을 처치할 때 얻는 경험치가 늘어납니다.");
-                current = Loc.T("경험치 배율: ") + ((lv != null ? lv.bonusEXP : 1f) * 100f).ToString("0") + "%";
-                break;
+                {
+                    float bonus = lv != null ? lv.bonusEXP : 1f;
+                    return CardText(S("적을 처치할 때 얻는 경험치가 늘어납니다."), S("경험치 배율"),
+                                    (bonus * 100f).ToString("0") + "%", ((bonus + 0.1f) * 100f).ToString("0") + "%", n, ExpMaxLevel);
+                }
             case 5:
-                summary = Loc.T("주변의 코인을 끌어옵니다.");
-                current = Loc.T("끌어오는 범위: ") + bul.coinMagnetRange.ToString("0") + " (" + ability_level[5] + "/" + MagnetMaxLevel + ")";
-                break;
+                return CardText(S("주변의 코인을 끌어옵니다."), S("끌어오는 범위"),
+                                bul.coinMagnetRange.ToString("0") + S("칸"), (bul.coinMagnetRange + MagnetStep).ToString("0") + S("칸"), n, MagnetMaxLevel);
             case 6:
-                summary = Loc.T("한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다.");
-                current = Loc.T("발사 수: ") + bul.multiShot + Loc.T("발 (최대 5발)\n현재 한 발당 피해: ")
-                    + Percent(bul.MultiShotDamageRate(bul.multiShot));
-                break;
+                return CardText(S("한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다."), S("발사 수 · 한 발당 피해"),
+                                bul.multiShot + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot)),
+                                (bul.multiShot + 1) + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)), n, 4);
             case 7:
-                summary = Loc.T("총알이 적을 더 멀리 밀어냅니다.");
-                current = Loc.T("넉백: 기본의 ") + (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "% (" + ability_level[7] + "/" + KnockBackMaxLevel + ")";
-                break;
+                return CardText(S("총알이 적을 더 멀리 밀어냅니다."), S("넉백"),
+                                (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "%", (bul.knockBack * KnockBackGrowth / BaseKnockBack * 100f).ToString("0") + "%", n, KnockBackMaxLevel);
             case 8:
-                summary = Loc.T("최대 체력이 늘어나고, 선택하는 순간 체력을 모두 회복합니다.");
-                current = Loc.T("최대 체력: ") + Mathf.RoundToInt(bul.PlayerMaxHealth);
-                break;
+                return CardText(S("최대 체력이 늘어나고, 선택하는 순간 체력을 모두 회복합니다."), S("최대 체력"),
+                                Mathf.RoundToInt(bul.PlayerMaxHealth).ToString(), Mathf.RoundToInt(bul.PlayerMaxHealth * 1.12f).ToString(), n, HeartMaxLevel);
             case 9:
-                summary = Loc.T("적에게 받는 피해가 줄어듭니다.");
-                current = Loc.T("받는 피해 감소: ") + (bul.def * 100f).ToString("0") + "%";
-                break;
+                return CardText(S("적에게 받는 피해가 줄어듭니다."), S("받는 피해 감소"),
+                                (bul.def * 100f).ToString("0") + "%", ((bul.def + DefStep) * 100f).ToString("0") + "%", n, DefMaxLevel);
             case 10:
-                summary = Loc.T("시간이 지나면 체력이 조금씩 회복됩니다.");
-                current = Loc.T("초당 회복: ") + bul.regenPerSecond.ToString("0.#") + " (" + ability_level[10] + "/" + RegenMaxLevel + ")";
-                break;
+                return CardText(S("시간이 지나면 체력이 조금씩 회복됩니다."), S("초당 회복"),
+                                bul.regenPerSecond.ToString("0.#"), (bul.regenPerSecond + RegenStep).ToString("0.#"), n, RegenMaxLevel);
             case 11:
-                summary = Loc.T("적을 처치할 때마다 체력을 회복합니다.");
-                current = Loc.T("처치당 회복: ") + bul.healOnKill.ToString("0") + " (" + ability_level[11] + "/" + HealOnKillMaxLevel + ")";
-                break;
+                return CardText(S("적을 처치할 때마다 체력을 회복합니다."), S("처치당 회복"),
+                                bul.healOnKill.ToString("0"), (bul.healOnKill + HealOnKillStep).ToString("0"), n, HealOnKillMaxLevel);
+            case SupplyId:
+                return S("고를 능력을 모두 배웠습니다.") + "\n<color=#F5D478>" + S("보급") + "  " + S("체력 +30% · 코인 +10") + "</color>";
         }
-
-        return summary + Loc.T("\n\n<color=#F5D478>현재 ") + current + "</color>";
+        return "";
     }
 
     // 카드를 누르면 고르기만 하고, 확정은 스페이스바

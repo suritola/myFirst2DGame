@@ -356,7 +356,7 @@ public class EnermyController : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // 플레이어와 닿으면 피해를 주고 자폭
+    // 플레이어와 닿으면 피해를 주고 살짝 튕겨 나감 (죽지 않음)
     // 플레이어가 무적이면 붙어 있다가 무적이 끝나는 순간 피해를 줌
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -373,7 +373,13 @@ public class EnermyController : MonoBehaviour
         if (isDead || !collision.CompareTag("Player")) return;
 
         PlayerController target = collision.GetComponent<PlayerController>();
-        if (target != null && target.TryHit(contactDamage) && !survivesContact) Die(0);
+        if (target != null && target.TryHit(contactDamage))
+        {
+            Vector3 away = transform.position - target.transform.position;
+            away.z = 0f;
+            if (away.sqrMagnitude < 0.01f) away = Random.insideUnitCircle;
+            transform.position += away.normalized * 1.2f * knockBackTaken;
+        }
     }
 
 

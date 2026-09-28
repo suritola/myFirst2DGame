@@ -89,6 +89,7 @@ public class SpecialFeedback : MonoBehaviour
 
     void BuildClips()
     {
+        BuildReloadClips();
         // 충전 윙윙 (1초 반복, 180Hz 정수 주기라 끊김 없음)
         Make("hum", 1f, (t, d, r) => (Sin(180f, t) * 0.5f + Sin(360f, t) * 0.25f + Sin(540f, t) * 0.1f) * (0.8f + 0.2f * Sin(6f, t)));
         // 완충 띵
@@ -301,6 +302,113 @@ public class SpecialFeedback : MonoBehaviour
             cr += (Noise(r) - cr) * 0.05f;
             float creak = Sin(Mathf.Lerp(70f, 150f, t / d) + 25f * cr, t) * (0.35f + 0.5f * Mathf.Abs(cr));
             return creak * 0.5f * Mathf.Clamp01(t / 0.08f) * (1f - 0.5f * t / d);
+        });
+    }
+
+    // ================================================================= 장전 소리 (무기마다 다름)
+    // at 초에 시작해 len 초 동안 줄어드는 짧은 소리 조각
+    static float Hit(float t, float at, float len, float power = 3f) => t < at ? 0f : Decay(t - at, len, power);
+
+    void BuildReloadClips()
+    {
+        // 리볼버 탄창 · 도적 표창: 쇳조각이 짤랑 (높은 금속음 세 번)
+        Make("rl_stars", 0.4f, (t, d, r) =>
+        {
+            float s = 0f;
+            for (int k = 0; k < 3; k++) s += (Sin(3100f + k * 420f, t) + Sin(4700f + k * 300f, t) * 0.5f) * Hit(t, k * 0.08f, 0.1f, 3f);
+            return s * 0.22f + Noise(r) * 0.05f * Hit(t, 0f, 0.3f);
+        });
+        // 산탄총: 펌프 "철-컥"
+        Make("rl_shotgun", 0.42f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            return (n * 0.7f + Sin(140f, t) * 0.6f) * Hit(t, 0f, 0.07f, 2f) + (n * 0.8f + Sin(210f, t) * 0.7f) * Hit(t, 0.22f, 0.09f, 2f);
+        });
+        // 저격총: 노리쇠 "딸깍 - 스르륵 - 철컥"
+        Make("rl_sniper", 0.55f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            float click = Sin(2400f, t) * Hit(t, 0f, 0.03f);
+            float slide = t > 0.08f && t < 0.3f ? n * 0.25f * Mathf.Sin(Mathf.PI * (t - 0.08f) / 0.22f) : 0f;
+            float clack = (n * 0.6f + Sin(900f, t) * 0.5f) * Hit(t, 0.36f, 0.06f, 2f);
+            return click * 0.5f + slide + clack;
+        });
+        // 쌍권총: 탄창 두 개를 번갈아 "착 · 착"
+        Make("rl_dual", 0.45f, (t, d, r) =>
+        {
+            float s = 0f;
+            for (int k = 0; k < 4; k++) s += (Sin(k % 2 == 0 ? 1500f : 1150f, t) + Noise(r) * 0.4f) * Hit(t, k * 0.1f, 0.04f);
+            return s * 0.35f;
+        });
+        // 유도 지팡이: 영혼이 차오르는 반짝임 (올라가는 음)
+        Make("rl_seeker", 0.5f, (t, d, r) => (Sin(Mathf.Lerp(500f, 1300f, t / d), t) + Sin(Mathf.Lerp(1000f, 2600f, t / d), t) * 0.3f) * Mathf.Sin(Mathf.PI * t / d) * 0.3f);
+        // 번개 사슬총: 전기가 충전되는 "지이이-탁"
+        Make("rl_chain", 0.5f, (t, d, r) =>
+        {
+            float buzz = Mathf.Sign(Sin(Mathf.Lerp(90f, 260f, t / d), t)) * 0.18f * Mathf.Clamp01(t / 0.35f) * (t < 0.4f ? 1f : 0f);
+            return buzz + Noise(r) * 0.6f * Hit(t, 0.4f, 0.05f, 2f);
+        });
+        // 유탄 발사기: 꺾어 열고 "텅" 탄을 넣고 "철컥"
+        Make("rl_grenade", 0.55f, (t, d, r) =>
+        {
+            float n = Noise(r);
+            return (n * 0.5f + Sin(120f, t)) * 0.5f * Hit(t, 0f, 0.08f, 2f)
+                 + Sin(Mathf.Lerp(90f, 60f, (t - 0.2f) / 0.2f), t) * 0.8f * Hit(t, 0.2f, 0.15f, 2f)
+                 + (n * 0.6f + Sin(700f, t) * 0.4f) * Hit(t, 0.42f, 0.06f, 2f);
+        });
+        // 독침 대롱: 나무 대롱을 "톡톡" 두드리고 침을 넣는 "슥"
+        Make("rl_blowgun", 0.4f, (t, d, r) =>
+        {
+            float tap = Sin(520f, t) * (Hit(t, 0f, 0.04f) + Hit(t, 0.1f, 0.04f));
+            float slide = t > 0.2f && t < 0.35f ? Noise(r) * 0.2f * Mathf.Sin(Mathf.PI * (t - 0.2f) / 0.15f) : 0f;
+            return tap * 0.45f + slide;
+        });
+        // 도박 카드: 카드를 "촤르륵" 섞고 "탁"
+        Make("rl_cards", 0.5f, (t, d, r) =>
+        {
+            float riffle = 0f;
+            if (t < 0.38f)
+            {
+                float rate = Mathf.Lerp(40f, 90f, t / 0.38f);
+                float ph = (t * rate) % 1f;
+                riffle = Noise(r) * (ph < 0.25f ? 0.5f : 0.05f);
+            }
+            return riffle * 0.6f + (Noise(r) * 0.7f + Sin(300f, t) * 0.5f) * Hit(t, 0.42f, 0.05f, 2f);
+        });
+        // 그물 활: 밧줄을 "끼이익" 당겨 묶는 소리
+        float rope = 0f;
+        Make("rl_netbow", 0.5f, (t, d, r) =>
+        {
+            rope += (Noise(r) - rope) * 0.08f;
+            float creak = Sin(Mathf.Lerp(110f, 180f, t / d) + 40f * rope, t) * (0.3f + 0.6f * Mathf.Abs(rope));
+            return creak * 0.5f * Mathf.Sin(Mathf.PI * t / d) + Sin(260f, t) * 0.4f * Hit(t, 0.42f, 0.06f);
+        });
+        // 속사 활: 화살통 "부스럭" + 화살 세 대 "딱딱딱"
+        Make("rl_burstbow", 0.5f, (t, d, r) =>
+        {
+            float rustle = t < 0.25f ? Noise(r) * 0.18f * (0.6f + 0.4f * Sin(30f, t)) : 0f;
+            float clicks = 0f;
+            for (int k = 0; k < 3; k++) clicks += Sin(1800f - k * 200f, t) * Hit(t, 0.28f + k * 0.06f, 0.03f);
+            return rustle + clicks * 0.35f;
+        });
+        // 수은 구슬: 액체가 "출렁 · 뽁"
+        Make("rl_quicksilver", 0.5f, (t, d, r) =>
+        {
+            float s = 0f;
+            for (int k = 0; k < 4; k++) s += Sin(Mathf.Lerp(700f + k * 150f, 1400f + k * 200f, Mathf.Clamp01((t - k * 0.09f) / 0.08f)), t) * Hit(t, k * 0.09f, 0.08f, 2f);
+            return s * 0.3f;
+        });
+        // 자석 폭탄: 자력이 "우우웅" 올라가다 "철컥" 붙음
+        Make("rl_magnet", 0.55f, (t, d, r) =>
+        {
+            float hum = (Sin(Mathf.Lerp(60f, 140f, t / 0.45f), t) + Sin(Mathf.Lerp(120f, 280f, t / 0.45f), t) * 0.5f) * (t < 0.45f ? Mathf.Clamp01(t / 0.3f) : 0f);
+            return hum * 0.35f + (Noise(r) * 0.6f + Sin(1600f, t) * 0.5f) * Hit(t, 0.45f, 0.06f, 2f);
+        });
+        // 폭죽 발사기: 심지가 "치이익" 타고 마개가 "뽕"
+        Make("rl_firework", 0.55f, (t, d, r) =>
+        {
+            float fuse = t < 0.42f ? Noise(r) * 0.22f * (0.5f + 0.5f * Mathf.Clamp01(t / 0.3f)) * (0.7f + 0.3f * Sin(55f, t)) : 0f;
+            return fuse + Sin(Mathf.Lerp(900f, 400f, (t - 0.44f) / 0.08f), t) * 0.5f * Hit(t, 0.44f, 0.08f, 2f);
         });
     }
 

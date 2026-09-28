@@ -330,7 +330,7 @@ public partial class SpecialAbilities
         else
         {
             SpecialDef def = abilities[id];
-            body = Loc.T(def.description);
+            body = AbilityText(id, def.description);
             if (def.kind == SpecialKind.Weapon)
             {
                 WeaponStatus(id, out string l, out float c);

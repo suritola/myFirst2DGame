@@ -14,23 +14,51 @@ public partial class LevelShop
 
     class KitCard
     {
-        public string name, desc;       // 카드 이름 · 설명 (한국어 키)
+        public string name, desc;       // 카드 이름 · 한 문장 설명 (한국어 키)
+        public string stat;             // 레벨마다 바뀌는 수치의 이름 (한국어 키)
+        public string[] values;         // 레벨 1 ~ 최대의 수치 ("앞말|숫자|단위", 앞말 · 단위는 번역 키)
         public int icon;                // Resources/Icons/ability_<icon>
-        public int max;                 // 최대 선택 횟수
+        public int max => values.Length;    // 최대 선택 횟수
     }
 
-    static KitCard Card(string name, string desc, int icon, int max) => new KitCard { name = name, desc = desc, icon = icon, max = max };
+    static KitCard Card(string name, string desc, int icon, string stat, params string[] values)
+        => new KitCard { name = name, desc = desc, icon = icon, stat = stat, values = values };
+
+    // "공격력 |40%|" → "공격력 40%" (앞말 · 단위만 번역)
+    static string Val(string v)
+    {
+        string[] p = v.Split('|');
+        if (p.Length != 3) return Loc.T(v);
+        return (p[0].Length > 0 ? Loc.T(p[0]) : "") + p[1] + (p[2].Length > 0 ? Loc.T(p[2]) : "");
+    }
+
+    // 모든 레벨업 카드 설명의 모양: 한 문장 + 금색 "수치  지금 → 다음" + Lv
+    public static string CardText(string sentence, string stat, string now, string next, int level, int max)
+    {
+        string lv = max > 0 ? "   <color=#A89C86>Lv " + level + " / " + max + "</color>" : "";
+        return sentence + "\n<color=#F5D478>" + stat + "  " + now + "  →  " + next + "</color>" + lv;
+    }
+
+    static string KitText(KitCard c, int level)
+    {
+        string now = level > 0 ? Val(c.values[Mathf.Min(level, c.max) - 1]) : Loc.T("없음");
+        string next = level < c.max ? Val(c.values[level]) : Loc.T("최대");
+        return CardText(Loc.T(c.desc), Loc.T(c.stat), now, next, level, c.max);
+    }
 
     static KitCard KitCardOf(int id) => KitCardOf(CharacterData.Selected, id);
 
-    // 도감용: 이 캐릭터의 전용 레벨업 카드 (이름 · 설명 · 아이콘 번호)
+    // 도감용: 이 캐릭터의 전용 레벨업 카드 (이름 · 설명(레벨별 수치 포함) · 아이콘 번호)
     public static System.Collections.Generic.List<(string name, string desc, int icon)> KitCardsFor(CharacterId who)
     {
         var list = new System.Collections.Generic.List<(string, string, int)>();
         foreach (int id in KitIds)
         {
             KitCard c = KitCardOf(who, id);
-            if (c != null) list.Add((c.name, c.desc, c.icon));
+            if (c == null) continue;
+            string[] v = new string[c.max];
+            for (int i = 0; i < c.max; i++) v[i] = Val(c.values[i]);
+            list.Add((c.name, Loc.T(c.desc) + "\n<color=#F5D478>" + Loc.T(c.stat) + "  " + string.Join(" / ", v) + "</color>", c.icon));
         }
         return list;
     }
@@ -42,46 +70,46 @@ public partial class LevelShop
             case CharacterId.Swordsman:
                 return id switch
                 {
-                    PierceId => Card("날아가는 검기", "평타를 휘두르면 검기가 날아가 적을 꿰뚫습니다.\n( 레벨마다 검기 피해 증가 )", 60, 3),
-                    MultiId => Card("흡혈 베기", "평타로 벤 적 하나당(최대 3) 체력을 회복합니다.", 61, 3),
-                    KnockId => Card("쳐내기", "평타를 휘두르면 범위 안의 적 투사체를 베어 없앱니다.", 62, 1),
-                    ExtraAId => Card("굳건한 자세", "우클릭 회전 베기를 모으는 동안 받는 피해가 줄어듭니다.\n( 30% · 45% · 60% )", 77, 3),
-                    ExtraBId => Card("연속 베기", "네 번째 베기마다 더 멀리, 두 배로 벱니다.\n( 2레벨: 세 번째마다 · 3레벨: 충격파 )", 78, 3),
-                    GlareId => Card("칼바람", "회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다.\n( 레벨마다 지속 시간 +1초 )", 63, 3),
+                    PierceId => Card("날아가는 검기", "평타를 휘두르면 적을 꿰뚫는 검기가 날아갑니다.", 60, "검기 피해", "공격력 |40%|", "공격력 |60%|", "공격력 |80%|"),
+                    MultiId => Card("흡혈 베기", "평타로 벤 적 하나당 체력을 회복합니다. (한 번에 최대 3마리)", 61, "적 하나당 회복", "|1|", "|2|", "|3|"),
+                    KnockId => Card("쳐내기", "평타를 휘두르면 범위 안의 적 투사체를 베어 없앱니다.", 62, "투사체 베기", "켜짐||"),
+                    ExtraAId => Card("굳건한 자세", "우클릭 회전 베기를 모으는 동안 받는 피해가 줄어듭니다.", 77, "받는 피해", "|-30%|", "|-45%|", "|-60%|"),
+                    ExtraBId => Card("연속 베기", "몇 번 벨 때마다 한 번은 더 멀리, 두 배로 벱니다.", 78, "강한 일격", "|4|번째마다", "|3|번째마다", "|3|번째마다 + 충격파"),
+                    GlareId => Card("칼바람", "회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다.", 63, "지속 시간", "|2|초", "|3|초", "|4|초"),
                     _ => null,
                 };
             case CharacterId.Rogue:
                 return id switch
                 {
-                    PierceId => Card("도탄 표창", "표창이 적에 맞으면 가까운 다른 적에게 튕겨 날아갑니다.\n( 레벨마다 튕기는 횟수 +1 )", 64, 3),
-                    MultiId => Card("갈고리 표창", "표창에 맞은 적이 출혈을 입습니다.", 65, 3),
-                    KnockId => Card("그림자 분신", "출혈 돌진을 시작한 자리에 분신이 남아 표창을 던집니다.\n( 레벨마다 지속 시간 +1초 )", 66, 3),
-                    ExtraAId => Card("급소 노리기", "출혈 중인 적에게 주는 피해가 늘어납니다.\n( +30% · +60% · +90% )", 79, 3),
-                    ExtraBId => Card("표창 회수", "탄창이 비면 확률로 재장전 없이 절반을 되찾습니다.\n( 25% · 50% · 75% )", 80, 3),
-                    HungerId => Card("사냥의 기세", "적을 처치할 때마다 스킬 게이지가 조금 찹니다.\n( 레벨마다 1%, 공격력이 오를수록 더 · 최대 4배 )", 76, 5),
-                    GlareId => Card("표창 폭풍", "출혈 돌진이 끝나는 자리에서 표창이 사방으로 퍼집니다.\n( 레벨마다 표창 +4개 )", 67, 3),
+                    PierceId => Card("도탄 표창", "표창이 적에 맞으면 가까운 다른 적에게 튕겨 날아갑니다.", 64, "튕기는 횟수", "|1|회", "|2|회", "|3|회"),
+                    MultiId => Card("갈고리 표창", "표창에 맞은 적이 3초 동안 출혈을 입습니다.", 65, "출혈 (초당)", "공격력 |20%|", "공격력 |40%|", "공격력 |60%|"),
+                    KnockId => Card("그림자 분신", "출혈 돌진을 시작한 자리에 분신이 남아 표창을 던집니다.", 66, "분신 지속", "|2|초", "|3|초", "|4|초"),
+                    ExtraAId => Card("급소 노리기", "출혈 중인 적에게 주는 피해가 늘어납니다.", 79, "추가 피해", "|+30%|", "|+60%|", "|+90%|"),
+                    ExtraBId => Card("표창 회수", "탄창이 비면 확률로 재장전 없이 절반을 되찾습니다.", 80, "회수 확률", "|25%|", "|50%|", "|75%|"),
+                    HungerId => Card("사냥의 기세", "적을 처치할 때마다 스킬 게이지가 찹니다. 공격력이 오를수록 더 많이 찹니다. (최대 4배)", 76, "처치당 게이지", "|1%|", "|2%|", "|3%|", "|4%|", "|5%|"),
+                    GlareId => Card("표창 폭풍", "출혈 돌진이 끝나는 자리에서 표창이 사방으로 퍼집니다.", 67, "표창 수", "|8|개", "|12|개", "|16|개"),
                     _ => null,
                 };
             case CharacterId.Archer:
                 return id switch
                 {
-                    PierceId => Card("분열 화살", "가득 당긴 화살이 처음 맞힌 적에게서 여러 갈래로 갈라집니다.\n( 레벨마다 갈래 +1 )", 68, 3),
-                    MultiId => Card("메아리 화살", "화살을 쏘면 잠시 뒤 유령 화살이 같은 방향으로 한 발 더 날아갑니다. (피해 50%)", 69, 1),
-                    KnockId => Card("바람 걸음", "가득 당긴 화살을 쏘면 반동으로 뒤로 휙 물러납니다.", 70, 1),
-                    ExtraAId => Card("정조준", "가만히 서서 당기면 시위를 더 빨리 가득 당깁니다.\n( +30% · +60% · +90% )", 81, 3),
-                    ExtraBId => Card("사냥감 표식", "가득 당긴 화살에 맞은 적은 4초 동안 피해를 더 받습니다.\n( +15% · +25% · +35% )", 82, 3),
-                    GlareId => Card("가시 덤불", "화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.\n( 레벨마다 지속 시간 +1초 )", 71, 3),
+                    PierceId => Card("분열 화살", "가득 당긴 화살이 처음 맞힌 적에게서 여러 갈래로 갈라집니다. (갈래마다 피해 40%)", 68, "갈래 수", "|2|갈래", "|3|갈래", "|4|갈래"),
+                    MultiId => Card("메아리 화살", "화살을 쏘면 잠시 뒤 유령 화살이 같은 방향으로 한 발 더 날아갑니다.", 69, "유령 화살 피해", "|50%|"),
+                    KnockId => Card("바람 걸음", "가득 당긴 화살을 쏘면 반동으로 뒤로 휙 물러납니다.", 70, "물러나는 거리", "|3|칸"),
+                    ExtraAId => Card("정조준", "가만히 서서 당기면 시위를 더 빨리 가득 당깁니다.", 81, "당기는 속도", "|+30%|", "|+60%|", "|+90%|"),
+                    ExtraBId => Card("사냥감 표식", "가득 당긴 화살에 맞은 적은 4초 동안 피해를 더 받습니다.", 82, "추가 피해", "|+15%|", "|+25%|", "|+35%|"),
+                    GlareId => Card("가시 덤불", "화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.", 71, "지속 시간", "|3|초", "|4|초", "|5|초"),
                     _ => null,
                 };
             case CharacterId.Alchemist:
                 return id switch
                 {
-                    PierceId => Card("연쇄 반응", "플라스크 폭발로 쓰러진 적이 그 자리에서 한 번 더 터집니다.", 72, 3),
-                    MultiId => Card("급속 냉동", "빙결 시약이 적을 느리게 하는 대신 꽁꽁 얼립니다.\n( 레벨마다 얼리는 시간 증가 )", 73, 3),
-                    KnockId => Card("호문쿨루스", "작은 조수가 머리 위를 맴돌며 적에게 플라스크를 던집니다.\n( 레벨마다 던지는 간격 감소 )", 74, 3),
-                    ExtraAId => Card("원소 융합", "불타는 적에게 빙결 시약이 닿으면 증기 폭발이 일어납니다.\n( 공격력 150% · 220% · 290% )", 83, 3),
-                    ExtraBId => Card("끈적한 산성", "산성 웅덩이가 적을 느리게 하고 더 오래 남습니다.\n( 레벨마다 +1초 )", 84, 3),
-                    GlareId => Card("파편 플라스크", "대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.\n( 레벨마다 파편 +2개 )", 75, 3),
+                    PierceId => Card("연쇄 반응", "플라스크 폭발로 쓰러진 적이 그 자리에서 한 번 더 터집니다.", 72, "연쇄 폭발 피해", "|40%|", "|60%|", "|80%|"),
+                    MultiId => Card("급속 냉동", "빙결 시약이 적을 느리게 하는 대신 꽁꽁 얼립니다.", 73, "얼리는 시간", "|0.8|초", "|1.1|초", "|1.4|초"),
+                    KnockId => Card("호문쿨루스", "작은 조수가 머리 위를 맴돌며 적에게 플라스크를 던집니다.", 74, "던지는 간격", "|2.7|초", "|2|초", "|1.3|초"),
+                    ExtraAId => Card("원소 융합", "불타는 적에게 빙결 시약이 닿으면 증기 폭발이 일어납니다.", 83, "증기 폭발", "공격력 |150%|", "공격력 |220%|", "공격력 |290%|"),
+                    ExtraBId => Card("끈적한 산성", "산성 웅덩이가 적을 40% 느리게 하고 더 오래 남습니다.", 84, "웅덩이 지속", "|3.5|초", "|4.5|초", "|5.5|초"),
+                    GlareId => Card("파편 플라스크", "대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.", 75, "파편 수", "|4|개", "|6|개", "|8|개"),
                     _ => null,
                 };
         }
@@ -102,7 +130,7 @@ public partial class LevelShop
             KitCard c = KitCardOf(id);
             if (c == null || id >= ability_name.Length) continue;
             ability_name[id] = Loc.T(c.name);
-            ability_content[id] = Loc.T(c.desc) + "\n( " + ability_level[id] + " / " + c.max + " )";
+            ability_content[id] = KitText(c, ability_level[id]);
         }
     }
 
@@ -111,7 +139,7 @@ public partial class LevelShop
         tip = null;
         KitCard c = KitCardOf(id);
         if (c == null) return false;
-        tip = Loc.T(c.desc) + "\n\n<color=#F5D478>" + Loc.T("현재 ") + ability_level[id] + " / " + c.max + "</color>";
+        tip = KitText(c, ability_level[id]);
         return true;
     }
 
