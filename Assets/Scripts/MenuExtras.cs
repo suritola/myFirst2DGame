@@ -77,18 +77,70 @@ public static class MenuExtras
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
 
-        // 세로로 다시 배치: 시작 · 캐릭터 · 스킨 상점 · 튜토리얼 · 도감 · 설정 · 종료 (일곱 줄이라 간격을 조금 좁힘)
-        float[] ys = { 0f, -80f, -160f, -240f, -320f, -400f, -480f };
-        GameObject[] order = { start, character, skins, tutorial, codex, settings, exit };
-        for (int i = 0; i < order.Length; i++)
+        // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 3 × 2 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
+        sr.anchoredPosition = new Vector2(0f, -10f);
+        sr.sizeDelta = new Vector2(560f, 110f);
+        AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
+        TMP_Text st = start.GetComponentInChildren<TMP_Text>(true);
+        if (st != null) { RectTransform tr = st.rectTransform; tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f); tr.sizeDelta = new Vector2(380f, 90f); tr.anchoredPosition = new Vector2(30f, 0f); }
+
+        (GameObject go, string icon)[] tiles =
         {
-            if (order[i] == null) continue;
-            RectTransform r = (RectTransform)order[i].transform;
-            r.anchoredPosition = new Vector2(r.anchoredPosition.x, ys[i]);
-            r.sizeDelta = new Vector2(r.sizeDelta.x, 72f);
+            (character, "menu_character"), (skins, "menu_skin"), (codex, "menu_codex"),
+            (tutorial, "menu_tutorial"), (settings, "menu_settings"), (exit, "menu_exit"),
+        };
+        for (int i = 0; i < tiles.Length; i++)
+        {
+            if (tiles[i].go == null) continue;
+            RectTransform r = (RectTransform)tiles[i].go.transform;
+            r.sizeDelta = new Vector2(232f, 122f);
+            r.anchoredPosition = new Vector2(-248f + 248f * (i % 3), -160f - 138f * (i / 3));
+            Image img = tiles[i].go.GetComponent<Image>();
+            if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : new Color(0.8f, 0.78f, 0.86f);
+            AddIcon(tiles[i].go, tiles[i].icon, new Vector2(0f, 20f), 56f);
+            TMP_Text t = tiles[i].go.GetComponentInChildren<TMP_Text>(true);
+            if (t == null) continue;
+            RectTransform lr = t.rectTransform;
+            lr.anchorMin = lr.anchorMax = new Vector2(0.5f, 0.5f);
+            lr.sizeDelta = new Vector2(212f, 40f);
+            lr.anchoredPosition = new Vector2(0f, -36f);
+            t.enableAutoSizing = true;
+            t.fontSizeMin = 14f;
+            t.fontSizeMax = 28f;
         }
 
         InstallDifficulty(sr);
+        InstallPoints(sr.parent);
+    }
+
+    // 버튼 안에 도트 아이콘 (Resources/Icons/menu_*.png)
+    static void AddIcon(GameObject button, string name, Vector2 pos, float size)
+    {
+        Sprite s = Resources.Load<Sprite>("Icons/" + name);
+        if (s == null) return;
+        RectTransform r = UIKit.Rect("Icon", button.transform, pos, new Vector2(size, size));
+        Image img = r.gameObject.AddComponent<Image>();
+        img.sprite = s;
+        img.preserveAspect = true;
+        img.raycastTarget = false;
+    }
+
+    // 오른쪽 위: 보유 포인트 (스킨 상점에서 쓰면 바로 줄어듦)
+    static void InstallPoints(Transform parent)
+    {
+        RectTransform box = UIKit.Rect("PointsBadge", parent, Vector2.zero, new Vector2(300f, 64f));
+        box.anchorMin = box.anchorMax = box.pivot = new Vector2(1f, 1f);
+        box.anchoredPosition = new Vector2(-30f, -26f);
+        Image bg = box.gameObject.AddComponent<Image>();
+        bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
+        bg.raycastTarget = false;
+        RectTransform ic = UIKit.Rect("Icon", box, new Vector2(-114f, 0f), new Vector2(44f, 44f));
+        Image ii = ic.gameObject.AddComponent<Image>();
+        ii.sprite = Resources.Load<Sprite>("Icons/menu_coin");
+        ii.preserveAspect = true;
+        ii.raycastTarget = false;
+        TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(26f, 0f), new Vector2(220f, 50f), TextAlignmentOptions.Right);
+        box.gameObject.AddComponent<MenuPoints>().text = t;
     }
 
     // 게임 시작 버튼 위: 쉬움 · 보통 · 어려움 · 무한 (잠긴 난이도는 회색, 누를 수 없음)
