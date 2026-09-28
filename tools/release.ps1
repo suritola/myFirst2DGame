@@ -39,15 +39,6 @@ if (-not $Version) {
     if ($minor -gt 9) { $minor = 0; $major++ }
     $Version = "v$major.$minor.$patch"
 }
-# 부 버전(두 번째 자리)마다 코드네임: 게임 안 표(WindowTitle.cs 의 Codenames)에서 읽음
-$codename = ""
-$codeFile = Join-Path $Project "Assets\Scripts\WindowTitle.cs"
-if ($Version -match "^v(\d+\.\d+)\." -and (Test-Path $codeFile)) {
-    $mm = [regex]::Escape($Matches[1])
-    $hit = Select-String -Path $codeFile -Pattern ('\{\s*"' + $mm + '",\s*"([^"]+)"') -Encoding utf8 | Select-Object -First 1
-    if ($hit) { $codename = $hit.Matches[0].Groups[1].Value }
-}
-$title = if ($codename) { "Soul Saver $Version — $codename" } else { "Soul Saver $Version" }
 if ($prevCommit) { $changes = git -C $Project log --pretty="- %s" "$prevCommit..HEAD" }
 else { $changes = git -C $Project log --pretty="- %s" -n 15 }
 if ($NotesFile) { $notes = "소스 커밋: $commit`n`n" + (Get-Content $NotesFile -Raw -Encoding utf8) }
@@ -83,6 +74,6 @@ Compress-Archive -Path (Join-Path $OutDir "*") -DestinationPath $zip
 Write-Host ("압축 완료: {0:N1} MB" -f ((Get-Item $zip).Length / 1MB))
 
 # ---------------------------------------------------------------- 업로드
-& $Gh release create $Version $zip -R $Repo --title $title --notes $notes
+& $Gh release create $Version $zip -R $Repo --title "Soul Saver $Version" --notes $notes
 if ($LASTEXITCODE -ne 0) { throw "Release 업로드 실패" }
 Write-Host "완료: https://github.com/$Repo/releases/tag/$Version"
