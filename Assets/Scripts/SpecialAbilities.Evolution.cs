@@ -4,8 +4,9 @@ using UnityEngine;
 // 거너의 새 성장 방식 (1.7.5~)
 //  · 무기 진화: 스테이지 보스를 쓰러뜨릴 때마다 지금 무기에서 3갈래 중 하나로 진화 (되돌릴 수 없음)
 //      권총 → 1차 (화염 방사기 / 영혼 저격총 / 저주받은 쌍권총) → 2차 (계열마다 강화판 3갈래)
-//  · 영혼 트리: 가운데 = 지금 무기, 네 갈래(무기 · 필살기 · 생존 · 영혼)로 뻗은 칸을 영혼 조각으로 배움
-//      앞 칸을 배워야 이어진 다음 칸이 열림. 무기 가지는 무기(진화 단계)마다 달라짐
+//  · 영혼 트리 (1.7.7~): 가운데 = 지금 무기, 여섯 가지(무기 · 필살기 · 스킬 · 생존 · 영혼 · 재물)
+//      앞 칸을 배워야 이어진 다음 칸이 열림 (그 너머는 화면에 보이지 않음)
+//      무기 가지는 모든 무기에 공통이라 진화해도 그대로 이어짐. 들었던 무기마다 숙련 가지가 덧붙음
 // 다른 캐릭터는 아직 예전 특수 능력 방식을 씀 (UsesEvolution == false)
 public partial class SpecialAbilities
 {
@@ -35,6 +36,7 @@ public partial class SpecialAbilities
     // 진화 단계에 맞는 무기 이름 (2차에서 같은 무기를 고르면 새 이름)
     public string EvolutionName(int id, int tier)
     {
+        if (id < 0) return Loc.T("기본 권총");
         if (tier >= 2 && id == FlameId) return Loc.T("지옥불 방사기");
         if (tier >= 2 && id == SniperId) return Loc.T("영혼 레일건");
         if (tier >= 2 && id == DualId) return Loc.T("심판의 쌍권총");
@@ -50,19 +52,21 @@ public partial class SpecialAbilities
         return tier >= 2 ? body + "\n<color=#9fd8ff>" + Loc.T("진화") + "</color>  " + EvolveText(id) : body;
     }
 
-    // 진화: 지금 무기를 새 무기로 바꾸고 강화를 이어받음
+    // 들었던 무기 (권총 = -1부터 진화 순서대로): 무기마다 숙련 가지가 트리에 남음
+    readonly List<int> weaponHistory = new List<int> { -1 };
+    readonly Dictionary<int, int> historyTier = new Dictionary<int, int> { { -1, 0 } };
+
+    // 진화: 지금 무기를 새 무기로 바꿈. 무기 가지(공통 강화)와 필살기 특성은 그대로 이어짐
     public void EvolveWeapon(int id)
     {
         int prev = WeaponActive ? CurrentWeapon : -1;
         int tier = EvolutionTier + 1;
 
-        // 권총 필살기(일제 사격)의 특성 강화도 첫 진화 무기로 이어받음
-        if (prev < 0 && ultLevels.TryGetValue(PistolUlt, out int[] pu)) ultLevels[id] = (int[])pu.Clone();
+        // 필살기 특성 강화는 새 무기로 이어받음 (권총 필살기 → 첫 진화 무기 포함)
+        int ultFrom = prev < 0 ? PistolUlt : prev;
+        if (ultFrom != id && ultLevels.TryGetValue(ultFrom, out int[] ul)) ultLevels[id] = (int[])ul.Clone();
         if (prev >= 0 && prev != id)
         {
-            // 무기 강화 · 필살기 강화를 새 무기로 이어받음
-            if (weaponLevels.TryGetValue(prev, out int[] wl)) weaponLevels[id] = (int[])wl.Clone();
-            if (ultLevels.TryGetValue(prev, out int[] ul)) ultLevels[id] = (int[])ul.Clone();
             equipped.Remove(prev);
             weapons.Remove(prev);
             evolved.Remove(prev);
@@ -78,6 +82,8 @@ public partial class SpecialAbilities
         weaponIndex = weapons.IndexOf(id);
         EvolutionTier = tier;
         if (tier >= 2 && !evolved.Contains(id)) Evolve(id);
+        if (!weaponHistory.Contains(id)) weaponHistory.Add(id);
+        historyTier[id] = tier;
         if (UsesAmmo(id)) { WeaponAmmo a = Ammo(id); a.ammo = MagSize(id); a.reloadEnd = -1f; }
         nextFire = 0f;
         RebuildHudRows();
@@ -87,101 +93,213 @@ public partial class SpecialAbilities
     public class SoulNode
     {
         public string key, parent;          // parent == null → 가운데 무기에서 바로 이어짐
-        public int branch;                  // 0 무기 · 1 필살기 · 2 생존 · 3 영혼
+        public int branch;                  // 0 무기 · 1 필살기 · 2 스킬 · 3 생존 · 4 영혼 · 5 재물
         public string name, desc;           // 번역된 글
         public int cost;
         public Sprite icon;
         public System.Action apply;
-        public bool hidden;                 // 지금 무기에는 해당 없음
+        public bool hidden;                 // 지금은 해당 없음 (예: 탄창이 없는 무기의 탄창 칸)
+        public System.Func<string> blocked; // 배울 수 없는 이유 (없으면 null) — 예: 스킬 칸이 가득
     }
 
-    public static readonly string[] BranchNames = { "무기", "필살기", "생존", "영혼" };
+    public const int BranchCount = 6;
+    public static readonly string[] BranchNames = { "무기", "필살기", "스킬", "생존", "영혼", "재물" };
     readonly HashSet<string> ownedNodes = new HashSet<string>();
     public bool OwnsNode(string key) => ownedNodes.Contains(key);
 
-    // 트리가 올리는 값
+    // ---------------- 트리가 올리는 값 (무기가 바뀌어도 그대로)
     public float TreeUltPower { get; private set; }         // 필살기 위력 +
     public float TreeGaugeMul { get; private set; } = 1f;   // 필살기 게이지 차는 속도
     public float TreeShardMul { get; private set; } = 1f;   // 영혼 조각 획득량
+    public float TreeUltRefund { get; private set; }        // 필살기를 쓴 뒤 게이지가 이만큼 남음
+    public float TreeRateMul { get; private set; } = 1f;    // 모든 무기 발사 간격 배율
+    public float TreeMagMul { get; private set; } = 1f;     // 모든 무기 탄창 배율
+    public float TreeReloadMul { get; private set; } = 1f;  // 모든 무기 장전 시간 배율
+    public float TreeCrit { get; private set; }             // 치명타 확률 (피해 2배)
+    public float TreeCritDamage { get; private set; } = 2f;
+    public int TreePene { get; private set; }               // 관통 +
+    public float TreeBulletSpeed { get; private set; } = 1f;
+    public float TreeExecute { get; private set; }          // 체력 20% 아래 적에게 추가 피해 비율
+    public float TreeCooldownMul { get; private set; } = 1f;
+    float barrierEvery, barrierReadyAt;                     // 보호막: 이 시간마다 공격 한 번을 막음
+    float interestRate, interestAt;                         // 이자: 30초마다 가진 코인의 일부
 
-    // 지금 트리 (무기 가지는 진화 단계 · 무기마다 다름)
+    float baseAttack = -1f;
+    int basePistolMag;
+    float BaseAttack => baseAttack > 0f ? baseAttack : player.damage;
+
+    // 트리 전체 (숨김 칸 포함). 칸 위치는 이 목록으로 정해져서, 새 칸이 열려도 배치가 흔들리지 않음
     public List<SoulNode> BuildSoulTree()
     {
+        if (baseAttack < 0f && player != null) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }
         List<SoulNode> t = new List<SoulNode>();
+        PlayerController p = player;
         Sprite atk = StatIcon(0), def = StatIcon(1), spd = StatIcon(2), rel = StatIcon(3), mov = StatIcon(4);
 
-        // ---------------- 무기 가지
-        if (!WeaponActive)
-        {
-            // 진화 전: 권총
-            PlayerController p = player;
-            t.Add(Node("p.dmg1", null, 0, "권총 화력", "권총 공격력 +0.25", 8, atk, () => p.damage += 0.25f));
-            t.Add(Node("p.dmg2", "p.dmg1", 0, "권총 화력 II", "권총 공격력 +0.25", 18, atk, () => p.damage += 0.25f));
-            t.Add(Node("p.rate1", "p.dmg1", 0, "빠른 손", "권총 연사 +10%", 12, spd, () => p.ShootSpeed *= 0.9f));
-            t.Add(Node("p.mag1", "p.rate1", 0, "큰 탄창", "권총 탄창 +2발", 12, rel, () => { p.MaxBullet += 2; p.NowBullet += 2; }));
-            t.Add(Node("p.reload1", "p.mag1", 0, "재빠른 장전", "권총 장전 시간 -15%", 15, rel, () => p.reloadTime *= 0.85f));
-        }
-        else
-        {
-            int w = CurrentWeapon;
-            Sprite wi = abilities[w].icon;
-            string trait = TraitName(w), step = TraitStep(w);
-            t.Add(Node("w.dmg1", null, 0, "무기 화력", "무기 피해 +15%", 12, atk, () => UpgradeWeapon(w, StatDamage)));
-            t.Add(Node("w.dmg2", "w.dmg1", 0, "무기 화력 II", "무기 피해 +15%", 25, atk, () => UpgradeWeapon(w, StatDamage)));
-            t.Add(Node("w.dmg3", "w.dmg2", 0, "무기 화력 III", "무기 피해 +15%", 45, atk, () => UpgradeWeapon(w, StatDamage)));
-            t.Add(Node("w.rate1", "w.dmg1", 0, "연사 강화", "무기 연사 +10%", 18, spd, () => UpgradeWeapon(w, StatRate)));
-            t.Add(Node("w.rate2", "w.rate1", 0, "연사 강화 II", "무기 연사 +10%", 35, spd, () => UpgradeWeapon(w, StatRate)));
-            SoulNode mag = Node("w.mag1", "w.rate1", 0, "큰 탄창", "무기 탄창 +25%", 15, rel, () => UpgradeWeapon(w, StatMag));
-            mag.hidden = !UsesAmmo(w);
-            t.Add(mag);
-            // 특성: 무기마다 다름 (저격총 충전 속도 · 화염 냉각 · 산탄 사거리 …)
-            t.Add(RawNode("w.trait1", "w.dmg1", 0, trait, step, 20, wi, () => UpgradeWeapon(w, StatTrait)));
-            t.Add(RawNode("w.trait2", "w.trait1", 0, trait + " II", step, 40, wi, () => UpgradeWeapon(w, StatTrait)));
-            t.Add(RawNode("w.trait3", "w.trait2", 0, trait + " III", step, 70, wi, () => UpgradeWeapon(w, StatTrait)));
-        }
+        // ---------------- 0 무기: 모든 무기에 공통 (진화해도 이어짐)
+        t.Add(Node("w.dmg1", null, 0, "무기 화력", "모든 무기 피해 +10%", 6, atk, () => AddAttack(0.1f)));
+        Chain(t, "w.dmg", 2, 5, "w.dmg1", 0, "무기 화력", "모든 무기 피해 +10%", new[] { 14, 26, 42, 64 }, atk, () => AddAttack(0.1f));
+        t.Add(Node("w.rate1", "w.dmg1", 0, "연사 강화", "모든 무기 발사 간격 -8%", 10, spd, () => AddRate(0.92f)));
+        Chain(t, "w.rate", 2, 4, "w.rate1", 0, "연사 강화", "모든 무기 발사 간격 -8%", new[] { 22, 38, 60 }, spd, () => AddRate(0.92f));
+        t.Add(Node("w.mag1", "w.rate1", 0, "큰 탄창", "모든 무기 탄창 +20%", 12, rel, () => AddMag(0.2f)));
+        Chain(t, "w.mag", 2, 3, "w.mag1", 0, "큰 탄창", "모든 무기 탄창 +20%", new[] { 26, 44 }, rel, () => AddMag(0.2f));
+        t.Add(Node("w.reload1", "w.mag1", 0, "재빠른 장전", "모든 무기 장전 시간 -12%", 14, rel, () => AddReload(0.88f)));
+        Chain(t, "w.reload", 2, 3, "w.reload1", 0, "재빠른 장전", "모든 무기 장전 시간 -12%", new[] { 28, 46 }, rel, () => AddReload(0.88f));
+        t.Add(Node("w.crit1", "w.dmg1", 0, "급소 사격", "치명타 확률 +8% (치명타는 피해 2배)", 16, LvIcon(3), () => TreeCrit += 0.08f));
+        Chain(t, "w.crit", 2, 3, "w.crit1", 0, "급소 사격", "치명타 확률 +8%", new[] { 30, 50 }, LvIcon(3), () => TreeCrit += 0.08f);
+        t.Add(Node("w.critdmg", "w.crit3", 0, "처참한 일격", "치명타 피해 2배 → 2.6배", 60, LvIcon(3), () => TreeCritDamage = 2.6f));
+        t.Add(Node("w.pene1", "w.crit1", 0, "철갑탄", "모든 총알 관통 +1", 24, LvIcon(0), () => AddPene()));
+        t.Add(Node("w.pene2", "w.pene1", 0, "철갑탄 II", "모든 총알 관통 +1", 48, LvIcon(0), () => AddPene()));
+        t.Add(Node("w.speed", "w.rate1", 0, "고속탄", "총알이 30% 더 빠르게 날아갑니다", 14, spd, () => TreeBulletSpeed *= 1.3f));
+        t.Add(Node("w.exec1", "w.dmg3", 0, "처형", "체력 20% 아래인 적에게 피해 +50%", 34, LvIcon(7), () => TreeExecute += 0.5f));
+        t.Add(Node("w.exec2", "w.exec1", 0, "처형 II", "체력 20% 아래인 적에게 피해 +50%", 58, LvIcon(7), () => TreeExecute += 0.5f));
 
-        // ---------------- 필살기 가지
-        Sprite ult = WeaponActive ? abilities[CurrentWeapon].icon : atk;
-        t.Add(Node("u.power1", null, 1, "필살 위력", "필살기 피해 +20%", 12, ult, () => TreeUltPower += 0.2f));
-        t.Add(Node("u.power2", "u.power1", 1, "필살 위력 II", "필살기 피해 +20%", 28, ult, () => TreeUltPower += 0.2f));
-        t.Add(Node("u.power3", "u.power2", 1, "필살 위력 III", "필살기 피해 +20%", 50, ult, () => TreeUltPower += 0.2f));
-        t.Add(Node("u.gauge1", "u.power1", 1, "빠른 충전", "필살기 게이지 차는 속도 +15%", 15, spd, () => TreeGaugeMul += 0.15f));
-        t.Add(Node("u.gauge2", "u.gauge1", 1, "빠른 충전 II", "필살기 게이지 차는 속도 +15%", 35, spd, () => TreeGaugeMul += 0.15f));
+        // 들었던 무기마다 숙련 가지 (무기 화력에서 뻗음). 숙련 보너스는 다음 무기에도 이어짐
+        foreach (int w in weaponHistory) AddMastery(t, w);
+
+        // ---------------- 1 필살기
+        Sprite ult = WeaponActive ? abilities[CurrentWeapon].icon : LvIcon(3);
+        t.Add(Node("u.power1", null, 1, "필살 위력", "필살기 피해 +20%", 8, ult, () => TreeUltPower += 0.2f));
+        Chain(t, "u.power", 2, 4, "u.power1", 1, "필살 위력", "필살기 피해 +20%", new[] { 20, 36, 56 }, ult, () => TreeUltPower += 0.2f);
+        t.Add(Node("u.gauge1", "u.power1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", 12, LvIcon(2), () => TreeGaugeMul += 0.12f));
+        Chain(t, "u.gauge", 2, 3, "u.gauge1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", new[] { 26, 44 }, LvIcon(2), () => TreeGaugeMul += 0.12f);
         // 필살기 특성: 무기마다 다름 (권총 타겟 수 · 화염 회오리 지속 · 레일건 굵기 …), 진화해도 이어짐
         int uw = WeaponActive ? CurrentWeapon : PistolUlt;
-        string ut = UltTraitName(uw), us = UltTraitStep(uw);
-        string ud = Loc.T("필살기") + " " + ut + " " + us;
-        t.Add(RawNode("u.trait1", "u.power1", 1, ut, ud, 20, ult, () => UpgradeUlt(uw, UltTraitStat)));
-        t.Add(RawNode("u.trait2", "u.trait1", 1, ut + " II", ud, 40, ult, () => UpgradeUlt(uw, UltTraitStat)));
-        t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 65, ult, () => UpgradeUlt(uw, UltTraitStat)));
+        string ut = UltTraitName(uw), ud = Loc.T("필살기") + " " + ut + " " + UltTraitStep(uw);
+        t.Add(RawNode("u.trait1", "u.power1", 1, ut, ud, 16, ult, () => UpgradeUlt(uw, UltTraitStat)));
+        t.Add(RawNode("u.trait2", "u.trait1", 1, ut + " II", ud, 32, ult, () => UpgradeUlt(uw, UltTraitStat)));
+        t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 52, ult, () => UpgradeUlt(uw, UltTraitStat)));
+        t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+        t.Add(Node("u.slow2", "u.slow1", 1, "노려보는 눈빛 II", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 34, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+        t.Add(Node("u.refund1", "u.gauge2", 1, "잔불", "필살기를 쓴 뒤 게이지가 15% 남습니다", 30, LvIcon(2), () => TreeUltRefund += 0.15f));
+        t.Add(Node("u.refund2", "u.refund1", 1, "잔불 II", "필살기를 쓴 뒤 게이지가 15% 더 남습니다", 54, LvIcon(2), () => TreeUltRefund += 0.15f));
 
-        // ---------------- 생존 가지
-        PlayerController pl = player;
-        t.Add(Node("s.hp1", null, 2, "튼튼한 몸", "최대 체력 +15%", 10, def, () => GrowHp(pl, 1.15f)));
-        t.Add(Node("s.hp2", "s.hp1", 2, "튼튼한 몸 II", "최대 체력 +15%", 25, def, () => GrowHp(pl, 1.15f)));
-        t.Add(Node("s.hp3", "s.hp2", 2, "튼튼한 몸 III", "최대 체력 +15%", 45, def, () => GrowHp(pl, 1.15f)));
-        t.Add(Node("s.regen1", "s.hp1", 2, "회복력", "초당 체력 +0.5 회복", 15, mov, () => pl.regenPerSecond += 0.5f));
-        t.Add(Node("s.regen2", "s.regen1", 2, "회복력 II", "초당 체력 +0.5 회복", 35, mov, () => pl.regenPerSecond += 0.5f));
-        t.Add(Node("s.def1", "s.hp1", 2, "단단한 피부", "받는 피해 -8%", 20, def, () => pl.def += 0.08f));
-        t.Add(Node("s.def2", "s.def1", 2, "단단한 피부 II", "받는 피해 -8%", 45, def, () => pl.def += 0.08f));
-        t.Add(Node("s.guard", "s.def1", 2, "재정비", "맞은 뒤 무적 시간 +0.15초", 30, def, () => pl.hurtInvincibleTime += 0.15f));
+        // ---------------- 2 스킬: 여덟 가지 중 세 칸 ([스킬1 · 2 · 3] 키), 배운 스킬은 진화 가능
+        t.Add(Node("k.root", null, 2, "스킬 해방", "스킬을 배울 수 있게 됩니다. 스킬은 세 개까지 ([{SKILL1}] · [{SKILL2}] · [{SKILL3}])", 10, abilities[DashId].icon, null));
+        t.Add(Node("k.cd1", "k.root", 2, "빠른 회복", "모든 스킬 쿨타임 -8%", 16, spd, () => TreeCooldownMul *= 0.92f));
+        Chain(t, "k.cd", 2, 3, "k.cd1", 2, "빠른 회복", "모든 스킬 쿨타임 -8%", new[] { 30, 50 }, spd, () => TreeCooldownMul *= 0.92f);
+        for (int id = DashId; id <= HookId; id++) AddSkill(t, id);
 
-        // ---------------- 영혼 가지 (예전 거너 패시브가 여기로)
-        t.Add(Node("o.root", null, 3, "영혼 각성", "영혼 조각 획득량 +20%", 10, abilities[OrbsId].icon, () => TreeShardMul += 0.2f));
-        AddPassive(t, OrbsId, 30, 60);
-        AddPassive(t, ThornsId, 30, 60);
-        AddPassive(t, CurseId, 25, 50);
-        AddPassive(t, UndyingId, 50, 90);
+        // ---------------- 3 생존
+        t.Add(Node("s.hp1", null, 3, "튼튼한 몸", "최대 체력 +12%", 6, LvIcon(8), () => GrowHp(p, 1.12f)));
+        Chain(t, "s.hp", 2, 5, "s.hp1", 3, "튼튼한 몸", "최대 체력 +12%", new[] { 14, 26, 42, 62 }, LvIcon(8), () => GrowHp(p, 1.12f));
+        t.Add(Node("s.regen1", "s.hp1", 3, "회복력", "초당 체력 +0.5 회복", 12, LvIcon(10), () => p.regenPerSecond += 0.5f));
+        Chain(t, "s.regen", 2, 3, "s.regen1", 3, "회복력", "초당 체력 +0.5 회복", new[] { 26, 44 }, LvIcon(10), () => p.regenPerSecond += 0.5f);
+        t.Add(Node("s.def1", "s.hp1", 3, "단단한 피부", "받는 피해 -6%", 14, def, () => p.def += 0.06f));
+        Chain(t, "s.def", 2, 3, "s.def1", 3, "단단한 피부", "받는 피해 -6%", new[] { 30, 50 }, def, () => p.def += 0.06f);
+        t.Add(Node("s.guard1", "s.def1", 3, "재정비", "맞은 뒤 무적 시간 +0.15초", 22, def, () => p.hurtInvincibleTime += 0.15f));
+        t.Add(Node("s.guard2", "s.guard1", 3, "재정비 II", "맞은 뒤 무적 시간 +0.15초", 42, def, () => p.hurtInvincibleTime += 0.15f));
+        t.Add(Node("s.barrier1", "s.def2", 3, "영혼 보호막", "20초마다 공격 한 번을 막아 주는 보호막이 생깁니다", 40, def, () => { barrierEvery = 20f; barrierReadyAt = Time.time; }));
+        t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
+        t.Add(Node("s.speed1", "s.hp1", 3, "가벼운 발", "이동 속도 +6%", 12, mov, () => p.speed *= 1.06f));
+        t.Add(Node("s.speed2", "s.speed1", 3, "가벼운 발 II", "이동 속도 +6%", 28, mov, () => p.speed *= 1.06f));
+        t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +1 회복", 20, LvIcon(11), () => p.healOnKill += 1f));
+        t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +1 회복", 40, LvIcon(11), () => p.healOnKill += 1f));
+
+        // ---------------- 4 영혼 (예전 거너 패시브가 여기로)
+        t.Add(Node("o.root", null, 4, "영혼 각성", "영혼 조각 획득량 +15%", 8, abilities[OrbsId].icon, () => TreeShardMul += 0.15f));
+        t.Add(Node("o.root2", "o.root", 4, "영혼 각성 II", "영혼 조각 획득량 +15%", 30, abilities[OrbsId].icon, () => TreeShardMul += 0.15f));
+        t.Add(Node("o.root3", "o.root2", 4, "영혼 각성 III", "영혼 조각 획득량 +20%", 60, abilities[OrbsId].icon, () => TreeShardMul += 0.2f));
+        AddPassive(t, OrbsId, 26, 56);
+        AddPassive(t, ThornsId, 26, 56);
+        AddPassive(t, CurseId, 22, 48);
+        AddPassive(t, UndyingId, 44, 80);
+
+        // ---------------- 5 재물
+        t.Add(Node("g.coin1", null, 5, "코인충", "코인 1개당 획득량 +1", 8, LvIcon(1), () => p.bonusCoin++));
+        Chain(t, "g.coin", 2, 3, "g.coin1", 5, "코인충", "코인 1개당 획득량 +1", new[] { 22, 40 }, LvIcon(1), () => p.bonusCoin++);
+        t.Add(Node("g.magnet1", "g.coin1", 5, "코인 자석", "주변 코인을 끌어오는 범위 +3칸", 10, LvIcon(5), () => p.coinMagnetRange += 3f));
+        t.Add(Node("g.magnet2", "g.magnet1", 5, "코인 자석 II", "끌어오는 범위 +3칸", 24, LvIcon(5), () => p.coinMagnetRange += 3f));
+        t.Add(Node("g.exp1", "g.coin1", 5, "배움의 기쁨", "얻는 경험치 +10%", 12, LvIcon(4), () => AddExp(0.1f)));
+        Chain(t, "g.exp", 2, 3, "g.exp1", 5, "배움의 기쁨", "얻는 경험치 +10%", new[] { 28, 46 }, LvIcon(4), () => AddExp(0.1f));
+        t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
+        t.Add(Node("g.interest2", "g.interest1", 5, "이자 II", "이자 +5%", 56, LvIcon(1), () => interestRate += 0.05f));
         return t;
+    }
+
+    // 무기 숙련: 무기 하나를 들었던 기록마다 가지 하나 (숙련 · 특성 세 단계 · 무기마다 다른 이어지는 보너스)
+    void AddMastery(List<SoulNode> t, int w)
+    {
+        string k = "m" + w;
+        string wname = EvolutionName(w, historyTier.TryGetValue(w, out int tr) ? tr : 1);
+        Sprite icon = w < 0 ? Resources.Load<Sprite>("Weapons/weapon_pistol") : abilities[w].icon;
+        t.Add(RawNode(k, "w.dmg1", 0, Loc.T("숙련: ") + wname, Loc.T("모든 무기 피해 +6% (다음 무기에도 이어짐)"), 12, icon, () => AddAttack(0.06f)));
+        if (w < 0)
+        {
+            // 권총: 기본기를 다지는 숙련 (모두 다음 무기에도 이어짐)
+            t.Add(Node(k + ".a", k, 0, "빠른 손", "모든 무기 발사 간격 -6%", 16, icon, () => AddRate(0.94f)));
+            t.Add(Node(k + ".b", k + ".a", 0, "명사수", "치명타 확률 +6%", 26, icon, () => TreeCrit += 0.06f));
+            t.Add(Node(k + ".c", k + ".b", 0, "총잡이의 감", "모든 무기 장전 시간 -10%", 36, icon, () => AddReload(0.9f)));
+            return;
+        }
+        // 진화 무기: 그 무기만의 특성 세 단계 + 이어지는 보너스
+        string trait = TraitName(w), step = TraitStep(w);
+        t.Add(RawNode(k + ".t1", k, 0, trait, step, 18, icon, () => AddTrait(w)));
+        t.Add(RawNode(k + ".t2", k + ".t1", 0, trait + " II", step, 34, icon, () => AddTrait(w)));
+        t.Add(RawNode(k + ".t3", k + ".t2", 0, trait + " III", step, 56, icon, () => AddTrait(w)));
+        t.Add(RawNode(k + ".x", k, 0, Loc.T("기억: ") + wname, MasteryBonusText(w), 30, icon, () => MasteryBonus(w)));
+    }
+
+    static string MasteryBonusText(int w) => w switch
+    {
+        FlameId or GrenadeId or ShotgunId => Loc.T("모든 무기 피해 +8%"),
+        SniperId or SeekerId => Loc.T("치명타 확률 +8%"),
+        DualId or ScytheId => Loc.T("모든 무기 발사 간격 -8%"),
+        _ => Loc.T("모든 총알 관통 +1"),
+    };
+
+    void MasteryBonus(int w)
+    {
+        switch (w)
+        {
+            case FlameId: case GrenadeId: case ShotgunId: AddAttack(0.08f); break;
+            case SniperId: case SeekerId: TreeCrit += 0.08f; break;
+            case DualId: case ScytheId: AddRate(0.92f); break;
+            default: AddPene(); break;
+        }
+    }
+
+    // 특성 강화: 지금 들고 있지 않은 무기에도 기록해 둠 (다시 쓸 일은 없지만 산 조각이 날아가지 않게)
+    void AddTrait(int id)
+    {
+        if (!weaponLevels.ContainsKey(id)) weaponLevels[id] = new int[4];
+        weaponLevels[id][StatTrait] = Mathf.Min(WeaponStatMax[StatTrait], weaponLevels[id][StatTrait] + 1);
+    }
+
+    void AddSkill(List<SoulNode> t, int id)
+    {
+        SpecialDef d = abilities[id];
+        t.Add(new SoulNode
+        {
+            key = "k." + id, parent = "k.root", branch = 2, name = Loc.T(d.name), desc = BodyText(id, d.description), cost = 24, icon = d.icon,
+            apply = () => Equip(new[] { id }),
+            blocked = () => skills.Count >= MaxSkills ? Loc.T("스킬 칸이 가득 찼습니다 (최대 3개)") : null,
+        });
+        t.Add(new SoulNode { key = "k." + id + "+", parent = "k." + id, branch = 2, name = Loc.T(d.name) + Loc.T(" 진화"), desc = EvolveText(id), cost = 50, icon = d.icon,
+                             apply = () => Evolve(id) });
     }
 
     void AddPassive(List<SoulNode> t, int id, int cost, int evoCost)
     {
         SpecialDef d = abilities[id];
-        t.Add(new SoulNode { key = "o." + id, parent = "o.root", branch = 3, name = Loc.T(d.name), desc = BodyText(id, d.description), cost = cost, icon = d.icon,
+        t.Add(new SoulNode { key = "o." + id, parent = "o.root", branch = 4, name = Loc.T(d.name), desc = BodyText(id, d.description), cost = cost, icon = d.icon,
                              apply = () => Equip(new[] { id }) });
-        t.Add(new SoulNode { key = "o." + id + "+", parent = "o." + id, branch = 3, name = Loc.T(d.name) + Loc.T(" 진화"), desc = EvolveText(id), cost = evoCost, icon = d.icon,
+        t.Add(new SoulNode { key = "o." + id + "+", parent = "o." + id, branch = 4, name = Loc.T(d.name) + Loc.T(" 진화"), desc = EvolveText(id), cost = evoCost, icon = d.icon,
                              apply = () => Evolve(id) });
+    }
+
+    // 같은 칸을 여러 단계로 (예: w.dmg2 ~ w.dmg5): 앞 단계에서 이어짐
+    static void Chain(List<SoulNode> t, string prefix, int from, int to, string first, int branch, string ko, string descKo, int[] costs, Sprite icon, System.Action apply)
+    {
+        string prev = first;
+        string[] roman = { "", "", "II", "III", "IV", "V", "VI" };
+        for (int i = from; i <= to; i++)
+        {
+            string key = prefix + i;
+            t.Add(Node(key, prev, branch, ko, descKo, costs[i - from], icon, apply));
+            t[t.Count - 1].name = Loc.T(ko) + " " + roman[Mathf.Min(i, roman.Length - 1)];
+            prev = key;
+        }
     }
 
     static SoulNode Node(string key, string parent, int branch, string ko, string descKo, int cost, Sprite icon, System.Action apply)
@@ -190,11 +308,75 @@ public partial class SpecialAbilities
     static SoulNode RawNode(string key, string parent, int branch, string name, string desc, int cost, Sprite icon, System.Action apply)
         => new SoulNode { key = key, parent = parent, branch = branch, name = name, desc = desc, cost = cost, icon = icon, apply = apply };
 
+    // ---------------- 트리 효과를 실제 수치에 반영
+    // 공격력: 처음 공격력 기준으로 더함 (상점 강화 · 희생의 계약과 겹쳐도 안전)
+    void AddAttack(float pct) => player.damage += BaseAttack * pct;
+
+    void AddRate(float mul)
+    {
+        TreeRateMul *= mul;
+        player.ShootSpeed *= mul;               // 권총
+    }
+
+    void AddMag(float pct)
+    {
+        TreeMagMul += pct;
+        int add = Mathf.Max(1, Mathf.RoundToInt(Mathf.Max(1, basePistolMag) * pct));
+        player.MaxBullet += add;                // 권총
+        player.NowBullet += add;
+        foreach (int w in weapons) if (UsesAmmo(w)) Ammo(w).ammo = Mathf.Min(MagSize(w), Ammo(w).ammo + Mathf.RoundToInt(BaseMag(w) * pct));
+    }
+
+    void AddReload(float mul)
+    {
+        TreeReloadMul *= mul;
+        player.reloadTime *= mul;               // 권총
+    }
+
+    void AddPene()
+    {
+        TreePene++;
+        player.pene++;                          // 권총
+    }
+
+    void AddExp(float pct)
+    {
+        Level lv = Cache<Level>.Get;
+        if (lv != null) lv.bonusEXP += pct;
+    }
+
     static void GrowHp(PlayerController p, float mul)
     {
         float add = p.PlayerMaxHealth * (mul - 1f);
         p.PlayerMaxHealth += add;
         p.PlayerHealth += add;
+    }
+
+    // 보호막이 있으면 공격 한 번을 막음 (PlayerController.TryHit)
+    public bool ConsumeBarrier()
+    {
+        if (barrierEvery <= 0f || Time.time < barrierReadyAt) return false;
+        barrierReadyAt = Time.time + barrierEvery;
+        if (fx != null)
+        {
+            fx.Play("clank", 0.7f, 1.4f);
+            fx.FloatText(player.transform.position, Loc.T("보호막!"), new Color(0.6f, 0.85f, 1f), 5f, 0.5f);
+        }
+        Flash(player.transform.position, 3f, new Color(0.6f, 0.85f, 1f, 0.8f), 0.25f);
+        return true;
+    }
+
+    // 매 프레임 (장착한 능력이 없어도): 이자
+    void TreeTick()
+    {
+        if (interestRate <= 0f || Time.timeScale == 0f || Time.time < interestAt) return;
+        interestAt = Time.time + 30f;
+        Coin c = Cache<Coin>.Get;
+        if (c == null) return;
+        int n = Mathf.Min(20, Mathf.FloorToInt(c.coins * interestRate));
+        if (n <= 0) return;
+        c.AddCoin(n);
+        if (fx != null) fx.FloatText(player.transform.position, Loc.T("이자 +") + n, new Color(1f, 0.85f, 0.35f), 5f, 0f);
     }
 
     // 능력치 아이콘 (StatsHUD: 공격력 · 방어력 · 공격 속도 · 재장전 · 이동 속도)
@@ -206,8 +388,19 @@ public partial class SpecialAbilities
         return statsHud != null && statsHud.icons != null && i < statsHud.icons.Length ? statsHud.icons[i] : null;
     }
 
-    public bool CanBuy(SoulNode n) => !ownedNodes.Contains(n.key) && !n.hidden && (n.parent == null || ownedNodes.Contains(n.parent)) && SoulShards.Amount >= n.cost;
+    // 레벨업 카드 아이콘 (0 관통 · 1 코인 · 2 재활용 · 3 눈빛 · 4 경험치 · 5 자석 · 7 밀어내기 · 8 심장 · 10 샘 · 11 굶주림)
+    static AbilityHUD abilityHud;
+    static Sprite LvIcon(int id)
+    {
+        if (abilityHud == null) abilityHud = FindFirstObjectByType<AbilityHUD>(FindObjectsInactive.Include);
+        return abilityHud != null ? abilityHud.GetIcon(id) : null;
+    }
+
     public bool IsOpenNode(SoulNode n) => !ownedNodes.Contains(n.key) && !n.hidden && (n.parent == null || ownedNodes.Contains(n.parent));
+    public string BlockReason(SoulNode n) => n.blocked?.Invoke();
+    public bool CanBuy(SoulNode n) => IsOpenNode(n) && SoulShards.Amount >= n.cost && BlockReason(n) == null;
+    // 화면에 보이는 칸: 배운 칸과 지금 배울 수 있는 칸 (그 너머는 숨김)
+    public bool IsVisibleNode(SoulNode n) => !n.hidden && (ownedNodes.Contains(n.key) || n.parent == null || ownedNodes.Contains(n.parent));
 
     public bool BuyNode(SoulNode n)
     {
@@ -218,13 +411,8 @@ public partial class SpecialAbilities
         return true;
     }
 
-    // 1차 진화 때 권총 가지는 끝나고 무기 가지가 새로 열림 (권총에 쓴 조각의 효과는 그대로 남음)
-    public void OnEvolvedTier1()
-    {
-        List<string> drop = new List<string>();
-        foreach (string k in ownedNodes) if (k.StartsWith("w.")) drop.Add(k);
-        foreach (string k in drop) ownedNodes.Remove(k);
-    }
+    // 예전 방식 호환 (무기 가지가 공통이 되어 이제 지울 칸이 없음)
+    public void OnEvolvedTier1() { }
 
     // 살 수 있는 칸이 있는지 (버튼 반짝임)
     public bool AnyAffordable()

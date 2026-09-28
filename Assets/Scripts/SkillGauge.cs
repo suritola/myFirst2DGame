@@ -73,7 +73,8 @@ public class SkillGauge : MonoBehaviour
 
     public void ResetSkillPoint()
     {
-        SkillPoint = 0;
+        // 영혼 트리 '잔불': 필살기를 쓴 뒤 게이지가 조금 남음
+        SkillPoint = SpecialAbilities.SharedInstance != null ? MaxSkillPoint * SpecialAbilities.SharedInstance.TreeUltRefund : 0f;
 
         UpdateGauge();
     }

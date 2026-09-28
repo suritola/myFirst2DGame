@@ -77,6 +77,7 @@ public partial class Shop : MonoBehaviour
 
         if (shopPanel != null) shopPanel.SetActive(false);
         else Debug.LogError("shopPanel이 연결되지 않았습니다!");
+        BasicStatsOnly();
 
         if (pause != null) pause.SetActive(false);
 

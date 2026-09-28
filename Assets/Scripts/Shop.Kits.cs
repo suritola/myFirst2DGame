@@ -40,6 +40,27 @@ public partial class Shop
     int KitMax(int slot) => Char == CharacterId.Archer && slot == 3 ? PierceMaxBuys : KitMaxBuys;
     bool KitMaxed(int slot) => kitBuys[slot] >= KitMax(slot);
 
+    // 영혼 트리를 쓰는 캐릭터: 상점은 무기와 상관없는 기본 능력치(공격력 · 이동 속도)만 팜
+    // 공격 속도 · 재장전 · 탄창은 무기마다 달라서 영혼 트리의 무기 가지로 옮김
+    // 줄 셋을 숨기고, 남은 두 줄이 가운데 오도록 창을 줄임 (줄 간격 108)
+    void BasicStatsOnly()
+    {
+        if (!SpecialAbilities.UsesEvolution || shopPanel == null) return;
+        const float Row = 108f;
+        foreach (Transform c in shopPanel.transform)
+        {
+            string n = c.name;
+            if (n.StartsWith("ShootSpeed") || n.StartsWith("ReloadSpeed") || n.StartsWith("MaxBullet")) { c.gameObject.SetActive(false); continue; }
+            RectTransform r = c as RectTransform;
+            if (r == null) continue;
+            if (n == "Window") { r.sizeDelta -= new Vector2(0f, Row * 3f); continue; }
+            Vector2 p = r.anchoredPosition;
+            // 위쪽(제목 · 코인 · 공격력)은 1.5줄 내리고, 아래쪽(이동 속도 · 닫기 안내)은 1.5줄 올림
+            p.y += n.StartsWith("MoveSpeed") || n == "CloseHint" ? Row * 1.5f : -Row * 1.5f;
+            r.anchoredPosition = p;
+        }
+    }
+
     // 캐릭터 전용 업그레이드면 사고 true (원래 업그레이드는 건너뜀)
     bool KitPress(int slot)
     {

@@ -911,6 +911,8 @@ void Shoot()
     public bool TryHit(float amount)
     {
         if (IsInvincible) return false;
+        // 영혼 트리 보호막: 공격 한 번을 막음
+        if (special != null && special.ConsumeBarrier()) { invincibleUntil = Time.time + 0.3f; return false; }
         // 도적 회피 본능: 확률로 공격을 피함
         if (special != null && special.KitDodge()) return false;
 

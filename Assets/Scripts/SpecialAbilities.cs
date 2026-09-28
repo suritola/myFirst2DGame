@@ -205,7 +205,7 @@ public partial class SpecialAbilities : MonoBehaviour
     };
 
     public static bool UsesAmmo(int id) => BaseMag(id) > 0;
-    public int MagSize(int id) => Mathf.RoundToInt(BaseMag(id) * (1f + 0.25f * WeaponLevel(id, StatMag)));
+    public int MagSize(int id) => Mathf.RoundToInt(BaseMag(id) * (1f + 0.25f * WeaponLevel(id, StatMag)) * TreeMagMul);
 
     WeaponAmmo Ammo(int id)
     {
@@ -229,7 +229,7 @@ public partial class SpecialAbilities : MonoBehaviour
         if (!UsesAmmo(id)) return;
         WeaponAmmo a = Ammo(id);
         if (a.Reloading || a.ammo >= MagSize(id)) return;
-        a.reloadEnd = Time.time + BaseReload(id);
+        a.reloadEnd = Time.time + BaseReload(id) * TreeReloadMul;
         fx.Play(ReloadSound(id), 0.8f, Random.Range(0.96f, 1.04f));
         ReloadShockwave(player.transform.position);
     }
@@ -889,6 +889,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // ================================================================= update
     void Update()
     {
+        if (player != null) TreeTick();
         if (player == null || equipped.Count == 0 || Time.timeScale == 0f)
         {
             // 멈춘 동안에는 소리와 표시를 숨기고 조준 중이던 스킬은 취소 (멈춘 사이 키를 떼도 조준이 남지 않게)
@@ -1097,7 +1098,7 @@ public partial class SpecialAbilities : MonoBehaviour
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
         start = player.MuzzlePosition;
-        nextFire = Time.time + BaseInterval(CurrentWeapon) / player.fireRateMultiplier * WeaponRateMul(CurrentWeapon);
+        nextFire = Time.time + BaseInterval(CurrentWeapon) / player.fireRateMultiplier * WeaponRateMul(CurrentWeapon) * TreeRateMul;
         // 무기마다 자기 탄창을 씀 (권총 탄창과 별개)
         bool kitWeapon = IsKit(CurrentWeapon);
         Vector2 aimDir = ((Vector2)(target - start)).normalized;
@@ -1119,6 +1120,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     Bullet Shot(Vector3 start, Vector2 dir, float dmg, int pene, float knockRate, bool cursed, Color tint, float speedMul = 1f, float scale = 1f, float skillCharge = 1f)
     {
+        if (pene < 50 && CurrentWeapon != DualId) pene += TreePene;
         Bullet b = player.CreateBullet(start, dir, dmg * (cursed ? 3f : 1f), pene, 0, false, knockRate);
         if (b == null) return null;
         // 스킬 게이지: 화염 방사기가 기준, 나머지 무기는 천천히
@@ -1246,7 +1248,7 @@ public partial class SpecialAbilities : MonoBehaviour
             Vector3 start = player.MuzzlePosition;
             Vector2 aim = ((Vector2)(target - start)).normalized;
             Vector2 dir = Quaternion.Euler(0, 0, Random.Range(-8f, 8f)) * aim;
-            nextFire = Time.time + 0.07f / player.fireRateMultiplier * WeaponRateMul(FlameId);
+            nextFire = Time.time + 0.07f / player.fireRateMultiplier * WeaponRateMul(FlameId) * TreeRateMul;
 
             // 실제 피해는 보이지 않는 판정용 탄이 담당
             Bullet b = Shot(start, dir, WDamage * 0.25f, 99, 0.2f, false, new Color(1f, 0.55f, 0.15f, 0.9f), 0.2f, 1.6f, 0.05f);
@@ -1476,6 +1478,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     void StartCooldown(int id, float seconds)
     {
+        seconds *= TreeCooldownMul;
         cooldownLength[id] = seconds;
         cooldownUntil[id] = Time.time + seconds;
         wasReady[id] = false;

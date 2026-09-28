@@ -14,6 +14,15 @@ public partial class SpecialAbilities
     public void ApplyGunCards(Bullet b, bool light, bool countShot = true)
     {
         if (b == null || !CharacterData.IsGunner) return;
+        // 영혼 트리: 치명타 (피해 2배, 금색) · 탄속
+        if (TreeCrit > 0f && Random.value < TreeCrit)
+        {
+            b.damage *= TreeCritDamage;
+            b.transform.localScale *= 1.25f;
+            if (b.TryGetComponent(out SpriteRenderer csr)) csr.color = new Color(1f, 0.85f, 0.3f);
+        }
+        if (!light && TreeBulletSpeed != 1f) b.speed *= TreeBulletSpeed;
+        if (TreeExecute > 0f) b.onHitEnemy += (bullet, col) => Execute(col, bullet.damage);
         bool boom = countShot && !light && GunBoomShot();
         // 유도: 부메랑 낫 · 이미 유도되는 추적탄에는 붙이지 않음
         bool curves = !(WeaponActive && (CurrentWeapon == ScytheId || CurrentWeapon == SeekerId));
@@ -29,6 +38,14 @@ public partial class SpecialAbilities
             if (firstHit && !light && gunCard[GunRicochet] > 0) Ricochet(bullet, col);
             firstHit = false;
         };
+    }
+
+    // 처형: 체력 20% 아래인 적에게 추가 피해
+    void Execute(Collider2D col, float dmg)
+    {
+        if (col == null || !col.TryGetComponent(out EnermyController e) || e.IsDead) return;
+        if (e.EnemyHealth > e.setEnemyHP * 0.2f) return;
+        Specials.Damage(col.gameObject, dmg * TreeExecute, Vector3.zero, 0f);
     }
 
     // 폭발 탄두: 5 · 4 · 3번째 발마다 true
