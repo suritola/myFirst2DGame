@@ -27,7 +27,7 @@ public partial class SpecialAbilities
 
     HudGroup weaponGroup, skillGroup, passiveGroup;
     const int PistolRow = -1;
-    const float TileSize = 50f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
+    const float TileSize = 58f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
     static readonly Color TileBorder = new Color(0.3f, 0.26f, 0.34f, 0.95f);
     static readonly Color TileActive = new Color(0.96f, 0.75f, 0.3f, 1f);
     static readonly Color TileText = new Color(0.95f, 0.92f, 0.85f);
@@ -180,23 +180,24 @@ public partial class SpecialAbilities
             kr.anchorMin = new Vector2(0f, 1f);
             kr.anchorMax = new Vector2(1f, 1f);
             kr.pivot = new Vector2(0.5f, 1f);
-            kr.sizeDelta = new Vector2(0f, 16f);
-            kr.anchoredPosition = new Vector2(0f, -1f);
-            // 키보드 키 모양 (설정 「키 아이콘」)
+            kr.sizeDelta = new Vector2(0f, 24f);
+            kr.anchoredPosition = new Vector2(0f, -2f);
+            // 키 배지: 설정 「키 아이콘」이면 흰 키보드 키 모양, 아니면 어두운 배지 (어느 쪽이든 크게 잘 보이게)
             GameObject cap = new GameObject("KeyCap", typeof(RectTransform), typeof(Image));
             RectTransform cr = cap.GetComponent<RectTransform>();
             cr.SetParent(r, false);
             cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(0f, 1f);
             cr.anchoredPosition = new Vector2(2f, -2f);
-            cr.sizeDelta = new Vector2(20f, 18f);
+            cr.sizeDelta = new Vector2(26f, 24f);
             t.keyCap = cap.GetComponent<Image>();
             t.keyCap.color = new Color(0.92f, 0.9f, 0.85f, 0.95f);
             t.keyCap.raycastTarget = false;
             Sprite[] capSprite = Fx.Frames("fx_keycap");
             if (capSprite.Length > 0) t.keyCap.sprite = capSprite[0];
             cap.SetActive(false);
-            t.key = HudText(kr, 12f, new Color(1f, 0.85f, 0.45f), TextAlignmentOptions.TopLeft);
-            t.key.margin = new Vector4(5f, 0f, 0f, 0f);
+            t.key = HudText(kr, 18f, new Color(1f, 0.85f, 0.45f), TextAlignmentOptions.TopLeft);
+            t.key.fontStyle = FontStyles.Bold;
+            t.key.margin = new Vector4(8f, 1f, 0f, 0f);
             t.key.outlineWidth = 0.25f;
             t.key.outlineColor = new Color32(0, 0, 0, 255);
 
@@ -314,12 +315,18 @@ public partial class SpecialAbilities
         t.border.color = flash ? Color.white : active ? TileActive : TileBorder;
         t.cooldown.fillAmount = cool;
         if (t.label.text != label) t.label.text = label;
-        bool cap = GameSettings.KeyIcons && key.Length > 0;
+        // 키가 있으면 늘 배지 위에 크게 (키 아이콘 설정: 흰 키 + 어두운 글자, 아니면 어두운 배지 + 금빛 글자)
+        bool cap = key.Length > 0;
+        bool icons = GameSettings.KeyIcons;
         if (t.keyCap.gameObject.activeSelf != cap) t.keyCap.gameObject.SetActive(cap);
-        if (cap) t.keyCap.rectTransform.sizeDelta = new Vector2(Mathf.Max(20f, 10f + key.Length * 9f), 18f);
-        t.key.color = cap ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.85f, 0.45f);
-        t.key.margin = new Vector4(cap ? 7f : 5f, cap ? 1f : 0f, 0f, 0f);
         string keyText = key + (id >= 0 && IsEvolved(id) ? (key.Length > 0 ? " " : "") + "+" : "");
+        if (cap)
+        {
+            // 배지 폭은 실제로 보이는 글자(진화 표시 " +" 포함)에 맞춤
+            t.keyCap.rectTransform.sizeDelta = new Vector2(Mathf.Max(26f, 14f + keyText.Length * 11f), 24f);
+            t.keyCap.color = icons ? new Color(0.92f, 0.9f, 0.85f, 0.95f) : new Color(0.05f, 0.04f, 0.08f, 0.85f);
+        }
+        t.key.color = cap && icons ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.88f, 0.4f);
         if (t.key.text != keyText) t.key.text = keyText;
     }
 
