@@ -50,7 +50,9 @@ public class CharacterKit : MonoBehaviour
     //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 바람 걸음 · 3 가시 덤불
     //   연금술사: 0 연쇄 반응 · 1 급속 냉동 · 2 호문쿨루스 · 3 파편 플라스크
     //   도적만 4: 사냥의 기세 (처치할 때마다 스킬 게이지)
-    public readonly int[] card = new int[5];
+    //   5 · 6 (레벨업 12 · 13번 칸): 검사 굳건한 자세 · 연속 베기 / 도적 급소 노리기 · 표창 회수
+    //                               궁수 정조준 · 사냥감 표식 / 연금술사 원소 융합 · 끈적한 산성
+    public readonly int[] card = new int[7];
 
     // 캐릭터 능력치 상점이 올리는 값 (Shop.Kits)
     [HideInInspector] public float reachMul = 1f;     // 검사 긴 칼날: 베기 사거리 · 손에 든 검 크기
@@ -117,6 +119,7 @@ public class CharacterKit : MonoBehaviour
         if (frames != null && frames.Length >= 6)
         {
             bool moving = (transform.position - lastPos).sqrMagnitude > 0.0004f && Time.timeScale > 0f;
+            stillTime = moving ? 0f : stillTime + Time.deltaTime;
             animT += Time.deltaTime;
             body.sprite = moving ? frames[2 + (int)(animT * 10f) % 4] : frames[(int)(animT * 2f) % 2];
         }
@@ -188,6 +191,9 @@ public class CharacterKit : MonoBehaviour
         Vector2 dir = ((Vector2)(target - start)).normalized;
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots);
+        // 그림자 은신: 오래 안 맞았으면 이번 평타가 강해짐
+        float veil = Special != null ? Special.KitConsumeVeil() : 1f;
+        dmg *= veil;
         PlayerLook.Fired(-1);
 
         switch (Id)
@@ -222,7 +228,14 @@ public class CharacterKit : MonoBehaviour
     void Swing(Vector2 dir, int shots)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
-        float reach = def.range * reachMul;
+        // 연속 베기: 네 번째(2레벨부터 세 번째) 베기마다 더 멀리 · 두 배로
+        bool combo = false;
+        if (card[6] > 0)
+        {
+            comboCount++;
+            if (comboCount >= (card[6] >= 2 ? 3 : 4)) { combo = true; comboCount = 0; }
+        }
+        float reach = def.range * reachMul * (combo ? 1.4f : 1f);
         float half = Mathf.Min(180f, 50f + arcBonus + 12f * (shots - 1));
         swingAlt = !swingAlt;
         bool left = dir.x < 0f;
@@ -235,14 +248,25 @@ public class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
-            Specials.Damage(c.gameObject, Damage, to.normalized, 1.4f);
+            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f), to.normalized, combo ? 2.5f : 1.4f);
             Fx.Play("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
         SwingCards(origin, dir, reach, half, hits);
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(1f, 1f, 1f, 0.9f), 24f, rot, 15);
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f), 24f, rot, 15);
+        if (combo)
+        {
+            Play("crack", 0.6f, 0.9f);
+            Hostile.Shake(0.1f);
+            // 3레벨: 마무리 베기에 충격파
+            if (card[6] >= 3)
+            {
+                DamageCircle(origin, reach, Damage, 2f);
+                Fx.Play("fx_shock", origin, reach * 2f, new Color(1f, 0.85f, 0.45f, 0.8f), 20f);
+            }
+        }
         if (a != null) a.sr.flipY = left ^ !swingAlt;
         if (half > 52f)
         {
@@ -278,7 +302,9 @@ public class CharacterKit : MonoBehaviour
         }
 
         // 사냥꾼의 집중: 순식간에 가득 당김
-        if (Special != null && Special.KitFocusActive) fullTime = 0.05f;
+        if (Special != null && (Special.KitFocusActive || Special.KitFreeDraws > 0)) fullTime = 0.05f;
+        // 정조준: 가만히 서서 당기면 더 빨리 가득 당김
+        else if (card[5] > 0 && stillTime > 0.1f) fullTime /= 1f + 0.3f * card[5];
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
         Vector3 start = player.MuzzlePosition;
         Vector3 target = Mouse;
@@ -318,7 +344,9 @@ public class CharacterKit : MonoBehaviour
             if (b == null) continue;
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
+            if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
         }
+        if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
         if (card[2] > 0 && draw >= 1f) StartCoroutine(Backstep(-dir));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -374,12 +402,26 @@ public class CharacterKit : MonoBehaviour
                 if (kind == 0) Burn.Apply(c.gameObject, hit * 0.35f, 2f);
                 // 급속 냉동: 빙결 시약이 느리게 하는 대신 꽁꽁 얼림
                 if (kind == 1 && e != null) e.Slow(card[1] > 0 ? 0f : 0.5f, card[1] > 0 ? 0.5f + 0.3f * card[1] : 1.5f);
+                // 원소 융합: 불타는 적에게 빙결 시약이 닿으면 증기 폭발
+                if (kind == 1 && card[5] > 0)
+                {
+                    Burn burn = c.GetComponent<Burn>();
+                    if (burn != null)
+                    {
+                        Destroy(burn);
+                        DamageCircle(c.transform.position, 1.8f, Damage * (0.8f + 0.7f * card[5]), 1.5f);
+                        Fx.Play("fx_cloud", c.transform.position, 3.6f, new Color(1f, 1f, 1f, 0.8f), 16f);
+                        Play("hiss", 0.5f, 1.4f);
+                    }
+                }
             }
             if (kind == 0) Play("ignite", 0.3f, 1.3f);
             if (kind == 1) Play("shimmer", 0.35f, 1.5f);
             if (kind == 2)
             {
-                if (Special != null) Special.SpawnZone(p, r * 0.8f, 2.5f, hit * 0.25f, new Color(0.45f, 1f, 0.3f, 0.6f));
+                float acidTime = 2.5f + card[6];
+                if (Special != null) Special.SpawnZone(p, r * 0.8f, acidTime, hit * 0.25f, new Color(0.45f, 1f, 0.3f, 0.6f));
+                if (card[6] > 0) StartCoroutine(StickyAcid(p, r * 0.8f, acidTime));
                 Play("fizz", 0.45f, 1f);
             }
         });
@@ -597,6 +639,43 @@ public class CharacterKit : MonoBehaviour
     }
 
     // ================================================================= 캐릭터 전용 레벨업 카드 (특수 능력)
+    float stillTime;
+    int comboCount;
+
+    // 검사 굳건한 자세: 우클릭을 모으는 동안 받는 피해 감소 (PlayerController.TryHit)
+    public float TakenMul => Id == CharacterId.Swordsman && charging && card[5] > 0 ? 1f - (0.15f + 0.15f * card[5]) : 1f;
+
+    // 적이 받는 피해 배율 (SpecialAbilities.KitDamageHook): 도적 급소 노리기 · 궁수 사냥감 표식
+    public float TargetDamageMul(EnermyController e)
+    {
+        if (Id == CharacterId.Rogue && card[5] > 0 && e.GetComponent<Bleed>() != null) return 1f + 0.3f * card[5];
+        if (Id == CharacterId.Archer && card[6] > 0 && HuntMark.Has(e.gameObject)) return 1.05f + 0.1f * card[6];
+        return 1f;
+    }
+
+    // 도적 표창 회수: 탄창이 비면 확률로 재장전 없이 절반을 되찾음
+    public void OnMagEmpty()
+    {
+        if (Id != CharacterId.Rogue || card[6] <= 0 || Random.value >= 0.25f * card[6]) return;
+        player.NowBullet = Mathf.Max(1, player.MaxBullet / 2);
+        Fx.Play("fx_sparkle", transform.position, 1.2f, new Color(0.85f, 0.7f, 1f), 20f);
+        Play("clank", 0.4f, 1.8f);
+    }
+
+    // 연금술사 끈적한 산성: 웅덩이 위의 적을 느리게
+    IEnumerator StickyAcid(Vector3 p, float r, float duration)
+    {
+        for (float t = 0f; t < duration; t += 0.3f)
+        {
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
+            {
+                EnermyController e = c.GetComponent<EnermyController>();
+                if (e != null && !e.IsDead) e.Slow(0.6f, 0.4f);
+            }
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
+
     // 도적 사냥의 기세: 처치할 때마다 스킬 게이지 (레벨마다 최대치의 1%, 지금 공격력이 처음보다 높을수록 더 · 최대 4배)
     float baseDamage;
     SkillGauge gaugeRef;
@@ -862,6 +941,40 @@ public class CharacterKit : MonoBehaviour
             }
             yield return null;
         }
+    }
+}
+
+// 궁수 사냥감 표식: 표식이 붙은 적은 피해를 더 받음 (머리 위 과녁)
+public class HuntMark : MonoBehaviour
+{
+    float until;
+    FxAnim icon;
+
+    public static bool Has(GameObject go) => go != null && go.TryGetComponent(out HuntMark m) && Time.time < m.until;
+
+    public static void Apply(GameObject target, float seconds)
+    {
+        if (target == null) return;
+        HuntMark m = target.GetComponent<HuntMark>();
+        if (m == null) m = target.AddComponent<HuntMark>();
+        m.until = Time.time + seconds;
+    }
+
+    void Update()
+    {
+        if (Time.time > until)
+        {
+            if (icon != null) Destroy(icon.gameObject);
+            Destroy(this);
+            return;
+        }
+        if (icon == null) icon = Fx.Play("fx_reticle", transform.position, 1.2f, new Color(1f, 0.4f, 0.35f, 0.9f), 8f, 0f, 19, true, 99f);
+        if (icon != null) icon.transform.position = transform.position + Vector3.up * 1.2f;
+    }
+
+    void OnDestroy()
+    {
+        if (icon != null) Destroy(icon.gameObject);
     }
 }
 

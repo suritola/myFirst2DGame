@@ -35,6 +35,24 @@ public class EndlessMode : MonoBehaviour
         bossPrefabs = bosses;
         nextBoss = Time.time + FirstBossAt;
         BuildHud();
+        StartCoroutine(StartAtLevel(10));
+    }
+
+    // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 카드를 차례로 고름
+    System.Collections.IEnumerator StartAtLevel(int level)
+    {
+        PlayerController p = FindFirstObjectByType<PlayerController>();
+        LevelShop shop = FindFirstObjectByType<LevelShop>();
+        if (p == null || shop == null) yield break;
+        while (p.level < level)
+        {
+            while (shop.IsOpen || Time.timeScale == 0f) yield return null;
+            p.level++;
+            p.needEXP = 50 + p.level * 50;
+            Juice.LevelUp(p.transform.position);
+            shop.openLevelShop();
+            yield return null;
+        }
     }
 
     void Update()
@@ -133,16 +151,20 @@ public class EndlessMode : MonoBehaviour
         }
         bosses = bossList.ToArray();
 
-        // 처치 수에 따라 강한 적 비율이 늘어나는 페이즈 6개
-        int[] kills = { 0, 30, 70, 120, 180, 250 };
-        float[] interval = { 1.1f, 0.95f, 0.85f, 0.75f, 0.68f, 0.6f };
-        int[] alive = { 10, 12, 14, 16, 18, 20 };
+        // 처치 수에 따라 강한 적이 차례로 풀리는 페이즈 9개: 처음엔 1장 첫 적들만, 점점 강한 적 위주로
+        // 아직 차례가 안 된 강한 적은 나오지 않고, 이미 풀린 약한 적은 계속 조금씩 섞여 나옴
+        int[] kills = { 0, 25, 55, 90, 130, 180, 240, 310, 390 };
+        float[] interval = { 1.2f, 1.05f, 0.95f, 0.85f, 0.78f, 0.72f, 0.66f, 0.62f, 0.58f };
+        int[] alive = { 8, 10, 12, 14, 16, 18, 19, 20, 22 };
+        float topTier = 0f;
+        foreach (float t in tiers) topTier = Mathf.Max(topTier, t);
         SpawnPhase[] phases = new SpawnPhase[kills.Length];
         for (int p = 0; p < phases.Length; p++)
         {
-            float focus = p * 0.55f;                            // 이 페이즈에 가장 많이 나오는 등급
+            float focus = topTier * p / (phases.Length - 1);    // 이 페이즈에 가장 많이 나오는 등급
             float[] w = new float[enemies.Count];
-            for (int i = 0; i < w.Length; i++) w[i] = Mathf.Max(0.15f, 1.2f - Mathf.Abs(tiers[i] - focus) * 0.6f);
+            for (int i = 0; i < w.Length; i++)
+                w[i] = tiers[i] > focus + 0.35f ? 0f : Mathf.Max(0.25f, 1.2f - Mathf.Abs(tiers[i] - focus) * 0.5f);
             phases[p] = new SpawnPhase { killsToEnter = kills[p], spawnInterval = interval[p], maxAlive = alive[p], weights = w };
         }
         float[] minions = new float[enemies.Count];

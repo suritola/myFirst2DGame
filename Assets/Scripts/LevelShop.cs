@@ -55,8 +55,8 @@ public partial class LevelShop : MonoBehaviour
         lv = FindFirstObjectByType<Level>();
         for (int i = 0; i< Total_abilitys; i++)
         {
-            // 11번(처치 시 회복)은 더 이상 나오지 않음
-            ability_selected[i] = i == 11 && KitIcon(11) == null;
+            // 11번(처치 시 회복)은 더 이상 나오지 않음 (도적은 사냥의 기세), 12 · 13번은 캐릭터 카드, 14번은 비상 보급 전용
+            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId;
         }
         //레벨업 능력들
         setAbilitys();
@@ -106,6 +106,9 @@ public partial class LevelShop : MonoBehaviour
 
         ability_name[11] = Loc.T("피의 굶주림");
         ability_content[11] = Loc.T("적을 처치할 때마다 체력을 회복합니다.\n( 처치당 ") + bul.healOnKill.ToString("0") + " -> " + (bul.healOnKill + HealOnKillStep).ToString("0") + " )";
+
+        ability_name[SupplyId] = Loc.T("비상 보급");
+        ability_content[SupplyId] = Loc.T("고를 능력을 모두 배웠습니다.\n체력 30%를 회복하고 코인 10개를 얻습니다.");
 
         KitSetAbilitys();
     }
@@ -244,6 +247,8 @@ public partial class LevelShop : MonoBehaviour
     {
         if (LvUpPanel != null && LvUpPanel.activeSelf != (showLv && !ShopOpen)) LvUpPanel.SetActive(showLv && !ShopOpen);
     }
+    public bool IsOpen => LvshopPanel != null && LvshopPanel.activeSelf;
+
     public void openLevelShop()
     {
         
@@ -263,25 +268,32 @@ public partial class LevelShop : MonoBehaviour
     private int first = 0, second = 1, third = 2;
     void UpdateLvShopContent()
     {
+        // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 비상 보급)
+        System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i]) open.Add(i);
+        int Draw()
+        {
+            if (open.Count == 0) return SupplyId;
+            int k = Random.Range(0, open.Count);
+            int id = open[k];
+            open.RemoveAt(k);
+            return id;
+        }
+
         //첫번째 능력 선택
-        first = Random.Range(0, Total_abilitys);
-        while (ability_selected[first]) first = Random.Range(0, Total_abilitys);
+        first = Draw();
 
         FirstTitle.text = ability_name[first];
         FirstAbility.text = ability_content[first];
 
         //두번째 능력 선택
-        second = Random.Range(0, Total_abilitys);
-        //첫번째와 겹치지 않기
-        while (second == first || ability_selected[second]) second = Random.Range(0, Total_abilitys);
+        second = Draw();
 
         SecondTitle.text = ability_name[second];
         SecondAbility.text = ability_content[second];
 
         //세번째 능력 선택
-        third = Random.Range(0, Total_abilitys);
-        //첫번째, 두번째랑 겹치지 않기
-        while (third == first || third == second || ability_selected[third]) third = Random.Range(0, Total_abilitys);
+        third = Draw();
 
         ThirdTitle.text = ability_name[third];
         ThirdAbility.text = ability_content[third];
@@ -305,7 +317,9 @@ public partial class LevelShop : MonoBehaviour
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.3f;
-    const int AbilityCount = 12;
+    const int AbilityCount = 15;
+    // 끝없이 고를 수 있던 카드의 상한
+    const int CoinMaxLevel = 4, ExpMaxLevel = 4, HeartMaxLevel = 4, GlareMaxLevel = 3;
     const float RegenStep = 0.5f;       // 생명의 샘 1회당 초당 회복량
     const int RegenMaxLevel = 4;
     const float HealOnKillStep = 1f;    // 피의 굶주림 1회당 처치 회복량
@@ -403,19 +417,42 @@ public partial class LevelShop : MonoBehaviour
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
 
-        ability_level[what]++;
-        if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
+        // 비상 보급은 능력이 아니라 HUD에 남기지 않음
+        if (what != SupplyId)
+        {
+            ability_level[what]++;
+            if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
+        }
+        if (what == SupplyId)
+        {
+            bul.PlayerHealth = Mathf.Min(bul.PlayerMaxHealth, bul.PlayerHealth + bul.PlayerMaxHealth * 0.3f);
+            Coin c = FindFirstObjectByType<Coin>();
+            if (c != null) c.AddCoin(10);
+            return;
+        }
         if (KitApply(what)) return;
         if (what == 0) bul.pene++;
-        if (what == 1) bul.bonusCoin++;
+        if (what == 1)
+        {
+            bul.bonusCoin++;
+            if (ability_level[1] >= CoinMaxLevel) ability_selected[1] = true;
+        }
         if (what == 2)
         {
             // 너무 쉬워지지 않도록 최소 5회까지만 줄어듦
             skill.SetMax(Mathf.Max(MinSkillPoint, Mathf.RoundToInt(skill.MaxSkillPoint * 0.8f)));
             if (skill.MaxSkillPoint <= MinSkillPoint) ability_selected[2] = true;
         }
-        if (what == 3) bul.Skill_setTime *= 0.8f;
-        if (what == 4) lv.bonusEXP += 0.1f;
+        if (what == 3)
+        {
+            bul.Skill_setTime *= 0.8f;
+            if (ability_level[3] >= GlareMaxLevel) ability_selected[3] = true;
+        }
+        if (what == 4)
+        {
+            lv.bonusEXP += 0.1f;
+            if (ability_level[4] >= ExpMaxLevel) ability_selected[4] = true;
+        }
         if (what == 5)
         {
             bul.coinMagnetRange += MagnetStep;
@@ -435,6 +472,8 @@ public partial class LevelShop : MonoBehaviour
         {
             bul.PlayerMaxHealth = Mathf.Round(bul.PlayerMaxHealth * 1.12f);
             bul.PlayerHealth = bul.PlayerMaxHealth;
+            // 최대 체력이 끝없이 불어나지 않게
+            if (ability_level[8] >= HeartMaxLevel) ability_selected[8] = true;
         }
         if (what == 9)
         {

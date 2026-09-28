@@ -116,6 +116,7 @@ public class StageManager : MonoBehaviour
             gameObject.AddComponent<EndlessMode>().Init(this, endlessBosses);
             ShowBanner(Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?"), 3f);
         }
+        else RunClock.Create();
     }
 
     void PrepareEndless()

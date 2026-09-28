@@ -36,6 +36,9 @@ public static class CodexUI
     static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원" };
 
     // 적 이름 · 설명 (프리팹 이름으로 찾음)
+    // 프리팹 이름으로 적 이름 (번역됨, 모르면 빈 문자열)
+    public static string EnemyName(string prefab) => EnemyText.TryGetValue(prefab, out var t) ? Loc.T(t.name) : "";
+
     static readonly Dictionary<string, (string name, string desc)> EnemyText = new Dictionary<string, (string, string)>
     {
         { "Enermy", ("해골", "지하 묘역의 기본 적. 스킬 없이 곧장 달려듭니다.") },

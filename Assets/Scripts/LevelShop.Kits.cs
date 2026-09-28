@@ -8,6 +8,9 @@ public partial class LevelShop
     const int PierceId = 0, GlareId = 3, MultiId = 6, KnockId = 7;
     // 도적만 쓰는 다섯 번째 칸: 모두에게서 빠진 11번(피의 굶주림) 자리를 빌림
     public const int HungerId = 11;
+    // 캐릭터 카드 두 장 더 (거너는 안 나옴) · 고를 카드가 모자랄 때만 나오는 비상 보급
+    public const int ExtraAId = 12, ExtraBId = 13, SupplyId = 14;
+    static readonly int[] KitIds = { PierceId, MultiId, KnockId, GlareId, HungerId, ExtraAId, ExtraBId };
 
     class KitCard
     {
@@ -24,7 +27,7 @@ public partial class LevelShop
     public static System.Collections.Generic.List<(string name, string desc, int icon)> KitCardsFor(CharacterId who)
     {
         var list = new System.Collections.Generic.List<(string, string, int)>();
-        foreach (int id in new[] { PierceId, MultiId, KnockId, GlareId, HungerId })
+        foreach (int id in KitIds)
         {
             KitCard c = KitCardOf(who, id);
             if (c != null) list.Add((c.name, c.desc, c.icon));
@@ -42,6 +45,8 @@ public partial class LevelShop
                     PierceId => Card("날아가는 검기", "평타를 휘두르면 검기가 날아가 적을 꿰뚫습니다.\n( 레벨마다 검기 피해 증가 )", 60, 3),
                     MultiId => Card("흡혈 베기", "평타로 벤 적 하나당(최대 3) 체력을 회복합니다.", 61, 3),
                     KnockId => Card("쳐내기", "평타를 휘두르면 범위 안의 적 투사체를 베어 없앱니다.", 62, 1),
+                    ExtraAId => Card("굳건한 자세", "우클릭 회전 베기를 모으는 동안 받는 피해가 줄어듭니다.\n( 30% · 45% · 60% )", 77, 3),
+                    ExtraBId => Card("연속 베기", "네 번째 베기마다 더 멀리, 두 배로 벱니다.\n( 2레벨: 세 번째마다 · 3레벨: 충격파 )", 78, 3),
                     GlareId => Card("칼바람", "회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다.\n( 레벨마다 지속 시간 +1초 )", 63, 3),
                     _ => null,
                 };
@@ -51,6 +56,8 @@ public partial class LevelShop
                     PierceId => Card("도탄 표창", "표창이 적에 맞으면 가까운 다른 적에게 튕겨 날아갑니다.\n( 레벨마다 튕기는 횟수 +1 )", 64, 3),
                     MultiId => Card("갈고리 표창", "표창에 맞은 적이 출혈을 입습니다.", 65, 3),
                     KnockId => Card("그림자 분신", "출혈 돌진을 시작한 자리에 분신이 남아 표창을 던집니다.\n( 레벨마다 지속 시간 +1초 )", 66, 3),
+                    ExtraAId => Card("급소 노리기", "출혈 중인 적에게 주는 피해가 늘어납니다.\n( +30% · +60% · +90% )", 79, 3),
+                    ExtraBId => Card("표창 회수", "탄창이 비면 확률로 재장전 없이 절반을 되찾습니다.\n( 25% · 50% · 75% )", 80, 3),
                     HungerId => Card("사냥의 기세", "적을 처치할 때마다 스킬 게이지가 조금 찹니다.\n( 레벨마다 1%, 공격력이 오를수록 더 · 최대 4배 )", 76, 5),
                     GlareId => Card("표창 폭풍", "출혈 돌진이 끝나는 자리에서 표창이 사방으로 퍼집니다.\n( 레벨마다 표창 +4개 )", 67, 3),
                     _ => null,
@@ -61,6 +68,8 @@ public partial class LevelShop
                     PierceId => Card("분열 화살", "가득 당긴 화살이 처음 맞힌 적에게서 여러 갈래로 갈라집니다.\n( 레벨마다 갈래 +1 )", 68, 3),
                     MultiId => Card("메아리 화살", "화살을 쏘면 잠시 뒤 유령 화살이 같은 방향으로 한 발 더 날아갑니다. (피해 50%)", 69, 1),
                     KnockId => Card("바람 걸음", "가득 당긴 화살을 쏘면 반동으로 뒤로 휙 물러납니다.", 70, 1),
+                    ExtraAId => Card("정조준", "가만히 서서 당기면 시위를 더 빨리 가득 당깁니다.\n( +30% · +60% · +90% )", 81, 3),
+                    ExtraBId => Card("사냥감 표식", "가득 당긴 화살에 맞은 적은 4초 동안 피해를 더 받습니다.\n( +15% · +25% · +35% )", 82, 3),
                     GlareId => Card("가시 덤불", "화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.\n( 레벨마다 지속 시간 +1초 )", 71, 3),
                     _ => null,
                 };
@@ -70,6 +79,8 @@ public partial class LevelShop
                     PierceId => Card("연쇄 반응", "플라스크 폭발로 쓰러진 적이 그 자리에서 한 번 더 터집니다.", 72, 3),
                     MultiId => Card("급속 냉동", "빙결 시약이 적을 느리게 하는 대신 꽁꽁 얼립니다.\n( 레벨마다 얼리는 시간 증가 )", 73, 3),
                     KnockId => Card("호문쿨루스", "작은 조수가 머리 위를 맴돌며 적에게 플라스크를 던집니다.\n( 레벨마다 던지는 간격 감소 )", 74, 3),
+                    ExtraAId => Card("원소 융합", "불타는 적에게 빙결 시약이 닿으면 증기 폭발이 일어납니다.\n( 공격력 150% · 220% · 290% )", 83, 3),
+                    ExtraBId => Card("끈적한 산성", "산성 웅덩이가 적을 느리게 하고 더 오래 남습니다.\n( 레벨마다 +1초 )", 84, 3),
                     GlareId => Card("파편 플라스크", "대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.\n( 레벨마다 파편 +2개 )", 75, 3),
                     _ => null,
                 };
@@ -79,13 +90,14 @@ public partial class LevelShop
 
     public static Sprite KitIcon(int id)
     {
+        if (id == SupplyId) return Resources.Load<Sprite>("Icons/ability_85");
         KitCard c = KitCardOf(id);
         return c != null ? Resources.Load<Sprite>("Icons/ability_" + c.icon) : null;
     }
 
     void KitSetAbilitys()
     {
-        foreach (int id in new[] { PierceId, GlareId, MultiId, KnockId, HungerId })
+        foreach (int id in KitIds)
         {
             KitCard c = KitCardOf(id);
             if (c == null || id >= ability_name.Length) continue;
@@ -111,7 +123,7 @@ public partial class LevelShop
         if (c == null || kit == null) return false;
 
         // 카드 칸 → CharacterKit.card 번호 (0 관통 · 1 멀티 샷 · 2 밀어내기 · 3 노려보는 눈빛 자리)
-        int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : id == HungerId ? 4 : 3;
+        int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : id == HungerId ? 4 : id == ExtraAId ? 5 : id == ExtraBId ? 6 : 3;
         kit.card[slot]++;
         kit.CardPicked(slot);
         if (ability_level[id] >= c.max) ability_selected[id] = true;

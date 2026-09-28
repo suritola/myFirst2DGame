@@ -15,12 +15,12 @@ public static class GameMode
     public static readonly string[] Names = { "쉬움", "보통", "어려움", "무한" };
 
     // 난이도별 배율                                쉬움   보통   어려움  무한(시작)
-    static readonly float[] EnemyHp =            { 1f,   1.35f, 1.75f,  1.75f };
-    static readonly float[] Damage =             { 1f,   1.2f,  1.45f,  1.45f };
-    static readonly float[] EnemySpeed =         { 1f,   1.05f, 1.1f,   1.1f };
-    static readonly float[] SkillCooldown =      { 1f,   0.85f, 0.72f,  0.72f };   // 작을수록 스킬을 자주 씀
+    static readonly float[] EnemyHp =            { 1f,   1.35f, 1.75f,  1.35f };
+    static readonly float[] Damage =             { 1f,   1.2f,  1.45f,  1.2f };
+    static readonly float[] EnemySpeed =         { 1f,   1.05f, 1.1f,   1.05f };
+    static readonly float[] SkillCooldown =      { 1f,   0.85f, 0.72f,  0.85f };   // 작을수록 스킬을 자주 씀
     static readonly float[] SpawnInterval =      { 1f,   0.9f,  0.8f,   0.8f };
-    static readonly int[] ExtraAlive =           { 0,    2,     4,      4 };
+    static readonly int[] ExtraAlive =           { 0,    2,     4,      2 };
     static readonly float[] BossHp =             { 1f,   1.2f,  1.4f,   1.4f };    // 보스는 1~3분 안에 잡히게 (대신 보스 공격이 셈)
     static readonly float[] Gauge =              { 1f,   0.9f,  0.8f,   0.8f };    // 필살기 게이지 차는 속도
     static readonly float[] Reward =             { 1f,   1.15f, 1.3f,   1.3f };    // 경험치 · 코인 (단단해진 만큼 조금 보상)
@@ -28,9 +28,9 @@ public static class GameMode
     static readonly float[] Kills =              { 0.7f, 0.8f,  0.9f,   1f };
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
 
-    // 무한 모드: 1분마다 +6%, 최대 +90% (약 15분)
-    const float EndlessRampPerMinute = 0.06f;
-    const float EndlessRampMax = 0.9f;
+    // 무한 모드: 보통 수치에서 시작해 1분마다 +8%, 최대 +130% (약 16분)
+    const float EndlessRampPerMinute = 0.08f;
+    const float EndlessRampMax = 1.3f;
 
     static bool loaded;
     static Difficulty current;

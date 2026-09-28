@@ -245,6 +245,55 @@ def glyph(img, g):
         for x in range(8, 22): 
             for y in range(23, 25): img.set(x, y, C)
         line(img, 20, 7, 26, 13, Y, 1.4); line(img, 26, 13, 24, 7, Y, 1.4)
+    elif g == 'oath':
+        sword(img, 9, 24, 23, 8); disc(img, 22, 22, 4.5, R); line(img, 20, 22, 24, 22, W, 1.2); line(img, 22, 20, 22, 24, W, 1.2)
+    elif g == 'plate':
+        for y in range(7, 26):
+            w = 9 if y < 17 else 9 - (y - 17)
+            for x in range(16 - w, 16 + w): img.blend(x, y, G)
+        line(img, 16, 8, 16, 24, S, 1.5); line(img, 9, 13, 23, 13, S, 1.2)
+    elif g == 'veil':
+        for i, a in enumerate([60, 120, 200]): disc(img, 16, 16, 11 - i * 3, (120, 80, 180, a))
+        disc(img, 13, 15, 1.5, (255, 230, 120, 255)); disc(img, 19, 15, 1.5, (255, 230, 120, 255))
+    elif g == 'fugitive':
+        for i in range(3): line(img, 5, 10 + i * 5, 12, 10 + i * 5, C, 1)
+        disc(img, 20, 10, 3, P); line(img, 20, 13, 18, 20, P, 2); line(img, 18, 20, 14, 26, P, 1.6); line(img, 18, 20, 23, 25, P, 1.6)
+    elif g == 'weakspot':
+        ring(img, 16, 16, 11, 1.4, W); ring(img, 16, 16, 6, 1.4, R); disc(img, 16, 16, 2.4, R)
+        line(img, 16, 2, 16, 8, W, 1); line(img, 16, 24, 16, 30, W, 1)
+    elif g == 'instinct':
+        arrow(img, 5, 26, 25, 6, Y); arrow(img, 5, 19, 20, 4, (255, 240, 170, 255))
+        disc(img, 24, 23, 3.5, GR)
+    elif g == 'emergency':
+        flask(img, R); line(img, 16, 17, 16, 24, W, 2); line(img, 12, 20, 20, 20, W, 2)
+        star(img, 24, 8, 4, Y, 4, 0.8)
+    elif g == 'goldconvert':
+        disc(img, 12, 19, 6, Y); ring(img, 12, 19, 6, 1, K); disc(img, 12, 19, 2, (255, 240, 170, 255))
+        star(img, 22, 10, 5, Y, 8, 0.2)
+    elif g == 'c_stance':
+        sword(img, 16, 26, 16, 5); ring(img, 16, 16, 12, 1.4, C, gaps=4)
+    elif g == 'c_combo':
+        for i in range(3): line(img, 6 + i * 6, 25, 14 + i * 6, 7, W if i < 2 else Y, 1.8)
+    elif g == 'c_vital':
+        star(img, 13, 13, 8, G); disc(img, 22, 22, 4, R); ring(img, 22, 22, 6, 1, R)
+    elif g == 'c_recall':
+        star(img, 12, 16, 6, G); ring(img, 16, 16, 12, 1.4, C, gaps=1, rot=0.5)
+        line(img, 25, 9, 27, 14, C, 1.4); line(img, 25, 9, 20, 9, C, 1.4)
+    elif g == 'c_steady':
+        ring(img, 16, 16, 9, 1.4, W); disc(img, 16, 16, 1.6, R)
+        for x0, y0, x1, y1 in [(16, 3, 16, 9), (16, 23, 16, 29), (3, 16, 9, 16), (23, 16, 29, 16)]: line(img, x0, y0, x1, y1, GR, 1.4)
+    elif g == 'c_mark':
+        disc(img, 16, 18, 7, (150, 110, 80, 255)); ring(img, 16, 18, 10, 1.4, R); line(img, 16, 5, 16, 11, R, 1.4)
+    elif g == 'c_fusion':
+        disc(img, 11, 16, 5, O); disc(img, 21, 16, 5, C); disc(img, 16, 10, 4.5, (235, 235, 245, 230))
+    elif g == 'c_sticky':
+        for x in range(6, 27):
+            for y in range(19, 27):
+                if ((x - 16) / 10) ** 2 + ((y - 23) / 4) ** 2 < 1: img.blend(x, y, GR)
+        for x in (10, 16, 22): line(img, x, 13, x, 20, GR, 1.4)
+    elif g == 'c_supply':
+        img.rect(8, 11, 16, 13, B); line(img, 8, 17, 24, 17, (80, 55, 35, 255), 1)
+        line(img, 16, 12, 16, 23, R, 2); line(img, 11, 17, 21, 17, R, 2)
     elif g == 'c_shrapnel':
         flask(img, GR)
         for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
@@ -259,8 +308,10 @@ ICONS = {
     64: ('c_ricochet', 'rg'), 65: ('c_barb', 'rg'), 66: ('c_clone', 'rg'), 67: ('c_starstorm', 'rg'),
     68: ('c_split', 'ar'), 69: ('c_echo', 'ar'), 70: ('c_windstep', 'ar'), 71: ('c_thorn', 'ar'),
     72: ('c_chain', 'al'), 73: ('c_freeze', 'al'), 74: ('c_homunculus', 'al'), 75: ('c_shrapnel', 'al'), 76: ('c_momentum', 'rg'),
+    52: ('oath', 'sw'), 53: ('plate', 'sw'), 54: ('veil', 'rg'), 55: ('fugitive', 'rg'), 56: ('weakspot', 'ar'), 57: ('instinct', 'ar'), 58: ('emergency', 'al'), 59: ('goldconvert', 'al'),
+    77: ('c_stance', 'sw'), 78: ('c_combo', 'sw'), 79: ('c_vital', 'rg'), 80: ('c_recall', 'rg'), 81: ('c_steady', 'ar'), 82: ('c_mark', 'ar'), 83: ('c_fusion', 'al'), 84: ('c_sticky', 'al'), 85: ('c_supply', 'gn'),
 }
-BG = {'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
+BG = {'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 
 
 def meta(path):

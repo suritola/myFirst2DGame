@@ -262,7 +262,7 @@ public class bosss : MonoBehaviour
             LevelShop levelS = Cache<LevelShop>.Get;
             Level lv = Cache<Level>.Get;
 
-            playerC.nowEXP += expReward * lv.bonusEXP;
+            playerC.nowEXP += expReward * (lv != null ? lv.bonusEXP : 1f);
 
             if (playerC.nowEXP >= playerC.needEXP)
             {

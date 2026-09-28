@@ -101,17 +101,6 @@ public partial class SpecialAbilities : MonoBehaviour
     // 누르고 있는 동안 미리보기를 보여주고 떼면 쓰는 스킬
     static bool IsAimedSkill(int id) => id == DashId || id == FireZoneId || id == HookId;
 
-    // HUD: 고른 능력마다 한 줄
-    class HudRow
-    {
-        public int id;
-        public TextMeshProUGUI name;
-        public TextMeshProUGUI info;
-        public Image bar;
-    }
-    RectTransform hud;
-    readonly List<HudRow> hudRows = new List<HudRow>();
-
     // 적 · 보스 스킬이 같이 쓰는 빛 스프라이트와 소리
     public static Sprite GlowSprite;
     public static Sprite SwirlSprite;
@@ -135,6 +124,7 @@ public partial class SpecialAbilities : MonoBehaviour
         player = FindFirstObjectByType<PlayerController>();
         if (player != null) player.special = this;
         EnermyController.Killed += OnEnemyKilled;
+        EnermyController.DamageHook = KitDamageHook;
         lineMaterial = new Material(Shader.Find("Sprites/Default"));
         BuildHud();
 
@@ -152,6 +142,7 @@ public partial class SpecialAbilities : MonoBehaviour
     void OnDestroy()
     {
         EnermyController.Killed -= OnEnemyKilled;
+        if (EnermyController.DamageHook == (System.Func<EnermyController, float, float>)KitDamageHook) EnermyController.DamageHook = null;
         EnermyController.GlobalSpeedMultiplier = 1f;
         EnermyController.Decoy = null;
     }
@@ -1716,6 +1707,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 플레이어가 맞았을 때 (복수의 가시)
     public void OnPlayerHurt()
     {
+        if (player != null) KitOnHurt();
         if (!Has(ThornsId) || player == null) return;
         fx.Play("boom", 0.6f, 1.4f);
         fx.FloatText(player.transform.position, Loc.T("가시 반격!"), new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
@@ -1872,258 +1864,6 @@ public partial class SpecialAbilities : MonoBehaviour
         if (fx != null && CurrentWeapon == ScytheId) fx.Play("clank", 0.5f);
     }
 
-    // ================================================================= HUD: 무기 / 스킬 / 패시브 세 창 (왼쪽 아래)
-    class HudPanel
-    {
-        public RectTransform rect;
-        public int count;
-    }
-    HudPanel weaponPanel, skillPanel, passivePanel;
-    const int PistolRow = -1;
-
-    void BuildHud()
-    {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
-        if (canvas == null) return;
-        weaponPanel = NewPanel(canvas, "WeaponSlot", Loc.T("무기  [Q] 교체  [R] 장전"));
-        skillPanel = NewPanel(canvas, "SkillSlot", Loc.T("스킬"));
-        passivePanel = NewPanel(canvas, "PassiveSlot", Loc.T("패시브"));
-        hud = weaponPanel.rect;
-    }
-
-    HudPanel NewPanel(Canvas canvas, string name, string title)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
-        RectTransform r = go.GetComponent<RectTransform>();
-        r.SetParent(canvas.transform, false);
-        Transform ammo = canvas.transform.Find("AmmoPanel");
-        if (ammo != null) r.SetSiblingIndex(ammo.GetSiblingIndex() + 1);
-        r.anchorMin = r.anchorMax = new Vector2(0f, 0f);
-        r.pivot = new Vector2(0f, 0f);
-        r.sizeDelta = new Vector2(PanelWidth, 100f);
-        Image bg = go.GetComponent<Image>();
-        bg.sprite = panelSprite;
-        bg.type = Image.Type.Sliced;
-        bg.raycastTarget = false;
-
-        GameObject head = new GameObject("Title", typeof(RectTransform));
-        RectTransform hr = head.GetComponent<RectTransform>();
-        hr.SetParent(r, false);
-        hr.anchorMin = new Vector2(0f, 1f);
-        hr.anchorMax = new Vector2(1f, 1f);
-        hr.pivot = new Vector2(0.5f, 1f);
-        hr.offsetMin = new Vector2(HudPad, 0f);
-        hr.offsetMax = new Vector2(-HudPad, 0f);
-        hr.sizeDelta = new Vector2(hr.sizeDelta.x, TitleHeight);
-        hr.anchoredPosition = new Vector2(hr.anchoredPosition.x, -HudPad + 8f);
-        RowText(hr, 16f, new Color(1f, 0.72f, 0.55f), TextAlignmentOptions.TopLeft).text = title;
-
-        go.SetActive(false);
-        return new HudPanel { rect = r };
-    }
-
-    const float PanelWidth = 320f;
-    const float PanelGap = 12f;
-    const float HudPad = 22f;
-    const float TitleHeight = 24f;
-    const float HudRowHeight = 46f;
-
-    // 고른 능력을 종류별 창에 한 줄씩 넣고 창 크기와 위치를 맞춤
-    void RebuildHudRows()
-    {
-        if (weaponPanel == null) return;
-        foreach (HudRow row in hudRows) Destroy(row.name.transform.parent.gameObject);
-        hudRows.Clear();
-
-        List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
-        if (weapons.Count > 0) w.Add(PistolRow);
-        foreach (int id in equipped)
-        {
-            if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
-            else if (abilities[id].kind == SpecialKind.Skill) s.Add(id);
-            else p.Add(id);
-        }
-        Fill(weaponPanel, w);
-        Fill(skillPanel, s);
-        Fill(passivePanel, p);
-
-        // 첫 창은 왼쪽 아래, 둘째 창은 그 오른쪽, 셋째 창은 첫 창 위
-        List<HudPanel> shown = new List<HudPanel>();
-        foreach (HudPanel panel in new[] { weaponPanel, skillPanel, passivePanel })
-            if (panel.count > 0) shown.Add(panel);
-        for (int i = 0; i < shown.Count; i++)
-        {
-            float x = 24f + (i == 1 ? PanelWidth + PanelGap : 0f);
-            float y = 100f + (i == 2 ? shown[0].rect.sizeDelta.y + PanelGap : 0f);
-            shown[i].rect.anchoredPosition = new Vector2(x, y);
-        }
-    }
-
-    void Fill(HudPanel panel, List<int> ids)
-    {
-        panel.count = ids.Count;
-        for (int i = 0; i < ids.Count; i++)
-        {
-            GameObject rowGo = new GameObject("Row", typeof(RectTransform));
-            RectTransform rr = rowGo.GetComponent<RectTransform>();
-            rr.SetParent(panel.rect, false);
-            rr.anchorMin = new Vector2(0f, 1f);
-            rr.anchorMax = new Vector2(1f, 1f);
-            rr.pivot = new Vector2(0.5f, 1f);
-            rr.offsetMin = new Vector2(HudPad, 0f);
-            rr.offsetMax = new Vector2(-HudPad, 0f);
-            rr.sizeDelta = new Vector2(rr.sizeDelta.x, HudRowHeight);
-            rr.anchoredPosition = new Vector2(rr.anchoredPosition.x, -HudPad - TitleHeight + 8f - i * HudRowHeight);
-
-            HudRow row = new HudRow { id = ids[i] };
-            row.name = RowText(rr, 20f, new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.TopLeft);
-            row.info = RowText(rr, 16f, new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.TopRight);
-
-            GameObject bar = new GameObject("Cooldown", typeof(RectTransform), typeof(Image));
-            RectTransform br = bar.GetComponent<RectTransform>();
-            br.SetParent(rr, false);
-            br.anchorMin = new Vector2(0f, 0f);
-            br.anchorMax = new Vector2(1f, 0f);
-            br.pivot = new Vector2(0.5f, 0f);
-            br.sizeDelta = new Vector2(0f, 7f);
-            br.anchoredPosition = new Vector2(0f, 12f);
-            row.bar = bar.GetComponent<Image>();
-            row.bar.sprite = barFillSprite;
-            row.bar.type = Image.Type.Filled;
-            row.bar.fillMethod = Image.FillMethod.Horizontal;
-            row.bar.raycastTarget = false;
-            hudRows.Add(row);
-        }
-        panel.rect.sizeDelta = new Vector2(PanelWidth, HudPad * 2f + TitleHeight - 8f + ids.Count * HudRowHeight);
-        panel.rect.gameObject.SetActive(ids.Count > 0);
-    }
-
-    TextMeshProUGUI RowText(RectTransform parent, float size, Color color, TextAlignmentOptions align)
-    {
-        GameObject go = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform r = go.GetComponent<RectTransform>();
-        r.SetParent(parent, false);
-        r.anchorMin = Vector2.zero;
-        r.anchorMax = Vector2.one;
-        r.offsetMin = Vector2.zero;
-        r.offsetMax = Vector2.zero;
-        TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
-        if (font != null) t.font = font;
-        if (fontMaterial != null) t.fontSharedMaterial = fontMaterial;
-        t.fontSize = size;
-        t.color = color;
-        t.alignment = align;
-        t.enableWordWrapping = false;
-        t.raycastTarget = false;
-        return t;
-    }
-
-    void UpdateHud()
-    {
-        if (weaponPanel == null) return;
-
-        foreach (HudRow row in hudRows)
-        {
-            float fill = 1f;
-            string info;
-            if (row.id == PistolRow)
-            {
-                // 기본 권총: 권총 탄창과 장전 상태
-                bool inHand = !WeaponActive;
-                // 캐릭터의 기본 무기 (거너 권총 · 검사 장검 · 도적 표창 …), 탄창이 없는 무기는 무한
-                CharacterKit kit = CharacterKit.Instance;
-                row.name.text = Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon);
-                if (kit != null && !kit.UsesAmmo)
-                {
-                    fill = 1f;
-                    info = Loc.T("무한");
-                }
-                else if (player.reload > 0f)
-                {
-                    fill = Mathf.Clamp01(player.reload / Mathf.Max(0.01f, player.reloadTime));
-                    info = Loc.T("장전 중");
-                }
-                else
-                {
-                    fill = player.MaxBullet > 0 ? player.NowBullet / (float)player.MaxBullet : 1f;
-                    info = player.NowBullet + "/" + player.MaxBullet;
-                }
-                if (inHand) info = Loc.T("사용 중 · ") + info;
-                row.name.color = inHand ? Color.white : new Color(0.96f, 0.83f, 0.47f);
-                row.info.text = info;
-                row.bar.fillAmount = fill;
-                row.bar.color = inHand ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.55f, 0.5f, 0.45f);
-                continue;
-            }
-
-            SpecialDef def = abilities[row.id];
-            row.name.text = Loc.T(def.name) + (IsEvolved(row.id) ? "+" : "");
-            bool highlight = false;
-            if (def.kind == SpecialKind.Weapon)
-            {
-                bool inHand = CurrentWeapon == row.id;
-                highlight = inHand;
-                if (row.id == FlameId)
-                {
-                    fill = 1f - heat;
-                    info = overheated ? Loc.T("과열") : Loc.T("열기 ") + Mathf.RoundToInt(heat * 100f) + "%";
-                }
-                else if (row.id == ScytheId)
-                {
-                    info = activeScythe == null ? Loc.T("준비") : Loc.T("회수 중");
-                    fill = activeScythe == null ? 1f : 0f;
-                }
-                else
-                {
-                    WeaponAmmo a = Ammo(row.id);
-                    if (MagSize(row.id) <= 0)
-                    {
-                        // 검 · 창처럼 탄창이 없는 전용 무기
-                        fill = 1f;
-                        info = Loc.T("무한");
-                    }
-                    else if (a.Reloading)
-                    {
-                        fill = 1f - (a.reloadEnd - Time.time) / BaseReload(row.id);
-                        info = Loc.T("장전 중");
-                    }
-                    else
-                    {
-                        fill = a.ammo / (float)Mathf.Max(1, MagSize(row.id));
-                        info = a.ammo + "/" + MagSize(row.id);
-                    }
-                }
-                if (inHand) info = Loc.T("사용 중 · ") + info;
-                row.bar.color = inHand ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.55f, 0.5f, 0.45f);
-            }
-            else if (def.kind == SpecialKind.Skill)
-            {
-                int slot = skills.IndexOf(row.id);
-                string key = slot >= 0 && slot < SkillKeys.Length ? KeyBindings.Name(SkillKeys[slot]) : "?";
-                float left = CooldownUntil(row.id) - Time.time;
-                float length = cooldownLength.TryGetValue(row.id, out float l) ? l : 1f;
-                fill = left > 0f ? 1f - left / length : 1f;
-                info = left > 0f ? "[" + key + "] " + left.ToString("0.0") + Loc.T("초") : "[" + key + Loc.T("] 준비");
-                if (row.id == SoulBurstId) info += Loc.T(" · 영혼 ") + souls;
-                row.bar.color = fill >= 1f ? new Color(0.96f, 0.75f, 0.3f) : new Color(0.3f, 0.86f, 0.9f);
-            }
-            else
-            {
-                info = "";
-                if (row.id == UndyingId)
-                {
-                    int left = UndyingMaxUses - undyingUses;
-                    info = left > 0 ? Loc.T("부활 ") + left : Loc.T("사용함");
-                    fill = left > 0 ? 1f : 0f;
-                }
-                row.bar.color = new Color(0.6f, 0.85f, 1f);
-            }
-            row.info.text = info;
-            bool flash = rowFlashUntil.TryGetValue(row.id, out float until) && Time.time < until;
-            row.name.color = flash || highlight ? Color.white : new Color(0.96f, 0.83f, 0.47f);
-            row.bar.fillAmount = fill;
-        }
-    }
 }
 
 // ===================================================================== helpers

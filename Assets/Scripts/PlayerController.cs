@@ -346,7 +346,11 @@ public class PlayerController : MonoBehaviour
                 && (!ammo || (NowBullet > 0 && !isReloading && !IsSkillUsing)))
             {
                 kit.Attack();
-                if (ammo) NowBullet--;
+                if (ammo)
+                {
+                    NowBullet--;
+                    if (NowBullet <= 0) kit.OnMagEmpty();
+                }
                 nextShootTime = Time.time + ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul);
             }
             if (!specialWeapon) ammoTextOverride = ammo ? null : kit.WeaponName;
@@ -901,6 +905,7 @@ void Shoot()
         if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);
 
         float taken = amount * GameMode.DamageMul * (1f - def);
+        if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())

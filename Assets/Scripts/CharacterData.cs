@@ -34,34 +34,43 @@ public static class CharacterData
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
             weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
-            hp = 1.5f, damage = 3f, attackSpeed = 0.4f, gauge = 1f, range = 5f, price = 0, pool = Range(20, 8),
+            hp = 1.5f, damage = 3f, attackSpeed = 0.4f, gauge = 1f, range = 5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
             name = "도적", title = "그림자 칼날", body = "rogue", held = "shuriken",
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발)",
-            hp = 0.7f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, mag = 6, price = 0, pool = Range(28, 8),
+            hp = 0.7f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
             weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살비를 떨어뜨릴 위치를 조정하고, 떼면 쏟아붓습니다",
-            hp = 0.5f, damage = 1.1f, attackSpeed = 0.9f, gauge = 1.5f, move = 1.05f, range = 0f, price = 1500, pool = Range(36, 8),
+            hp = 0.5f, damage = 1.1f, attackSpeed = 0.9f, gauge = 1.5f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
             color = new Color(0.45f, 0.8f, 0.4f) },
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
-            hp = 1f, damage = 0.9f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Range(44, 8),
+            hp = 1f, damage = 0.9f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
         Coming(), Coming(), Coming(), Coming(), Coming(),
     };
 
     static CharacterDef Coming() => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0],
                                                         description = "아직 준비 중인 캐릭터입니다." };
+
+    // 캐릭터 능력 8개 (from ~ from+7) + 나중에 더한 패시브
+    static int[] Pool(int from, params int[] more)
+    {
+        int[] a = new int[8 + more.Length];
+        for (int i = 0; i < 8; i++) a[i] = from + i;
+        for (int i = 0; i < more.Length; i++) a[8 + i] = more[i];
+        return a;
+    }
 
     static int[] Range(int from, int count)
     {

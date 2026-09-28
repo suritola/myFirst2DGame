@@ -171,6 +171,7 @@ public class EnemySpawner : MonoBehaviour
             e.survivesContact = true;
             e.baseColor = midBossColor;
             e.onKilled += () => onMidBossDefeated?.Invoke();
+            MidBossMark.Attach(go, CodexUI.EnemyName(prefab.name));
         }
         onMidBossSpawned?.Invoke();
     }

@@ -17,6 +17,8 @@ public partial class SpecialAbilities
     public const int KitNetBow = 36, KitJavelin = 37, KitBurstBow = 38, KitFalcon = 39, KitGale = 40, KitFocus = 41, KitTrophy = 42, KitKeepDistance = 43;
     // 연금술사: 괴짜 발명
     public const int KitQuicksilver = 44, KitMagnet = 45, KitFirework = 46, KitStone = 47, KitRewind = 48, KitGiant = 49, KitCycle = 50, KitVolatile = 51;
+    // 캐릭터마다 패시브 두 개씩 더 (52 ~ 59)
+    public const int KitOath = 52, KitPlate = 53, KitVeil = 54, KitFugitive = 55, KitWeakspot = 56, KitInstinct = 57, KitEmergency = 58, KitGoldConvert = 59;
 
     static readonly (string name, SpecialKind kind, string desc)[] KitDefs =
     {
@@ -55,6 +57,15 @@ public partial class SpecialAbilities
         ("거대화 물약", SpecialKind.Skill, "5초 동안 몸이 커져 받는 피해가 절반, 닿는 적을 밀쳐내며 피해를 줍니다.\n진화: 8초"),
         ("연금 순환", SpecialKind.Passive, "스킬을 쓸 때마다 체력 5% 회복, 다른 스킬 쿨타임 1초 감소.\n진화: 체력 8%, 2초 감소"),
         ("불안정 연구", SpecialKind.Passive, "불안정한 플라스크가 나올 확률이 15% → 35%, 불안정 폭발이 불을 붙입니다.\n진화: 50%"),
+
+        ("기사의 맹세", SpecialKind.Passive, "체력이 가득 차 있는 동안 공격력이 20% 오릅니다.\n진화: +35%"),
+        ("강철 갑옷", SpecialKind.Passive, "받는 피해가 15% 줄지만 이동 속도가 5% 느려집니다.\n진화: 피해 -25%, 느려지지 않음"),
+        ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타가 두 배로 아픕니다.\n진화: 2초, 2.5배"),
+        ("도망자의 발걸음", SpecialKind.Passive, "맞으면 1.5초 동안 이동 속도가 40% 빨라집니다.\n진화: +60%"),
+        ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 50% 늘어납니다.\n진화: +100%"),
+        ("사냥 본능", SpecialKind.Passive, "적을 20마리 처치할 때마다 다음 화살 3발이 저절로 가득 당겨집니다.\n진화: 12마리마다"),
+        ("비상 물약", SpecialKind.Passive, "체력이 25% 아래로 떨어지면 체력 30%를 곧바로 회복합니다. (쿨타임 45초)\n진화: 쿨타임 30초"),
+        ("금속 변환", SpecialKind.Passive, "적을 처치하면 10% 확률로 적이 금으로 변해 코인 3개를 줍니다.\n진화: 20%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -868,6 +879,8 @@ public partial class SpecialAbilities
         rate *= 1f + fervor * (IsEvolved(KitFervor) ? 0.08f : 0.06f);
         if (Time.time < warCryUntil) dmg *= IsEvolved(KitWarCry) ? 1.6f : 1.4f;
         if (Time.time < spreeUntil) speed *= 1.2f;
+        if (Has(KitOath) && player.PlayerHealth >= player.PlayerMaxHealth * 0.99f) dmg *= IsEvolved(KitOath) ? 1.35f : 1.2f;
+        if (Time.time < fugitiveUntil) speed *= IsEvolved(KitFugitive) ? 1.6f : 1.4f;
         if (Has(KitKeepDistance) && Specials.NearestEnemy(player.transform.position, 5f) == null)
             dmg *= IsEvolved(KitKeepDistance) ? 1.5f : 1.3f;
         ApplyDynamic(dmg, rate, speed);
@@ -937,6 +950,24 @@ public partial class SpecialAbilities
             spreeUntil = Time.time + 2f;
             ReduceCooldowns(IsEvolved(KitSpree) ? 0.6f : 0.3f);
         }
+        if (Has(KitInstinct))
+        {
+            instinctKills++;
+            if (instinctKills >= (IsEvolved(KitInstinct) ? 12 : 20))
+            {
+                instinctKills = 0;
+                KitFreeDraws = 3;
+                fx.FloatText(player.transform.position, Loc.T("사냥 본능!"), new Color(0.7f, 1f, 0.6f), 4.5f, 0.3f);
+                fx.Play("chime", 0.5f, 1.5f);
+            }
+        }
+        if (Has(KitGoldConvert) && Random.value < (IsEvolved(KitGoldConvert) ? 0.2f : 0.1f))
+        {
+            Coin c = FindFirstObjectByType<Coin>();
+            if (c != null) c.AddCoin(3);
+            Fx.Play("fx_sparkle", pos, 1.4f, new Color(1f, 0.85f, 0.3f), 18f);
+            fx.FloatText(pos, "+3", new Color(1f, 0.85f, 0.3f), 4f, 0.2f);
+        }
         if (Has(KitTrophy))
         {
             bool e = IsEvolved(KitTrophy);
@@ -961,8 +992,105 @@ public partial class SpecialAbilities
         return true;
     }
 
-    // 패시브는 KitTick · KitOnKill · KitDodge 에서 그때그때 적용
-    void KitOnEquip(int id, bool evolving) { }
+    // 새 패시브 상태
+    float fugitiveUntil, lastHurt = -999f, emergencyReady;
+    int instinctKills;
+    // 사냥 본능: 남은 "저절로 가득 당겨지는 화살" 수 (CharacterKit 이 씀)
+    [System.NonSerialized] public int KitFreeDraws;
+
+    // 그림자 은신: 오래 안 맞았으면 평타 피해 배율을 주고 다시 모으기 시작
+    public float KitConsumeVeil()
+    {
+        if (!Has(KitVeil)) return 1f;
+        bool evo = IsEvolved(KitVeil);
+        if (Time.time - lastHurt < (evo ? 2f : 3f)) return 1f;
+        lastHurt = Time.time;                   // 한 번 쓰면 다시 기다림
+        Fx.Play("fx_stealth", player.transform.position, 1.6f, new Color(0.7f, 0.5f, 1f, 0.8f), 20f);
+        return evo ? 2.5f : 2f;
+    }
+
+    // 플레이어가 맞았을 때 (OnPlayerHurt)
+    void KitOnHurt()
+    {
+        lastHurt = Time.time;
+        if (Has(KitFugitive)) fugitiveUntil = Time.time + 1.5f;
+        if (Has(KitEmergency) && Time.time >= emergencyReady && player.PlayerHealth > 0f && player.PlayerHealth < player.PlayerMaxHealth * 0.25f)
+        {
+            emergencyReady = Time.time + (IsEvolved(KitEmergency) ? 30f : 45f);
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.3f);
+            Fx.Play("fx_levelup", player.transform.position + Vector3.up, 3.5f, new Color(0.6f, 1f, 0.6f), 14f, 0f, 30);
+            fx.FloatText(player.transform.position, Loc.T("비상 물약!"), new Color(0.5f, 1f, 0.5f), 5f, 0f);
+            fx.Play("bubble", 0.8f, 1.2f);
+        }
+    }
+
+    // 적이 받는 피해 (EnermyController.DamageHook): 약점 간파 · 도적 급소 노리기 · 궁수 사냥감 표식
+    float KitDamageHook(EnermyController e, float damage)
+    {
+        if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 2f : 1.5f;
+        CharacterKit kit = CharacterKit.Instance;
+        if (kit != null) damage *= kit.TargetDamageMul(e);
+        return damage;
+    }
+
+    // 패시브 장착 · 진화 때 한 번
+    void KitOnEquip(int id, bool evolving)
+    {
+        if (player == null || id != KitPlate) return;
+        if (!evolving) { player.def += 0.15f; player.speed *= 0.95f; }
+        else { player.def += 0.1f; player.speed /= 0.95f; }
+    }
+
+    // HUD 아이콘 아래 짧은 상태 · 툴팁의 자세한 상태 (캐릭터 능력)
+    string KitPassiveState(int id, bool detail)
+    {
+        switch (id)
+        {
+            case KitUnyielding:
+                {
+                    bool e = IsEvolved(id);
+                    float lost = 1f - Mathf.Clamp01(player.PlayerHealth / Mathf.Max(1f, player.PlayerMaxHealth));
+                    int pct = Mathf.RoundToInt(Mathf.Min(e ? 0.8f : 0.5f, lost * (e ? 1f : 0.6f)) * 100f);
+                    return detail ? Loc.T("지금 공격력 +") + pct + "%" : "+" + pct + "%";
+                }
+            case KitFervor: return detail ? Loc.T("중첩 ") + fervor + Loc.T(" · 공격 속도 +") + Mathf.RoundToInt(fervor * (IsEvolved(id) ? 8f : 6f)) + "%" : "x" + fervor;
+            case KitEvasion: return (IsEvolved(id) ? "30" : "20") + "%";
+            case KitSpree: return Time.time < spreeUntil ? (detail ? Loc.T("질주 중") : "ON") : "";
+            case KitTrophy: return detail ? Loc.T("최대 체력 +") + trophyHp.ToString("0.#") : "+" + trophyHp.ToString("0");
+            case KitKeepDistance:
+                {
+                    bool on = Specials.NearestEnemy(player.transform.position, 5f) == null;
+                    return detail ? (on ? Loc.T("발동 중 (주변에 적 없음)") : Loc.T("꺼짐 (5칸 안에 적)")) : on ? "ON" : "OFF";
+                }
+            case KitCycle: return "";
+            case KitVolatile: return Mathf.RoundToInt(KitUnstableChance * 100f) + "%";
+            case KitOath:
+                {
+                    bool on = player.PlayerHealth >= player.PlayerMaxHealth * 0.99f;
+                    return detail ? (on ? Loc.T("발동 중 (체력 가득)") : Loc.T("꺼짐 (체력이 가득해야 함)")) : on ? "ON" : "OFF";
+                }
+            case KitPlate: return "-" + (IsEvolved(id) ? "25" : "15") + "%";
+            case KitVeil:
+                {
+                    float wait = (IsEvolved(id) ? 2f : 3f) - (Time.time - lastHurt);
+                    return wait <= 0f ? (detail ? Loc.T("준비됨 · 다음 평타 강화") : Loc.T("준비")) : wait.ToString("0.0");
+                }
+            case KitFugitive: return Time.time < fugitiveUntil ? (detail ? Loc.T("빨라짐") : "ON") : "";
+            case KitWeakspot: return "+" + (IsEvolved(id) ? "100" : "50") + "%";
+            case KitInstinct:
+                {
+                    int need = IsEvolved(id) ? 12 : 20;
+                    return KitFreeDraws > 0 ? (detail ? Loc.T("자동 만궁 ") + KitFreeDraws + Loc.T("발 남음") : "x" + KitFreeDraws) : instinctKills + "/" + need;
+                }
+            case KitEmergency:
+                {
+                    float left = emergencyReady - Time.time;
+                    return left > 0f ? left.ToString("0") + (detail ? Loc.T("초 뒤 준비") : "") : (detail ? Loc.T("준비됨") : Loc.T("준비"));
+                }
+            case KitGoldConvert: return (IsEvolved(id) ? "20" : "10") + "%";
+        }
+        return "";
+    }
 }
 
 // 중독: 쌓일수록 강해지는 초록 도트 피해 (4초 동안 새로 안 맞으면 사라짐)

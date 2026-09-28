@@ -71,6 +71,8 @@ public class EnermyController : MonoBehaviour
     public static Transform Decoy;
     // 적이 처치됐을 때 (영혼 모으기 등)
     public static System.Action<Vector3> Killed;
+    // 받는 피해를 바꾸는 능력 (약점 간파 · 급소 노리기 · 사냥감 표식)
+    public static System.Func<EnermyController, float, float> DamageHook;
 
     private CircleCollider2D bodyCollider;
     private static readonly Collider2D[] nearby = new Collider2D[24];
@@ -243,6 +245,8 @@ public class EnermyController : MonoBehaviour
     {
         if (isDead) return;
 
+        if (DamageHook != null) damage = DamageHook(this, damage);
+
         // 체력 감소
         EnemyHealth -= damage;
         DamagePopup.Show(transform, damage, spriteRenderer);
@@ -291,7 +295,8 @@ public class EnermyController : MonoBehaviour
             LevelShop levelS = Cache<LevelShop>.Get;
             Level lv = Cache<Level>.Get;
 
-            playerC.nowEXP += expReward * lv.bonusEXP;
+            // 경험치 막대가 잠깐 꺼져 있어도 멈추지 않게
+            playerC.nowEXP += expReward * (lv != null ? lv.bonusEXP : 1f);
 
             if (playerC.nowEXP >= playerC.needEXP)
             {
