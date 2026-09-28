@@ -9,6 +9,9 @@ public class BossSkills : MonoBehaviour
 {
     public int kind;
 
+    // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게)
+    const float Power = 1.25f;
+
     static readonly Color Soul = new Color(0.55f, 0.95f, 1f, 0.95f);
     static readonly Color Curse = new Color(0.75f, 0.4f, 1f, 0.9f);
     static readonly Color Fire = new Color(1f, 0.45f, 0.12f, 0.95f);
@@ -39,7 +42,7 @@ public class BossSkills : MonoBehaviour
         // 체력 절반 아래: 특수 스킬 (처음 한 번은 바로)
         if (boss.Enraged && Time.time >= nextSpecial)
         {
-            nextSpecial = Time.time + 16f * GameMode.SkillCooldownMul;
+            nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul;
             string name = kind == 0 ? Loc.T("리치 왕이 망자의 의식을 시작한다!") : kind == 1 ? Loc.T("지옥의 군주가 십자 불길을 내뿜는다!") : Loc.T("킹 슬라임이 미친 듯이 뛰어오른다!");
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
             StartCoroutine(Run(kind == 0 ? DeathVortex() : kind == 1 ? HellCross() : SlimeFrenzy()));
@@ -47,7 +50,7 @@ public class BossSkills : MonoBehaviour
         }
 
         if (Time.time < next) return;
-        next = Time.time + (boss.Enraged ? 3.2f : 4.5f) * GameMode.SkillCooldownMul;
+        next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul;
         step = (step + 1) % 5;
         IEnumerator skill = kind == 0
             ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : step == 2 ? BoneSpears(p) : step == 3 ? SoulChains(p) : GraspOfDead(p))
@@ -107,7 +110,7 @@ public class BossSkills : MonoBehaviour
             {
                 Fx.Play("fx_spike", at + Vector3.up * 0.7f, 2.6f, new Color(0.6f, 0.95f, 1f), 18f);
                 Fx.Play("fx_orb", at, 1f, new Color(0.7f, 0.9f, 1f), 18f);
-                Hostile.HitCircle(at, 1.3f, 15f);
+                Hostile.HitCircle(at, 1.3f, 15f * Power);
             }
             Hostile.Play("crack", 0.5f, 1.2f + w * 0.1f);
         }
@@ -126,7 +129,7 @@ public class BossSkills : MonoBehaviour
         if (!Alive) yield break;
         foreach (Vector3 s in spots)
         {
-            Hostile.HitCircle(s, 2.3f, 18f);
+            Hostile.HitCircle(s, 2.3f, 18f * Power);
             Hostile.Burst(s, 2.3f, Curse);
         }
         Hostile.Play("boom", 0.6f, 1.3f);
@@ -155,7 +158,7 @@ public class BossSkills : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl != null)
                 foreach (Vector3 at in spots)
-                    if (Vector2.Distance(pl.transform.position, at) < 1f) { pl.TryHit(16f); break; }
+                    if (Vector2.Distance(pl.transform.position, at) < 1f) { pl.TryHit(16f * Power); break; }
             Hostile.Play("crack", 0.7f, 1.1f);
         }
     }
@@ -234,7 +237,7 @@ public class BossSkills : MonoBehaviour
                     for (int i = 0; i < lanterns.Length; i++)
                         if (Hostile.DistanceToSegment(pl.transform.position, home, home + (lanterns[i].transform.position - home).normalized * 13f) < 0.8f)
                         {
-                            pl.TryHit(14f);
+                            pl.TryHit(14f * Power);
                             beamHit = 0.3f;
                             break;
                         }
@@ -269,7 +272,7 @@ public class BossSkills : MonoBehaviour
         transform.position = home;
         if (!Alive) yield break;
 
-        Hostile.HitCircle(home, blastRadius, 26f);
+        Hostile.HitCircle(home, blastRadius, 26f * Power);
         Hostile.Burst(home, blastRadius, violet);
         ShockRing.Spawn(home, 1f, blastRadius * 1.6f, 0.6f, cyan, 0.5f);
         ShockRing.Spawn(home, 0.5f, blastRadius * 1.1f, 0.45f, Color.white, 0.3f);
@@ -338,7 +341,7 @@ public class BossSkills : MonoBehaviour
         }
         transform.position = target;
         if (!Alive) yield break;
-        Hostile.HitCircle(target, r, 30f);
+        Hostile.HitCircle(target, r, 30f * Power);
         Fx.Play("fx_shock", target, r * 2.6f, Acid, 18f);
         Fx.Play("fx_puddle", target, r * 1.3f, Acid, 12f);
         HazardZone.Spawn(target, r * 0.8f, 3f, 10f, Acid, "fx_puddle", 0.7f);
@@ -363,7 +366,7 @@ public class BossSkills : MonoBehaviour
         if (!Alive) yield break;
         foreach (Vector3 at in spots)
         {
-            Hostile.HitCircle(at, 2.2f, 14f);
+            Hostile.HitCircle(at, 2.2f, 14f * Power);
             Fx.Play("fx_cloud", at, 4f, Acid, 16f);
             HazardZone.Spawn(at, 1.8f, 3.5f, 8f, Acid, "fx_puddle", 0.75f);
         }
@@ -392,7 +395,7 @@ public class BossSkills : MonoBehaviour
                 trail = 0f;
                 HazardZone.Spawn(transform.position, 1.4f, 2.5f, 8f, Acid, "fx_puddle", 0.8f);
             }
-            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f);
+            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f * Power);
             yield return null;
         }
         transform.rotation = Quaternion.identity;
@@ -430,7 +433,7 @@ public class BossSkills : MonoBehaviour
             if (Hostile.Glow != null)
                 FlameParticle.Spawn(Hostile.Glow, transform.position + (Vector3)Random.insideUnitCircle, Random.insideUnitCircle * 2f, 0.5f, 0.08f, 0.35f, false);
             if (Random.value < 0.3f) Fx.Play("fx_explosion", transform.position + (Vector3)(Random.insideUnitCircle * 1.2f), 2.2f, Color.white, 20f);
-            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.4f) hit = p.TryHit(35f);
+            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.4f) hit = p.TryHit(35f * Power);
             yield return null;
         }
         Hostile.Burst(transform.position, 3f, Fire, true);
@@ -468,7 +471,7 @@ public class BossSkills : MonoBehaviour
             yield return null;
         }
         if (rock != null) Destroy(rock);
-        Hostile.HitCircle(spot, r, 28f);
+        Hostile.HitCircle(spot, r, 28f * Power);
         Fx.Play("fx_explosion", spot, r * 2.6f, Color.white, 16f);
         Hostile.Burst(spot, r, Fire, true);
         Hostile.Play("boom", 0.6f, 0.9f);
@@ -505,7 +508,7 @@ public class BossSkills : MonoBehaviour
             {
                 Vector2 to = p.transform.position - center;
                 if (Mathf.Abs(to.magnitude - radius) < 0.9f && !InGap(Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg, gapAt, gapSize))
-                    hit = p.TryHit(30f);
+                    hit = p.TryHit(30f * Power);
             }
             yield return null;
         }
@@ -571,7 +574,7 @@ public class BossSkills : MonoBehaviour
                 {
                     if (Hostile.DistanceToSegment(p.transform.position, beams[i].GetPosition(0), beams[i].GetPosition(1)) < 1f)
                     {
-                        p.TryHit(25f);
+                        p.TryHit(25f * Power);
                         break;
                     }
                 }
@@ -620,7 +623,7 @@ public class BossSkills : MonoBehaviour
                 Vector3 at = c + (Vector3)(d * k);
                 if (Hostile.IsWall(at)) continue;
                 Fx.Play("fx_soulchain", at + Vector3.up * 1.5f, 3.2f, Color.white, 18f, 0f, 14);
-                if (!hit) hit = Hostile.HitCircle(at, 0.9f, 16f);
+                if (!hit) hit = Hostile.HitCircle(at, 0.9f, 16f * Power);
             }
             Hostile.Play("clank", 0.25f, 1.3f + k * 0.03f);
             yield return new WaitForSeconds(0.06f);
@@ -647,7 +650,7 @@ public class BossSkills : MonoBehaviour
         {
             Fx.Play("fx_bonehand", s + Vector3.up * 0.9f, 2.6f, Color.white, 14f, 0f, 14);
             Fx.Play("fx_smoke", s, 2f, new Color(0.5f, 0.45f, 0.5f, 0.7f), 18f);
-            if (!hit && Hostile.HitCircle(s, 1.4f, 16f)) { hit = true; p.Slow(0.45f, 1.6f); }
+            if (!hit && Hostile.HitCircle(s, 1.4f, 16f * Power)) { hit = true; p.Slow(0.45f, 1.6f); }
         }
         Hostile.Play("crack", 0.6f, 0.8f);
     }
@@ -672,7 +675,7 @@ public class BossSkills : MonoBehaviour
         for (int i = 0; i < n && Alive; i++)
         {
             Fx.Play("fx_firepillar", spots[i] + Vector3.up * 1.8f, 4f, Color.white, 18f, 0f, 14);
-            Hostile.HitCircle(spots[i], 1.4f, 20f);
+            Hostile.HitCircle(spots[i], 1.4f, 20f * Power);
             if (i % 3 == 0) Hostile.Play("ignite", 0.4f, 1.1f);
             yield return new WaitForSeconds(0.08f);
         }
@@ -711,7 +714,7 @@ public class BossSkills : MonoBehaviour
                 Vector2 d = Quaternion.Euler(0f, 0f, s) * dir;
                 Vector3 at = c + (Vector3)(d * k);
                 Fx.Play("fx_firepillar", at + Vector3.up * 1.2f, 2.6f, Color.white, 20f, 0f, 14);
-                if (!hit) hit = Hostile.HitCircle(at, 1.1f, 22f);
+                if (!hit) hit = Hostile.HitCircle(at, 1.1f, 22f * Power);
             }
         Hostile.Play("boom", 0.6f, 0.8f);
     }
@@ -734,7 +737,7 @@ public class BossSkills : MonoBehaviour
             foreach (Vector3 s in spots)
             {
                 Fx.Play("fx_geyser", s + Vector3.up * 1.7f, 3.8f, Color.white, 16f, 0f, 14);
-                if (!hit) hit = Hostile.HitCircle(s, 1.5f, 16f);
+                if (!hit) hit = Hostile.HitCircle(s, 1.5f, 16f * Power);
             }
             Hostile.Play("whoosh", 0.5f, 1.2f);
             yield return new WaitForSeconds(0.3f);
@@ -758,7 +761,7 @@ public class BossSkills : MonoBehaviour
             yield return null;
         }
         if (!Alive) yield break;
-        Hostile.HitCircle(c, 2f, 24f);
+        Hostile.HitCircle(c, 2f, 24f * Power);
         Fx.Play("fx_geyser", c + Vector3.up * 1.7f, 4.2f, Color.white, 16f, 0f, 14);
         Hostile.Burst(c, 2f, Acid);
         HazardZone.Spawn(c, 1.6f, 3f, 8f, Acid, "fx_puddle", 0.7f);

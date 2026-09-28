@@ -872,7 +872,7 @@ void Shoot()
     [Header("피격")]
     public float bossContactDamage = 25f;
     // 맞은 뒤 이 시간 동안은 다시 맞지 않음 (여러 마리에게 동시에 맞는 것 방지)
-    public float hurtInvincibleTime = 0.8f;
+    public float hurtInvincibleTime = 0.4f;
 
     private float invincibleUntil = 0f;
 

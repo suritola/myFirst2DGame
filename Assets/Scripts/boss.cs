@@ -56,8 +56,8 @@ public class bosss : MonoBehaviour
     static readonly List<bosss> slimes = new List<bosss>();
     static int gen2Deaths;
     static int gen3Spawned;
-    const int Gen2Hp = 1100;
-    const int Gen3Hp = 500;
+    const int Gen2Hp = 600;
+    const int Gen3Hp = 280;
     // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
     static float slimeMul = 1f;
     static int gen1Max = 2600;

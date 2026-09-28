@@ -226,7 +226,23 @@ public partial class LevelShop : MonoBehaviour
     public void toggleLevelUp()
     {
         showLv = !showLv;
-        LvUpPanel.SetActive(showLv);
+        LvUpPanel.SetActive(showLv && !ShopOpen);
+    }
+
+    Shop shopRef;
+    bool ShopOpen
+    {
+        get
+        {
+            if (shopRef == null) shopRef = FindFirstObjectByType<Shop>();
+            return shopRef != null && shopRef.isShopOpen;
+        }
+    }
+
+    // 상점이 열려 있는 동안은 레벨업 표시가 화면을 가리지 않게
+    void LateUpdate()
+    {
+        if (LvUpPanel != null && LvUpPanel.activeSelf != (showLv && !ShopOpen)) LvUpPanel.SetActive(showLv && !ShopOpen);
     }
     public void openLevelShop()
     {

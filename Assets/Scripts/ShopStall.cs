@@ -6,7 +6,7 @@ using UnityEngine;
 public class ShopStall : MonoBehaviour
 {
     public float lifetime = 10f;
-    public float openDistance = 3f;
+    public float openDistance = 6f;
 
     // 플레이어가 제단 앞에 있으면 상호작용 키는 상점 열기 (스킬 대신)
     public static bool PlayerNear;

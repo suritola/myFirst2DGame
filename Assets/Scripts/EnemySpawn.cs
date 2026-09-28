@@ -113,7 +113,7 @@ public class EnemySpawner : MonoBehaviour
 
         UpdatePhase();
 
-        if (killedEnemy >= Stage.bossKills && !bossSpawned && !bossCleared && Stage.bossPrefab != null)
+        if (killedEnemy >= GameMode.ScaleKills(Stage.bossKills) && !bossSpawned && !bossCleared && Stage.bossPrefab != null)
         {
             if (bossbar == null) bossbar = FindFirstObjectByType<bossbar>();
             if (bossbar != null) bossbar.bossSpawn = true;
@@ -130,7 +130,7 @@ public class EnemySpawner : MonoBehaviour
         int phase = 1;
         for (int i = 1; i < Stage.phases.Length; i++)
         {
-            if (killedEnemy >= Stage.phases[i].killsToEnter) phase = i + 1;
+            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter)) phase = i + 1;
         }
         paze = phase;
 
