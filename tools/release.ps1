@@ -2,7 +2,7 @@
 # 에디터가 켜져 있어도 되도록 프로젝트 복사본에서 빌드한다.
 #
 # 사용법: pwsh tools/release.ps1            (버전 자동 증가: v1.0 -> v1.1 ...)
-#         pwsh tools/release.ps1 -Version v1.7.1   (버전은 AGENT.md 규칙 4, 빼면 오늘 날짜로 자동)
+#         pwsh tools/release.ps1 -Version v1.7.7   (버전은 AGENT.md 규칙 4, 빼면 지난 버전 +1 로 자동)
 #         pwsh tools/release.ps1 -NotesFile docs/patch-notes/v1.0.md
 param(
     [string]$Version,
@@ -31,16 +31,23 @@ if ($LASTEXITCODE -eq 0 -and $latest) {
     if ($body -match "소스 커밋: ([0-9a-f]+)") { $prevCommit = $Matches[1] }
 }
 if (-not $Version) {
-    # 버전: 달 번호(2026년 9월 = 1) . |년월 자리합 - 날짜 자리합| . 그날 배포 순서 (AGENT.md 규칙 4)
-    $now = Get-Date
-    $month = ($now.Year - 2026) * 12 + $now.Month - 8
-    $ym = ($now.ToString("yyMM").ToCharArray() | ForEach-Object { [int][string]$_ } | Measure-Object -Sum).Sum
-    $dd = ($now.ToString("dd").ToCharArray() | ForEach-Object { [int][string]$_ } | Measure-Object -Sum).Sum
-    $today = $now.ToString("yyyy-MM-dd")
-    $rows = & $Gh release list -R $Repo --limit 100 --json tagName,publishedAt --jq '.[] | .tagName + " " + .publishedAt'
-    $order = 1 + @($rows | Where-Object { $_ -match "^v\d+\.\d+\.\d+ " -and ([datetime]($_ -split " ")[1]).ToLocalTime().ToString("yyyy-MM-dd") -eq $today }).Count
-    $Version = "v$month.$([Math]::Abs($ym - $dd)).$order"
+    # 버전: 주.부.수 — 지난 릴리즈 +1, 끝자리가 9를 넘으면 부 +1, 부가 9를 넘으면 주 +1 (AGENT.md 규칙 4)
+    $major = 1; $minor = 7; $patch = 5
+    if ($prevTag -match "^v(\d+)\.(\d+)\.(\d+)$") { $major = [int]$Matches[1]; $minor = [int]$Matches[2]; $patch = [int]$Matches[3] }
+    $patch++
+    if ($patch -gt 9) { $patch = 0; $minor++ }
+    if ($minor -gt 9) { $minor = 0; $major++ }
+    $Version = "v$major.$minor.$patch"
 }
+# 부 버전(두 번째 자리)마다 코드네임: 게임 안 표(WindowTitle.cs 의 Codenames)에서 읽음
+$codename = ""
+$codeFile = Join-Path $Project "Assets\Scripts\WindowTitle.cs"
+if ($Version -match "^v(\d+\.\d+)\." -and (Test-Path $codeFile)) {
+    $mm = [regex]::Escape($Matches[1])
+    $hit = Select-String -Path $codeFile -Pattern ('\{\s*"' + $mm + '",\s*"([^"]+)"') -Encoding utf8 | Select-Object -First 1
+    if ($hit) { $codename = $hit.Matches[0].Groups[1].Value }
+}
+$title = if ($codename) { "Soul Saver $Version — $codename" } else { "Soul Saver $Version" }
 if ($prevCommit) { $changes = git -C $Project log --pretty="- %s" "$prevCommit..HEAD" }
 else { $changes = git -C $Project log --pretty="- %s" -n 15 }
 if ($NotesFile) { $notes = "소스 커밋: $commit`n`n" + (Get-Content $NotesFile -Raw -Encoding utf8) }
@@ -76,6 +83,6 @@ Compress-Archive -Path (Join-Path $OutDir "*") -DestinationPath $zip
 Write-Host ("압축 완료: {0:N1} MB" -f ((Get-Item $zip).Length / 1MB))
 
 # ---------------------------------------------------------------- 업로드
-& $Gh release create $Version $zip -R $Repo --title "Soul Saver $Version" --notes $notes
+& $Gh release create $Version $zip -R $Repo --title $title --notes $notes
 if ($LASTEXITCODE -ne 0) { throw "Release 업로드 실패" }
 Write-Host "완료: https://github.com/$Repo/releases/tag/$Version"
