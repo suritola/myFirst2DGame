@@ -69,6 +69,7 @@ public partial class SpecialAbilities
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
+    public static bool KitIsWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
 
     // 인스펙터의 능력 목록(거너) 뒤에 새 캐릭터 능력을 붙임 (ID = 순서)
     void KitExtendAbilities()

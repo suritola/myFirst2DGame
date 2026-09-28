@@ -60,7 +60,7 @@ public partial class CharacterKit
     {
         SpecialAbilities.KitHammer => "평타가 몸 주위를 크게 내리찍습니다. 느리지만 피해 200%, 맞은 적은 잠깐 기절.",
         SpecialAbilities.KitWhip => "평타가 길고 가는 채찍 베기가 됩니다. 사거리 180%, 끝부분에 맞은 적은 두 배 피해.",
-        SpecialAbilities.KitLance => "평타가 앞으로 짧게 돌진하며 길게 찌릅니다. 사거리 150%, 피해 170%, 돌진 중 무적.",
+        SpecialAbilities.KitLance => "평타를 누르면 마우스 쪽으로 쭉 돌진하며 지나간 적을 찌르고(60%), 도착한 곳에서 길게 찌릅니다 (사거리 150%, 피해 170%). 돌진 중 무적.",
         SpecialAbilities.KitBlowgun => "평타가 빠른 독침이 됩니다. 공격 속도 170%, 한 발 피해 55%, 맞은 적에게 독이 쌓임.",
         SpecialAbilities.KitCards => "평타가 카드 세 장이 됩니다. 장마다 피해가 제각각 (50~170%), 가끔 조커가 폭발.",
         SpecialAbilities.KitWire => "평타 표창이 맞은 적에게서 가까운 적 둘에게 줄이 튀어 벱니다. (피해 70%)",
@@ -118,9 +118,68 @@ public partial class CharacterKit
         if (first && augment == AugThunder) ChainBolt(c, Damage * 0.6f * formPower, 3);
     }
 
-    void SwingFormBefore(Vector2 dir)
+    void SwingFormBefore(Vector2 dir) { }
+
+    // 기창: 평타를 누르면 먼저 쭉 돌진하고 (도적 출혈 돌진처럼, 거리는 짧게), 도착한 곳에서 길게 찌름
+    bool lanceFinishing;
+
+    bool LanceIntercept(Vector2 dir, int shots)
     {
-        if (form == SpecialAbilities.KitLance) StartCoroutine(Lunge(dir));
+        if (form != SpecialAbilities.KitLance || lanceFinishing) return false;
+        StartCoroutine(LanceCharge(dir, shots));
+        return true;
+    }
+
+    IEnumerator LanceCharge(Vector2 dir, int shots)
+    {
+        if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
+        const float dist = 7f, time = 0.2f, width = 1.3f;
+        Vector3 from = transform.position;
+        float len = dist;
+        for (float d = 0.5f; d <= dist; d += 0.5f)
+        {
+            Vector3 p = from + (Vector3)(dir * d);
+            if (Hostile.IsWall(p) || (Hostile.ClampArena(p) - p).sqrMagnitude > 0.01f) { len = d - 0.5f; break; }
+        }
+        Vector3 to = from + (Vector3)(dir * len);
+        dashUntil = Time.time + time;
+        player.GrantInvincibility(time + 0.25f);
+        Play("whoosh", 0.9f, 1.1f);
+        Fx.Spawn("fx_shock", from, 3f, new Color(0.8f, 0.9f, 1f, 0.7f), 20f);
+        float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        HashSet<Collider2D> hit = new HashSet<Collider2D>();
+        int ghosts = 0;
+        for (float t = 0f; t < time; t += Time.deltaTime)
+        {
+            Vector3 p = Vector3.Lerp(from, to, t / time);
+            transform.position = p;
+            // 지나가며 닿은 적을 찌름 (적마다 한 번, 피해 60%)
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, width))
+            {
+                if ((!c.CompareTag("enermy") && !c.CompareTag("boss")) || !hit.Add(c)) continue;
+                Vector2 side = new Vector2(-dir.y, dir.x);
+                if (Vector2.Dot(side, c.transform.position - p) < 0f) side = -side;
+                Specials.Damage(c.gameObject, Damage * 0.6f * formPower, side, 2.5f);
+                Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
+            }
+            // 은빛 잔상
+            if (t >= ghosts * 0.03f)
+            {
+                ghosts++;
+                GameObject g = SpecialAbilities.MakeSprite("LanceGhost", body.sprite, p, 1f, new Color(0.75f, 0.85f, 1f, 0.5f), "Character", -1);
+                g.transform.localScale = transform.lossyScale;
+                g.GetComponent<SpriteRenderer>().flipX = body.flipX;
+                g.AddComponent<FadeOut>().duration = 0.25f;
+                Fx.Spawn("fx_shadowdash", p - (Vector3)(dir * 1.2f), 1.1f, new Color(0.8f, 0.9f, 1f), 24f, rot, 13);
+            }
+            yield return null;
+        }
+        transform.position = to;
+        // 도착: 길게 찌르기 (평소 베기 판정 · 카드 효과 그대로)
+        lanceFinishing = true;
+        Swing(dir, shots);
+        lanceFinishing = false;
+        Hostile.Shake(0.08f);
     }
 
     void SwingFormAfter(Vector3 origin, float reach)
@@ -137,20 +196,6 @@ public partial class CharacterKit
             Fx.Spawn("fx_shock", origin, reach * 2.6f, new Color(0.7f, 0.9f, 1f, 0.8f), 18f);
             Play("whoosh", 0.7f, 0.7f);
         }
-    }
-
-    // 기창: 앞으로 짧게 돌진 (돌진 중 무적)
-    IEnumerator Lunge(Vector2 dir)
-    {
-        player.GrantInvincibility(0.2f);
-        Vector3 to = Hostile.ClampArena(transform.position + (Vector3)(dir * 2.5f));
-        Vector3 from = transform.position;
-        for (float t = 0f; t < 0.12f; t += Time.deltaTime)
-        {
-            transform.position = Vector3.Lerp(from, to, t / 0.12f);
-            yield return null;
-        }
-        transform.position = to;
     }
 
     // 번개: 처음 맞은 적에서 가까운 적 n 명에게 차례로

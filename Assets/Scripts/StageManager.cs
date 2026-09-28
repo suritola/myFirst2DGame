@@ -65,6 +65,10 @@ public class StageManager : MonoBehaviour
     float affordCheckAt;
     bool affordable;
     int shownShards = -1;                   // 버튼 글은 조각 수가 바뀔 때만 새로 씀 (매 프레임 글자 생성 방지)
+    public bool TreeAffordable => affordable;   // 레벨업 알림과 한 줄로 묶을 때 (LevelShop)
+    TMP_Text gainText;               // 버튼 옆에 잠깐 뜨는 "+N" (조각이 들어오는 느낌)
+    int gainAmount, gainFrom = -1;
+    float gainUntil;
     KeyCode shownKey;
     Loc.Lang shownLang;
 
@@ -201,6 +205,7 @@ public class StageManager : MonoBehaviour
             affordable = specials != null && specials.AnyAffordable();
             if (affordable) Hints.Show("soultree_buy", "영혼 조각으로 배울 수 있는 칸이 생겼습니다. [{UPGRADE}]로 영혼 트리를 여세요.");
         }
+        UpdateShardGain();
         float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
         upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
         upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
@@ -214,7 +219,53 @@ public class StageManager : MonoBehaviour
             shownLang = Loc.Current;
             upgradeText.text = Loc.T("영혼 트리") + " [" + KeyBindings.KeyName(key) + "]  <color=#C9B8FF>" + shownShards + "</color>";
         }
-        if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame) OpenSoulTree();
+        if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame)
+        {
+            // [Shift]+[T]: 트리를 열지 않고 추천 칸(없으면 가장 싼 칸)을 바로 배움
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) QuickBuy();
+            else OpenSoulTree();
+        }
+    }
+
+    void QuickBuy()
+    {
+        if (specials == null || Time.timeScale == 0f) return;
+        SpecialAbilities.SoulNode n = specials.QuickBuy();
+        affordCheckAt = 0f;
+        if (n == null)
+        {
+            SpecialAbilities.SharedFx?.Play("buzz", 0.5f);
+            ShowBanner(Loc.T("지금 배울 수 있는 칸이 없습니다"), 1.2f);
+            return;
+        }
+        ShowBanner(Loc.T("영혼 트리") + "  ·  " + n.name, 1.6f);
+    }
+
+    // 조각이 들어오면 버튼 왼쪽에 "+N" 이 잠깐 떴다가 사라짐 (0.4초 안에 들어온 양은 합쳐서)
+    void UpdateShardGain()
+    {
+        int now = SoulShards.Amount;
+        if (gainFrom < 0) gainFrom = now;
+        if (now > gainFrom)
+        {
+            gainAmount = (Time.unscaledTime < gainUntil - 0.6f ? gainAmount : 0) + (now - gainFrom);
+            gainUntil = Time.unscaledTime + 1f;
+            if (gainText == null)
+            {
+                gainText = UIKit.Text(upgradeButton.transform, "", 22f, new Color(0.8f, 0.7f, 1f), new Vector2(-185f, 0f), new Vector2(120f, 36f), TextAlignmentOptions.Right);
+            }
+            gainText.text = "+" + gainAmount;
+        }
+        gainFrom = now;
+        if (gainText == null) return;
+        float left = gainUntil - Time.unscaledTime;
+        gainText.gameObject.SetActive(left > 0f);
+        if (left > 0f)
+        {
+            float k = 1f - left;                                    // 0 → 1
+            gainText.alpha = Mathf.Clamp01(left * 2f);
+            gainText.rectTransform.anchoredPosition = new Vector2(-185f, 6f * k);
+        }
     }
 
     public void OpenSoulTree()

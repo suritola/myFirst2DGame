@@ -1802,6 +1802,7 @@ public partial class SpecialAbilities : MonoBehaviour
     void OnEnemyKilled(Vector3 pos)
     {
         KitOnKill(pos);
+        TreeOnKill(pos);
         if (!Has(SoulBurstId)) return;
         souls = Mathf.Min(40, souls + 1);
         if (souls == SoulsNeeded)

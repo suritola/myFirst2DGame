@@ -34,9 +34,10 @@ public static class Juice
         Hostile.Play("levelup", 0.8f);
     }
 
-    public static void CoinPicked(Vector3 pos)
+    // sound: 코인을 한꺼번에 여러 개 주우면 소리는 가끔만 (PlayerController 가 정함)
+    public static void CoinPicked(Vector3 pos, bool sound = true)
     {
         Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), 0.8f, new Color(1f, 0.88f, 0.4f), 16f, 0f, 20);
-        Hostile.Play("sparkle", 0.3f, Random.Range(0.95f, 1.15f));
+        if (sound) Hostile.Play("sparkle", 0.2f, Random.Range(0.95f, 1.15f));
     }
 }

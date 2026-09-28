@@ -851,17 +851,28 @@ void Shoot()
     }
 
     int dropCoin;
+    float lastCoinSound = -1f;
+    int coinStreak;
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("coin"))
         {
-            Coin coin = FindFirstObjectByType<Coin>();
+            Coin coin = Cache<Coin>.Get;
 
             if (coin != null)
             {
                 coin.AddCoin(1 + bonusCoin);
-                if ( audioSource != null && getCoin != null ) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume);
-                Juice.CoinPicked(collision.transform.position);
+                // 한꺼번에 여러 개를 주우면 소리가 겹쳐 너무 커지므로: 0.07초에 한 번만, 연달아 주울수록 작게
+                float now = Time.unscaledTime;
+                coinStreak = now - lastCoinSound < 0.6f ? coinStreak + 1 : 0;
+                bool sound = now - lastCoinSound >= 0.07f;
+                if (sound)
+                {
+                    lastCoinSound = now;
+                    float vol = Mathf.Max(0.4f, 1f / (1f + 0.15f * coinStreak));
+                    if (audioSource != null && getCoin != null) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume * vol);
+                }
+                Juice.CoinPicked(collision.transform.position, sound);
             }
             Destroy( collision.gameObject );
         }
@@ -923,6 +934,7 @@ void Shoot()
         // 피해 감소는 합쳐도 최대 70% (단단한 신체 + 강철 갑옷 + 거대화 물약이 겹쳐 무적이 되지 않게)
         float taken = amount * GameMode.DamageMul * (1f - Mathf.Clamp(def, 0f, MaxDef));
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
+        if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())

@@ -241,6 +241,7 @@ public static class CodexUI
 
     static void Evolutions(CodexData data)
     {
+        WeaponEvolutions(data);
         if (data == null || data.specials == null) return;
         for (int id = 0; id < data.specials.Length && id < SpecialAbilities.EvolveTexts.Length; id++)
         {
@@ -252,6 +253,39 @@ public static class CodexUI
         }
     }
 
+    // 캐릭터별 무기 진화 (거너 + 해금한 캐릭터): 1차 세 갈래 · 2차 세 갈래를 판 시작 전에 계획할 수 있게
+    static void WeaponEvolutions(CodexData data)
+    {
+        Color tint = new Color(1f, 0.85f, 0.55f);
+        // 거너: 권총 → 1차 무기 → 2차 (같은 계열 극대화 또는 새 계열)
+        string gunner = Loc.T(CharacterData.Def(CharacterId.Gunner).name);
+        foreach (int w in SpecialAbilities.Tier1Options)
+        {
+            SpecialDef d = data != null && data.specials != null && w < data.specials.Length ? data.specials[w] : null;
+            if (d == null) continue;
+            string paths = "";
+            foreach (int n in SpecialAbilities.Tier2Options(w))
+            {
+                string nm = n == w ? SpecialAbilities.MaxedName(n) : (n < data.specials.Length && data.specials[n] != null ? Loc.T(data.specials[n].name) : "");
+                paths += (paths.Length > 0 ? " / " : "") + nm;
+            }
+            Card(d.icon, tint, Loc.T(d.name), gunner + " \u00B7 " + Loc.T("1차 진화"),
+                 Loc.T(d.description).Replace("\n", " ") + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths);
+        }
+        // 다른 캐릭터: 1차 형태 셋 · 2차 강화 셋
+        foreach (CharacterId c in UnlockedKits())
+        {
+            string who = Loc.T(CharacterData.Def(c).name);
+            foreach (int id in CharacterData.Def(c).pool)
+            {
+                if (!SpecialAbilities.IsKit(id) || !SpecialAbilities.KitIsWeapon(id)) continue;
+                Card(Resources.Load<Sprite>("Icons/ability_" + id), tint, Loc.T(SpecialAbilities.KitName(id)), who + " \u00B7 " + Loc.T("1차 진화"), Loc.T(CharacterKit.FormDesc(id)));
+            }
+            foreach (int a in CharacterKit.AugmentsFor(c))
+                Card(Resources.Load<Sprite>("Icons/ability_" + (a - CharacterKit.AugFirst + 92)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
+        }
+    }
+
     static void LevelUpCards(CodexData data)
     {
         for (int i = 0; i < LevelUps.Length; i++)
@@ -259,6 +293,7 @@ public static class CodexUI
             // 무기 · 스킬 카드(관통 · 재활용 에너지 · 노려보는 눈빛 · 멀티 샷 · 밀어내기)는 더 이상 나오지 않음
             if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) continue;
             Sprite icon = data != null && data.abilityIcons != null && i < data.abilityIcons.Length ? data.abilityIcons[i] : null;
+            if (i == 5) icon = Resources.Load<Sprite>("Icons/ability_104");      // 코인 자석
             Card(icon, Color.white, Loc.T(LevelUps[i].name), Loc.T("모든 캐릭터"), Loc.T(LevelUps[i].desc));
         }
         // 캐릭터 전용 카드 (무기 관련 카드 대신 나옴): 거너 + 해금한 캐릭터

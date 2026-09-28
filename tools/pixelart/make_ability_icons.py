@@ -354,7 +354,7 @@ ICONS = {
     77: ('c_stance', 'sw'), 78: ('c_combo', 'sw'), 79: ('c_vital', 'rg'), 80: ('c_recall', 'rg'), 81: ('c_steady', 'ar'), 82: ('c_mark', 'ar'), 83: ('c_fusion', 'al'), 84: ('c_sticky', 'al'), 85: ('c_supply', 'gn'),
     86: ('g_ricochet', 'gn'), 87: ('g_explosive', 'gn'), 88: ('g_incendiary', 'gn'), 89: ('g_homing', 'gn'), 90: ('g_shock', 'gn'), 91: ('g_reloadwave', 'gn'),
     92: ('a_storm', 'sw'), 93: ('a_execute', 'sw'), 94: ('a_thunder', 'sw'), 95: ('a_echo', 'rg'), 96: ('a_venom', 'rg'), 97: ('a_volley', 'rg'),
-    98: ('a_blast', 'ar'), 99: ('a_seek', 'ar'), 100: ('a_gale', 'ar'), 101: ('a_double', 'al'), 102: ('a_giant', 'al'), 103: ('a_overload', 'al'),
+    98: ('a_blast', 'ar'), 99: ('a_seek', 'ar'), 100: ('a_gale', 'ar'), 101: ('a_double', 'al'), 102: ('a_giant', 'al'), 103: ('a_overload', 'al'), 104: ('magnet', 'gn'),
 }
 BG = {'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 

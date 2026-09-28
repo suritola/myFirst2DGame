@@ -151,8 +151,12 @@ public partial class Shop : MonoBehaviour
 
     int moveSpeedBuys = 0;
 
+    // 영혼 트리 '흥정' 할인을 뺀 실제 가격
+    static int Discounted(int price) => SpecialAbilities.SharedInstance != null ? Mathf.CeilToInt(price * SpecialAbilities.SharedInstance.TreeShopMul) : price;
+
     bool TryPay(int price)
     {
+        price = Discounted(price);
         if (coind == null || playerControllerd == null) return false;
         if (coind.coins < price) return false;
 
@@ -308,7 +312,7 @@ public partial class Shop : MonoBehaviour
     // 상점 텍스트 갱신
     // =====================================
 
-    string PriceText(int price, bool maxed) => maxed ? Loc.T("최대") : Loc.T("구매\n") + price + Loc.T(" 코인");
+    string PriceText(int price, bool maxed) => maxed ? Loc.T("최대") : Loc.T("구매\n") + Discounted(price) + Loc.T(" 코인");
 
     static string PerSecond(float interval) => (1f / interval).ToString("0.0");
 

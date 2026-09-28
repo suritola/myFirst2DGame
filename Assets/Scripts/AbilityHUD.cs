@@ -32,6 +32,7 @@ public class AbilityHUD : MonoBehaviour
     {
         Sprite kit = LevelShop.KitIcon(id);
         if (kit != null) return kit;
+        if (id == 5) return Resources.Load<Sprite>("Icons/ability_104");     // 코인 자석 (예전 그림이 핏방울처럼 보여서)
         if (icons == null || id < 0 || id >= icons.Length) return null;
         return icons[id];
     }

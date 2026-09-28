@@ -12,15 +12,28 @@ public class RunStats : MonoBehaviour
     public static string Character = "", Difficulty = "";
     public static readonly List<string> Abilities = new List<string>();     // 특수 능력 (진화하면 +)
     public static readonly List<string> Cards = new List<string>();         // 레벨업 카드 "이름 Lv n"
+    // 무기 진화 · 영혼 트리 (1.7.9~): 결과 화면과 밸런스 기록에 씀
+    public static readonly List<KeyValuePair<string, float>> Evolutions = new List<KeyValuePair<string, float>>();
+    public static int[] Branches = new int[6];
+    public static int ShardsTotal, ShardsSpent;
+    static bool runActive, cleared;
 
     float refresh;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
+        StageManager.Cleared += d => cleared = true;
         SceneManager.sceneLoaded += (s, m) =>
         {
+            // 게임 씬을 떠날 때 (게임 오버 · 메인 메뉴 · 다시 시작) 이번 판을 밸런스 기록에 한 줄
+            if (runActive) { runActive = false; WriteBalanceLog(cleared ? "clear" : s.name == "GameOver" ? "death" : "quit"); }
             if (s.name != "GameScene") return;
+            runActive = true;
+            cleared = false;
+            Evolutions.Clear();
+            Branches = new int[6];
+            ShardsTotal = ShardsSpent = 0;
             Seconds = 0f;
             Kills = 0;
             Level = 1;
@@ -56,6 +69,14 @@ public class RunStats : MonoBehaviour
 
         // 0.5초마다 씬을 뒤지지 않게 한 번 찾아 두고 씀
         if (sp == null) sp = FindFirstObjectByType<SpecialAbilities>();
+        if (sp != null)
+        {
+            Evolutions.Clear();
+            Evolutions.AddRange(sp.EvolutionLog);
+            Branches = sp.OwnedPerBranch();
+            ShardsTotal = SoulShards.Total;
+            ShardsSpent = SoulShards.Spent;
+        }
         if (sp != null && sp.abilities != null)
         {
             Abilities.Clear();
@@ -88,9 +109,53 @@ public class RunStats : MonoBehaviour
                    + Loc.T("공격력 ") + p.damage.ToString("0.##") + "   " + Loc.T("받는 피해 감소 ") + (Mathf.Min(p.def, PlayerController.MaxDef) * 100f).ToString("0") + "%"
                    + "   " + Loc.T("최대 체력 ") + Mathf.RoundToInt(p.PlayerMaxHealth);
         }
+        // 무기 진화: 기본 무기 → 1차 (시각) → 2차 (시각)
+        string evo = Loc.T("기본 무기");
+        foreach (KeyValuePair<string, float> e in Evolutions) evo += "  \u2192  " + e.Key + " <color=#A89C86>(" + EndlessMode.Clock(e.Value) + ")</color>";
+        s += "\n\n" + gold + Loc.T("무기 진화") + end + "\n" + evo;
+        // 영혼 트리: 많이 배운 가지 순서 · 조각
+        List<int> order = new List<int> { 0, 1, 2, 3, 4, 5 };
+        order.Sort((a, b) => Branches[b].CompareTo(Branches[a]));
+        string tree = "";
+        foreach (int b in order)
+            if (Branches[b] > 0) tree += (tree.Length > 0 ? ",  " : "") + Loc.T(SpecialAbilities.BranchNames[b]) + " " + Branches[b];
+        s += "\n\n" + gold + Loc.T("영혼 트리") + end + "\n" + (tree.Length > 0 ? tree : "-")
+           + "\n" + Loc.T("영혼 조각") + " " + ShardsTotal + "  (" + Loc.T("씀") + " " + ShardsSpent + ")";
         s += "\n\n" + gold + Loc.T("특수 능력") + end + "\n" + (Abilities.Count > 0 ? string.Join(",  ", Abilities) : "-");
         s += "\n\n" + gold + Loc.T("레벨업 카드") + end + "\n" + (Cards.Count > 0 ? string.Join(",  ", Cards) : "-");
         return s;
+    }
+
+    // ================================================================= 밸런스 기록
+    // 판이 끝날 때마다 한 줄 (persistentDataPath/balance_log.csv): 영혼 조각 · 진화 시점 · 가지별 칸 수를 숫자로 보고 조정하려고
+    public static string BalanceLogPath => System.IO.Path.Combine(Application.persistentDataPath, "balance_log.csv");
+
+    static void WriteBalanceLog(string result)
+    {
+        if (GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return;     // 테스트 · 자동 플레이는 기록하지 않음
+        try
+        {
+            string path = BalanceLogPath;
+            bool fresh = !System.IO.File.Exists(path);
+            System.Text.StringBuilder b = new System.Text.StringBuilder();
+            if (fresh) b.AppendLine("date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards");
+            string E(int i, bool time) => i < Evolutions.Count ? (time ? Evolutions[i].Value.ToString("0") : Evolutions[i].Key.Replace(",", " ")) : "";
+            b.Append(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")).Append(',')
+             .Append(Application.version).Append(',')
+             .Append(CharacterData.Selected).Append(',')
+             .Append(GameMode.Current).Append(',')
+             .Append(GameMode.IsEndless ? 1 : 0).Append(',')
+             .Append(result).Append(',')
+             .Append(Seconds.ToString("0")).Append(',')
+             .Append(Level).Append(',').Append(Kills).Append(',')
+             .Append(ShardsTotal).Append(',').Append(ShardsSpent).Append(',')
+             .Append(E(0, false)).Append(',').Append(E(0, true)).Append(',')
+             .Append(E(1, false)).Append(',').Append(E(1, true));
+            for (int i = 0; i < 6; i++) b.Append(',').Append(i < Branches.Length ? Branches[i] : 0);
+            b.Append(',').Append(Cards.Count).AppendLine();
+            System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
+        }
+        catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }
     }
 
     // ================================================================= ESC 메뉴 오른쪽의 이번 판 요약

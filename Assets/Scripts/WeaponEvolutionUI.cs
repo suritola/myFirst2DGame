@@ -226,7 +226,7 @@ public class WeaponEvolutionUI : MonoBehaviour
     void BuildCard(int i)
     {
         int id = options[i];
-        RectTransform c = UIKit.Rect("Card" + i, root, Vector2.zero, new Vector2(440f, 560f));
+        RectTransform c = UIKit.Rect("Card" + i, root, Vector2.zero, new Vector2(440f, 640f));
         c.gameObject.AddComponent<CanvasGroup>();
         Image frame = c.gameObject.AddComponent<Image>();
         frame.sprite = UIKit.ButtonSprite;
@@ -237,27 +237,29 @@ public class WeaponEvolutionUI : MonoBehaviour
         int idx = i;
         b.onClick.AddListener(() => Select(idx));
 
-        Image inner = Img("Inner", c, Vector2.zero, new Vector2(412f, 532f), null, new Color(0.08f, 0.06f, 0.12f, 0.97f));
+        Image inner = Img("Inner", c, Vector2.zero, new Vector2(412f, 612f), null, new Color(0.08f, 0.06f, 0.12f, 0.97f));
         inner.raycastTarget = false;
 
         // 같은 계열을 한 번 더 고르면 '강화판'
         bool same = tier >= 2 && sp.WeaponActive && id == sp.CurrentWeapon;
         string tag = !CharacterData.IsGunner ? (tier >= 2 ? Loc.T("추가 강화") : Loc.T("1차 진화"))
                    : tier >= 2 ? (same ? Loc.T("같은 계열 · 극대화") : Loc.T("새 계열로 분기")) : Loc.T("1차 진화");
-        TMP_Text tg = UIKit.Text(c, "", 22f, same ? Gold : new Color(0.7f, 0.85f, 1f), new Vector2(0f, 240f), new Vector2(400f, 34f));
+        TMP_Text tg = UIKit.Text(c, "", 22f, same ? Gold : new Color(0.7f, 0.85f, 1f), new Vector2(0f, 285f), new Vector2(400f, 34f));
         tg.text = tag;
 
-        Img("Glow", c, new Vector2(0f, 120f), new Vector2(300f, 300f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.35f)).raycastTarget = false;
+        Img("Glow", c, new Vector2(0f, 170f), new Vector2(260f, 260f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.35f)).raycastTarget = false;
         Sprite weapon = sp.EvolutionIcon(id);
-        Image icon = Img("Icon", c, new Vector2(0f, 120f), new Vector2(200f, 200f), weapon, Color.white);
+        Image icon = Img("Icon", c, new Vector2(0f, 170f), new Vector2(170f, 170f), weapon, Color.white);
         icon.preserveAspect = true;
         icon.raycastTarget = false;
 
-        TMP_Text name = UIKit.Text(c, "", 36f, Gold, new Vector2(0f, -10f), new Vector2(400f, 54f));
+        TMP_Text name = UIKit.Text(c, "", 36f, Gold, new Vector2(0f, 55f), new Vector2(400f, 54f));
         name.text = sp.EvolutionName(id, tier);
-        TMP_Text desc = UIKit.Text(c, "", 22f, Parch, new Vector2(0f, -150f), new Vector2(380f, 210f), TextAlignmentOptions.Top);
+        TMP_Text desc = UIKit.Text(c, "", 22f, Parch, new Vector2(0f, -55f), new Vector2(380f, 150f), TextAlignmentOptions.Top);
+        // 미리보기: 이 무기가 어떻게 나가는지 작은 그림으로 되풀이
+        EvoPreview.Attach(UIKit.Rect("Preview", c, new Vector2(0f, -205f), new Vector2(380f, 120f)), id, sp.glowSprite);
         desc.text = sp.EvolutionDesc(id, tier);
-        TMP_Text key = UIKit.Text(c, "", 20f, new Color(0.6f, 0.56f, 0.62f), new Vector2(0f, -258f), new Vector2(200f, 28f));
+        TMP_Text key = UIKit.Text(c, "", 20f, new Color(0.6f, 0.56f, 0.62f), new Vector2(0f, -294f), new Vector2(200f, 28f));
         key.text = "[" + (i + 1) + "]";
 
         c.gameObject.SetActive(false);

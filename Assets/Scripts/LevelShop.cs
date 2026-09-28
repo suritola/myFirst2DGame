@@ -111,11 +111,14 @@ public partial class LevelShop : MonoBehaviour
     public void AddPending(int n = 1)
     {
         PendingLevels += n;
+        SpecialAbilities.SharedInstance?.TreeOnLevelUp(n);       // 영혼 트리 '깨달음'
         Hints.Show("levelup", "레벨이 오르면 능력 포인트가 쌓입니다. [{INTERACT}]를 눌러 원할 때 능력을 고르세요.");
     }
 
     GameObject pendingBadge;
     TextMeshProUGUI pendingText;
+    int shownPending = -1;
+    bool shownTree;
 
     void UpdatePendingBadge()
     {
@@ -137,7 +140,7 @@ public partial class LevelShop : MonoBehaviour
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
             r.anchoredPosition = new Vector2(0f, 110f);
-            r.sizeDelta = new Vector2(560f, 48f);
+            r.sizeDelta = new Vector2(780f, 48f);
             Image bg = pendingBadge.GetComponent<Image>();
             bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
             bg.raycastTarget = false;
@@ -161,7 +164,14 @@ public partial class LevelShop : MonoBehaviour
         if (!pendingBadge.activeSelf) pendingBadge.SetActive(true);
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
-        pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("능력 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "");
+        bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
+        if (shownPending != PendingLevels || shownTree != tree)
+        {
+            shownPending = PendingLevels;
+            shownTree = tree;
+            pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("능력 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "")
+                             + (tree ? "   \u00B7   [" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("배울 칸 있음") : "");
+        }
     }
 
     // 클릭한 카드 (0~2, -1 = 아직 없음)

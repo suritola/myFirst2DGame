@@ -227,6 +227,7 @@ public partial class CharacterKit : MonoBehaviour
     void Swing(Vector2 dir, int shots)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
+        if (LanceIntercept(dir, shots)) return;          // 기창: 먼저 돌진하고 도착해서 찌름
         // 연속 베기: 네 번째(2레벨부터 세 번째) 베기마다 더 멀리 · 두 배로
         bool combo = false;
         if (card[6] > 0)

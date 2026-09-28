@@ -36,7 +36,9 @@ public class SoulTreeUI : MonoBehaviour
     SpecialAbilities sp;
     System.Action onClose;
     RectTransform root, viewport, board;
-    TMP_Text shardText, footText;
+    TMP_Text shardText, footText, affordText;
+    RectTransform shardBox;
+    float shardFlash;
     readonly List<NodeView> views = new List<NodeView>();
     readonly List<GameObject> decor = new List<GameObject>();
     List<SpecialAbilities.SoulNode> nodes;
@@ -51,7 +53,7 @@ public class SoulTreeUI : MonoBehaviour
     {
         public SpecialAbilities.SoulNode node;
         public RectTransform rect;
-        public Image frame, icon, glow, line;
+        public Image frame, icon, glow, line, badge;
         public TMP_Text cost;
     }
 
@@ -123,11 +125,23 @@ public class SoulTreeUI : MonoBehaviour
         {
             bool can = sp.CanBuy(v.node);
             v.glow.enabled = can;
-            if (can) { Color c = BranchColor[v.node.branch]; v.glow.color = new Color(c.r, c.g, c.b, 0.25f + 0.4f * pulse); }
+            if (!can) continue;
+            Color c = BranchColor[v.node.branch];
+            v.glow.color = new Color(Mathf.Lerp(c.r, 1f, 0.3f), Mathf.Lerp(c.g, 1f, 0.3f), Mathf.Lerp(c.b, 1f, 0.3f), 0.45f + 0.45f * pulse);
+            v.glow.rectTransform.sizeDelta = Vector2.one * (170f + 40f * pulse);
+            v.frame.color = Color.Lerp(new Color(1f, 0.9f, 0.5f), Color.white, pulse);
+            if (!hovered.Contains(v)) v.rect.localScale = Vector3.one * (1f + 0.06f * pulse);
+        }
+        // 조각이 바뀌면 숫자 상자가 잠깐 번쩍
+        if (shardBox != null)
+        {
+            shardFlash = Mathf.Max(0f, shardFlash - Time.unscaledDeltaTime * 2.5f);
+            shardBox.localScale = Vector3.one * (1f + 0.12f * shardFlash);
         }
     }
 
     Vector2 lastMouse;
+    readonly HashSet<NodeView> hovered = new HashSet<NodeView>();
 
     // ================================================================= 이동 · 확대
     float CanvasScale => root.lossyScale.x > 0f ? root.lossyScale.x : 1f;
@@ -198,7 +212,19 @@ public class SoulTreeUI : MonoBehaviour
 
         TMP_Text title = UIKit.Text(root, "영혼 트리", 54f, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
         title.fontStyle = FontStyles.Bold;
-        shardText = UIKit.Text(root, "", 34f, new Color(0.8f, 0.7f, 1f), new Vector2(-700f, 480f), new Vector2(460f, 60f), TextAlignmentOptions.Left);
+        shardBox = UIKit.Rect("Shards", root, new Vector2(-735f, 470f), new Vector2(400f, 108f));
+        Image sb = shardBox.gameObject.AddComponent<Image>();
+        sb.sprite = UIKit.ButtonSprite;
+        sb.type = Image.Type.Sliced;
+        sb.color = new Color(0.55f, 0.42f, 0.85f);
+        sb.raycastTarget = false;
+        Img("Inner", shardBox, Vector2.zero, new Vector2(380f, 88f), null, new Color(0.08f, 0.05f, 0.14f, 0.97f));
+        Img("OrbGlow", shardBox, new Vector2(-148f, 0f), new Vector2(110f, 110f), sp.glowSprite, new Color(0.75f, 0.55f, 1f, 0.7f));
+        Img("Orb", shardBox, new Vector2(-148f, 0f), new Vector2(44f, 44f), sp.glowSprite, new Color(0.95f, 0.9f, 1f));
+        UIKit.Text(shardBox, "영혼 조각", 20f, new Color(0.8f, 0.7f, 1f), new Vector2(20f, 26f), new Vector2(300f, 28f), TextAlignmentOptions.Left);
+        shardText = UIKit.Text(shardBox, "", 50f, Color.white, new Vector2(20f, -6f), new Vector2(300f, 56f), TextAlignmentOptions.Left);
+        shardText.fontStyle = FontStyles.Bold;
+        affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
         UIKit.MakeButton(root, "", new Vector2(790f, 480f), new Vector2(230f, 62f), Close, 24f)
             .GetComponentInChildren<TMP_Text>().text = Loc.T("닫기") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]";
         UIKit.MakeButton(root, "", new Vector2(540f, 480f), new Vector2(200f, 62f), Recenter, 22f)
@@ -217,6 +243,7 @@ public class SoulTreeUI : MonoBehaviour
     {
         foreach (NodeView v in views) { if (v.rect != null) Destroy(v.rect.gameObject); if (v.line != null) Destroy(v.line.gameObject); }
         views.Clear();
+        hovered.Clear();
         foreach (GameObject g in decor) if (g != null) Destroy(g);
         decor.Clear();
 
@@ -245,8 +272,8 @@ public class SoulTreeUI : MonoBehaviour
             v.line = lines[n.key];
             views.Add(v);
         }
-        footText.text = Loc.T("칸을 누르면 배웁니다 · 배우면 다음 칸이 드러납니다") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
-                      + "  ·  " + Loc.T("끌기 · WASD 이동, 휠 확대");
+        footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
+                      + "  ·  " + Loc.T("끌기 · WASD 이동, 휠 확대") + "  ·  " + Loc.T("[Shift]+[T] 트리를 열지 않고 빠르게 배우기");
         Refresh();
     }
 
@@ -277,13 +304,17 @@ public class SoulTreeUI : MonoBehaviour
         v.icon = Img("Icon", v.rect, Vector2.zero, new Vector2(56f, 56f), n.icon, Color.white);
         v.icon.preserveAspect = true;
         v.cost = UIKit.Text(v.rect, "", 20f, Parch, new Vector2(0f, -54f), new Vector2(120f, 28f));
+        // 추천 칸: 오른쪽 위 금빛 마름모 (아직 안 배운 칸만)
+        v.badge = Img("Badge", v.rect, new Vector2(34f, 34f), new Vector2(18f, 18f), null, Gold);
+        v.badge.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+        v.badge.enabled = n.recommended && !sp.OwnsNode(n.key);
 
         Button b = v.frame.gameObject.AddComponent<Button>();
         b.transition = Selectable.Transition.None;
         b.onClick.AddListener(() => Buy(v));
         EventTrigger et = v.frame.gameObject.AddComponent<EventTrigger>();
-        AddTrigger(et, EventTriggerType.PointerEnter, () => { TooltipUI.Show(n.name, Tip(n)); v.rect.localScale = Vector3.one * 1.12f; });
-        AddTrigger(et, EventTriggerType.PointerExit, () => { TooltipUI.Hide(); if (v.rect != null) v.rect.localScale = Vector3.one; });
+        AddTrigger(et, EventTriggerType.PointerEnter, () => { TooltipUI.Show(n.name, Tip(n)); hovered.Add(v); v.rect.localScale = Vector3.one * 1.15f; });
+        AddTrigger(et, EventTriggerType.PointerExit, () => { TooltipUI.Hide(); hovered.Remove(v); if (v.rect != null) v.rect.localScale = Vector3.one; });
         return v;
     }
 
@@ -310,8 +341,13 @@ public class SoulTreeUI : MonoBehaviour
 
     void Refresh()
     {
+        if (shownShards >= 0 && shownShards != SoulShards.Amount) shardFlash = 1f;
         shownShards = SoulShards.Amount;
-        shardText.text = Loc.T("영혼 조각") + "  <color=#FFFFFF>" + SoulShards.Amount + "</color>";
+        shardText.text = SoulShards.Amount.ToString();
+        int canCount = 0;
+        foreach (NodeView v in views) if (sp.CanBuy(v.node)) canCount++;
+        affordText.text = canCount > 0 ? Loc.T("지금 배울 수 있는 칸") + " " + canCount : Loc.T("조각을 더 모으세요");
+        affordText.color = canCount > 0 ? new Color(0.7f, 1f, 0.6f) : new Color(0.6f, 0.56f, 0.62f);
         foreach (NodeView v in views)
         {
             SpecialAbilities.SoulNode n = v.node;
@@ -319,10 +355,13 @@ public class SoulTreeUI : MonoBehaviour
             bool can = sp.CanBuy(n);
             bool blocked = !owned && sp.BlockReason(n) != null;
             Color bc = BranchColor[n.branch];
-            v.frame.color = owned ? Gold : blocked ? new Color(0.35f, 0.32f, 0.38f) : bc;
-            v.icon.color = owned || !blocked ? Color.white : new Color(0.5f, 0.48f, 0.52f, 0.9f);
+            // 배운 칸 = 금색, 살 수 있는 칸 = 맥박치는 흰 금빛 (Update), 조각이 모자란 칸 = 흐리게
+            v.frame.color = owned ? Gold : blocked ? new Color(0.35f, 0.32f, 0.38f) : can ? Color.white : new Color(bc.r * 0.55f, bc.g * 0.55f, bc.b * 0.55f);
+            v.icon.color = owned || can ? Color.white : new Color(0.55f, 0.53f, 0.58f, 0.85f);
+            if (!can && !hovered.Contains(v)) v.rect.localScale = Vector3.one;
             v.cost.text = owned ? "" : n.cost.ToString();           // 배운 칸은 금색 테두리로 충분 (글자는 지저분해서 뺌)
-            v.cost.color = owned ? Gold : can ? Color.white : new Color(1f, 0.5f, 0.45f);
+            v.cost.fontStyle = can ? FontStyles.Bold : FontStyles.Normal;
+            v.cost.color = owned ? Gold : can ? new Color(0.6f, 1f, 0.5f) : new Color(1f, 0.5f, 0.45f);
             if (v.line != null) v.line.color = owned ? new Color(Gold.r, Gold.g, Gold.b, 0.9f) : new Color(bc.r, bc.g, bc.b, 0.55f);
         }
     }
@@ -334,7 +373,8 @@ public class SoulTreeUI : MonoBehaviour
             : block != null ? "<color=#8a8494>" + block + "</color>"
             : SoulShards.Amount >= n.cost ? "<color=#b8f5a0>" + Loc.T("눌러서 배우기") + "  (" + n.cost + ")</color>"
             : "<color=#ff8a80>" + Loc.T("영혼 조각이 모자랍니다") + "  (" + SoulShards.Amount + " / " + n.cost + ")</color>";
-        return n.desc + "\n" + state;
+        string rec = n.recommended && !sp.OwnsNode(n.key) ? "\n<color=#F5D478>" + Loc.T("추천: 지금 무기에 잘 맞는 칸") + "</color>" : "";
+        return n.desc + rec + "\n" + state;
     }
 
     // ================================================================= 배치

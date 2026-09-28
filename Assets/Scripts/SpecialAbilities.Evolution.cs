@@ -53,6 +53,15 @@ public partial class SpecialAbilities
         return l.ToArray();
     }
 
+    // 2차에서 같은 무기를 다시 고른 강화판 이름 (도감)
+    public static string MaxedName(int id) => id switch
+    {
+        FlameId => Loc.T("지옥불 방사기"),
+        SniperId => Loc.T("영혼 레일건"),
+        DualId => Loc.T("심판의 쌍권총"),
+        _ => "",
+    };
+
     public string EvolutionName(int id, int tier)
     {
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentName(id));
@@ -111,6 +120,7 @@ public partial class SpecialAbilities
     // 진화: 지금 무기를 새 무기로 바꿈. 무기 가지(공통 강화)와 필살기 특성은 그대로 이어짐
     public void EvolveWeapon(int id)
     {
+        EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionName(id, EvolutionTier + 1), RunStats.Seconds));
         if (!Gunner) { KitEvolve(id); return; }
         int prev = WeaponActive ? CurrentWeapon : -1;
         int tier = EvolutionTier + 1;
@@ -171,6 +181,7 @@ public partial class SpecialAbilities
         public System.Action apply;
         public bool hidden;                 // 지금은 해당 없음 (예: 탄창이 없는 무기의 탄창 칸)
         public System.Func<string> blocked; // 배울 수 없는 이유 (없으면 null) — 예: 스킬 칸이 가득
+        public bool recommended;            // 지금 무기(형태)에 잘 맞는 칸 (트리에 금빛 표시)
     }
 
     public const int BranchCount = 6;
@@ -193,6 +204,13 @@ public partial class SpecialAbilities
     public float TreeExecute { get; private set; }          // 체력 20% 아래 적에게 추가 피해 비율
     public float TreeCooldownMul { get; private set; } = 1f;
     float barrierEvery, barrierReadyAt;                     // 보호막: 이 시간마다 공격 한 번을 막음
+    public float TreeLowHpDef { get; private set; }         // 체력 절반 아래일 때 받는 피해 감소
+    public float TreeMend { get; private set; }             // 안 맞고 있으면 초당 최대 체력 비율 회복
+    public float TreeDamageCap { get; private set; }        // 한 번에 잃는 체력 상한 (최대 체력 비율, 0 = 없음)
+    public float TreeGoldChance { get; private set; }       // 처치 시 코인 3개 확률
+    public float TreeShopMul { get; private set; } = 1f;    // 떠돌이 상점 가격 배율
+    public int TreeInsight { get; private set; }            // 레벨업마다 영혼 조각
+    float lastHurtAt = -99f;
     float interestRate, interestAt;                         // 이자: 30초마다 가진 코인의 일부
 
     float baseAttack = -1f;
@@ -288,18 +306,17 @@ public partial class SpecialAbilities
         foreach (int id in mySkills) AddSkill(t, id);
 
         // ---------------- 3 생존
-        t.Add(Node("s.hp1", null, 3, "튼튼한 몸", "최대 체력 +12%", 6, LvIcon(8), () => GrowHp(p, 1.12f)));
-        Chain(t, "s.hp", 2, 5, "s.hp1", 3, "튼튼한 몸", "최대 체력 +12%", new[] { 14, 26, 42, 62 }, LvIcon(8), () => GrowHp(p, 1.12f));
-        t.Add(Node("s.regen1", "s.hp1", 3, "회복력", "초당 체력 +0.5 회복", 12, LvIcon(10), () => p.regenPerSecond += 0.5f));
-        Chain(t, "s.regen", 2, 3, "s.regen1", 3, "회복력", "초당 체력 +0.5 회복", new[] { 26, 44 }, LvIcon(10), () => p.regenPerSecond += 0.5f);
-        t.Add(Node("s.def1", "s.hp1", 3, "단단한 피부", "받는 피해 -6%", 14, def, () => p.def += 0.06f));
-        Chain(t, "s.def", 2, 3, "s.def1", 3, "단단한 피부", "받는 피해 -6%", new[] { 30, 50 }, def, () => p.def += 0.06f);
+        // 레벨업 카드(강철같은 심장 · 단단한 신체 · 생명의 샘)와 겹치지 않는, 싸우는 방식에 따라 달라지는 생존 칸
+        t.Add(Node("s.hp1", null, 3, "강인함", "체력이 절반 아래일 때 받는 피해 -12%", 6, LvIcon(8), () => TreeLowHpDef += 0.12f));
+        Chain(t, "s.hp", 2, 3, "s.hp1", 3, "강인함", "체력이 절반 아래일 때 받는 피해 -12%", new[] { 18, 34 }, LvIcon(8), () => TreeLowHpDef += 0.12f);
+        t.Add(Node("s.regen1", "s.hp1", 3, "전투 치유", "3초 동안 맞지 않으면 초당 최대 체력의 1%를 회복", 12, LvIcon(10), () => TreeMend += 0.01f));
+        Chain(t, "s.regen", 2, 3, "s.regen1", 3, "전투 치유", "3초 동안 맞지 않으면 회복량 +0.75%", new[] { 26, 44 }, LvIcon(10), () => TreeMend += 0.0075f);
+        t.Add(Node("s.def1", "s.hp1", 3, "완충", "한 번에 잃는 체력이 최대 체력의 25%를 넘지 않습니다", 16, def, () => TreeDamageCap = TreeDamageCap > 0f ? Mathf.Min(TreeDamageCap, 0.25f) : 0.25f));
+        t.Add(Node("s.def2", "s.def1", 3, "완충 II", "한 번에 잃는 체력의 상한 25% → 18%", 36, def, () => TreeDamageCap = 0.18f));
         t.Add(Node("s.guard1", "s.def1", 3, "재정비", "맞은 뒤 무적 시간 +0.15초", 22, def, () => p.hurtInvincibleTime += 0.15f));
         t.Add(Node("s.guard2", "s.guard1", 3, "재정비 II", "맞은 뒤 무적 시간 +0.15초", 42, def, () => p.hurtInvincibleTime += 0.15f));
         t.Add(Node("s.barrier1", "s.def2", 3, "영혼 보호막", "20초마다 공격 한 번을 막아 주는 보호막이 생깁니다", 40, def, () => { barrierEvery = 20f; barrierReadyAt = Time.time; }));
         t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
-        t.Add(Node("s.speed1", "s.hp1", 3, "가벼운 발", "이동 속도 +6%", 12, mov, () => p.speed *= 1.06f));
-        t.Add(Node("s.speed2", "s.speed1", 3, "가벼운 발 II", "이동 속도 +6%", 28, mov, () => p.speed *= 1.06f));
         t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +1 회복", 20, LvIcon(11), () => p.healOnKill += 1f));
         t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +1 회복", 40, LvIcon(11), () => p.healOnKill += 1f));
 
@@ -310,16 +327,74 @@ public partial class SpecialAbilities
         for (int i = 0; i < myPassives.Count; i++) AddPassive(t, myPassives[i], 22 + 6 * i, 48 + 8 * i);
 
         // ---------------- 5 재물
-        t.Add(Node("g.coin1", null, 5, "코인충", "코인 1개당 획득량 +1", 8, LvIcon(1), () => p.bonusCoin++));
-        Chain(t, "g.coin", 2, 3, "g.coin1", 5, "코인충", "코인 1개당 획득량 +1", new[] { 22, 40 }, LvIcon(1), () => p.bonusCoin++);
-        t.Add(Node("g.magnet1", "g.coin1", 5, "코인 자석", "주변 코인을 끌어오는 범위 +3칸", 10, LvIcon(5), () => p.coinMagnetRange += 3f));
-        t.Add(Node("g.magnet2", "g.magnet1", 5, "코인 자석 II", "끌어오는 범위 +3칸", 24, LvIcon(5), () => p.coinMagnetRange += 3f));
-        t.Add(Node("g.exp1", "g.coin1", 5, "배움의 기쁨", "얻는 경험치 +10%", 12, LvIcon(4), () => AddExp(0.1f)));
-        Chain(t, "g.exp", 2, 3, "g.exp1", 5, "배움의 기쁨", "얻는 경험치 +10%", new[] { 28, 46 }, LvIcon(4), () => AddExp(0.1f));
+        // 레벨업 카드(코인충 · 코인 자석 · 더 많은 경험치)와 겹치지 않는 재물 칸
+        t.Add(Node("g.coin1", null, 5, "황금 손길", "적을 처치하면 6% 확률로 코인 3개를 더 받습니다", 8, LvIcon(1), () => TreeGoldChance += 0.06f));
+        Chain(t, "g.coin", 2, 3, "g.coin1", 5, "황금 손길", "처치 시 코인 확률 +6%", new[] { 22, 40 }, LvIcon(1), () => TreeGoldChance += 0.06f);
+        t.Add(Node("g.magnet1", "g.coin1", 5, "흥정", "떠돌이 상점 가격 -10%", 12, LvIcon(1), () => TreeShopMul *= 0.9f));
+        t.Add(Node("g.magnet2", "g.magnet1", 5, "흥정 II", "떠돌이 상점 가격 -10%", 28, LvIcon(1), () => TreeShopMul *= 0.9f));
+        t.Add(Node("g.exp1", "g.coin1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", 12, LvIcon(4), () => TreeInsight += 5));
+        Chain(t, "g.exp", 2, 3, "g.exp1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", new[] { 28, 46 }, LvIcon(4), () => TreeInsight += 5);
         t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
         t.Add(Node("g.interest2", "g.interest1", 5, "이자 II", "이자 +5%", 56, LvIcon(1), () => interestRate += 0.05f));
+        string[] rec = RecommendedPrefixes();
+        foreach (SoulNode n in t)
+            foreach (string r in rec)
+                if (n.key.StartsWith(r)) { n.recommended = true; break; }
         return t;
     }
+
+    // 지금 무기(형태)에 잘 맞는 칸의 앞글자 (영혼 트리 추천 표시)
+    string[] RecommendedPrefixes()
+    {
+        int w = Gunner ? (WeaponActive ? CurrentWeapon : -1) : (Kit != null ? Kit.form : -1);
+        switch (w)
+        {
+            case SniperId: case SeekerId: return new[] { "w.crit", "w.critdmg", "m" + w };
+            case FlameId: case GrenadeId: case ShotgunId: return new[] { "w.dmg", "m" + w };
+            case DualId: case ScytheId: return new[] { "w.rate", "w.mag", "m" + w };
+            case ChainId: return new[] { "w.pene", "w.dmg", "m" + w };
+            case KitHammer: return new[] { "w.dmg", "u.kit", "m" + w };
+            case KitWhip: return new[] { "w.reach", "w.crit", "m" + w };
+            case KitLance: return new[] { "w.crit", "w.exec", "m" + w };
+            case KitBlowgun: return new[] { "w.rate", "w.mag", "m" + w };
+            case KitCards: return new[] { "w.crit", "w.critdmg", "m" + w };
+            case KitWire: return new[] { "w.dmg", "w.pene", "m" + w };
+            case KitNetBow: return new[] { "w.rate", "w.dmg", "m" + w };
+            case KitJavelin: return new[] { "w.pene", "w.dmg", "m" + w };
+            case KitBurstBow: return new[] { "w.rate", "w.crit", "m" + w };
+            case KitQuicksilver: case KitFirework: return new[] { "w.blast", "w.dmg", "m" + w };
+            case KitMagnet: return new[] { "w.dmg", "w.blast", "m" + w };
+            default: return new[] { "w.dmg", "s.hp" };          // 진화 전: 기본기
+        }
+    }
+
+    // [Shift]+[T] 빠른 배우기: 트리를 열지 않고 살 수 있는 칸 하나 (추천 칸 → 가장 싼 칸)
+    public SoulNode QuickBuy()
+    {
+        SoulNode best = null;
+        foreach (SoulNode n in BuildSoulTree())
+        {
+            if (!CanBuy(n)) continue;
+            if (best == null || (n.recommended && !best.recommended) || (n.recommended == best.recommended && n.cost < best.cost)) best = n;
+        }
+        return best != null && BuyNode(best) ? best : null;
+    }
+
+    // 가지마다 배운 칸 수 (결과 화면 · 밸런스 기록). 칸 이름 앞글자로 가지를 알 수 있음
+    public int[] OwnedPerBranch()
+    {
+        int[] c = new int[BranchCount];
+        foreach (string k in ownedNodes)
+        {
+            int b = k.StartsWith("w.") || k.StartsWith("m") ? 0 : k.StartsWith("u.") ? 1 : k.StartsWith("k.") ? 2
+                  : k.StartsWith("s.") ? 3 : k.StartsWith("o.") ? 4 : 5;
+            c[b]++;
+        }
+        return c;
+    }
+
+    // 진화 기록: (이름, 판 시작 뒤 몇 초) — 결과 화면 · 밸런스 기록
+    public readonly List<KeyValuePair<string, float>> EvolutionLog = new List<KeyValuePair<string, float>>();
 
     // 다른 캐릭터 전용 무기 칸: 예전 상점의 캐릭터 줄(베기 사거리 · 베기 각도 · 폭발 범위)이 여기로
     void KitWeaponNodes(List<SoulNode> t)
@@ -487,6 +562,32 @@ public partial class SpecialAbilities
         p.PlayerHealth += add;
     }
 
+    // 받는 피해 조정 (PlayerController.TryHit): 강인함 · 완충. 맞은 시각도 적어 둠 (전투 치유)
+    public float AdjustTaken(float taken)
+    {
+        lastHurtAt = Time.time;
+        if (TreeLowHpDef > 0f && player.PlayerHealth <= player.PlayerMaxHealth * 0.5f) taken *= 1f - Mathf.Min(0.5f, TreeLowHpDef);
+        if (TreeDamageCap > 0f) taken = Mathf.Min(taken, player.PlayerMaxHealth * TreeDamageCap);
+        return taken;
+    }
+
+    // 황금 손길 (처치할 때)
+    void TreeOnKill(Vector3 pos)
+    {
+        if (TreeGoldChance <= 0f || Random.value >= TreeGoldChance) return;
+        Coin c = Cache<Coin>.Get;
+        if (c == null) return;
+        c.AddCoin(3);
+        Fx.Spawn("fx_sparkle", pos, 1.2f, new Color(1f, 0.85f, 0.35f), 18f);
+        if (fx != null) fx.FloatText(pos, "+3", new Color(1f, 0.85f, 0.35f), 4f, 0.2f);
+    }
+
+    // 깨달음 (레벨이 오를 때, LevelShop.AddPending)
+    public void TreeOnLevelUp(int levels)
+    {
+        if (TreeInsight > 0 && player != null) SoulShards.Add(TreeInsight * levels, player.transform.position, false);
+    }
+
     // 보호막이 있으면 공격 한 번을 막음 (PlayerController.TryHit)
     public bool ConsumeBarrier()
     {
@@ -504,6 +605,8 @@ public partial class SpecialAbilities
     // 매 프레임 (장착한 능력이 없어도): 이자
     void TreeTick()
     {
+        if (TreeMend > 0f && Time.timeScale > 0f && Time.time - lastHurtAt > 3f && player.PlayerHealth < player.PlayerMaxHealth && player.PlayerHealth > 0f)
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * TreeMend * Time.deltaTime);
         if (interestRate <= 0f || Time.timeScale == 0f || Time.time < interestAt) return;
         interestAt = Time.time + 30f;
         Coin c = Cache<Coin>.Get;
@@ -562,6 +665,7 @@ public static class SoulShards
 {
     public static int Amount { get; private set; }
     public static int Total { get; private set; }            // 이번 판에 모은 총량
+    public static int Spent { get; private set; }            // 이번 판에 트리에 쓴 양
     public static event System.Action Changed;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -572,6 +676,7 @@ public static class SoulShards
             if (s.name != "GameScene") return;
             Amount = 0;
             Total = 0;
+            Spent = 0;
             Changed?.Invoke();
         };
     }
@@ -597,6 +702,7 @@ public static class SoulShards
     {
         if (Amount < n) return false;
         Amount -= n;
+        Spent += n;
         Changed?.Invoke();
         return true;
     }
