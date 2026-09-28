@@ -24,7 +24,7 @@ public class DamageFlash : MonoBehaviour
 
     static void Create()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
 
         GameObject go = new GameObject("DamageFlash", typeof(RectTransform), typeof(Image), typeof(DamageFlash));

@@ -20,7 +20,7 @@ public static class MenuExtras
     // 무한 모드에서 쓰러지면 생존 시간 · 보스 처치 수 · 최고 기록
     static void InstallGameOver()
     {
-        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         // 이번 판 결과 (왼쪽) · [R] 다시 시작
         if (canvas != null)
         {
@@ -153,6 +153,21 @@ public static class MenuExtras
 // ===================================================================== runtime UI helpers
 public static class UIKit
 {
+    // 화면 UI를 붙일 캔버스: 탄약 패널이 있는 HUD 캔버스 > 화면용 최상위 캔버스.
+    // UIKit.HudCanvas()는 적 이름표 같은 월드 캔버스를 고를 수 있어서
+    // (그 적이 죽으면 붙어 있던 창까지 같이 사라짐) 쓰지 않음
+    public static Canvas HudCanvas()
+    {
+        Canvas best = null;
+        foreach (Canvas cv in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        {
+            if (!cv.isRootCanvas || cv.renderMode == RenderMode.WorldSpace) continue;
+            if (cv.transform.Find("AmmoPanel") != null) return cv;
+            if (best == null) best = cv;
+        }
+        return best != null ? best : Object.FindFirstObjectByType<Canvas>();
+    }
+
     public static TMP_FontAsset Font;
     public static Material FontMaterial;
     public static Sprite ButtonSprite;

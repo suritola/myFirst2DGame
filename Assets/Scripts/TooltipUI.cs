@@ -30,13 +30,20 @@ public class TooltipUI : MonoBehaviour
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
+        if (panel != null) Destroy(panel.gameObject);
     }
+
+    void OnDisable() => Hide();
 
     void Build()
     {
         GameObject go = new GameObject("TooltipPanel", typeof(RectTransform), typeof(Image));
         panel = go.GetComponent<RectTransform>();
-        panel.SetParent(transform, false);
+        // 최상위 캔버스 바로 아래 + 자기 그리기 순서: 전체 화면 창(영혼 트리 등)보다 항상 위에 그려지게
+        panel.SetParent(canvasRect, false);
+        Canvas top = go.AddComponent<Canvas>();
+        top.overrideSorting = true;
+        top.sortingOrder = 1000;
         panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
 
         Image bg = go.GetComponent<Image>();
@@ -96,6 +103,8 @@ public class TooltipUI : MonoBehaviour
         panel.sizeDelta = new Vector2(width, padding * 2f + titleH + gap + bodyH);
         panel.gameObject.SetActive(true);
         panel.SetAsLastSibling();
+        Canvas top = panel.GetComponent<Canvas>();
+        if (top != null) { top.overrideSorting = true; top.sortingOrder = 1000; }
         Follow();
     }
 

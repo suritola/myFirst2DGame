@@ -128,7 +128,7 @@ public partial class LevelShop : MonoBehaviour
         if (pendingBadge == null)
         {
             Canvas canvas = LvshopPanel != null ? LvshopPanel.GetComponentInParent<Canvas>(true) : null;
-            if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
+            if (canvas == null) canvas = UIKit.HudCanvas();
             if (canvas == null) return;
             canvas = canvas.rootCanvas;
             pendingBadge = new GameObject("LevelUpPending", typeof(RectTransform), typeof(Image));

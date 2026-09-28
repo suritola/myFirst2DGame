@@ -31,7 +31,7 @@ public class WeaponEvolutionUI : MonoBehaviour
     public static IEnumerator Run(SpecialAbilities sp, int[] options, System.Action<int> picked)
     {
         if (sp == null || options == null || options.Length == 0) yield break;
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) yield break;
         UIKit.EnsureStyle();
 
@@ -46,6 +46,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         r.anchorMax = Vector2.one;
         r.offsetMin = r.offsetMax = Vector2.zero;
         r.SetAsLastSibling();
+        SoulTreeUI.OnTop(go, 600);
         ui.root = r;
         Open = true;
         TooltipUI.Hide();

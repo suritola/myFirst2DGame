@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// 영혼 트리 화면 (거너): 가운데 = 지금 무기, 네 갈래(무기 · 필살기 · 생존 · 영혼)가 대각선으로 뻗음
+// 영혼 트리 화면 (거너): 가운데 = 지금 무기, 네 갈래(무기 · 필살기 · 생존 · 영혼)가 네 귀퉁이 쪽으로 뻗음
+// 가지 안에서는 깊이 = 가로 칸, 갈래 = 세로 줄이라 칸이 서로 겹치지 않음
 // 칸을 누르면 영혼 조각으로 바로 배움. 앞 칸을 배워야 이어진 칸이 열림. 게임은 멈춘 채로 열림
 public class SoulTreeUI : MonoBehaviour
 {
@@ -12,11 +13,11 @@ public class SoulTreeUI : MonoBehaviour
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color Soul = new Color(0.72f, 0.58f, 1f);
     static readonly Color Dim = new Color(0.45f, 0.42f, 0.5f);
-    // 가지 색 · 방향 (도): 무기 오른쪽 위 · 필살기 왼쪽 위 · 생존 왼쪽 아래 · 영혼 오른쪽 아래
+    // 가지 색 · 방향: 무기 오른쪽 위 · 필살기 왼쪽 위 · 생존 왼쪽 아래 · 영혼 오른쪽 아래
     static readonly Color[] BranchColor = { new Color(1f, 0.62f, 0.3f), new Color(0.5f, 0.9f, 1f), new Color(0.55f, 0.95f, 0.5f), Soul };
-    static readonly float[] BranchAngle = { 40f, 140f, 220f, 320f };
-    const float Sector = 50f;
-    static readonly float[] Radius = { 0f, 175f, 285f, 390f, 485f };
+    static readonly Vector2[] BranchDir = { new Vector2(1f, 1f), new Vector2(-1f, 1f), new Vector2(-1f, -1f), new Vector2(1f, -1f) };
+    const float ColStep = 150f, ColStart = 60f;      // 깊이 1 = 210, 2 = 360, 3 = 510, 4 = 660
+    const float RowStep = 110f, RowStart = 55f;      // 칸 78 + 글자 28 이 겹치지 않는 간격
 
     public static SoulTreeUI Instance { get; private set; }
     public static bool IsOpen => Instance != null;
@@ -40,7 +41,7 @@ public class SoulTreeUI : MonoBehaviour
     public static void Open(SpecialAbilities sp, System.Action onClose)
     {
         if (Instance != null || sp == null) return;
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
         UIKit.EnsureStyle();
         GameObject go = new GameObject("SoulTree", typeof(RectTransform));
@@ -53,6 +54,7 @@ public class SoulTreeUI : MonoBehaviour
         r.anchorMax = Vector2.one;
         r.offsetMin = r.offsetMax = Vector2.zero;
         r.SetAsLastSibling();
+        OnTop(go, 500);
         ui.root = r;
         Instance = ui;
         ui.Build();
@@ -98,7 +100,7 @@ public class SoulTreeUI : MonoBehaviour
     void Build()
     {
         openFrame = Time.frameCount;
-        Image dim = Img("Dim", root, Vector2.zero, Vector2.zero, null, new Color(0.03f, 0.02f, 0.05f, 0.93f));
+        Image dim = Img("Dim", root, Vector2.zero, Vector2.zero, null, new Color(0.03f, 0.02f, 0.05f, 0.97f));
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
 
@@ -115,7 +117,7 @@ public class SoulTreeUI : MonoBehaviour
         // 가지 이름
         for (int b = 0; b < 4; b++)
         {
-            Vector2 at = Polar(BranchAngle[b], 560f) * new Vector2(1.25f, 0.9f);
+            Vector2 at = new Vector2(830f, 200f) * BranchDir[b];
             TMP_Text t = UIKit.Text(board, "", 28f, BranchColor[b], at, new Vector2(260f, 44f));
             t.text = Loc.T(SpecialAbilities.BranchNames[b]);
         }
@@ -163,9 +165,9 @@ public class SoulTreeUI : MonoBehaviour
         Sprite w = sp.WeaponActive ? Resources.Load<Sprite>("Weapons/weapon_" + sp.CurrentWeapon) : Resources.Load<Sprite>("Weapons/weapon_pistol");
         Image icon = Img("Weapon", centerRoot, new Vector2(0f, 10f), new Vector2(120f, 120f), w, Color.white);
         icon.preserveAspect = true;
-        TMP_Text name = UIKit.Text(centerRoot, "", 24f, Gold, new Vector2(0f, -110f), new Vector2(320f, 36f));
+        TMP_Text name = UIKit.Text(centerRoot, "", 24f, Gold, new Vector2(0f, -110f), new Vector2(230f, 36f));
         name.text = sp.MainWeaponName;
-        TMP_Text tier = UIKit.Text(centerRoot, "", 18f, Parch, new Vector2(0f, -138f), new Vector2(320f, 28f));
+        TMP_Text tier = UIKit.Text(centerRoot, "", 18f, Parch, new Vector2(0f, -138f), new Vector2(230f, 28f));
         tier.text = sp.EvolutionTier == 0 ? Loc.T("진화 전") : sp.EvolutionTier == 1 ? Loc.T("1차 진화") : Loc.T("최종 진화");
     }
 
@@ -238,7 +240,7 @@ public class SoulTreeUI : MonoBehaviour
     }
 
     // ================================================================= 배치
-    // 가지마다 부채꼴 안에서 잎 수만큼 각도를 나눔 (깊이 = 반지름)
+    // 가지마다 잎(끝 칸)에 차례로 줄을 주고, 부모는 자식 줄의 가운데 (깊이 = 가로 칸)
     Dictionary<string, Vector2> Layout(List<SpecialAbilities.SoulNode> list)
     {
         Dictionary<string, List<SpecialAbilities.SoulNode>> kids = new Dictionary<string, List<SpecialAbilities.SoulNode>>();
@@ -254,12 +256,9 @@ public class SoulTreeUI : MonoBehaviour
         for (int b = 0; b < 4; b++)
         {
             string rootKey = "#" + b;
-            int leaves = Leaves(rootKey, kids);
-            if (leaves == 0) continue;
-            float step = leaves > 1 ? Sector / (leaves - 1) : 0f;
-            float start = BranchAngle[b] - step * (leaves - 1) / 2f;
+            if (Leaves(rootKey, kids) == 0) continue;
             int cursor = 0;
-            Place(rootKey, 1, kids, pos, start, step, ref cursor);
+            Place(rootKey, 1, kids, pos, BranchDir[b], ref cursor);
         }
         return pos;
     }
@@ -272,23 +271,20 @@ public class SoulTreeUI : MonoBehaviour
         return s;
     }
 
-    // 잎은 차례로 각도를 받고, 부모는 자식 각도의 가운데
-    static float Place(string key, int depth, Dictionary<string, List<SpecialAbilities.SoulNode>> kids, Dictionary<string, Vector2> pos, float start, float step, ref int cursor)
+    // 잎은 차례로 줄을 받고, 부모는 자식 줄의 가운데 (가운데 선에서 바깥쪽으로)
+    static float Place(string key, int depth, Dictionary<string, List<SpecialAbilities.SoulNode>> kids, Dictionary<string, Vector2> pos, Vector2 dir, ref int cursor)
     {
         if (!kids.TryGetValue(key, out List<SpecialAbilities.SoulNode> l) || l.Count == 0)
-            return start + step * cursor++;
+            return RowStart + RowStep * cursor++;
         float sum = 0f;
         foreach (SpecialAbilities.SoulNode n in l)
         {
-            float a = Place(n.key, depth + 1, kids, pos, start, step, ref cursor);
-            // 옆으로 넓은 화면이라 위아래는 조금 눌러 줌
-            pos[n.key] = Polar(a, Radius[Mathf.Min(depth, Radius.Length - 1)]) * new Vector2(1.25f, 0.9f);
-            sum += a;
+            float row = Place(n.key, depth + 1, kids, pos, dir, ref cursor);
+            pos[n.key] = new Vector2((ColStart + ColStep * depth) * dir.x, row * dir.y);
+            sum += row;
         }
         return sum / l.Count;
     }
-
-    static Vector2 Polar(float deg, float r) => new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad)) * r;
 
     Image Line(Vector2 a, Vector2 b)
     {
@@ -321,6 +317,15 @@ public class SoulTreeUI : MonoBehaviour
             yield return null;
         }
         if (r != null) r.anchoredPosition = home;
+    }
+
+    // 따로 그리기 순서를 가진 캔버스: HUD의 다른 캔버스보다 위에, 클릭도 받음
+    public static void OnTop(GameObject go, int order)
+    {
+        Canvas c = go.AddComponent<Canvas>();
+        c.overrideSorting = true;
+        c.sortingOrder = order;
+        go.AddComponent<GraphicRaycaster>();
     }
 
     static void AddTrigger(EventTrigger et, EventTriggerType type, System.Action a)

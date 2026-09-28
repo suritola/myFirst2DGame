@@ -198,10 +198,12 @@ public partial class SpecialAbilities
     }
 
     // 능력치 아이콘 (StatsHUD: 공격력 · 방어력 · 공격 속도 · 재장전 · 이동 속도)
+    // 씬 검색은 한 번만 (트리를 만들 때마다 찾지 않게)
+    static StatsHUD statsHud;
     static Sprite StatIcon(int i)
     {
-        StatsHUD s = FindFirstObjectByType<StatsHUD>(FindObjectsInactive.Include);
-        return s != null && s.icons != null && i < s.icons.Length ? s.icons[i] : null;
+        if (statsHud == null) statsHud = FindFirstObjectByType<StatsHUD>(FindObjectsInactive.Include);
+        return statsHud != null && statsHud.icons != null && i < statsHud.icons.Length ? statsHud.icons[i] : null;
     }
 
     public bool CanBuy(SoulNode n) => !ownedNodes.Contains(n.key) && !n.hidden && (n.parent == null || ownedNodes.Contains(n.parent)) && SoulShards.Amount >= n.cost;
@@ -259,10 +261,11 @@ public static class SoulShards
         Amount += n;
         Total += n;
         Changed?.Invoke();
-        if (SpecialAbilities.UsesEvolution)
+        // 적마다 반짝이면 화면이 지저분해서, 많이 주는 중간 보스 · 보스만 보여 줌
+        if (announce && SpecialAbilities.UsesEvolution)
         {
-            Fx.Spawn("fx_sparkle", at + Vector3.up * 0.4f, announce ? 1.6f : 0.7f, new Color(0.7f, 0.55f, 1f), 18f);
-            if (announce && SpecialAbilities.SharedFx != null)
+            Fx.Spawn("fx_sparkle", at + Vector3.up * 0.4f, 1.6f, new Color(0.7f, 0.55f, 1f), 18f);
+            if (SpecialAbilities.SharedFx != null)
                 SpecialAbilities.SharedFx.FloatText(at, Loc.T("영혼 조각 +") + n, new Color(0.75f, 0.6f, 1f), 5f, 0f);
         }
     }

@@ -123,7 +123,7 @@ public class EndlessMode : MonoBehaviour
 
     void BuildHud()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
         GameObject go = new GameObject("EndlessHud", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform r = go.GetComponent<RectTransform>();

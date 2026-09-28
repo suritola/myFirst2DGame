@@ -34,9 +34,9 @@ public partial class SpecialAbilities
 
     void BuildHud()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
-        weaponGroup = NewGroup(canvas, "WeaponSlot", Loc.T("무기") + " [" + KeyBindings.Name(GameAction.Swap) + "]", "hud.fold.weapon");
+        weaponGroup = NewGroup(canvas, "WeaponSlot", UsesEvolution ? Loc.T("무기") : Loc.T("무기") + " [" + KeyBindings.Name(GameAction.Swap) + "]", "hud.fold.weapon");
         skillGroup = NewGroup(canvas, "SkillSlot", Loc.T("스킬"), "hud.fold.skill");
         passiveGroup = NewGroup(canvas, "PassiveSlot", Loc.T("패시브"), "hud.fold.passive");
     }
@@ -418,7 +418,7 @@ public class RunClock : MonoBehaviour
         Canvas canvas = null;
         foreach (Canvas cv in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
             if (cv.isRootCanvas && cv.renderMode != RenderMode.WorldSpace && cv.transform.Find("AmmoPanel") != null) { canvas = cv; break; }
-        if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
+        if (canvas == null) canvas = UIKit.HudCanvas();
         if (canvas == null) return;
         // 어두운 칸 위에 시간
         GameObject box = new GameObject("RunClockBox", typeof(RectTransform), typeof(Image));

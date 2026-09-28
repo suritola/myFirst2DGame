@@ -329,7 +329,7 @@ public class EnermyController : MonoBehaviour
             if (point != null) point.AddPoint(10);
 
             // 영혼 조각: 강한 적 · 중간 보스일수록 많이 (중간 보스는 크게 알림)
-            SoulShards.Add(SoulShards.ForEnemy(this), transform.position, survivesContact);
+            SoulShards.Add(SoulShards.ForEnemy(this), transform.position, GetComponent<MidBossMark>() != null);
         }
 
         if (animator != null) animator.SetTrigger("death");

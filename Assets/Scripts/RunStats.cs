@@ -103,7 +103,7 @@ public class RunStats : MonoBehaviour
             if (summaryPanel != null) Destroy(summaryPanel);
             return;
         }
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
         if (summaryPanel != null) Destroy(summaryPanel);
         summaryPanel = new GameObject("RunSummary", typeof(RectTransform), typeof(Image));
@@ -154,7 +154,7 @@ public static class Hints
         string pref = "hint." + key;
         if (PlayerPrefs.GetInt(pref, 0) == 1) return;
         PlayerPrefs.SetInt(pref, 1);
-        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
         if (box == null)
         {

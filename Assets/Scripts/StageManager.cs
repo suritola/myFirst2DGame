@@ -64,6 +64,9 @@ public class StageManager : MonoBehaviour
     int treeClosedFrame = -1;
     float affordCheckAt;
     bool affordable;
+    int shownShards = -1;                   // 버튼 글은 조각 수가 바뀔 때만 새로 씀 (매 프레임 글자 생성 방지)
+    KeyCode shownKey;
+    Loc.Lang shownLang;
 
     public int CurrentStage { get; private set; }
 
@@ -189,17 +192,28 @@ public class StageManager : MonoBehaviour
         if (upgradeButton == null) return;
         if (upgradeButton.activeSelf != show) upgradeButton.SetActive(show);
         if (!show) return;
-        // 살 수 있는 칸이 있을 때만 반짝임 (트리 전체를 매 프레임 만들지 않게 0.5초마다 확인)
+        // 살 수 있는 칸이 있을 때만 반짝임. 트리를 새로 만들어 확인하므로 자주 하지 않음:
+        // 조각 수가 바뀌었으면 0.5초 뒤에 한 번, 아니면 2초마다
+        if (shownShards != SoulShards.Amount && affordCheckAt > Time.unscaledTime + 0.5f) affordCheckAt = Time.unscaledTime + 0.5f;
         if (Time.unscaledTime >= affordCheckAt)
         {
-            affordCheckAt = Time.unscaledTime + 0.5f;
+            affordCheckAt = Time.unscaledTime + 2f;
             affordable = specials != null && specials.AnyAffordable();
+            if (affordable) Hints.Show("soultree_buy", "영혼 조각으로 배울 수 있는 칸이 생겼습니다. [{UPGRADE}]로 영혼 트리를 여세요.");
         }
         float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
         upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
         upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
         upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
-        upgradeText.text = Loc.T("영혼 트리 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   영혼 조각 ") + SoulShards.Amount;
+        // 키 코드 · 언어로 비교 (키 이름 글자를 매 프레임 만들지 않게)
+        KeyCode key = KeyBindings.Get(GameAction.Upgrade);
+        if (shownShards != SoulShards.Amount || shownKey != key || shownLang != Loc.Current)
+        {
+            shownShards = SoulShards.Amount;
+            shownKey = key;
+            shownLang = Loc.Current;
+            upgradeText.text = Loc.T("영혼 트리") + " [" + KeyBindings.KeyName(key) + "]  <color=#C9B8FF>" + shownShards + "</color>";
+        }
         if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame) OpenSoulTree();
     }
 
@@ -242,9 +256,10 @@ public class StageManager : MonoBehaviour
         Hints.Show("soultree_btn", "영혼 조각이 모이면 [{UPGRADE}]로 영혼 트리를 열어 무기 · 필살기 · 생존 · 영혼 칸을 배우세요.");
     }
 
-    IEnumerator EvolutionThenPortal()
+    IEnumerator EvolutionThenPortal(string banner, float time)
     {
         yield return Evolution(true);
+        ShowBanner(banner, time);
         StartCoroutine(PortalCountdown());
     }
 
@@ -329,7 +344,7 @@ public class StageManager : MonoBehaviour
     // 경험치 바 위 가운데에 반짝이는 버튼
     void BuildUpgradeButton()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = UIKit.HudCanvas();
         if (canvas == null || specialTree == null) return;
 
         upgradeButton = new GameObject("SpecialUpgradeButton", typeof(RectTransform));
@@ -381,6 +396,17 @@ public class StageManager : MonoBehaviour
         upgradeText.alignment = TextAlignmentOptions.Center;
         upgradeText.raycastTarget = false;
 
+        // 거너: 늘 떠 있는 버튼이라 오른쪽 위 구석(코인 · 포인트 아래)에 작게
+        if (Evo)
+        {
+            root.anchorMin = root.anchorMax = root.pivot = new Vector2(1f, 1f);
+            root.sizeDelta = new Vector2(230f, 44f);
+            root.anchoredPosition = new Vector2(-30f, -222f);
+            upgradeGlow.sizeDelta = new Vector2(310f, 100f);
+            upgradeText.fontSize = upgradeText.fontSizeMax = 20f;
+            upgradeText.fontSizeMin = 12f;
+        }
+
         upgradeButton.SetActive(false);
     }
 
@@ -405,14 +431,22 @@ public class StageManager : MonoBehaviour
         if (stage == 0)
         {
             if (portal != null) portal.SetActive(true);
-            ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
-            StartCoroutine(Evo ? EvolutionThenPortal() : PortalCountdown());
+            if (Evo) StartCoroutine(EvolutionThenPortal(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f));
+            else
+            {
+                ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
+                StartCoroutine(PortalCountdown());
+            }
         }
         else if (stage == 1)
         {
             if (portal != null) portal.SetActive(true);
-            ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
-            StartCoroutine(Evo ? EvolutionThenPortal() : PortalCountdown());
+            if (Evo) StartCoroutine(EvolutionThenPortal(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f));
+            else
+            {
+                ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
+                StartCoroutine(PortalCountdown());
+            }
         }
         else
         {
@@ -563,7 +597,7 @@ public class StageManager : MonoBehaviour
     {
         if (countdownText == null)
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
+            Canvas canvas = UIKit.HudCanvas();
             GameObject go = new GameObject("PortalCountdown", typeof(RectTransform), typeof(TextMeshProUGUI));
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);

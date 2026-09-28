@@ -1025,5 +1025,6 @@ public static class LocTable
         { "지옥불 방사기", L("Hellfire Thrower", "獄炎放射器", "狱火喷射器") },
         { "영혼 레일건", L("Soul Railgun", "魂のレールガン", "灵魂电磁炮") },
         { "심판의 쌍권총", L("Twin Pistols of Judgment", "審判の二丁拳銃", "审判双枪") },
+        { "영혼 조각으로 배울 수 있는 칸이 생겼습니다. [{UPGRADE}]로 영혼 트리를 여세요.", L("You can now learn a node with Soul Shards. Press [{UPGRADE}] to open the Soul Tree.", "魂のかけらで習得できるマスがあります。[{UPGRADE}] で魂のツリーを開きましょう。", "有可以用灵魂碎片学习的节点了。按 [{UPGRADE}] 打开灵魂树。") },
     };
 }
