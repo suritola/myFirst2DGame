@@ -58,6 +58,7 @@ public partial class LevelShop : MonoBehaviour
             // 11번(처치 시 회복)은 더 이상 나오지 않음 (도적은 사냥의 기세), 12 · 13번은 캐릭터 카드, 14번은 비상 보급 전용
             ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId;
         }
+        CompactLevelUp();
         //레벨업 능력들
         setAbilitys();
         
@@ -195,6 +196,19 @@ public partial class LevelShop : MonoBehaviour
     }
     private bool showLv;
     public GameObject LvUpPanel;
+    // 「레벨업!」 표시를 작게 줄여 알림판 아래에 (시야를 가리지 않게)
+    void CompactLevelUp()
+    {
+        if (LvUpPanel == null) return;
+        RectTransform r = LvUpPanel.GetComponent<RectTransform>();
+        if (r == null) return;
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+        r.pivot = new Vector2(0.5f, 1f);
+        r.anchoredPosition = new Vector2(0f, -150f);
+        r.localScale = Vector3.one * 0.4f;
+        foreach (Graphic g in LvUpPanel.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+    }
+
     public void toggleLevelUp()
     {
         showLv = !showLv;

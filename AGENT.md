@@ -10,6 +10,11 @@
    - `using System.Drawing;`도 쓰지 않는다 (빌드에서 참조되지 않고, `UnityEngine.Color`와 이름이 겹친다).
    - 에디터 코드가 꼭 필요하면 `Assets/**/Editor/` 폴더에 두거나 `#if UNITY_EDITOR ... #endif`로 감싼다.
    - 확인 명령: `git grep -nE "using UnityEditor|UnityEditor\.|System\.Drawing" -- "Assets/*.cs" ":!Assets/**/Editor/**" ":!Assets/Editor/**"`
+3. 사용자와의 모든 대화는 **한국어로만** 한다. (진행 상황 보고, 중간 알림, 질문, 최종 보고 모두 · 코드 식별자와 파일명은 예외)
+4. 빌드 버전은 **`YYMM.DD.NN`** 형식으로 쓴다. (업데이트 년월 4자리 . 날짜 . 그날의 수정 번호 2자리)
+   - 예) 2026년 9월 28일 첫 배포 → `2609.28.01`, 같은 날 두 번째 → `2609.28.02`, 다음 날 첫 배포 → `2609.29.01`
+   - 태그 · 릴리스 · 패치노트 파일 이름은 앞에 `v`를 붙인다 (`v2609.28.01`, `docs/patch-notes/v2609.28.01.md`). `ProjectSettings` 의 `bundleVersion` 과 메인 메뉴 표시도 같은 번호.
+   - v3.9 까지는 옛 형식(v3.x)이고, v3.10 대신 `2609.28.01` 부터 새 형식.
 
 ## 주의 사항
 

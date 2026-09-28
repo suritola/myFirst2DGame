@@ -4,9 +4,9 @@
 # 준비: tools/steam/steam-config.json 에 appId · depotId · steamUser · steamcmd 경로를 채우고,
 #       Assets/Scripts/SteamManager.cs 의 AppId 도 같은 값으로 맞춘다. (docs/steam/README.md)
 #
-# 사용법: pwsh tools/steam-upload.ps1 -Version v2.4             (빌드 + 업로드)
-#         pwsh tools/steam-upload.ps1 -Version v2.4 -Preview    (업로드 없이 steamcmd 미리보기만)
-#         pwsh tools/steam-upload.ps1 -Version v2.4 -SkipBuild  (마지막 빌드를 다시 올림)
+# 사용법: pwsh tools/steam-upload.ps1 -Version v2609.28.01             (빌드 + 업로드)
+#         pwsh tools/steam-upload.ps1 -Version v2609.28.01 -Preview    (업로드 없이 steamcmd 미리보기만)
+#         pwsh tools/steam-upload.ps1 -Version v2609.28.01 -SkipBuild  (마지막 빌드를 다시 올림)
 param(
     [Parameter(Mandatory)][string]$Version,
     [switch]$Preview,

@@ -28,7 +28,7 @@ public static class Juice
 
     public static void LevelUp(Vector3 pos)
     {
-        Fx.Play("fx_levelup", pos + Vector3.up * 1.2f, 4.5f, Color.white, 14f, 0f, 30);
+        Fx.Play("fx_levelup", pos + Vector3.up * 1f, 3.2f, Color.white, 14f, 0f, 30);
         Fx.Play("fx_sparkle", pos + new Vector3(-0.8f, 1.8f, 0f), 0.9f, new Color(1f, 0.9f, 0.5f), 12f, 0f, 31);
         Fx.Play("fx_sparkle", pos + new Vector3(0.9f, 2.4f, 0f), 0.7f, new Color(1f, 0.9f, 0.5f), 10f, 0f, 31);
         Hostile.Play("levelup", 0.8f);

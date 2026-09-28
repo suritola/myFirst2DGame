@@ -82,6 +82,7 @@ public class StageManager : MonoBehaviour
         if (portal != null) portal.SetActive(false);
         if (specialPanel != null) specialPanel.SetActive(false);
         if (banner != null) banner.SetActive(false);
+        CompactBanner();
         SetFade(0f);
 
         BuildUpgradeButton();
@@ -512,11 +513,60 @@ public class StageManager : MonoBehaviour
 
     Coroutine bannerRoutine;
 
+    // 알림판을 화면 위쪽의 작은 띠로 (시야를 가리지 않게)
+    CanvasGroup bannerGroup;
+
+    void CompactBanner()
+    {
+        if (banner == null) return;
+        RectTransform r = banner.GetComponent<RectTransform>();
+        if (r != null)
+        {
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+            r.pivot = new Vector2(0.5f, 1f);
+            r.anchoredPosition = new Vector2(0f, -70f);       // 플레이 시간 바로 아래
+            r.sizeDelta = new Vector2(760f, 72f);
+        }
+        Image bg = banner.GetComponent<Image>();
+        if (bg != null) bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0.72f);
+        if (bannerText != null)
+        {
+            RectTransform tr = bannerText.rectTransform;
+            tr.anchorMin = Vector2.zero;
+            tr.anchorMax = Vector2.one;
+            tr.offsetMin = new Vector2(20f, 6f);
+            tr.offsetMax = new Vector2(-20f, -6f);
+            bannerText.enableAutoSizing = true;
+            bannerText.fontSizeMin = 14f;
+            bannerText.fontSizeMax = 26f;
+            bannerText.raycastTarget = false;
+        }
+        bannerGroup = banner.GetComponent<CanvasGroup>() ?? banner.AddComponent<CanvasGroup>();
+        bannerGroup.blocksRaycasts = false;
+        bannerGroup.interactable = false;
+    }
+
     IEnumerator BannerRoutine(string text, float seconds)
     {
         bannerText.text = text;
         banner.SetActive(true);
-        yield return new WaitForSecondsRealtime(seconds);
+        // 살짝 내려오며 나타났다가 서서히 사라짐
+        RectTransform r = banner.GetComponent<RectTransform>();
+        for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
+        {
+            float k = t / 0.2f;
+            if (bannerGroup != null) bannerGroup.alpha = k;
+            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(-50f, -70f, k));
+            yield return null;
+        }
+        if (bannerGroup != null) bannerGroup.alpha = 1f;
+        if (r != null) r.anchoredPosition = new Vector2(0f, -70f);
+        yield return new WaitForSecondsRealtime(Mathf.Max(0.3f, seconds - 0.5f));
+        for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
+        {
+            if (bannerGroup != null) bannerGroup.alpha = 1f - t / 0.3f;
+            yield return null;
+        }
         banner.SetActive(false);
     }
 
