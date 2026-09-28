@@ -537,16 +537,19 @@ public static class SettingsUI
     static readonly string[] ActionNames =
     {
         "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
-        "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "특수 강화",
+        "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리",
     };
+    // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음)
+    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 9, 10 };
 
     static void BuildControls()
     {
-        for (int i = 0; i < KeyBindings.All.Length; i++)
+        for (int j = 0; j < ShownActions.Length; j++)
         {
+            int i = ShownActions[j];
             int index = i;
-            int col = i < 6 ? 0 : 1;
-            float y = 220f - 78f * (i % 6);
+            int col = j < 4 ? 0 : 1;
+            float y = 220f - 78f * (j % 4);
             float x = col == 0 ? -540f : 20f;
             UIKit.Text(page, ActionNames[i], 26f, Parch, new Vector2(x + 170f, y), new Vector2(340f, 50f), TextAlignmentOptions.Left);
             Button b = UIKit.MakeButton(page, "", new Vector2(x + 430f, y), new Vector2(170f, 60f), () =>
@@ -570,12 +573,13 @@ public static class SettingsUI
 
     static void RefreshKeys()
     {
-        for (int i = 0; i < keyLabels.Count; i++)
+        for (int j = 0; j < keyLabels.Count && j < ShownActions.Length; j++)
         {
-            if (keyLabels[i] == null) continue;
+            if (keyLabels[j] == null) continue;
+            int i = ShownActions[j];
             bool waiting = i == capturing;
-            keyLabels[i].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.Name(KeyBindings.All[i]);
-            keyLabels[i].color = waiting ? Gold : new Color(0.96f, 0.9f, 0.8f);
+            keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.Name(KeyBindings.All[i]);
+            keyLabels[j].color = waiting ? Gold : new Color(0.96f, 0.9f, 0.8f);
         }
     }
 
@@ -705,7 +709,7 @@ public static class TutorialUI
         {
             ("무기 진화", "보스를 쓰러뜨릴 때마다 무기(평타)가 세 갈래 중 하나로 진화 (2번, 되돌릴 수 없음)"),
             ("영혼 트리 ({UPGRADE})", "영혼 조각으로 무기 · 필살기 · 스킬 · 생존 · 영혼 · 재물 칸을 배움"),
-            ("스킬", "트리의 스킬 가지에서 배움 · {SKILL1} · {SKILL2} · {SKILL3}"),
+            ("운명 가지", "카드 다시 뽑기 · 시간의 틈 · 중력 우물 등 트리에서만 얻는 효과"),
         }),
         ("적과 보스", "fx_warn", new[]
         {

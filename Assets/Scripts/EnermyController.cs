@@ -299,6 +299,8 @@ public class EnermyController : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        // 영혼 트리 '저주 전이': 걸려 있던 화상 · 독 · 출혈을 가까운 적에게 (상태 이상이 아직 붙어 있을 때)
+        if (a == 1 && SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.FateOnEnemyDie(this);
         if (a == 1) Killed?.Invoke(transform.position);
         if (a == 1) onKilled?.Invoke();
         if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);

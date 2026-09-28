@@ -89,6 +89,7 @@ public partial class LevelShop : MonoBehaviour
         if (IsOpen) setAbilitys();
         UpdateSelectLock();
 
+        UpdateReroll();
         // 클릭으로 고른 카드를 스페이스바로 확정
         if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
         {
@@ -103,6 +104,49 @@ public partial class LevelShop : MonoBehaviour
             openLevelShop();
         }
         UpdatePendingBadge();
+    }
+
+    // ================================================================= 운명의 실: [R] 다시 뽑기
+    TextMeshProUGUI rerollText;
+    int shownRerolls = -1;
+
+    void UpdateReroll()
+    {
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        int n = sp != null ? sp.Rerolls : 0;
+        bool open = IsOpen && n > 0;
+        if (open && Input.GetKeyDown(KeyCode.R) && sp.TryReroll())
+        {
+            UpdateLvShopContent();
+            pendingSlot = -1;
+            RefreshCards();
+            n = sp.Rerolls;
+            open = n > 0;
+        }
+        if (rerollText == null)
+        {
+            if (!open || LvshopPanel == null) return;
+            GameObject go = new GameObject("RerollHint", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform r = go.GetComponent<RectTransform>();
+            r.SetParent(LvshopPanel.transform, false);
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+            r.sizeDelta = new Vector2(700f, 40f);
+            r.anchoredPosition = new Vector2(0f, -462f);
+            rerollText = go.GetComponent<TextMeshProUGUI>();
+            UIKit.EnsureStyle();
+            if (UIKit.Font != null) rerollText.font = UIKit.Font;
+            if (UIKit.FontMaterial != null) rerollText.fontSharedMaterial = UIKit.FontMaterial;
+            rerollText.fontSize = 26f;
+            rerollText.alignment = TextAlignmentOptions.Center;
+            rerollText.color = new Color(0.8f, 0.7f, 1f);
+            rerollText.raycastTarget = false;
+        }
+        if (rerollText.gameObject.activeSelf != open) rerollText.gameObject.SetActive(open);
+        if (open && shownRerolls != n)
+        {
+            shownRerolls = n;
+            rerollText.text = Loc.T("[R] 카드 다시 뽑기") + "  (" + n + ")";
+        }
     }
 
     // ================================================================= 쌓인 레벨업

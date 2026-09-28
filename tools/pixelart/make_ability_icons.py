@@ -336,6 +336,22 @@ def glyph(img, g):
         flask(img, GR); line(img, 3, 5, 8, 5, W, 1.4); line(img, 3, 5, 3, 10, W, 1.4); line(img, 29, 27, 24, 27, W, 1.4); line(img, 29, 27, 29, 22, W, 1.4)
     elif g == 'a_overload':
         flask(img, P); star(img, 16, 7, 5, Y, 6, 0.1)
+    elif g == 'f_thread':
+        ring(img, 16, 16, 8, 1.6, T); line(img, 16, 8, 16, 24, B, 2); line(img, 22, 20, 28, 27, W, 1.2); line(img, 28, 27, 25, 29, W, 1)
+    elif g == 'f_rift':
+        line(img, 10, 6, 22, 6, T, 1.6); line(img, 10, 26, 22, 26, T, 1.6); line(img, 11, 7, 21, 25, C, 1.6); line(img, 21, 7, 11, 25, C, 1.6)
+        disc(img, 16, 22, 2.5, C)
+    elif g == 'f_nova':
+        ring(img, 16, 16, 12, 1.4, C); ring(img, 16, 16, 7, 1.4, W); star(img, 16, 16, 4, Y, 8, 0.2)
+    elif g == 'f_storm':
+        for i in range(3): ring(img, 16, 16, 5 + i * 4, 1.2, GR, gaps=2, rot=i * 0.8)
+    elif g == 'f_well':
+        disc(img, 16, 16, 10, (40, 20, 60, 255)); ring(img, 16, 16, 10, 1.4, P, gaps=3, rot=0.3); disc(img, 16, 16, 3, K)
+    elif g == 'f_curse':
+        disc(img, 12, 14, 5, GR); disc(img, 22, 20, 4, O); line(img, 15, 16, 20, 19, GR, 1.4); disc(img, 12, 14, 1.6, K)
+    elif g == 'f_echo':
+        disc(img, 16, 14, 7, (200, 225, 255, 230)); img.rect(9, 14, 14, 9, (200, 225, 255, 230)); disc(img, 13, 13, 1.5, K); disc(img, 19, 13, 1.5, K)
+        for x in (10, 15, 20): disc(img, x, 24, 2, (200, 225, 255, 230))
     elif g == 'c_shrapnel':
         flask(img, GR)
         for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
@@ -355,8 +371,9 @@ ICONS = {
     86: ('g_ricochet', 'gn'), 87: ('g_explosive', 'gn'), 88: ('g_incendiary', 'gn'), 89: ('g_homing', 'gn'), 90: ('g_shock', 'gn'), 91: ('g_reloadwave', 'gn'),
     92: ('a_storm', 'sw'), 93: ('a_execute', 'sw'), 94: ('a_thunder', 'sw'), 95: ('a_echo', 'rg'), 96: ('a_venom', 'rg'), 97: ('a_volley', 'rg'),
     98: ('a_blast', 'ar'), 99: ('a_seek', 'ar'), 100: ('a_gale', 'ar'), 101: ('a_double', 'al'), 102: ('a_giant', 'al'), 103: ('a_overload', 'al'), 104: ('magnet', 'gn'),
+    105: ('f_thread', 'fa'), 106: ('f_rift', 'fa'), 107: ('f_nova', 'fa'), 108: ('f_storm', 'fa'), 109: ('f_well', 'fa'), 110: ('f_curse', 'fa'), 111: ('f_echo', 'fa'),
 }
-BG = {'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
+BG = {'fa': ((55, 35, 80), (110, 80, 160)), 'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 
 
 def meta(path):

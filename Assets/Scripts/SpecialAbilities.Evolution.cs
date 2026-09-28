@@ -185,7 +185,7 @@ public partial class SpecialAbilities
     }
 
     public const int BranchCount = 6;
-    public static readonly string[] BranchNames = { "무기", "필살기", "스킬", "생존", "영혼", "재물" };
+    public static readonly string[] BranchNames = { "무기", "필살기", "운명", "생존", "영혼", "재물" };
     readonly HashSet<string> ownedNodes = new HashSet<string>();
     public bool OwnsNode(string key) => ownedNodes.Contains(key);
 
@@ -284,26 +284,14 @@ public partial class SpecialAbilities
         t.Add(Node("u.refund1", "u.gauge2", 1, "잔불", "필살기를 쓴 뒤 게이지가 15% 남습니다", 30, LvIcon(2), () => TreeUltRefund += 0.15f));
         t.Add(Node("u.refund2", "u.refund1", 1, "잔불 II", "필살기를 쓴 뒤 게이지가 15% 더 남습니다", 54, LvIcon(2), () => TreeUltRefund += 0.15f));
 
-        // ---------------- 2 스킬: 여덟 가지 중 세 칸 ([스킬1 · 2 · 3] 키), 배운 스킬은 진화 가능
-        List<int> mySkills = new List<int>(), myPassives = new List<int>();
-        if (Gunner)
-        {
-            for (int id = DashId; id <= HookId; id++) mySkills.Add(id);
-            myPassives.AddRange(new[] { OrbsId, ThornsId, CurseId, UndyingId });
-        }
+        // ---------------- 2 운명 (1.8.2~, 예전 액티브 스킬 자리): 다른 가지 · 레벨업 카드에 없는 새 효과만
+        List<int> myPassives = new List<int>();
+        if (Gunner) myPassives.AddRange(new[] { OrbsId, ThornsId, CurseId, UndyingId });
         else
             foreach (int id in CharacterData.Current.pool)
-            {
-                if (id >= abilities.Length) continue;
-                if (abilities[id].kind == SpecialKind.Skill) mySkills.Add(id);
-                if (abilities[id].kind == SpecialKind.Passive) myPassives.Add(id);
-            }
-        Sprite skillIcon = mySkills.Count > 0 ? abilities[mySkills[0]].icon : spd;
+                if (id < abilities.Length && abilities[id].kind == SpecialKind.Passive) myPassives.Add(id);
         Sprite soulIcon = myPassives.Count > 0 ? abilities[myPassives[0]].icon : def;
-        t.Add(Node("k.root", null, 2, "스킬 해방", "스킬을 배울 수 있게 됩니다. 스킬은 세 개까지 ([{SKILL1}] · [{SKILL2}] · [{SKILL3}])", 10, skillIcon, null));
-        t.Add(Node("k.cd1", "k.root", 2, "빠른 회복", "모든 스킬 쿨타임 -8%", 16, spd, () => TreeCooldownMul *= 0.92f));
-        Chain(t, "k.cd", 2, 3, "k.cd1", 2, "빠른 회복", "모든 스킬 쿨타임 -8%", new[] { 30, 50 }, spd, () => TreeCooldownMul *= 0.92f);
-        foreach (int id in mySkills) AddSkill(t, id);
+        FateNodes(t);
 
         // ---------------- 3 생존
         // 레벨업 카드(강철같은 심장 · 단단한 신체 · 생명의 샘)와 겹치지 않는, 싸우는 방식에 따라 달라지는 생존 칸
@@ -386,7 +374,7 @@ public partial class SpecialAbilities
         int[] c = new int[BranchCount];
         foreach (string k in ownedNodes)
         {
-            int b = k.StartsWith("w.") || k.StartsWith("m") ? 0 : k.StartsWith("u.") ? 1 : k.StartsWith("k.") ? 2
+            int b = k.StartsWith("w.") || k.StartsWith("m") ? 0 : k.StartsWith("u.") ? 1 : k.StartsWith("f.") ? 2
                   : k.StartsWith("s.") ? 3 : k.StartsWith("o.") ? 4 : 5;
             c[b]++;
         }
@@ -476,19 +464,6 @@ public partial class SpecialAbilities
         weaponLevels[id][StatTrait] = Mathf.Min(WeaponStatMax[StatTrait], weaponLevels[id][StatTrait] + 1);
     }
 
-    void AddSkill(List<SoulNode> t, int id)
-    {
-        SpecialDef d = abilities[id];
-        t.Add(new SoulNode
-        {
-            key = "k." + id, parent = "k.root", branch = 2, name = Loc.T(d.name), desc = BodyText(id, d.description), cost = 24, icon = d.icon,
-            apply = () => Equip(new[] { id }),
-            blocked = () => skills.Count >= MaxSkills ? Loc.T("스킬 칸이 가득 찼습니다 (최대 3개)") : null,
-        });
-        t.Add(new SoulNode { key = "k." + id + "+", parent = "k." + id, branch = 2, name = Loc.T(d.name) + Loc.T(" 진화"), desc = EvolveText(id), cost = 50, icon = d.icon,
-                             apply = () => Evolve(id) });
-    }
-
     void AddPassive(List<SoulNode> t, int id, int cost, int evoCost)
     {
         SpecialDef d = abilities[id];
@@ -574,6 +549,7 @@ public partial class SpecialAbilities
     // 황금 손길 (처치할 때)
     void TreeOnKill(Vector3 pos)
     {
+        FateOnKill(pos);
         if (TreeGoldChance <= 0f || Random.value >= TreeGoldChance) return;
         Coin c = Cache<Coin>.Get;
         if (c == null) return;
@@ -585,6 +561,7 @@ public partial class SpecialAbilities
     // 깨달음 (레벨이 오를 때, LevelShop.AddPending)
     public void TreeOnLevelUp(int levels)
     {
+        FateOnLevelUp(levels);
         if (TreeInsight > 0 && player != null) SoulShards.Add(TreeInsight * levels, player.transform.position, false);
     }
 
@@ -605,6 +582,7 @@ public partial class SpecialAbilities
     // 매 프레임 (장착한 능력이 없어도): 이자
     void TreeTick()
     {
+        FateTick();
         if (TreeMend > 0f && Time.timeScale > 0f && Time.time - lastHurtAt > 3f && player.PlayerHealth < player.PlayerMaxHealth && player.PlayerHealth > 0f)
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * TreeMend * Time.deltaTime);
         if (interestRate <= 0f || Time.timeScale == 0f || Time.time < interestAt) return;

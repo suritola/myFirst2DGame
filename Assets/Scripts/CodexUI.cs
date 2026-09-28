@@ -19,14 +19,14 @@ public static class CodexUI
     static readonly Color Dim = new Color(0.72f, 0.68f, 0.76f);
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
 
-    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "스킬", "패시브", "진화", "레벨업", "상점" };
+    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "레벨업", "상점" };
     static readonly string[] Hints =
     {
         "스테이지마다 나오는 적과 스킬 · 붉은 경고가 보이면 피하세요",
         "각 스테이지의 마지막 적 · 체력이 절반 아래로 떨어지면 특수 스킬을 씁니다",
         "메인 메뉴의 캐릭터에서 고릅니다 · 잠긴 캐릭터는 포인트로 해금하면 정보가 보입니다",
         "무기 진화로 얻는 무기 · 우클릭 필살기는 무기마다 다릅니다",
-        "영혼 트리의 스킬 가지에서 배움 · {SKILL1} · {SKILL2} · {SKILL3} (최대 3개)",
+        "영혼 트리의 운명 가지 · 모든 캐릭터 공통 · 다른 어디에도 없는 효과",
         "영혼 트리의 영혼 가지에서 배우면 항상 적용되는 능력",
         "영혼 트리({UPGRADE})에서 배운 능력의 다음 칸을 배우면 진화합니다",
         "레벨이 오를 때 세 장의 카드 중 하나를 고릅니다",
@@ -168,7 +168,7 @@ public static class CodexUI
             case 1: Bosses(data); break;
             case 2: Characters(); break;
             case 3: Specials(data, SpecialKind.Weapon); break;
-            case 4: Specials(data, SpecialKind.Skill); break;
+            case 4: FateCards(); break;
             case 5: Specials(data, SpecialKind.Passive); break;
             case 6: Evolutions(data); break;
             case 7: LevelUpCards(data); break;
@@ -284,6 +284,14 @@ public static class CodexUI
             foreach (int a in CharacterKit.AugmentsFor(c))
                 Card(Resources.Load<Sprite>("Icons/ability_" + (a - CharacterKit.AugFirst + 92)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
         }
+    }
+
+    // 운명 가지 (예전 액티브 스킬 자리): 트리와 같은 목록
+    static void FateCards()
+    {
+        Color tint = new Color(0.8f, 0.7f, 1f);
+        foreach (var f in SpecialAbilities.FateInfo)
+            Card(Resources.Load<Sprite>("Icons/ability_" + f.icon), tint, Loc.T(f.name), Loc.T("운명") + " \u00B7 " + f.cost, Loc.T(f.desc));
     }
 
     static void LevelUpCards(CodexData data)
