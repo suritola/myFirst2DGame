@@ -274,6 +274,10 @@ public class bosss : MonoBehaviour
             Point point = Cache<Point>.Get;
 
             if (point != null) point.AddPoint(10);
+
+            // 영혼 조각: 보스전이 끝나는 마지막 한 마리는 크게, 슬라임 분열체는 조금
+            if (lastOne) SoulShards.Add(SoulShards.ForBoss(expReward), transform.position, true);
+            else SoulShards.Add(Mathf.Max(1, Mathf.RoundToInt(expReward / 30f)), transform.position, false);
         }
 
         if (animator != null) animator.SetTrigger("death");

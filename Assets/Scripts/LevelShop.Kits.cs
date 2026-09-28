@@ -2,13 +2,14 @@ using UnityEngine;
 
 // 캐릭터 전용 레벨업 카드: 무기와 관련된 카드(관통 · 노려보는 눈빛 · 멀티 샷 · 밀어내기)만
 // 캐릭터의 평타 · 우클릭에 맞는 특수 능력 카드로 바뀜 (기본 스펙을 올리지 않음). 나머지 카드는 모든 캐릭터가 같이 씀
+// 거너도 총알이 하는 일을 바꾸는 카드 6장 (권총 · 진화한 무기 모두에 붙음, SpecialAbilities.GunCards)
 public partial class LevelShop
 {
     // 바뀌는 카드 번호
     const int PierceId = 0, GlareId = 3, MultiId = 6, KnockId = 7;
     // 도적만 쓰는 다섯 번째 칸: 모두에게서 빠진 11번(피의 굶주림) 자리를 빌림
     public const int HungerId = 11;
-    // 캐릭터 카드 두 장 더 (거너는 안 나옴) · 고를 카드가 모자랄 때만 나오는 비상 보급
+    // 캐릭터 카드 두 장 더 · 고를 카드가 모자랄 때만 나오는 비상 보급
     public const int ExtraAId = 12, ExtraBId = 13, SupplyId = 14;
     static readonly int[] KitIds = { PierceId, MultiId, KnockId, GlareId, HungerId, ExtraAId, ExtraBId };
 
@@ -67,6 +68,17 @@ public partial class LevelShop
     {
         switch (who)
         {
+            case CharacterId.Gunner:
+                return id switch
+                {
+                    PierceId => Card("도탄 사격", "총알이 적을 맞히면 가까운 다른 적에게 작은 탄이 튕겨 나갑니다.", 86, "튕긴 탄 피해", "|40%|", "|55%|", "|70%|"),
+                    MultiId => Card("폭발 탄두", "몇 발마다 한 발은 맞은 자리에서 폭발합니다.", 87, "폭발하는 탄", "|5|번째마다", "|4|번째마다", "|3|번째마다"),
+                    KnockId => Card("소각탄", "총알에 맞은 적이 2초 동안 불탑니다.", 88, "화상 (초당)", "공격력 |15%|", "공격력 |25%|", "공격력 |35%|"),
+                    GlareId => Card("유도 탄두", "총알이 날아가며 가까운 적 쪽으로 휩니다.", 89, "휘는 힘", "약하게||", "보통||", "강하게||"),
+                    ExtraAId => Card("전기탄", "총알이 적을 맞히면 확률로 번개가 주변 적 둘에게 튑니다.", 90, "번개 확률", "|15%|", "|25%|", "|35%|"),
+                    ExtraBId => Card("장전 충격파", "장전을 시작하면 몸 주변에 충격파가 터져 적을 밀어냅니다.", 91, "충격파 피해", "공격력 |100%|", "공격력 |160%|", "공격력 |220%|"),
+                    _ => null,
+                };
             case CharacterId.Swordsman:
                 return id switch
                 {
@@ -147,6 +159,16 @@ public partial class LevelShop
     bool KitApply(int id)
     {
         KitCard c = KitCardOf(id);
+        if (c != null && CharacterData.IsGunner)
+        {
+            SpecialAbilities sp = SpecialAbilities.SharedInstance;
+            if (sp == null) return false;
+            int g = id == PierceId ? SpecialAbilities.GunRicochet : id == MultiId ? SpecialAbilities.GunExplosive : id == KnockId ? SpecialAbilities.GunIncendiary
+                  : id == GlareId ? SpecialAbilities.GunHoming : id == ExtraAId ? SpecialAbilities.GunShock : SpecialAbilities.GunReloadWave;
+            sp.gunCard[g]++;
+            if (ability_level[id] >= c.max) ability_selected[id] = true;
+            return true;
+        }
         CharacterKit kit = CharacterKit.Instance;
         if (c == null || kit == null) return false;
 

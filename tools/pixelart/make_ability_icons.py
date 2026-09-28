@@ -1,4 +1,4 @@
-# 새 캐릭터 특수 능력 아이콘 (ID 20~51) · 캐릭터 전용 레벨업 카드 아이콘 (ID 60~75)
+# 새 캐릭터 특수 능력 아이콘 (ID 20~59) · 캐릭터 전용 레벨업 카드 아이콘 (ID 60~91, 거너 86~91)
 #   → Assets/Resources/Icons/ability_<id>.png  (32x32)
 # 캐릭터 색 둥근 판 위에 능력마다 다른 문양
 # 실행: python tools/pixelart/make_ability_icons.py
@@ -294,6 +294,24 @@ def glyph(img, g):
     elif g == 'c_supply':
         img.rect(8, 11, 16, 13, B); line(img, 8, 17, 24, 17, (80, 55, 35, 255), 1)
         line(img, 16, 12, 16, 23, R, 2); line(img, 11, 17, 21, 17, R, 2)
+    elif g == 'g_ricochet':
+        disc(img, 9, 22, 2.4, Y); line(img, 9, 22, 16, 12, W, 1.4); disc(img, 16, 12, 3, R)
+        line(img, 16, 12, 25, 20, Y, 1.6); disc(img, 25, 20, 2.2, Y)
+    elif g == 'g_explosive':
+        star(img, 16, 16, 11, O, 8, 0.2); disc(img, 16, 16, 5, Y); disc(img, 16, 16, 2.2, W)
+    elif g == 'g_incendiary':
+        line(img, 6, 24, 16, 14, Y, 2); disc(img, 20, 11, 5, O); disc(img, 21, 9, 3, R); disc(img, 19, 13, 2, Y)
+    elif g == 'g_homing':
+        for i in range(8):
+            t = i / 7
+            img.blend(int(6 + t * 18), int(24 - math.sin(t * math.pi) * 12 + t * 2), P)
+        ring(img, 24, 20, 4, 1.2, R); disc(img, 24, 20, 1.4, R)
+    elif g == 'g_shock':
+        line(img, 18, 5, 12, 16, C, 2); line(img, 12, 16, 20, 16, C, 2); line(img, 20, 16, 13, 27, C, 2)
+        disc(img, 7, 9, 1.6, W); disc(img, 25, 23, 1.6, W)
+    elif g == 'g_reloadwave':
+        img.rect(13, 9, 6, 13, T); img.rect(13, 9, 6, 3, Y)
+        ring(img, 16, 16, 12, 1.4, O, gaps=3)
     elif g == 'c_shrapnel':
         flask(img, GR)
         for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
@@ -310,6 +328,7 @@ ICONS = {
     72: ('c_chain', 'al'), 73: ('c_freeze', 'al'), 74: ('c_homunculus', 'al'), 75: ('c_shrapnel', 'al'), 76: ('c_momentum', 'rg'),
     52: ('oath', 'sw'), 53: ('plate', 'sw'), 54: ('veil', 'rg'), 55: ('fugitive', 'rg'), 56: ('weakspot', 'ar'), 57: ('instinct', 'ar'), 58: ('emergency', 'al'), 59: ('goldconvert', 'al'),
     77: ('c_stance', 'sw'), 78: ('c_combo', 'sw'), 79: ('c_vital', 'rg'), 80: ('c_recall', 'rg'), 81: ('c_steady', 'ar'), 82: ('c_mark', 'ar'), 83: ('c_fusion', 'al'), 84: ('c_sticky', 'al'), 85: ('c_supply', 'gn'),
+    86: ('g_ricochet', 'gn'), 87: ('g_explosive', 'gn'), 88: ('g_incendiary', 'gn'), 89: ('g_homing', 'gn'), 90: ('g_shock', 'gn'), 91: ('g_reloadwave', 'gn'),
 }
 BG = {'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 

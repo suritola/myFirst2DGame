@@ -450,6 +450,7 @@ public class PlayerController : MonoBehaviour
 
         isReloading = true;
         reload = 0f;
+        special?.ReloadShockwave(transform.position);
 
         if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
         else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
@@ -502,7 +503,12 @@ void Shoot()
 
         float shotRate = MultiShotDamageRate(multiShot);
 
-        if (multiShot == 1) special?.CurseBullet(CreateBullet(startPosition, direction, bulletDamage, pene, 0, false), cursed);
+        if (multiShot == 1)
+        {
+            Bullet one = CreateBullet(startPosition, direction, bulletDamage, pene, 0, false);
+            special?.CurseBullet(one, cursed);
+            special?.ApplyGunCards(one, false);
+        }
         else
         {
             int shotCount = multiShot;
@@ -515,7 +521,9 @@ void Shoot()
 
                 Vector2 shotDirection = Quaternion.Euler(0, 0, angle) * direction;
 
-                special?.CurseBullet(CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate), cursed);
+                Bullet b = CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate);
+                special?.CurseBullet(b, cursed);
+                special?.ApplyGunCards(b, false, i == 0);
             }
         }
     }

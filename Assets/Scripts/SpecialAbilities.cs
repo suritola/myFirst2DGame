@@ -59,7 +59,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 무기: Q로 기본 권총 → 무기1 → 무기2 순서로 교체 (-1 = 기본 권총)
     int weaponIndex = -1;
     public bool WeaponActive => weaponIndex >= 0 && weaponIndex < weapons.Count;
-    int CurrentWeapon => WeaponActive ? weapons[weaponIndex] : -1;
+    public int CurrentWeapon => WeaponActive ? weapons[weaponIndex] : -1;
     // 손에 들고 있는 무기 (PlayerLook): -1 = 기본 권총, 낫을 던진 동안은 빈손(-2)
     public int HeldWeapon => CurrentWeapon == ScytheId && activeScythe != null ? -2 : CurrentWeapon;
 
@@ -105,6 +105,7 @@ public partial class SpecialAbilities : MonoBehaviour
     public static Sprite GlowSprite;
     public static Sprite SwirlSprite;
     public static SpecialFeedback SharedFx;
+    public static SpecialAbilities SharedInstance { get; private set; }
 
     // 그림자 대시 거리: 이동 속도에 비례 (기본 속도 20 → 6칸)
     float DashDistance => player.speed * 0.3f;
@@ -132,6 +133,7 @@ public partial class SpecialAbilities : MonoBehaviour
         fx = gameObject.AddComponent<SpecialFeedback>();
         fx.Init(font, fontMaterial);
         SharedFx = fx;
+        SharedInstance = this;
         aimLine = fx.NewLine("AimLine", true);
         previewRing = fx.NewLine("PreviewRing", true);
         previewCone = fx.NewLine("PreviewCone", true);
@@ -159,7 +161,7 @@ public partial class SpecialAbilities : MonoBehaviour
             if (id == OrbsId) SpawnOrbs(3);
             KitOnEquip(id, false);
         }
-        if (weapons.Count > 0) Hints.Show("swap", "[{SWAP}]로 특수 무기와 기본 무기를 바꿔 듭니다. [{RELOAD}]는 장전입니다.");
+        if (weapons.Count > 0 && !UsesEvolution) Hints.Show("swap", "[{SWAP}]로 특수 무기와 기본 무기를 바꿔 듭니다. [{RELOAD}]는 장전입니다.");
         if (skills.Count > 0) Hints.Show("skill", "스킬은 [{SKILL1}] · [{SKILL2}] · [{SKILL3}]로 씁니다. 쿨타임은 왼쪽 아래 칸에 보입니다.");
         // 처음 무기를 골랐다면 바로 꺼내 들고 시작 (이미 들고 있던 무기는 그대로)
         if (!hadWeapons) weaponIndex = weapons.Count > 0 ? 0 : -1;
@@ -229,6 +231,7 @@ public partial class SpecialAbilities : MonoBehaviour
         if (a.Reloading || a.ammo >= MagSize(id)) return;
         a.reloadEnd = Time.time + BaseReload(id);
         fx.Play(ReloadSound(id), 0.8f, Random.Range(0.96f, 1.04f));
+        ReloadShockwave(player.transform.position);
     }
 
     // 무기마다 다른 장전 소리 (SpecialFeedback 이 만든 소리 이름, -1 = 캐릭터 기본 무기)
@@ -685,14 +688,15 @@ public partial class SpecialAbilities : MonoBehaviour
         aura.transform.localScale = new Vector3(worldSize * 0.35f / sx, worldSize * 0.35f / sy, 1f);
     }
 
-    // ================================================================= 필살기 강화 (스킬 강화 상점) · 조준 화면
+    // ================================================================= 필살기 강화 (영혼 트리) · 조준 화면
     public const int PistolUlt = -1;
     public const int UltPowerStat = 0, UltTraitStat = 1;
     public static readonly int[] UltStatMax = { 5, 3 };
     readonly Dictionary<int, int[]> ultLevels = new Dictionary<int, int[]>();
 
     public int UltLevel(int weapon, int stat) => ultLevels.TryGetValue(weapon, out int[] l) ? l[stat] : 0;
-    public float UltPower(int weapon) => 1f + 0.2f * UltLevel(weapon, UltPowerStat);
+    // 필살기 위력 (특성 강화 단계 + 영혼 트리)
+    public float UltPower(int weapon) => 1f + 0.2f * UltLevel(weapon, UltPowerStat) + TreeUltPower;
     public int UltTrait(int weapon) => UltLevel(weapon, UltTraitStat);
 
     public bool UpgradeUlt(int weapon, int stat)
@@ -899,7 +903,8 @@ public partial class SpecialAbilities : MonoBehaviour
 
         if (weapons.Count > 0)
         {
-            if (KeyBindings.Down(GameAction.Swap))
+            // 무기 진화 방식(거너)은 진화한 무기를 늘 들고 있음 (교체 없음)
+            if (!UsesEvolution && KeyBindings.Down(GameAction.Swap))
             {
                 // 기본 권총(-1) → 무기1 → 무기2 → 기본 권총 ...
                 weaponIndex = weaponIndex + 1 >= weapons.Count ? -1 : weaponIndex + 1;
@@ -1122,6 +1127,7 @@ public partial class SpecialAbilities : MonoBehaviour
         b.transform.localScale *= scale;
         if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = tint;
         CurseBullet(b, cursed);
+        ApplyGunCards(b, CurrentWeapon == FlameId);
         return b;
     }
 
@@ -1135,6 +1141,7 @@ public partial class SpecialAbilities : MonoBehaviour
         bool evo = IsEvolved(ShotgunId);
         float dmg = WDamage * (evo ? 3.2f : 2.5f) * (cursed ? 3f : 1f);
         bool hitAny = false;
+        bool boom = GunBoomShot();
 
         foreach (Collider2D c in Physics2D.OverlapCircleAll(start, ShotgunRange))
         {
@@ -1144,6 +1151,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
             Specials.Damage(c.gameObject, dmg, to.normalized, 2.5f);
             if (evo) Burn.Apply(c.gameObject, WDamage * 0.5f, 2f);
+            GunCardHit(c, dmg, to.normalized, false, boom && !hitAny);
             hitAny = true;
             if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
         }
@@ -2236,6 +2244,7 @@ public class Grenade : MonoBehaviour
     void Blast()
     {
         owner.Explode(target, radius, damage, 1.5f, Lava);
+        if (!mini) owner.GunAreaHit(target, radius, damage);
         Sprite glow = sr.sprite;
 
         // 하얗게 달아오른 중심 섬광

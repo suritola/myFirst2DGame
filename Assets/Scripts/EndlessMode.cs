@@ -90,6 +90,13 @@ public class EndlessMode : MonoBehaviour
         BossesDefeated++;
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + BossEvery;
+        if (SpecialAbilities.UsesEvolution)
+        {
+            // 거너: 진화할 단계가 남았으면 무기 진화, 아니면 영혼 조각으로 충분 (보스가 이미 많이 줌)
+            stages.ShowBanner(Loc.T("보스 처치!"), 2.5f);
+            stages.StartCoroutine(stages.Evolution(true));
+            return;
+        }
         stages.specialPoints++;
         stages.ShowBanner(Loc.T("보스 처치!  특수 능력 포인트 +1"), 3f);
     }

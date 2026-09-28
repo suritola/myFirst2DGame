@@ -56,7 +56,8 @@ public partial class LevelShop : MonoBehaviour
         for (int i = 0; i< Total_abilitys; i++)
         {
             // 11번(처치 시 회복)은 더 이상 나오지 않음 (도적은 사냥의 기세), 12 · 13번은 캐릭터 카드, 14번은 비상 보급 전용
-            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId;
+            // 2번(재활용 에너지)은 스킬 강화라 빠짐: 필살기는 영혼 트리 · 특수 능력에서만 강화
+            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId || i == RecycleId;
         }
         CompactLevelUp();
         //레벨업 능력들
@@ -359,6 +360,7 @@ public partial class LevelShop : MonoBehaviour
     SkillGauge skill;
 
     const int MinSkillPoint = 10;
+    const int RecycleId = 2;
 
     static string Percent(float rate) => Mathf.RoundToInt(rate * 100f) + "%";
     const float MagnetStep = 4f;            // 코인 자석 1회당 끌어오는 범위

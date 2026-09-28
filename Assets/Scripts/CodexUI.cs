@@ -96,8 +96,8 @@ public static class CodexUI
     static readonly (string icon, string name, string desc)[] Shops =
     {
         ("fx_prompt", "능력치 상점", "공격력 · 공격 속도 · 재장전 속도 · 탄창 · 이동 속도를 올립니다. 살수록 값이 오릅니다."),
-        ("fx_muzzle", "무기 강화", "2장부터. 특수 무기마다 피해 · 연사 · 탄창 · 고유 특성을 올립니다."),
-        ("fx_reticle", "스킬 강화", "필살기의 위력과 무기마다 다른 특성(타겟 수 · 지속 시간 등)을 올립니다."),
+        ("fx_muzzle", "무기 진화", "거너. 스테이지 보스를 쓰러뜨릴 때마다 무기가 세 갈래 중 하나로 진화합니다. 되돌릴 수 없습니다."),
+        ("fx_reticle", "영혼 트리", "거너. 적이 떨어뜨리는 영혼 조각으로 무기 · 필살기 · 생존 · 영혼 가지의 칸을 배웁니다. 강한 적일수록 조각을 많이 줍니다."),
         ("fx_orb", "특수 능력 포인트", "중간 보스를 잡으면 얻습니다. T를 눌러 새 능력을 배우거나 가진 능력을 진화합니다."),
     };
 
@@ -257,11 +257,13 @@ public static class CodexUI
     {
         for (int i = 0; i < LevelUps.Length; i++)
         {
+            // 무기 · 스킬 카드(관통 · 재활용 에너지 · 노려보는 눈빛 · 멀티 샷 · 밀어내기)는 더 이상 나오지 않음
+            if (i == 0 || i == 2 || i == 3 || i == 6 || i == 7) continue;
             Sprite icon = data != null && data.abilityIcons != null && i < data.abilityIcons.Length ? data.abilityIcons[i] : null;
-            Card(icon, Color.white, Loc.T(LevelUps[i].name), i == 0 || i == 3 || i == 6 || i == 7 ? Loc.T("거너") : Loc.T("모든 캐릭터"), Loc.T(LevelUps[i].desc));
+            Card(icon, Color.white, Loc.T(LevelUps[i].name), Loc.T("모든 캐릭터"), Loc.T(LevelUps[i].desc));
         }
-        // 해금한 캐릭터의 전용 카드 (무기 관련 카드 대신 나옴)
-        foreach (CharacterId c in UnlockedKits())
+        // 캐릭터 전용 카드 (무기 관련 카드 대신 나옴): 거너 + 해금한 캐릭터
+        foreach (CharacterId c in System.Linq.Enumerable.Prepend(UnlockedKits(), CharacterId.Gunner))
             foreach (var k in LevelShop.KitCardsFor(c))
                 Card(Resources.Load<Sprite>("Icons/ability_" + k.icon), Color.white, Loc.T(k.name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"), Loc.T(k.desc).Replace("\n", " "));
     }

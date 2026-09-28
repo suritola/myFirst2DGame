@@ -26,6 +26,8 @@ public class ESCmenu : MonoBehaviour
 
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;
+        // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
+        if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open) return;
         if (isShopOpen)
         {
             shop.isShopOpen = false;

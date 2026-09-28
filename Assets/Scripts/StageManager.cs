@@ -54,8 +54,16 @@ public class StageManager : MonoBehaviour
     TextMeshProUGUI upgradeText;
     bool upgradeOpen;
 
-    // 특수 능력 화면(지옥 입장 / 강화)이 열려 있는지
-    public bool IsMenuOpen => upgradeOpen || transitioning;
+    // 특수 능력 화면(지옥 입장 / 강화) · 무기 진화 · 영혼 트리가 열려 있는지
+    public bool IsMenuOpen => upgradeOpen || transitioning || evolving;
+
+    // 거너: 무기 진화 + 영혼 트리 (특수 능력 포인트 대신)
+    static bool Evo => SpecialAbilities.UsesEvolution;
+    bool evolving;
+    bool started;                       // 인트로가 끝나 버튼을 보여도 되는지
+    int treeClosedFrame = -1;
+    float affordCheckAt;
+    bool affordable;
 
     public int CurrentStage { get; private set; }
 
@@ -86,10 +94,7 @@ public class StageManager : MonoBehaviour
         SetFade(0f);
 
         BuildUpgradeButton();
-        // 2장 상점의 무기 강화 창
-        gameObject.AddComponent<WeaponUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
-        // 상점의 필살기(스킬) 강화 창
-        gameObject.AddComponent<SkillUpgradeShop>().Init(FindFirstObjectByType<Shop>(), specials, specialTree);
+        // 떠돌이 상점의 무기 · 스킬 강화 창은 없어짐: 무기는 진화, 스킬은 트리에서만 강화
 
         StartCoroutine(Opening());
     }
@@ -109,8 +114,13 @@ public class StageManager : MonoBehaviour
         bool endless = GameMode.IsEndless;
         if (endless) PrepareEndless();
         yield return StoryDirector.Intro(endless);
-        if (endless) yield return PickEndlessSpecials();
+        if (endless)
+        {
+            if (Evo) yield return Evolution(false);
+            else yield return PickEndlessSpecials();
+        }
         if (spawner != null) spawner.spawningEnabled = true;
+        started = true;
         if (endless)
         {
             GameMode.StartEndlessClock();
@@ -154,6 +164,7 @@ public class StageManager : MonoBehaviour
 
     void Update()
     {
+        if (Evo) { UpdateSoulTreeButton(); return; }
         bool show = specialPoints > 0 && CurrentStage >= 1 && !transitioning && !upgradeOpen;
         if (upgradeButton != null)
         {
@@ -171,14 +182,86 @@ public class StageManager : MonoBehaviour
         if (show && KeyBindings.Down(GameAction.Upgrade)) OpenUpgrade();
     }
 
+    // ================================================================= 거너: 영혼 트리 버튼 · 무기 진화
+    void UpdateSoulTreeButton()
+    {
+        bool show = started && !transitioning && !upgradeOpen && !evolving && !GameInput.TrailerRunning;
+        if (upgradeButton == null) return;
+        if (upgradeButton.activeSelf != show) upgradeButton.SetActive(show);
+        if (!show) return;
+        // 살 수 있는 칸이 있을 때만 반짝임 (트리 전체를 매 프레임 만들지 않게 0.5초마다 확인)
+        if (Time.unscaledTime >= affordCheckAt)
+        {
+            affordCheckAt = Time.unscaledTime + 0.5f;
+            affordable = specials != null && specials.AnyAffordable();
+        }
+        float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
+        upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
+        upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
+        upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
+        upgradeText.text = Loc.T("영혼 트리 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   영혼 조각 ") + SoulShards.Amount;
+        if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame) OpenSoulTree();
+    }
+
+    public void OpenSoulTree()
+    {
+        // 상점, 레벨업, 일시정지 중에는 열지 않음
+        if (upgradeOpen || evolving || Time.timeScale == 0f || specials == null || SoulTreeUI.IsOpen) return;
+        upgradeOpen = true;
+        Time.timeScale = 0f;
+        SoulTreeUI.Open(specials, () =>
+        {
+            upgradeOpen = false;
+            treeClosedFrame = Time.frameCount;
+            affordCheckAt = 0f;
+            Time.timeScale = 1f;
+        });
+    }
+
+    // 보스를 쓰러뜨리면 무기 진화 (진화할 단계가 남아 있을 때만). waitMenus: 다른 창이 닫힐 때까지 기다림
+    public IEnumerator Evolution(bool waitMenus)
+    {
+        int[] options = specials != null ? specials.NextEvolutionOptions() : null;
+        if (options == null) yield break;
+        evolving = true;
+        if (waitMenus)
+        {
+            yield return new WaitForSecondsRealtime(0.8f);
+            while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
+        }
+        float before = Time.timeScale;
+        Time.timeScale = 0f;
+        int picked = options[0];
+        yield return WeaponEvolutionUI.Run(specials, options, id => picked = id);
+        bool first = specials.EvolutionTier == 0;
+        specials.EvolveWeapon(picked);
+        if (first) specials.OnEvolvedTier1();
+        Time.timeScale = before > 0f ? before : 1f;
+        evolving = false;
+        affordCheckAt = 0f;
+        Hints.Show("soultree_btn", "영혼 조각이 모이면 [{UPGRADE}]로 영혼 트리를 열어 무기 · 필살기 · 생존 · 영혼 칸을 배우세요.");
+    }
+
+    IEnumerator EvolutionThenPortal()
+    {
+        yield return Evolution(true);
+        StartCoroutine(PortalCountdown());
+    }
+
     // ================================================================= 특수 능력 포인트
     void OnMidBossSpawned()
     {
+        if (Evo) { ShowBanner(Loc.T("중간 보스 등장!\n쓰러뜨리면 영혼 조각을 많이 줍니다"), 3f); return; }
         ShowBanner(Loc.T("중간 보스 등장!\n쓰러뜨리면 특수 능력 포인트 +1"), 3f);
     }
 
     void OnMidBossDefeated()
     {
+        if (Evo)
+        {
+            ShowBanner(Loc.T("영혼 조각을 모았다!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 영혼 트리"), 3f);
+            return;
+        }
         specialPoints++;
         Hints.Show("upgrade", "특수 능력 포인트는 [{UPGRADE}]를 눌러 새 능력을 배우거나 가진 능력을 진화하는 데 씁니다.");
         ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
@@ -186,6 +269,7 @@ public class StageManager : MonoBehaviour
 
     public void OpenUpgrade()
     {
+        if (Evo) { OpenSoulTree(); return; }
         // 상점, 레벨업, 일시정지 중에는 열지 않음
         if (upgradeOpen || specialPoints <= 0 || Time.timeScale == 0f || specialTree == null) return;
         upgradeOpen = true;
@@ -322,13 +406,13 @@ public class StageManager : MonoBehaviour
         {
             if (portal != null) portal.SetActive(true);
             ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
-            StartCoroutine(PortalCountdown());
+            StartCoroutine(Evo ? EvolutionThenPortal() : PortalCountdown());
         }
         else if (stage == 1)
         {
             if (portal != null) portal.SetActive(true);
             ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
-            StartCoroutine(PortalCountdown());
+            StartCoroutine(Evo ? EvolutionThenPortal() : PortalCountdown());
         }
         else
         {
@@ -376,11 +460,11 @@ public class StageManager : MonoBehaviour
         CurrentStage = 2;
         spawner.StartStage(2);
         if (player != null) player.position = stage2PlayerStart;
-        specialPoints += 2;
+        if (!Evo) specialPoints += 2;
 
         Time.timeScale = 1f;
         yield return Fade(1f, 0f, 0.8f);
-        ShowBanner(Loc.T("3장 · 초원\n특수 능력 포인트 +2"), 3f);
+        ShowBanner(Evo ? Loc.T("3장 · 초원") : Loc.T("3장 · 초원\n특수 능력 포인트 +2"), 3f);
         transitioning = false;
     }
 
@@ -392,16 +476,19 @@ public class StageManager : MonoBehaviour
 
         yield return Fade(0f, 1f, 0.7f);
 
-        // 특수 능력 선택 (전체 화면 스킬 트리)
-        pendingPicks = null;
-        specialPanel.SetActive(true);
-        if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
-        SetFade(0f);
-        while (pendingPicks == null) yield return null;
-        ApplyPicks(pendingPicks);
-        TooltipUI.Hide();
-        SetFade(1f);
-        specialPanel.SetActive(false);
+        // 특수 능력 선택 (전체 화면 스킬 트리) - 거너는 보스 처치 때 무기 진화로 대신함
+        if (!Evo)
+        {
+            pendingPicks = null;
+            specialPanel.SetActive(true);
+            if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
+            SetFade(0f);
+            while (pendingPicks == null) yield return null;
+            ApplyPicks(pendingPicks);
+            TooltipUI.Hide();
+            SetFade(1f);
+            specialPanel.SetActive(false);
+        }
 
         // 지옥 맵으로 교체
         foreach (Renderer r in caveRenderers) if (r != null) r.enabled = false;

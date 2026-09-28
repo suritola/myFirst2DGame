@@ -123,7 +123,7 @@ public partial class SpecialAbilities
     {
         if (weaponGroup == null) return;
         List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
-        if (weapons.Count > 0) w.Add(PistolRow);
+        if (weapons.Count > 0 && !UsesEvolution) w.Add(PistolRow);    // 진화 방식은 권총으로 돌아가지 않음
         foreach (int id in equipped)
         {
             if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
