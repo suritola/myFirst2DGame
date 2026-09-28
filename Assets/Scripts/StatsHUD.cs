@@ -188,7 +188,7 @@ public class StatsHUD : MonoBehaviour
             : player.damage.ToString("0.##");
 
         // 방어력: 받는 피해 감소율
-        values[1].text = (player.def * 100f).ToString("0") + "%";
+        values[1].text = (Mathf.Min(player.def, PlayerController.MaxDef) * 100f).ToString("0") + "%";
 
         // 공격 속도: 초당 발사 수
         values[2].text = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");

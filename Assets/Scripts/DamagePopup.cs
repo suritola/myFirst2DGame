@@ -21,7 +21,7 @@ public class DamagePopup : MonoBehaviour
 
     public static void Show(Transform target, float damage, SpriteRenderer body)
     {
-        if (target == null || damage <= 0f) return;
+        if (target == null || damage <= 0f || GameSettings.DamageNumbers == 2) return;
         int k = target.GetInstanceID();
         if (byTarget.TryGetValue(k, out DamagePopup p) && p != null && Time.time - p.lastAdd < Merge)
         {
@@ -39,7 +39,7 @@ public class DamagePopup : MonoBehaviour
         p.text = go.AddComponent<TextMeshPro>();
         p.text.font = font;
         if (material != null) p.text.fontSharedMaterial = material;
-        p.text.fontSize = 11f;
+        p.text.fontSize = GameSettings.DamageNumbers == 1 ? 15f : 11f;
         p.text.alignment = TextAlignmentOptions.Center;
         p.text.enableWordWrapping = false;
         p.text.rectTransform.sizeDelta = new Vector2(6f, 2f);

@@ -21,6 +21,8 @@ public class EnermyController : MonoBehaviour
 
     [Header("보상 / 피해")]
     public float contactDamage = 5f;   // 플레이어와 닿았을 때 주는 피해
+    // 부딪혀도 적이 죽지 않고 계속 붙어 있으므로 실제로는 이만큼만
+    public const float ContactScale = 0.6f;
     public int expReward = 20;          // 처치 경험치
     public int coinDrop = 1;            // 떨어뜨리는 코인 수
 
@@ -373,7 +375,7 @@ public class EnermyController : MonoBehaviour
         if (isDead || !collision.CompareTag("Player")) return;
 
         PlayerController target = collision.GetComponent<PlayerController>();
-        if (target != null && target.TryHit(contactDamage))
+        if (target != null && target.TryHit(contactDamage * ContactScale))
         {
             Vector3 away = transform.position - target.transform.position;
             away.z = 0f;

@@ -62,7 +62,7 @@ public partial class SpecialAbilities
         ("강철 갑옷", SpecialKind.Passive, "받는 피해가 15% 줄지만 이동 속도가 5% 느려집니다.\n진화: 피해 -25%, 느려지지 않음"),
         ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타가 두 배로 아픕니다.\n진화: 2초, 2.5배"),
         ("도망자의 발걸음", SpecialKind.Passive, "맞으면 1.5초 동안 이동 속도가 40% 빨라집니다.\n진화: +60%"),
-        ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 50% 늘어납니다.\n진화: +100%"),
+        ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 35% 늘어납니다.\n진화: +70%"),
         ("사냥 본능", SpecialKind.Passive, "적을 20마리 처치할 때마다 다음 화살 3발이 저절로 가득 당겨집니다.\n진화: 12마리마다"),
         ("비상 물약", SpecialKind.Passive, "체력이 25% 아래로 떨어지면 체력 30%를 곧바로 회복합니다. (쿨타임 45초)\n진화: 쿨타임 30초"),
         ("금속 변환", SpecialKind.Passive, "적을 처치하면 10% 확률로 적이 금으로 변해 코인 3개를 줍니다.\n진화: 20%"),
@@ -1027,7 +1027,7 @@ public partial class SpecialAbilities
     // 적이 받는 피해 (EnermyController.DamageHook): 약점 간파 · 도적 급소 노리기 · 궁수 사냥감 표식
     float KitDamageHook(EnermyController e, float damage)
     {
-        if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 2f : 1.5f;
+        if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.7f : 1.35f;
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null) damage *= kit.TargetDamageMul(e);
         return damage;
@@ -1076,7 +1076,7 @@ public partial class SpecialAbilities
                     return wait <= 0f ? (detail ? Loc.T("준비됨 · 다음 평타 강화") : Loc.T("준비")) : wait.ToString("0.0");
                 }
             case KitFugitive: return Time.time < fugitiveUntil ? (detail ? Loc.T("빨라짐") : "ON") : "";
-            case KitWeakspot: return "+" + (IsEvolved(id) ? "100" : "50") + "%";
+            case KitWeakspot: return "+" + (IsEvolved(id) ? "70" : "35") + "%";
             case KitInstinct:
                 {
                     int need = IsEvolved(id) ? 12 : 20;

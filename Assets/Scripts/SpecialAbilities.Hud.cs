@@ -13,6 +13,7 @@ public partial class SpecialAbilities
         public int id;
         public Image border, icon, cooldown;
         public TextMeshProUGUI label, key;
+        public Image keyCap;
     }
 
     class HudGroup
@@ -181,6 +182,19 @@ public partial class SpecialAbilities
             kr.pivot = new Vector2(0.5f, 1f);
             kr.sizeDelta = new Vector2(0f, 16f);
             kr.anchoredPosition = new Vector2(0f, -1f);
+            // 키보드 키 모양 (설정 「키 아이콘」)
+            GameObject cap = new GameObject("KeyCap", typeof(RectTransform), typeof(Image));
+            RectTransform cr = cap.GetComponent<RectTransform>();
+            cr.SetParent(r, false);
+            cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(0f, 1f);
+            cr.anchoredPosition = new Vector2(2f, -2f);
+            cr.sizeDelta = new Vector2(20f, 18f);
+            t.keyCap = cap.GetComponent<Image>();
+            t.keyCap.color = new Color(0.92f, 0.9f, 0.85f, 0.95f);
+            t.keyCap.raycastTarget = false;
+            Sprite[] capSprite = Fx.Frames("fx_keycap");
+            if (capSprite.Length > 0) t.keyCap.sprite = capSprite[0];
+            cap.SetActive(false);
             t.key = HudText(kr, 12f, new Color(1f, 0.85f, 0.45f), TextAlignmentOptions.TopLeft);
             t.key.margin = new Vector4(5f, 0f, 0f, 0f);
             t.key.outlineWidth = 0.25f;
@@ -263,6 +277,11 @@ public partial class SpecialAbilities
         t.border.color = flash ? Color.white : active ? TileActive : TileBorder;
         t.cooldown.fillAmount = cool;
         t.label.text = label;
+        bool cap = GameSettings.KeyIcons && key.Length > 0;
+        if (t.keyCap.gameObject.activeSelf != cap) t.keyCap.gameObject.SetActive(cap);
+        if (cap) t.keyCap.rectTransform.sizeDelta = new Vector2(Mathf.Max(20f, 10f + key.Length * 9f), 18f);
+        t.key.color = cap ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.85f, 0.45f);
+        t.key.margin = new Vector4(cap ? 7f : 5f, cap ? 1f : 0f, 0f, 0f);
         t.key.text = key + (id >= 0 && IsEvolved(id) ? (key.Length > 0 ? " " : "") + "+" : "");
     }
 

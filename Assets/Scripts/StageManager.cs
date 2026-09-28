@@ -118,6 +118,7 @@ public class StageManager : MonoBehaviour
             ShowBanner(Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?"), 3f);
         }
         else RunClock.Create();
+        Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
     }
 
     void PrepareEndless()
@@ -179,6 +180,7 @@ public class StageManager : MonoBehaviour
     void OnMidBossDefeated()
     {
         specialPoints++;
+        Hints.Show("upgrade", "특수 능력 포인트는 [{UPGRADE}]를 눌러 새 능력을 배우거나 가진 능력을 진화하는 데 씁니다.");
         ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
     }
 
@@ -541,7 +543,9 @@ public class StageManager : MonoBehaviour
             bannerText.fontSizeMax = 26f;
             bannerText.raycastTarget = false;
         }
-        bannerGroup = banner.GetComponent<CanvasGroup>() ?? banner.AddComponent<CanvasGroup>();
+        // ?? 는 유니티의 "없음"(가짜 null)을 못 알아보므로 직접 확인
+        bannerGroup = banner.GetComponent<CanvasGroup>();
+        if (bannerGroup == null) bannerGroup = banner.AddComponent<CanvasGroup>();
         bannerGroup.blocksRaycasts = false;
         bannerGroup.interactable = false;
     }

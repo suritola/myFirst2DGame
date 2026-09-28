@@ -365,7 +365,7 @@ public partial class LevelShop : MonoBehaviour
                                 Mathf.RoundToInt(bul.PlayerMaxHealth).ToString(), Mathf.RoundToInt(bul.PlayerMaxHealth * 1.12f).ToString(), n, HeartMaxLevel);
             case 9:
                 return CardText(S("적에게 받는 피해가 줄어듭니다."), S("받는 피해 감소"),
-                                (bul.def * 100f).ToString("0") + "%", ((bul.def + DefStep) * 100f).ToString("0") + "%", n, DefMaxLevel);
+                                (Mathf.Min(bul.def, PlayerController.MaxDef) * 100f).ToString("0") + "%", (Mathf.Min(bul.def + DefStep, PlayerController.MaxDef) * 100f).ToString("0") + "%", n, DefMaxLevel);
             case 10:
                 return CardText(S("시간이 지나면 체력이 조금씩 회복됩니다."), S("초당 회복"),
                                 bul.regenPerSecond.ToString("0.#"), (bul.regenPerSecond + RegenStep).ToString("0.#"), n, RegenMaxLevel);

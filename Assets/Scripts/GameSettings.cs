@@ -13,12 +13,18 @@ public static class GameSettings
     const string ShakeKey = "settings.shake";
     const string FlashKey = "settings.flash";
     const string VSyncKey = "settings.vsync";
+    const string HintsKey = "settings.hints";
+    const string DamageNumKey = "settings.damageNumbers";
+    const string ColorBlindKey = "settings.colorBlind";
+    const string KeyIconKey = "settings.keyIcons";
 
     static bool loaded;
     static Loc.Lang language = Loc.Lang.Korean;
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
     static bool shake = true, flash = true, vsync = true;
+    static bool hints = true, colorBlind = false, keyIcons = true;
+    static int damageNumbers;
 
     public static Loc.Lang Language
     {
@@ -60,6 +66,10 @@ public static class GameSettings
         shake = PlayerPrefs.GetInt(ShakeKey, 1) == 1;
         flash = PlayerPrefs.GetInt(FlashKey, 1) == 1;
         vsync = PlayerPrefs.GetInt(VSyncKey, 1) == 1;
+        hints = PlayerPrefs.GetInt(HintsKey, 1) == 1;
+        damageNumbers = Mathf.Clamp(PlayerPrefs.GetInt(DamageNumKey, 0), 0, 2);
+        colorBlind = PlayerPrefs.GetInt(ColorBlindKey, 0) == 1;
+        keyIcons = PlayerPrefs.GetInt(KeyIconKey, 1) == 1;
     }
 
     // 음악 · 효과음 볼륨 (0 ~ 1, 전체 볼륨에 곱해짐)
@@ -87,6 +97,35 @@ public static class GameSettings
     {
         get { Load(); return flash || GameInput.Auto; }
         set { Load(); flash = value; PlayerPrefs.SetInt(FlashKey, value ? 1 : 0); }
+    }
+
+    // 처음 한 번씩 뜨는 도움말
+    public static bool Hints
+    {
+        get { Load(); return hints; }
+        set { Load(); hints = value; PlayerPrefs.SetInt(HintsKey, value ? 1 : 0); }
+    }
+
+    // 피해 숫자: 0 보통 · 1 크게 · 2 끄기
+    public static readonly string[] DamageNumberNames = { "보통", "크게", "끄기" };
+    public static int DamageNumbers
+    {
+        get { Load(); return damageNumbers; }
+        set { Load(); damageNumbers = Mathf.Clamp(value, 0, 2); PlayerPrefs.SetInt(DamageNumKey, damageNumbers); }
+    }
+
+    // 색각 이상 모드: 경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로
+    public static bool ColorBlind
+    {
+        get { Load(); return colorBlind; }
+        set { Load(); colorBlind = value; PlayerPrefs.SetInt(ColorBlindKey, value ? 1 : 0); }
+    }
+
+    // HUD 스킬 칸의 키를 키보드 모양 아이콘으로
+    public static bool KeyIcons
+    {
+        get { Load(); return keyIcons; }
+        set { Load(); keyIcons = value; PlayerPrefs.SetInt(KeyIconKey, value ? 1 : 0); }
     }
 
     public static bool VSync

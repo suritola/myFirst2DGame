@@ -575,6 +575,18 @@ public static class Hostile
         return t;
     }
 
+    // 색각 이상 모드: 빨강 · 주황 → 노랑빛 주황, 초록 → 파랑, 보라 → 자홍 (밝기는 그대로)
+    public static Color Accessible(Color c)
+    {
+        if (!GameSettings.ColorBlind) return c;
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if (s < 0.2f) return c;
+        Color to = h < 0.14f || h > 0.92f ? new Color(1f, 0.72f, 0.1f)
+                 : h < 0.5f ? new Color(0.25f, 0.6f, 1f)
+                 : h > 0.7f ? new Color(1f, 0.3f, 1f) : new Color(0.3f, 0.8f, 1f);
+        return new Color(to.r, to.g, to.b, c.a);
+    }
+
     public static bool HitCircle(Vector3 pos, float radius, float damage)
     {
         PlayerController p = Player;
@@ -671,6 +683,7 @@ public class Telegraph : MonoBehaviour
 
     public void InitCircle(float radius, float duration, Color color)
     {
+        color = Hostile.Accessible(color);
         circle = true;
         this.radius = radius;
         this.duration = duration;
@@ -703,6 +716,7 @@ public class Telegraph : MonoBehaviour
 
     public void InitLine(Vector3 a, Vector3 b, float width, float duration, Color color)
     {
+        color = Hostile.Accessible(color);
         this.a = a;
         this.b = b;
         this.width = width;
@@ -786,7 +800,7 @@ public class SkillTag : MonoBehaviour
         t.text = label;
         t.fontSize = 4.5f;
         t.fontStyle = TMPro.FontStyles.Bold;
-        t.color = new Color(1f, 0.35f, 0.3f);
+        t.color = Hostile.Accessible(new Color(1f, 0.35f, 0.3f));
         t.alignment = TMPro.TextAlignmentOptions.Center;
         t.outlineWidth = 0.3f;
         t.outlineColor = new Color32(0, 0, 0, 255);

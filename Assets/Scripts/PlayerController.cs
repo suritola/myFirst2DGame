@@ -878,6 +878,7 @@ void Shoot()
     public float bossContactDamage = 25f;
     // 맞은 뒤 이 시간 동안은 다시 맞지 않음 (여러 마리에게 동시에 맞는 것 방지)
     public float hurtInvincibleTime = 0.6f;
+    public const float MaxDef = 0.7f;
 
     private float invincibleUntil = 0f;
 
@@ -905,7 +906,8 @@ void Shoot()
 
         if (audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);
 
-        float taken = amount * GameMode.DamageMul * (1f - def);
+        // 피해 감소는 합쳐도 최대 70% (단단한 신체 + 강철 갑옷 + 거대화 물약이 겹쳐 무적이 되지 않게)
+        float taken = amount * GameMode.DamageMul * (1f - Mathf.Clamp(def, 0f, MaxDef));
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀

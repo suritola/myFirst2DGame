@@ -159,6 +159,8 @@ public partial class SpecialAbilities : MonoBehaviour
             if (id == OrbsId) SpawnOrbs(3);
             KitOnEquip(id, false);
         }
+        if (weapons.Count > 0) Hints.Show("swap", "[{SWAP}]로 특수 무기와 기본 무기를 바꿔 듭니다. [{RELOAD}]는 장전입니다.");
+        if (skills.Count > 0) Hints.Show("skill", "스킬은 [{SKILL1}] · [{SKILL2}] · [{SKILL3}]로 씁니다. 쿨타임은 왼쪽 아래 칸에 보입니다.");
         // 처음 무기를 골랐다면 바로 꺼내 들고 시작 (이미 들고 있던 무기는 그대로)
         if (!hadWeapons) weaponIndex = weapons.Count > 0 ? 0 : -1;
         RebuildHudRows();

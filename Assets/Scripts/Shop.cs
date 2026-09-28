@@ -105,6 +105,7 @@ public partial class Shop : MonoBehaviour
             if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
         }
         ShopStall.Spawn(this, at);
+        Hints.Show("shop", "떠돌이 상점에서는 코인으로 공격력 · 체력 등을 영구히 올릴 수 있습니다. 가까이 가서 [{INTERACT}]");
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [{INTERACT}]"), 2.2f);
     }
 

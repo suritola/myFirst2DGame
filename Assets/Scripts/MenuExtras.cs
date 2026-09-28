@@ -21,6 +21,24 @@ public static class MenuExtras
     static void InstallGameOver()
     {
         Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        // 이번 판 결과 (왼쪽) · [R] 다시 시작
+        if (canvas != null)
+        {
+            UIKit.EnsureStyle();
+            TMP_Text res = UIKit.Text(canvas.transform, "", 24f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(560f, 520f), TextAlignmentOptions.TopLeft);
+            res.enableAutoSizing = true;
+            res.fontSizeMin = 14f;
+            res.fontSizeMax = 24f;
+            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunStats.Summary(false);
+            RectTransform rr = res.rectTransform;
+            rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
+            rr.anchoredPosition = new Vector2(60f, 0f);
+            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[R] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
+            RectTransform ar = again.rectTransform;
+            ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
+            ar.anchoredPosition = new Vector2(0f, 40f);
+            canvas.gameObject.AddComponent<QuickRestart>();
+        }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
         {
@@ -272,7 +290,7 @@ public static class SettingsUI
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color Off = new Color(0.6f, 0.58f, 0.65f);
 
-    static readonly string[] TabNames = { "일반", "화면", "조작" };
+    static readonly string[] TabNames = { "일반", "화면", "조작", "게임" };
     static int tab;
     static RectTransform page;
     static readonly List<Button> tabButtons = new List<Button>();
@@ -296,7 +314,7 @@ public static class SettingsUI
         for (int i = 0; i < TabNames.Length; i++)
         {
             int t = i;
-            tabButtons.Add(UIKit.MakeButton(win, TabNames[i], new Vector2(-270f + 270f * i, 272f), new Vector2(250f, 64f), () => ShowTab(t), 28f));
+            tabButtons.Add(UIKit.MakeButton(win, TabNames[i], new Vector2(-405f + 270f * i, 272f), new Vector2(250f, 64f), () => ShowTab(t), 28f));
         }
         page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
 
@@ -317,7 +335,8 @@ public static class SettingsUI
         }
         if (tab == 0) BuildGeneral();
         else if (tab == 1) BuildDisplay();
-        else BuildControls();
+        else if (tab == 2) BuildControls();
+        else BuildGameplay();
     }
 
     static TMP_Text RowLabel(string ko, float y) =>
@@ -442,6 +461,38 @@ public static class SettingsUI
         if (!list.Contains(now)) list.Add(now);
         list.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
         return list;
+    }
+
+    // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘
+    static void BuildGameplay()
+    {
+        ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
+        CycleRow("피해 숫자", 90f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
+        ToggleRow("색각 이상 모드", -20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
+        ToggleRow("키 아이콘", -130f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
+    }
+
+    // 누를 때마다 다음 값으로
+    static void CycleRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set)
+    {
+        RowLabel(ko, y);
+        TMP_Text label = null;
+        Button b = null;
+        System.Action refresh = () =>
+        {
+            string text = names[Mathf.Clamp(get(), 0, names.Length - 1)];
+            label.text = Loc.T(text);
+            UIKit.Remember(label, text);
+            b.GetComponent<Image>().color = Gold;
+        };
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        {
+            set((get() + 1) % names.Length);
+            Deselect();
+            refresh();
+        }, 26f);
+        label = b.GetComponentInChildren<TMP_Text>();
+        refresh();
     }
 
     static void ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set)

@@ -32,7 +32,7 @@ public static class CharacterData
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
-            weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다",
+            weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
             hp = 1.5f, damage = 3f, attackSpeed = 0.4f, gauge = 1f, range = 5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
@@ -48,14 +48,14 @@ public static class CharacterData
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
             weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살비를 떨어뜨릴 위치를 조정하고, 떼면 쏟아붓습니다",
-            hp = 0.5f, damage = 1.1f, attackSpeed = 0.9f, gauge = 1.5f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
+            hp = 0.65f, damage = 1.1f, attackSpeed = 0.9f, gauge = 1.5f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
             color = new Color(0.45f, 0.8f, 0.4f) },
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
-            hp = 1f, damage = 0.9f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
+            hp = 1f, damage = 0.8f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
         Coming(), Coming(), Coming(), Coming(), Coming(),
     };

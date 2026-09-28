@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class DamageFlash : MonoBehaviour
 {
     const float LowHealthRatio = 0.3f;
+    float nextBeat, beatEcho;
 
     static DamageFlash instance;
 
@@ -77,7 +78,21 @@ public class DamageFlash : MonoBehaviour
         if (player == null) player = FindFirstObjectByType<PlayerController>();
         float low = 0f;
         if (player != null && player.PlayerMaxHealth > 0f && player.PlayerHealth / player.PlayerMaxHealth < LowHealthRatio)
+        {
             low = GameSettings.Flashes ? 0.22f + 0.14f * Mathf.Sin(Time.unscaledTime * 5f) : 0.22f;
+            // 심장 박동 "쿵-쿵" (멈춘 동안에는 안 남)
+            if (Time.timeScale > 0f && player.PlayerHealth > 0f && Time.unscaledTime >= nextBeat && SpecialAbilities.SharedFx != null)
+            {
+                nextBeat = Time.unscaledTime + 0.95f;
+                SpecialAbilities.SharedFx.Play("thump", 0.45f, 0.55f);
+                beatEcho = Time.unscaledTime + 0.18f;
+            }
+            if (beatEcho > 0f && Time.unscaledTime >= beatEcho)
+            {
+                beatEcho = 0f;
+                if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("thump", 0.3f, 0.5f);
+            }
+        }
 
         float alpha = Mathf.Max(flash, low);
         image.color = new Color(1f, 1f, 1f, alpha);

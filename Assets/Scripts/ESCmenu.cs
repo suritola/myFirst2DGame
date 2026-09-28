@@ -59,6 +59,7 @@ public class ESCmenu : MonoBehaviour
         isEscOpen = !isEscOpen;
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
+        RunStats.ShowSummary(isEscOpen);
 
         if (isEscOpen)
         {

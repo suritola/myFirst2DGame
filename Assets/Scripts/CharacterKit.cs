@@ -94,7 +94,8 @@ public class CharacterKit : MonoBehaviour
         EnermyController.Killed += OnKill;
         player.ShootSpeed /= Mathf.Max(0.1f, def.attackSpeed);
         player.speed *= def.move;
-        if (def.mag > 0) player.MaxBullet = def.mag;          // (거너의 mag 는 표시용, 실제 탄창은 인스펙터 값)
+        if (def.mag > 0) player.MaxBullet = def.mag;
+        if (Id == CharacterId.Rogue) player.reloadTime = 1f;      // 표창은 빨리 다시 쥠          // (거너의 mag 는 표시용, 실제 탄창은 인스펙터 값)
         player.NowBullet = player.MaxBullet;
 
         // 새 몸 그림 (애니메이터는 거너 그림을 쓰므로 끔)
@@ -248,7 +249,8 @@ public class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
-            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f), to.normalized, combo ? 2.5f : 1.4f);
+            // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
+            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f), to.normalized, combo ? 4f : 3f);
             Fx.Play("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
@@ -329,12 +331,12 @@ public class CharacterKit : MonoBehaviour
 
         if (GameInput.FireHeld && canDraw) return;
 
-        // 발사: 피해 30% → 250%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
+        // 발사: 피해 30% → 280%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
         drawing = false;
         SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        float power = 0.3f + 2.2f * draw;
+        float power = 0.3f + 2.5f * draw;
         float speed = 35f + 60f * draw;
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots) * power;
@@ -643,7 +645,19 @@ public class CharacterKit : MonoBehaviour
     int comboCount;
 
     // 검사 굳건한 자세: 우클릭을 모으는 동안 받는 피해 감소 (PlayerController.TryHit)
-    public float TakenMul => Id == CharacterId.Swordsman && charging && card[5] > 0 ? 1f - (0.15f + 0.15f * card[5]) : 1f;
+    // 검사: 휘두르는 동안(근접 특성) 받는 피해 절반, 굳건한 자세 카드는 우클릭을 모으는 동안 받는 피해 감소
+    float swingGuardUntil;
+    public float TakenMul
+    {
+        get
+        {
+            if (Id != CharacterId.Swordsman) return 1f;
+            float mul = 1f;
+            if (Time.time < swingGuardUntil) mul *= 0.5f;
+            if (charging && card[5] > 0) mul *= 1f - (0.15f + 0.15f * card[5]);
+            return mul;
+        }
+    }
 
     // 적이 받는 피해 배율 (SpecialAbilities.KitDamageHook): 도적 급소 노리기 · 궁수 사냥감 표식
     public float TargetDamageMul(EnermyController e)
@@ -702,11 +716,14 @@ public class CharacterKit : MonoBehaviour
             // 검기: 휘두른 방향으로 적을 꿰뚫는 칼바람이 날아감
             Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.2f + 0.2f * card[0]), 9999, 26f, 14f, "fx_swordwave", 2.6f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
         }
-        if (card[1] > 0 && hits > 0 && player.PlayerHealth > 0f)
+        // 근접 특성: 휘두르는 동안 받는 피해 절반
+        swingGuardUntil = Time.time + 0.3f;
+        // 근접 특성: 벤 적(최대 3) 하나당 체력 0.3 회복, 흡혈 베기 카드가 레벨마다 +1
+        if (hits > 0 && player.PlayerHealth > 0f)
         {
-            // 흡혈 베기: 벤 적(최대 3) 하나당 체력 회복
-            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + Mathf.Min(hits, 3) * card[1]);
-            Fx.Play("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
+            float heal = Mathf.Min(hits, 3) * (0.3f + card[1]);
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
+            if (card[1] > 0) Fx.Play("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
         }
         if (card[2] > 0)
         {
