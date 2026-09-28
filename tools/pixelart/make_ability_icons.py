@@ -312,6 +312,30 @@ def glyph(img, g):
     elif g == 'g_reloadwave':
         img.rect(13, 9, 6, 13, T); img.rect(13, 9, 6, 3, Y)
         ring(img, 16, 16, 12, 1.4, O, gaps=3)
+    elif g == 'a_storm':
+        ring(img, 16, 16, 11, 1.6, C, gaps=3, rot=0.4); sword(img, 11, 21, 21, 11)
+    elif g == 'a_execute':
+        sword(img, 8, 24, 24, 8, W); disc(img, 22, 22, 4, R); line(img, 19, 22, 25, 22, K, 1)
+    elif g == 'a_thunder':
+        sword(img, 8, 24, 20, 12); line(img, 24, 4, 19, 12, Y, 1.8); line(img, 19, 12, 25, 12, Y, 1.8); line(img, 25, 12, 20, 20, Y, 1.8)
+    elif g == 'a_echo':
+        star(img, 20, 16, 6, (120, 90, 170, 200)); star(img, 13, 16, 6, G)
+    elif g == 'a_venom':
+        star(img, 13, 13, 6, G); disc(img, 21, 22, 4, GR); disc(img, 21, 17, 2, GR)
+    elif g == 'a_volley':
+        star(img, 9, 12, 4, G); star(img, 16, 20, 4, G); star(img, 23, 12, 4, G)
+    elif g == 'a_blast':
+        arrow(img, 5, 25, 17, 13); star(img, 22, 10, 7, O, 8, 0.2); disc(img, 22, 10, 2.5, Y)
+    elif g == 'a_seek':
+        arrow(img, 6, 24, 18, 12); ring(img, 23, 9, 5, 1.2, R); disc(img, 23, 9, 1.5, R)
+    elif g == 'a_gale':
+        arrow(img, 4, 26, 26, 6); line(img, 6, 16, 14, 16, C, 1); line(img, 16, 26, 16, 18, C, 1)
+    elif g == 'a_double':
+        flask(img, O); ring(img, 16, 18, 13, 1.2, Y, gaps=2)
+    elif g == 'a_giant':
+        flask(img, GR); line(img, 3, 5, 8, 5, W, 1.4); line(img, 3, 5, 3, 10, W, 1.4); line(img, 29, 27, 24, 27, W, 1.4); line(img, 29, 27, 29, 22, W, 1.4)
+    elif g == 'a_overload':
+        flask(img, P); star(img, 16, 7, 5, Y, 6, 0.1)
     elif g == 'c_shrapnel':
         flask(img, GR)
         for x, y in [(5, 8), (26, 7), (6, 24), (26, 24)]: disc(img, x, y, 1.6, GR)
@@ -329,6 +353,8 @@ ICONS = {
     52: ('oath', 'sw'), 53: ('plate', 'sw'), 54: ('veil', 'rg'), 55: ('fugitive', 'rg'), 56: ('weakspot', 'ar'), 57: ('instinct', 'ar'), 58: ('emergency', 'al'), 59: ('goldconvert', 'al'),
     77: ('c_stance', 'sw'), 78: ('c_combo', 'sw'), 79: ('c_vital', 'rg'), 80: ('c_recall', 'rg'), 81: ('c_steady', 'ar'), 82: ('c_mark', 'ar'), 83: ('c_fusion', 'al'), 84: ('c_sticky', 'al'), 85: ('c_supply', 'gn'),
     86: ('g_ricochet', 'gn'), 87: ('g_explosive', 'gn'), 88: ('g_incendiary', 'gn'), 89: ('g_homing', 'gn'), 90: ('g_shock', 'gn'), 91: ('g_reloadwave', 'gn'),
+    92: ('a_storm', 'sw'), 93: ('a_execute', 'sw'), 94: ('a_thunder', 'sw'), 95: ('a_echo', 'rg'), 96: ('a_venom', 'rg'), 97: ('a_volley', 'rg'),
+    98: ('a_blast', 'ar'), 99: ('a_seek', 'ar'), 100: ('a_gale', 'ar'), 101: ('a_double', 'al'), 102: ('a_giant', 'al'), 103: ('a_overload', 'al'),
 }
 BG = {'gn': ((70, 55, 35), (140, 110, 70)), 'sw': ((40, 60, 120), (80, 110, 190)), 'rg': ((45, 30, 70), (95, 65, 140)), 'ar': ((35, 70, 35), (75, 130, 65)), 'al': ((60, 30, 85), (120, 70, 170))}
 

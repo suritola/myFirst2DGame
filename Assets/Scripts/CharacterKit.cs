@@ -4,7 +4,7 @@ using UnityEngine;
 
 // 거너가 아닌 캐릭터: 스탯 배율 · 새 몸 그림(대기/달리기) · 평타 · 우클릭 스킬
 // PlayerController 가 평타 · 우클릭 · 이동을 이 컴포넌트에 맡김 (거너면 붙지 않음)
-public class CharacterKit : MonoBehaviour
+public partial class CharacterKit : MonoBehaviour
 {
     public static CharacterKit Instance { get; private set; }
 
@@ -29,7 +29,7 @@ public class CharacterKit : MonoBehaviour
     bool swingAlt;
 
     public bool Busy => charging || Dashing;
-    public float AttackSpeedMul => 1f;
+    public float AttackSpeedMul => FormRate;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     public float MoveMul => 1f;
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
@@ -203,9 +203,7 @@ public class CharacterKit : MonoBehaviour
                 Swing(dir, shots);
                 break;
             case CharacterId.Rogue:
-                foreach (Vector2 d in Spread(dir, shots, 8f))
-                    Shuriken(start, d, dmg, card[0]);
-                Play("whoosh", 0.35f, 1.8f);
+                RogueThrow(start, dir, dmg, shots);          // 진화 형태 · 강화 (CharacterKit.Forms)
                 break;
             case CharacterId.Archer:
                 foreach (Vector2 d in Spread(dir, shots, 6f))
@@ -236,8 +234,9 @@ public class CharacterKit : MonoBehaviour
             comboCount++;
             if (comboCount >= (card[6] >= 2 ? 3 : 4)) { combo = true; comboCount = 0; }
         }
-        float reach = def.range * reachMul * (combo ? 1.4f : 1f);
-        float half = Mathf.Min(180f, 50f + arcBonus + 12f * (shots - 1));
+        float reach = def.range * reachMul * (combo ? 1.4f : 1f) * SwingReachMul;
+        float half = SwingHalf(Mathf.Min(180f, 50f + arcBonus + 12f * (shots - 1)));
+        SwingFormBefore(dir);
         swingAlt = !swingAlt;
         bool left = dir.x < 0f;
         PlayerLook.Swing(swingAlt);
@@ -250,11 +249,13 @@ public class CharacterKit : MonoBehaviour
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
-            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f), to.normalized, combo ? 4f : 3f);
+            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f) * SwingHitMul(c, to.magnitude, reach), to.normalized, combo ? 4f : 3f);
+            OnSwingHit(c, hits == 0);
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
         SwingCards(origin, dir, reach, half, hits);
+        SwingFormAfter(origin, reach);
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f), 24f, rot, 15);
@@ -344,10 +345,12 @@ public class CharacterKit : MonoBehaviour
         {
             Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw, draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
             if (b == null) continue;
+            ArrowForm(b, draw, start);
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
         }
+        if (form == SpecialAbilities.KitBurstBow) StartCoroutine(BurstFollow(dir, dmg * formPower * 0.6f, speed, 0.4f + 0.25f * draw, draw));
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
         if (card[2] > 0 && draw >= 1f) StartCoroutine(Backstep(-dir));
@@ -363,17 +366,19 @@ public class CharacterKit : MonoBehaviour
     static readonly Color[] ReagentColors = { new Color(1f, 0.55f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };
     public string NextReagentName => reagent switch { 0 => "화염 시약", 1 => "빙결 시약", _ => "산성 시약" };
 
-    void ThrowReagent(Vector3 from, Vector3 land, float dmg)
+    void ThrowReagent(Vector3 from, Vector3 land, float dmg, int depth = 0)
     {
         int kind = reagent;
         reagent = (reagent + 1) % 3;
         // 현자의 돌이면 모두 불안정, 불안정 연구면 확률이 오름
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
+        if (depth == 0 && ForceUnstable()) unstable = true;
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
         FlaskLob.Throw(from, land, 0.4f, unstable ? 1.05f : 0.8f, tint, (p) =>
         {
-            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f);
-            float hit = dmg * 1.6f * (unstable ? 1.8f : 1f);
+            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul;
+            float hit = dmg * 1.6f * (unstable ? 1.8f : 1f) * FlaskDamageMul;
+            FlaskExtras(p, r, hit, depth);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
             {

@@ -258,7 +258,7 @@ public class SoulTreeUI : MonoBehaviour
         Image ring = Img("Ring", c, Vector2.zero, new Vector2(170f, 170f), UIKit.ButtonSprite, Gold);
         ring.type = Image.Type.Sliced;
         Img("Inner", c, Vector2.zero, new Vector2(150f, 150f), null, new Color(0.1f, 0.07f, 0.15f, 1f));
-        Sprite w = sp.WeaponActive ? Resources.Load<Sprite>("Weapons/weapon_" + sp.CurrentWeapon) : Resources.Load<Sprite>("Weapons/weapon_pistol");
+        Sprite w = sp.MainWeaponIcon;
         Image icon = Img("Weapon", c, new Vector2(0f, 14f), new Vector2(104f, 104f), w, Color.white);
         icon.preserveAspect = true;
         TMP_Text name = UIKit.Text(c, "", 22f, Gold, new Vector2(0f, -52f), new Vector2(160f, 30f));

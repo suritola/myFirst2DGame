@@ -242,12 +242,13 @@ public class WeaponEvolutionUI : MonoBehaviour
 
         // 같은 계열을 한 번 더 고르면 '강화판'
         bool same = tier >= 2 && sp.WeaponActive && id == sp.CurrentWeapon;
-        string tag = tier >= 2 ? (same ? Loc.T("같은 계열 · 극대화") : Loc.T("새 계열로 분기")) : Loc.T("1차 진화");
+        string tag = !CharacterData.IsGunner ? (tier >= 2 ? Loc.T("추가 강화") : Loc.T("1차 진화"))
+                   : tier >= 2 ? (same ? Loc.T("같은 계열 · 극대화") : Loc.T("새 계열로 분기")) : Loc.T("1차 진화");
         TMP_Text tg = UIKit.Text(c, "", 22f, same ? Gold : new Color(0.7f, 0.85f, 1f), new Vector2(0f, 240f), new Vector2(400f, 34f));
         tg.text = tag;
 
         Img("Glow", c, new Vector2(0f, 120f), new Vector2(300f, 300f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.35f)).raycastTarget = false;
-        Sprite weapon = Resources.Load<Sprite>("Weapons/weapon_" + id) ?? sp.abilities[id].icon;
+        Sprite weapon = sp.EvolutionIcon(id);
         Image icon = Img("Icon", c, new Vector2(0f, 120f), new Vector2(200f, 200f), weapon, Color.white);
         icon.preserveAspect = true;
         icon.raycastTarget = false;
@@ -263,11 +264,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         cards[i] = c;
     }
 
-    Sprite CurrentSprite()
-    {
-        if (sp.WeaponActive) return Resources.Load<Sprite>("Weapons/weapon_" + sp.CurrentWeapon) ?? sp.abilities[sp.CurrentWeapon].icon;
-        return Resources.Load<Sprite>("Weapons/weapon_pistol");
-    }
+    Sprite CurrentSprite() => sp.MainWeaponIcon;
 
     // 튀는 빛 조각 (UI 위에서 날아가며 사라짐)
     void Spark(Vector2 from, Vector2 velocity, float life)

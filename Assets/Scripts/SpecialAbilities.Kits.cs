@@ -1033,6 +1033,15 @@ public partial class SpecialAbilities
     // 적이 받는 피해 (EnermyController.DamageHook): 약점 간파 · 도적 급소 노리기 · 궁수 사냥감 표식
     float KitDamageHook(EnermyController e, float damage)
     {
+        if (!CharacterData.IsGunner)
+        {
+            if (TreeCrit > 0f && Random.value < TreeCrit)
+            {
+                damage *= TreeCritDamage;
+                Fx.Spawn("fx_sparkle", e.transform.position, 1f, new Color(1f, 0.85f, 0.3f), 24f);
+            }
+            if (TreeExecute > 0f && e.EnemyHealth <= e.setEnemyHP * 0.2f) damage *= 1f + TreeExecute;
+        }
         if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.7f : 1.35f;
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null) damage *= kit.TargetDamageMul(e);
