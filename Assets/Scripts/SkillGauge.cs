@@ -54,6 +54,14 @@ public class SkillGauge : MonoBehaviour
         UpdateGauge();
     }
 
+    // 최대치를 바꿀 때 (재활용 에너지): 넘친 양을 맞추고 게이지를 바로 다시 그림
+    public void SetMax(int max)
+    {
+        MaxSkillPoint = Mathf.Max(1, max);
+        SkillPoint = Mathf.Clamp(SkillPoint, 0, MaxSkillPoint);
+        UpdateGauge();
+    }
+
     public bool IsFull()
     {
         return SkillPoint >= MaxSkillPoint;

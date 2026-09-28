@@ -395,7 +395,7 @@ public partial class LevelShop : MonoBehaviour
         if (what == 2)
         {
             // 너무 쉬워지지 않도록 최소 5회까지만 줄어듦
-            skill.MaxSkillPoint = Mathf.Max(MinSkillPoint, Mathf.RoundToInt(skill.MaxSkillPoint * 0.8f));
+            skill.SetMax(Mathf.Max(MinSkillPoint, Mathf.RoundToInt(skill.MaxSkillPoint * 0.8f)));
             if (skill.MaxSkillPoint <= MinSkillPoint) ability_selected[2] = true;
         }
         if (what == 3) bul.Skill_setTime *= 0.8f;
