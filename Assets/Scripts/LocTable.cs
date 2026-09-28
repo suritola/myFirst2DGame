@@ -1205,5 +1205,8 @@ public static class LocTable
         { "흥정", L("Haggle", "値切り", "讨价还价") },
         { "흥정 II", L("Haggle II", "値切り II", "讨价还价 II") },
         { "평타를 누르면 마우스 쪽으로 쭉 돌진하며 지나간 적을 찌르고(60%), 도착한 곳에서 길게 찌릅니다 (사거리 150%, 피해 170%). 돌진 중 무적.", L("Your basic attack dashes toward the mouse, stabbing enemies along the way (60%), then thrusts far at the end (150% reach, 170% damage). Invincible while dashing.", "通常攻撃でマウスの方へ一気に突進し、通り道の敵を突き(60%)、到着地点で長く突きます (射程150%、ダメージ170%)。突進中は無敵。", "普通攻击会朝鼠标方向冲刺，刺穿沿途敌人(60%)，并在终点长距离突刺 (范围150%，伤害170%)。冲刺中无敌。") },
+        // 1.8.0 트리 이동
+        { "전체 보기", L("Show all", "全体表示", "显示全部") },
+        { "끌기 · WASD · 화면 끝으로 이동, 휠 확대, [F] 전체 보기", L("Drag · WASD · screen edge to move, wheel to zoom, [F] show all", "ドラッグ・WASD・画面端で移動、ホイールで拡大、[F] 全体表示", "拖动 · WASD · 屏幕边缘移动，滚轮缩放，[F] 显示全部") },
     };
 }

@@ -28,7 +28,7 @@ public class SoulTreeUI : MonoBehaviour
     const float Sector = 54f;           // 가지 하나가 쓸 수 있는 각도
     const float R0 = 210f, RStep = 135f; // 깊이 1 반지름 · 깊이마다 늘어나는 거리
     const float Gap = 124f;             // 옆 칸과의 최소 거리 (칸 78 + 아래 가격 글자 + 여유)
-    const float MinZoom = 0.35f, MaxZoom = 1.4f;
+    const float MinZoom = 0.2f, MaxZoom = 1.4f;
 
     public static SoulTreeUI Instance { get; private set; }
     public static bool IsOpen => Instance != null;
@@ -115,9 +115,24 @@ public class SoulTreeUI : MonoBehaviour
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) k.y += 1f;
         if (k != Vector2.zero) Pan(k * 900f * Time.unscaledDeltaTime);
         if (Input.GetKeyDown(KeyCode.Home) || Input.GetKeyDown(KeyCode.C)) Recenter();
-        // 우클릭 드래그로도 이동
-        if (Input.GetMouseButton(1)) Pan((Vector2)Input.mousePosition - lastMouse);
-        lastMouse = Input.mousePosition;
+        if (Input.GetKeyDown(KeyCode.F)) Fit();
+        // 끌어서 이동: 빈 곳에서 좌클릭 · 휠 클릭 · 우클릭을 누른 채 끌기 (칸 위에서 누르면 배우기라 끌지 않음)
+        Vector2 mouse = Input.mousePosition;
+        if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(2) || Input.GetMouseButtonDown(1)) && hovered.Count == 0) dragging = true;
+        if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1) && !Input.GetMouseButton(2)) dragging = false;
+        if (dragging) Pan(mouse - lastMouse);
+        // 마우스를 화면 끝에 대면 그쪽으로 천천히 이동
+        else if (Application.isFocused && mouse.x >= 0f && mouse.y >= 0f && mouse.x <= Screen.width && mouse.y <= Screen.height)
+        {
+            const float edge = 18f;
+            Vector2 e = Vector2.zero;
+            if (mouse.x < edge) e.x += 1f;
+            if (mouse.x > Screen.width - edge) e.x -= 1f;
+            if (mouse.y < edge) e.y += 1f;
+            if (mouse.y > Screen.height - edge) e.y -= 1f;
+            if (e != Vector2.zero) Pan(e * 700f * Time.unscaledDeltaTime);
+        }
+        lastMouse = mouse;
 
         if (shownShards != SoulShards.Amount) Refresh();
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
@@ -141,6 +156,9 @@ public class SoulTreeUI : MonoBehaviour
     }
 
     Vector2 lastMouse;
+    bool dragging;
+    Rect bounds = new Rect(-200f, -200f, 400f, 400f);   // 보이는 칸들이 퍼진 범위 (보드 좌표)
+    static bool fittedOnce;                             // 처음 열 때는 전체가 보이게 맞춤
     readonly HashSet<NodeView> hovered = new HashSet<NodeView>();
 
     // ================================================================= 이동 · 확대
@@ -170,12 +188,25 @@ public class SoulTreeUI : MonoBehaviour
         board.localScale = Vector3.one * zoom;
     }
 
-    // 보이는 칸이 화면 밖으로 다 사라지지 않게
+    // 이동 한도: 보이는 칸 가운데 가장 바깥 칸까지 화면 가운데로 끌어올 수 있게 (그 너머로는 못 감)
     void ClampPan()
     {
-        float reach = 1500f * zoom;
+        const float margin = 300f;
         Vector2 p = board.anchoredPosition;
-        board.anchoredPosition = new Vector2(Mathf.Clamp(p.x, -reach, reach), Mathf.Clamp(p.y, -reach, reach));
+        board.anchoredPosition = new Vector2(
+            Mathf.Clamp(p.x, -(bounds.xMax + margin) * zoom, -(bounds.xMin - margin) * zoom),
+            Mathf.Clamp(p.y, -(bounds.yMax + margin) * zoom, -(bounds.yMin - margin) * zoom));
+    }
+
+    // 전체 보기: 보이는 칸이 한 화면에 모두 들어오게 확대 · 축소하고 가운데를 맞춤
+    void Fit()
+    {
+        const float w = 1760f, h = 780f;                // 위 · 아래 띠를 뺀 화면
+        float z = Mathf.Min(w / Mathf.Max(1f, bounds.width + 160f), h / Mathf.Max(1f, bounds.height + 160f));
+        zoom = Mathf.Clamp(z, MinZoom, 1f);
+        board.localScale = Vector3.one * zoom;
+        board.anchoredPosition = -bounds.center * zoom + new Vector2(0f, -36f);
+        ClampPan();
     }
 
     // ================================================================= 만들기
@@ -186,11 +217,6 @@ public class SoulTreeUI : MonoBehaviour
         Image dim = Img("Dim", root, Vector2.zero, Vector2.zero, null, new Color(0.03f, 0.02f, 0.05f, 0.97f));
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
-        // 빈 곳을 끌면 트리가 움직임
-        EventTrigger drag = dim.gameObject.AddComponent<EventTrigger>();
-        EventTrigger.Entry de = new EventTrigger.Entry { eventID = EventTriggerType.Drag };
-        de.callback.AddListener(d => { PointerEventData pe = (PointerEventData)d; if (pe.button == PointerEventData.InputButton.Left) Pan(pe.delta); });
-        drag.triggers.Add(de);
 
         viewport = UIKit.Rect("Viewport", root, Vector2.zero, Vector2.zero);
         Stretch(viewport);
@@ -227,8 +253,8 @@ public class SoulTreeUI : MonoBehaviour
         affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
         UIKit.MakeButton(root, "", new Vector2(790f, 480f), new Vector2(230f, 62f), Close, 24f)
             .GetComponentInChildren<TMP_Text>().text = Loc.T("닫기") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]";
-        UIKit.MakeButton(root, "", new Vector2(540f, 480f), new Vector2(200f, 62f), Recenter, 22f)
-            .GetComponentInChildren<TMP_Text>().text = Loc.T("가운데로") + " [C]";
+        UIKit.MakeButton(root, "", new Vector2(540f, 480f), new Vector2(200f, 62f), Fit, 22f)
+            .GetComponentInChildren<TMP_Text>().text = Loc.T("전체 보기") + " [F]";
         footText = UIKit.Text(root, "", 22f, Dim, new Vector2(0f, -508f), new Vector2(1800f, 36f));
         // 가지 색 범례 (트리 위에 이름을 띄우면 칸과 겹쳐서, 위 띠에 한 줄로)
         string legend = "";
@@ -237,6 +263,9 @@ public class SoulTreeUI : MonoBehaviour
         UIKit.Text(root, "", 22f, Parch, new Vector2(0f, 428f), new Vector2(1200f, 30f)).text = legend;
 
         Rebuild();
+        // 처음 열 때는 전체 보기, 그 뒤로는 보던 자리 (새 범위 안으로)
+        if (!fittedOnce) { fittedOnce = true; Fit(); }
+        else ClampPan();
     }
 
     void Rebuild()
@@ -273,7 +302,15 @@ public class SoulTreeUI : MonoBehaviour
             views.Add(v);
         }
         footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
-                      + "  ·  " + Loc.T("끌기 · WASD 이동, 휠 확대") + "  ·  " + Loc.T("[Shift]+[T] 트리를 열지 않고 빠르게 배우기");
+                      + "  ·  " + Loc.T("끌기 · WASD · 화면 끝으로 이동, 휠 확대, [F] 전체 보기");
+        // 보이는 칸의 범위 (이동 한도 · 전체 보기)
+        bounds = new Rect(-120f, -120f, 240f, 240f);
+        foreach (NodeView v in views)
+        {
+            Vector2 q = v.rect.anchoredPosition;
+            bounds.xMin = Mathf.Min(bounds.xMin, q.x - 60f); bounds.xMax = Mathf.Max(bounds.xMax, q.x + 60f);
+            bounds.yMin = Mathf.Min(bounds.yMin, q.y - 80f); bounds.yMax = Mathf.Max(bounds.yMax, q.y + 60f);
+        }
         Refresh();
     }
 
