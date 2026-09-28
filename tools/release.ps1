@@ -13,7 +13,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $Project = Split-Path $PSScriptRoot -Parent
-$Work = Join-Path $env:LOCALAPPDATA "FuxkBuild"
+$Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
 $CopyDir = Join-Path $Work "Project"
 $OutDir = Join-Path $Work "Out"
 $Gh = (Get-Command gh -ErrorAction SilentlyContinue).Source

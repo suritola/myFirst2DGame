@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 
 $Project = Split-Path $PSScriptRoot -Parent
 $Config = Get-Content (Join-Path $PSScriptRoot "steam\steam-config.json") -Raw | ConvertFrom-Json
-$Work = Join-Path $env:LOCALAPPDATA "FuxkBuild"
+$Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
 $CopyDir = Join-Path $Work "Project"
 $OutDir = Join-Path $Work "SteamOut"
 $ScriptDir = Join-Path $Work "SteamScripts"

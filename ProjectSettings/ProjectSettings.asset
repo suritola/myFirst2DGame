@@ -631,14 +631,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Fuxk
+  metroPackageName: SoulSaver
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: Fuxk
+  metroApplicationDescription: Soul Saver
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
