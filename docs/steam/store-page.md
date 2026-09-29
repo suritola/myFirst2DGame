@@ -5,6 +5,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 > 게임 이름은 v3.2부터 **Soul Saver** 입니다. (예전 이름 Gun Saver)
 > 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
+> 1.8.6 기준으로 다시 썼습니다: 무기 진화 · 영혼 트리(운명 가지) · 스킨 상점 · 도전 과제 32개. 예전 글의 "특수 능력 52종 · 상점 무기 강화"는 1.7.8에 없어진 방식이라 뺐습니다.
 
 ## 기본 정보
 
@@ -18,7 +19,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 | 플랫폼 | Windows |
 | 컨트롤러 | 지원 안 함 (키보드 · 마우스) |
 | 플레이어 | 싱글플레이어 |
-| 스팀 기능 | 스팀 도전 과제(26개) |
+| 스팀 기능 | 스팀 도전 과제(32개) |
 
 ---
 
@@ -27,7 +28,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **짧은 설명**
 
 ```
-리치 왕이 깨운 망자들로부터 세상의 영혼을 지켜라! 저마다 다른 무기와 기술을 가진 영웅을 골라 지하 묘역, 불타는 지옥, 초원을 돌파하는 도트 그래픽 탑다운 액션 로그라이트.
+리치 왕이 깨운 망자들로부터 세상의 영혼을 지켜라! 영웅을 골라 보스를 쓰러뜨릴 때마다 무기를 진화시키고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 탑다운 액션 로그라이트.
 ```
 
 **상세 설명**
@@ -35,22 +36,32 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 ```
 [h2]영혼을 구할 영웅들[/h2]
 리치 왕이 지하 묘역을 깨우자 죽은 자들이 땅 위로 기어 나왔다. 무너진 신전의 구멍 아래로 뛰어들 영웅을 고르세요.
-[b]10칸의 캐릭터 도감[/b]에는 저마다 다른 무기 · 우클릭 기술 · 특수 능력을 가진 영웅들이 기다립니다. 처음에는 셋만 함께하고, 나머지는 적을 처치해 모은 포인트로 한 명씩 불러옵니다. 아직 모습을 드러내지 않은 [b]비밀 영웅[/b]도 있으며, 새 영웅은 앞으로도 계속 추가됩니다.
+[b]10칸의 캐릭터 도감[/b]에는 저마다 다른 무기와 우클릭 기술을 가진 영웅들이 기다립니다. 처음에는 셋만 함께하고, 나머지는 적을 처치해 모은 포인트로 한 명씩 불러옵니다. 아직 모습을 드러내지 않은 [b]비밀 영웅[/b]도 있습니다.
 [list]
-[*][b]거너[/b] — 리볼버와 여러 특수 총기, 시간을 늦추는 타겟팅 필살기
+[*][b]거너[/b] — 리볼버와 시간을 늦추는 타겟팅 필살기
 [*][b]검사[/b] — 장검을 크게 휘둘러 적 무리를 직접 베고, 누를수록 강해지는 회전 베기
 [*][b]도적[/b] — 쉴 새 없는 표창 세례와 무적 출혈 돌진
-[*][b]궁수[/b] — 적을 꿰뚫는 화살과 하늘을 덮는 화살비
+[*][b]궁수[/b] — 당길수록 강해지는 화살과 하늘을 덮는 화살비
 [*][b]연금술사[/b] — 터지는 플라스크와 누를수록 커지는 대폭발
 [*][b]???[/b] — 검은 실루엣 너머의 비밀 영웅들
 [/list]
 영웅마다 시작과 엔딩 이야기도 다릅니다.
 
-[h2]나만의 빌드[/h2]
+[h2]보스를 쓰러뜨리면 무기가 진화한다[/h2]
+스테이지 보스를 쓰러뜨릴 때마다 지금 무기가 부서지며 [b]진화 카드 3장[/b]이 펼쳐집니다. 한 판에 두 번, 되돌릴 수 없는 선택입니다.
 [list]
-[*][b]레벨업 카드[/b] — 공통 카드와 영웅의 무기에 맞춘 전용 카드
-[*][b]특수 능력 52종[/b] — 영웅마다 다른 무기 · 스킬 · 패시브. 중간 보스를 잡고 얻은 포인트로 [b]진화[/b]
-[*][b]상점 강화[/b] — 코인으로 능력치와 무기를 강화
+[*][b]거너[/b] — 권총이 화염 방사기 · 영혼 저격총 · 저주받은 쌍권총으로, 다시 레일건 · 번개 사슬총 · 부메랑 낫 등으로
+[*][b]다른 영웅[/b] — 평타의 모양 자체가 바뀝니다. 전쟁 망치 · 기창 · 도박 카드 · 투창 · 자석 폭탄 …
+[/list]
+지금까지 고른 레벨업 카드와 영혼 트리 강화는 진화한 무기로 그대로 이어집니다.
+
+[h2]100칸이 넘는 영혼 트리[/h2]
+적을 쓰러뜨려 모은 [b]영혼 조각[/b]으로 [b]무기 · 필살기 · 운명 · 생존 · 영혼 · 재물[/b] 여섯 가지의 칸을 배웁니다.
+[list]
+[*]영웅마다 다른 트리 — 전용 무기 칸, 패시브와 그 진화
+[*]배운 칸의 다음 칸만 드러나는 숨겨진 가지
+[*][b]운명[/b] 가지 — 레벨업 카드 다시 뽑기, 시간의 틈, 중력 우물, 저주 전이, 영혼 메아리 …
+[*]지금 무기에 쓸모없는 칸과 카드는 나오지 않습니다
 [/list]
 
 [h2]세 개의 세계, 세 명의 왕[/h2]
@@ -59,11 +70,14 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [h2]난이도와 무한 모드[/h2]
 쉬움 · 보통 · 어려움 세 난이도. 어려움을 클리어하면 모든 괴물과 보스가 끝없이 몰려오는 [b]불타는 사막 무한 모드[/b]가 열립니다.
 
+[h2]스킨 상점[/h2]
+모은 포인트로 [b]캐릭터 스킨 20종 · 무기 스킨 10종 · 이펙트 스킨 4종[/b]을 삽니다. 등급이 오를수록 장식, 움직일 때 잔상, 오라, 처치 연출과 전용 소리가 더해집니다. 스킨은 겉모습과 소리만 바꾸고 판정은 그대로입니다.
+
 [h2]그 밖에[/h2]
 [list]
-[*]적 · 보스 · 능력 · 캐릭터 도감
+[*]적 · 보스 · 무기 · 운명 · 진화 도감
 [*]머리 위로 튀는 피해 숫자, 화려한 도트 이펙트와 스테이지별 음악
-[*]스팀 도전 과제 26개
+[*]스팀 도전 과제 32개
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -73,7 +87,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **Short description**
 
 ```
-Save the world's souls from the dead the Lich King awakened! Choose from a growing roster of heroes, each with their own weapon and skills, and fight through the Catacombs, the Burning Hell and the Meadow in this pixel-art top-down action roguelite.
+Save the world's souls from the dead the Lich King awakened! Choose a hero, evolve your weapon with every boss you defeat, and shape your own build across a Soul Tree of 100+ nodes in this pixel-art top-down action roguelite.
 ```
 
 **About this game**
@@ -81,22 +95,32 @@ Save the world's souls from the dead the Lich King awakened! Choose from a growi
 ```
 [h2]Heroes to save the souls[/h2]
 When the Lich King woke the catacombs, the dead crawled up to the surface. Choose the hero who will leap into the hole beneath the ruined temple.
-A [b]10-slot character codex[/b] holds heroes with their own weapons, right-click skills and special abilities. Three join you from the start; the rest are unlocked one by one with points earned from defeating enemies. Some [b]secret heroes[/b] have yet to reveal themselves, and more heroes will keep arriving in future updates.
+A [b]10-slot character codex[/b] holds heroes with their own weapons and right-click skills. Three join you from the start; the rest are unlocked one by one with points earned from defeating enemies. Some [b]secret heroes[/b] have yet to reveal themselves.
 [list]
-[*][b]Gunner[/b] — a revolver, special firearms and a time-slowing targeting ultimate
+[*][b]Gunner[/b] — a revolver and a time-slowing targeting ultimate
 [*][b]Swordsman[/b] — swing a longsword wide to cut through crowds, plus a spin slash that grows as you hold
 [*][b]Rogue[/b] — a nonstop hail of throwing stars and an invincible Bleeding Dash
-[*][b]Archer[/b] — piercing arrows and a sky-darkening arrow rain
+[*][b]Archer[/b] — arrows that grow stronger the longer you draw, and a sky-darkening arrow rain
 [*][b]Alchemist[/b] — exploding flasks and a mega blast that grows as you hold
 [*][b]???[/b] — secret heroes hidden behind black silhouettes
 [/list]
 Every hero also has their own opening and ending story.
 
-[h2]Build your run[/h2]
+[h2]Defeat a boss, evolve your weapon[/h2]
+Each time you defeat a stage boss, your weapon shatters and [b]three evolution cards[/b] appear. Twice per run, and there's no going back.
 [list]
-[*][b]Level-up cards[/b] — shared cards plus cards tailored to each hero's weapon
-[*][b]52 special abilities[/b] — unique weapons, skills and passives for every hero. [b]Evolve[/b] them with points from mid-bosses
-[*][b]Shop upgrades[/b] — spend coins on stats and weapons
+[*][b]Gunner[/b] — the pistol becomes a flamethrower, soul sniper or cursed dual pistols, then a railgun, chain-lightning gun, boomerang scythe and more
+[*][b]Other heroes[/b] — the basic attack itself changes shape: war hammer, lance, gambler's cards, javelin, magnet bomb …
+[/list]
+Your level-up cards and Soul Tree upgrades carry over to the evolved weapon.
+
+[h2]A Soul Tree of 100+ nodes[/h2]
+Spend the [b]soul shards[/b] dropped by enemies on six branches: [b]Weapon, Ultimate, Fate, Survival, Soul and Wealth[/b].
+[list]
+[*]A different tree for every hero — unique weapon nodes, passives and their evolutions
+[*]Hidden branches that reveal only the next node as you learn
+[*]The [b]Fate[/b] branch — reroll level-up cards, Time Rift, Gravity Well, Curse Transfer, Soul Echo …
+[*]Nodes and cards that don't fit your current weapon simply don't appear
 [/list]
 
 [h2]Three worlds, three kings[/h2]
@@ -105,11 +129,14 @@ The Lich King of the Catacombs, the Demon Lord of the Burning Hell and the King 
 [h2]Difficulties and Endless Mode[/h2]
 Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/b], where every monster and boss keeps coming.
 
+[h2]Skin Shop[/h2]
+Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/b]. Higher tiers add ornaments, motion trails, auras, kill effects and unique sounds. Skins only change looks and sounds, never hitboxes.
+
 [h2]And more[/h2]
 [list]
-[*]A codex for enemies, bosses, abilities and characters
+[*]A codex for enemies, bosses, weapons, Fate and evolutions
 [*]Damage numbers, flashy pixel effects and music for every stage
-[*]26 Steam achievements
+[*]32 Steam achievements
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -119,7 +146,7 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 **短い説明**
 
 ```
-リッチ王が目覚めさせた亡者から世界の魂を守れ！それぞれ異なる武器と技を持つ英雄を選び、地下墓所、燃える地獄、草原を突破するドット絵トップダウンアクション・ローグライト。
+リッチ王が目覚めさせた亡者から世界の魂を守れ！英雄を選び、ボスを倒すたびに武器を進化させ、100マスを超える魂のツリーで自分だけのビルドを完成させるドット絵トップダウンアクション・ローグライト。
 ```
 
 **このゲームについて**
@@ -127,22 +154,32 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 ```
 [h2]魂を救う英雄たち[/h2]
 リッチ王が地下墓所を目覚めさせると、死者たちが地上へ這い出してきた。崩れた神殿の穴へ飛び込む英雄を選ぼう。
-[b]10枠のキャラクター図鑑[/b]には、それぞれ異なる武器・右クリック技・特殊能力を持つ英雄たちが待っている。最初に仲間になるのは三人、残りは敵を倒して集めたポイントで一人ずつ解放。まだ姿を見せていない[b]秘密の英雄[/b]もおり、新たな英雄は今後も追加されていく。
+[b]10枠のキャラクター図鑑[/b]には、それぞれ異なる武器と右クリック技を持つ英雄たちが待っている。最初に仲間になるのは三人、残りは敵を倒して集めたポイントで一人ずつ解放。まだ姿を見せていない[b]秘密の英雄[/b]もいる。
 [list]
-[*][b]ガンナー[/b] — リボルバーと様々な特殊銃、時間を遅くするターゲティング必殺技
+[*][b]ガンナー[/b] — リボルバーと時間を遅くするターゲティング必殺技
 [*][b]剣士[/b] — 長剣を大きく振るって敵の群れを直接斬り、押すほど強くなる回転斬り
 [*][b]盗賊[/b] — 絶え間ない手裏剣の雨と無敵の出血突進
-[*][b]弓使い[/b] — 敵を貫く矢と空を覆う矢の雨
+[*][b]弓使い[/b] — 引くほど強くなる矢と空を覆う矢の雨
 [*][b]錬金術師[/b] — 弾けるフラスコと押すほど大きくなる大爆発
 [*][b]???[/b] — 黒いシルエットに隠された秘密の英雄たち
 [/list]
 英雄ごとにオープニングとエンディングの物語も異なる。
 
-[h2]自分だけのビルド[/h2]
+[h2]ボスを倒すと武器が進化する[/h2]
+ステージボスを倒すたびに今の武器が砕け、[b]進化カード3枚[/b]が広がる。1回のプレイで2回、やり直しのきかない選択だ。
 [list]
-[*][b]レベルアップカード[/b] — 共通カードと、英雄の武器に合わせた専用カード
-[*][b]特殊能力52種[/b] — 英雄ごとに異なる武器・スキル・パッシブ。中ボスから得たポイントで[b]進化[/b]
-[*][b]ショップ強化[/b] — コインでステータスと武器を強化
+[*][b]ガンナー[/b] — 拳銃が火炎放射器・魂の狙撃銃・呪われた二丁拳銃に、さらにレールガン・連鎖雷銃・ブーメラン鎌などへ
+[*][b]他の英雄[/b] — 通常攻撃の形そのものが変わる。戦槌・騎槍・賭博カード・投げ槍・磁石爆弾 …
+[/list]
+選んだレベルアップカードと魂のツリーの強化は、進化した武器にそのまま引き継がれる。
+
+[h2]100マスを超える魂のツリー[/h2]
+敵を倒して集めた[b]魂のかけら[/b]で、[b]武器・必殺技・運命・生存・魂・財宝[/b]の六つの枝のマスを習得する。
+[list]
+[*]英雄ごとに異なるツリー — 専用の武器マス、パッシブとその進化
+[*]習得したマスの次だけが現れる隠された枝
+[*][b]運命[/b]の枝 — レベルアップカードの引き直し、時の裂け目、重力井戸、呪いの伝染、魂の残響 …
+[*]今の武器に合わないマスやカードは出てこない
 [/list]
 
 [h2]三つの世界、三人の王[/h2]
@@ -151,11 +188,14 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 [h2]難易度とエンドレスモード[/h2]
 イージー・ノーマル・ハードの三つの難易度。ハードをクリアすると、すべての怪物とボスが押し寄せる[b]燃える砂漠のエンドレスモード[/b]が解放される。
 
+[h2]スキンショップ[/h2]
+集めたポイントで[b]キャラクタースキン20種・武器スキン10種・エフェクトスキン4種[/b]を購入。等級が上がるほど装飾、移動時の残像、オーラ、撃破演出と専用サウンドが加わる。スキンは見た目と音だけを変え、当たり判定はそのまま。
+
 [h2]その他[/h2]
 [list]
-[*]敵・ボス・能力・キャラクター図鑑
+[*]敵・ボス・武器・運命・進化の図鑑
 [*]頭上に飛び出すダメージ数値、派手なドットエフェクトとステージごとのBGM
-[*]Steam実績26個
+[*]Steam実績32個
 [*]한국어・English・日本語・简体中文
 [/list]
 ```
@@ -165,7 +205,7 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 **简短描述**
 
 ```
-从巫妖王唤醒的亡者手中守护世界的灵魂！选择拥有各自武器与技能的英雄，突破地下墓穴、燃烧地狱与草原——像素风俯视角动作肉鸽游戏。
+从巫妖王唤醒的亡者手中守护世界的灵魂！选择英雄，每击败一位首领就进化你的武器，在超过100个节点的灵魂树中打造专属流派——像素风俯视角动作肉鸽游戏。
 ```
 
 **关于这款游戏**
@@ -173,22 +213,32 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 ```
 [h2]拯救灵魂的英雄们[/h2]
 巫妖王唤醒了地下墓穴，亡者纷纷爬上了地面。选择一位英雄，跃入倒塌神殿下的深洞。
-[b]10格角色图鉴[/b]中，拥有各自武器、右键技能与特殊能力的英雄们正在等待。开局有三位同伴，其余英雄需用击败敌人累积的点数逐一解锁。还有尚未现身的[b]秘密英雄[/b]，新的英雄也将在今后持续加入。
+[b]10格角色图鉴[/b]中，拥有各自武器与右键技能的英雄们正在等待。开局有三位同伴，其余英雄需用击败敌人累积的点数逐一解锁。还有尚未现身的[b]秘密英雄[/b]。
 [list]
-[*][b]枪手[/b] — 左轮手枪与多种特殊枪械，以及让时间变慢的瞄准必杀技
+[*][b]枪手[/b] — 左轮手枪与让时间变慢的瞄准必杀技
 [*][b]剑士[/b] — 大幅挥舞长剑直接斩开敌群，按得越久越强的回旋斩
 [*][b]盗贼[/b] — 连绵不断的飞镖与无敌的出血突进
-[*][b]弓箭手[/b] — 穿透之箭与遮天箭雨
+[*][b]弓箭手[/b] — 拉得越久越强的箭矢与遮天箭雨
 [*][b]炼金术士[/b] — 爆炸烧瓶与按得越久越大的大爆炸
 [*][b]???[/b] — 隐藏在黑色剪影后的秘密英雄
 [/list]
 每位英雄都有专属的开场与结局故事。
 
-[h2]打造你的流派[/h2]
+[h2]击败首领，武器进化[/h2]
+每击败一位关卡首领，当前的武器就会碎裂，展开[b]3张进化卡牌[/b]。每局两次，一旦选择无法反悔。
 [list]
-[*][b]升级卡牌[/b] — 通用卡牌与配合英雄武器的专属卡牌
-[*][b]52种特殊能力[/b] — 每位英雄各不相同的武器·技能·被动。用击败精英首领获得的点数将其[b]进化[/b]
-[*][b]商店强化[/b] — 用金币强化属性与武器
+[*][b]枪手[/b] — 手枪进化为火焰喷射器、灵魂狙击枪或诅咒双枪，再进化为轨道炮、连锁闪电枪、回旋镰刀等
+[*][b]其他英雄[/b] — 普通攻击的形态本身都会改变：战锤、骑枪、赌徒卡牌、投枪、磁力炸弹……
+[/list]
+已选择的升级卡牌与灵魂树强化会原样继承到进化后的武器上。
+
+[h2]超过100个节点的灵魂树[/h2]
+用击败敌人收集的[b]灵魂碎片[/b]，学习[b]武器、必杀技、命运、生存、灵魂、财富[/b]六大分支的节点。
+[list]
+[*]每位英雄的树各不相同 — 专属武器节点、被动技能及其进化
+[*]只显示已学节点下一格的隐藏分支
+[*][b]命运[/b]分支 — 重抽升级卡牌、时间裂隙、重力井、诅咒转移、灵魂回响……
+[*]与当前武器不匹配的节点和卡牌不会出现
 [/list]
 
 [h2]三个世界，三位王者[/h2]
@@ -197,11 +247,14 @@ Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/
 [h2]难度与无尽模式[/h2]
 简单、普通、困难三种难度。通关困难后将解锁所有怪物与首领源源不断涌来的[b]燃烧沙漠无尽模式[/b]。
 
+[h2]皮肤商店[/h2]
+用累积的点数购买[b]20款角色皮肤、10款武器皮肤与4款特效皮肤[/b]。品级越高，装饰、移动残影、光环、击杀演出与专属音效就越丰富。皮肤只改变外观与声音，判定范围保持不变。
+
 [h2]更多内容[/h2]
 [list]
-[*]敌人·首领·能力·角色图鉴
+[*]敌人·首领·武器·命运·进化图鉴
 [*]头顶弹出的伤害数字、华丽的像素特效与各关卡专属音乐
-[*]26个Steam成就
+[*]32个Steam成就
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```

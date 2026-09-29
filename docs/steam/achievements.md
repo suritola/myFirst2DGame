@@ -3,7 +3,7 @@
 Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 32개를 만듭니다.
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
-- 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `.png` (`tools/steam/make_achievement_icons.py`)
+- 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `tools/steam/make_achievement_icons.py` 로 만든 PNG를 JPG로 변환 (Steamworks는 JPG 권장)
 - 모두 **숨김 아님**으로 두면 됩니다. (`ACH_CLEAR`만 숨김으로 해도 좋음)
 - `ACH_KILLS_3000_TOTAL`의 누적 처치 수는 이 PC에 저장됩니다 (PlayerPrefs `stats.totalKills`).
 - 다 만든 뒤 **게시(Publish)**를 눌러야 적용됩니다.

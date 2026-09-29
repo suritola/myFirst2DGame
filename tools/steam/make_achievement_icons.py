@@ -1,5 +1,6 @@
 # 새 업적 아이콘 (1.8.6~): 게임 도트를 StoreArtTests와 같은 구도로 합성 — 금테 · 색 배경 · 가운데 도트
 # 달성 <API>.png, 미달성 <API>_locked.png (회색 · 밝기 55%), 256×256
+# Steamworks에는 JPG로 올림: PowerShell System.Drawing 으로 .jpg 변환 후 PNG는 지움
 # 실행 (저장소 루트에서): python tools/steam/make_achievement_icons.py
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'pixelart'))
