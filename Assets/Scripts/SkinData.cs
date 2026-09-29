@@ -119,6 +119,9 @@ public static class SkinData
         PlayerPrefs.Save();
     }
 
+    // 스킨을 샀을 때 (업적)
+    public static event System.Action<SkinDef> Bought;
+
     // 사면 true (포인트 차감 · 바로 장착)
     public static bool Buy(SkinDef s)
     {
@@ -126,6 +129,7 @@ public static class SkinData
         CharacterData.SpendPoints(s.Price);
         PlayerPrefs.SetInt("skin.own." + s.id, 1);
         Equip(s);
+        Bought?.Invoke(s);
         return true;
     }
 

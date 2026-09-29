@@ -1,9 +1,9 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 26개를 만듭니다.
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 32개를 만듭니다.
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
-- 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256)
+- 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `.png` (`tools/steam/make_achievement_icons.py`)
 - 모두 **숨김 아님**으로 두면 됩니다. (`ACH_CLEAR`만 숨김으로 해도 좋음)
 - `ACH_KILLS_3000_TOTAL`의 누적 처치 수는 이 PC에 저장됩니다 (PlayerPrefs `stats.totalKills`).
 - 다 만든 뒤 **게시(Publish)**를 눌러야 적용됩니다.
@@ -14,7 +14,7 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_ENTER_HELL` | **지옥의 문** — 불타는 지옥에 들어섰다 | **Gates of Hell** — Enter the Burning Hell | **地獄の門** — 燃える地獄に足を踏み入れた | **地狱之门** — 进入燃烧地狱 |
 | `ACH_ENTER_MEADOW` | **바깥 공기** — 초원에 다다랐다 | **Fresh Air** — Reach the Meadow | **外の空気** — 草原にたどり着いた | **新鲜空气** — 抵达草原 |
 | `ACH_MIDBOSS` | **덩치 큰 녀석** — 중간 보스를 처치했다 | **Big One Down** — Defeat a mid-boss | **大物退治** — 中ボスを倒した | **大家伙** — 击败精英首领 |
-| `ACH_EVOLVE` | **진화** — 특수 능력을 처음 진화시켰다 | **Evolution** — Evolve a special ability | **進化** — 特殊能力を初めて進化させた | **进化** — 首次进化特殊能力 |
+| `ACH_EVOLVE` | **진화** — 능력을 처음 진화시켰다 | **Evolution** — Evolve an ability for the first time | **進化** — 初めて能力を進化させた | **进化** — 首次进化能力 |
 | `ACH_LEVEL_10` | **숙련된 총잡이** — 한 판에서 레벨 10에 도달했다 | **Seasoned Gunner** — Reach level 10 in one run | **熟練ガンナー** — 1回のプレイでレベル10に到達 | **老练枪手** — 单局达到10级 |
 | `ACH_KILLS_500` | **학살자** — 한 판에서 적 500마리를 처치했다 | **Slayer** — Defeat 500 enemies in one run | **殲滅者** — 1回のプレイで敵を500体倒した | **屠戮者** — 单局击败500个敌人 |
 | `ACH_BOSS_LICH` | **왕의 몰락** — 리치 왕을 쓰러뜨렸다 | **Fall of the King** — Defeat the Lich King | **王の失墜** — リッチ王を倒した | **王之陨落** — 击败巫妖王 |
@@ -22,8 +22,8 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_CLEAR` | **Soul Saver** — 킹 슬라임을 쓰러뜨리고 게임을 클리어했다 | **Soul Saver** — Defeat the King Slime and clear the game | **Soul Saver** — キングスライムを倒してゲームをクリア | **Soul Saver** — 击败史莱姆王，通关游戏 |
 | `ACH_FIRST_DEATH` | **다시 일어나라** — 처음으로 쓰러졌다 | **Get Back Up** — Fall in battle for the first time | **立ち上がれ** — 初めて倒れた | **重新站起来** — 第一次倒下 |
 | `ACH_SHOPPER` | **단골 손님** — 떠돌이 상점을 처음 열었다 | **Regular Customer** — Open the wandering shop | **常連客** — さすらいのショップを初めて開いた | **老主顾** — 第一次打开流浪商店 |
-| `ACH_FULL_SKILLS` | **손이 모자라** — 스킬 칸 3개를 모두 채웠다 | **All Hands** — Fill all 3 skill slots | **手が足りない** — スキル枠3つをすべて埋めた | **手忙脚乱** — 填满全部3个技能栏 |
-| `ACH_ARSENAL` | **무기고** — 특수 무기 2개를 동시에 가졌다 | **Arsenal** — Carry 2 special weapons at once | **武器庫** — 特殊武器を2つ同時に持った | **军火库** — 同时拥有2把特殊武器 |
+| `ACH_FULL_SKILLS` | **운명을 쥐다** — 한 판에서 운명 가지 칸 3개를 배웠다 | **Hold Your Fate** — Learn 3 Fate nodes in one run | **運命を握る** — 1回のプレイで運命の枝を3マス習得した | **执掌命运** — 单局学习3个命运节点 |
+| `ACH_ARSENAL` | **완성된 무기** — 한 판에서 무기를 두 번 진화시켰다 | **Perfected Weapon** — Evolve your weapon twice in one run | **完成された武器** — 1回のプレイで武器を2回進化させた | **完美武器** — 单局将武器进化两次 |
 | `ACH_EVOLVE_3` | **완전체** — 한 판에서 능력 3개를 진화시켰다 | **Final Form** — Evolve 3 abilities in one run | **完全体** — 1回のプレイで能力を3つ進化させた | **完全体** — 单局进化3项能力 |
 | `ACH_ULT_30` | **필살기 중독** — 한 판에서 필살기를 30번 사용했다 | **Ultimate Addict** — Use 30 ultimates in one run | **必殺技中毒** — 1回のプレイで必殺技を30回使った | **必杀成瘾** — 单局使用30次必杀技 |
 | `ACH_LEVEL_15` | **베테랑** — 한 판에서 레벨 15에 도달했다 | **Veteran** — Reach level 15 in one run | **ベテラン** — 1回のプレイでレベル15に到達 | **老兵** — 单局达到15级 |
@@ -36,6 +36,12 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_ENDLESS_10` | **사막의 방랑자** — 무한 모드에서 10분 동안 살아남았다 | **Desert Wanderer** — Survive 10 minutes in Endless | **砂漠の放浪者** — エンドレスで10分間生き延びた | **沙漠流浪者** — 在无尽模式中存活10分钟 |
 | `ACH_ENDLESS_20` | **사막의 주인** — 무한 모드에서 20분 동안 살아남았다 | **Lord of the Desert** — Survive 20 minutes in Endless | **砂漠の主** — エンドレスで20分間生き延びた | **沙漠之主** — 在无尽模式中存活20分钟 |
 | `ACH_ENDLESS_BOSSES` | **왕들의 무덤** — 무한 모드 한 판에서 보스 5마리를 쓰러뜨렸다 | **Graveyard of Kings** — Defeat 5 bosses in one Endless run | **王たちの墓場** — エンドレス1回でボスを5体倒した | **王者之墓** — 单局无尽模式击败5个首领 |
+| `ACH_WEAPON_EVOLVE` | **새로운 무기** — 무기를 처음 진화시켰다 | **New Weapon** — Evolve your weapon for the first time | **新たな武器** — 初めて武器を進化させた | **新武器** — 首次进化武器 |
+| `ACH_TREE_20` | **뿌리 내리기** — 한 판에서 영혼 트리 칸 20개를 배웠다 | **Taking Root** — Learn 20 Soul Tree nodes in one run | **根を張る** — 1回のプレイで魂のツリーを20マス習得した | **扎根** — 单局学习20个灵魂树节点 |
+| `ACH_TREE_40` | **세계수** — 한 판에서 영혼 트리 칸 40개를 배웠다 | **World Tree** — Learn 40 Soul Tree nodes in one run | **世界樹** — 1回のプレイで魂のツリーを40マス習得した | **世界树** — 单局学习40个灵魂树节点 |
+| `ACH_REROLL` | **운명 비틀기** — 레벨업 카드를 다시 뽑았다 | **Twist of Fate** — Reroll your level-up cards | **運命のいたずら** — レベルアップカードを引き直した | **命运转折** — 重抽升级卡牌 |
+| `ACH_SKIN` | **새 옷** — 스킨 상점에서 스킨을 처음 샀다 | **New Look** — Buy your first skin in the Skin Shop | **新しい装い** — スキンショップで初めてスキンを買った | **新装扮** — 首次在皮肤商店购买皮肤 |
+| `ACH_SKIN_LEGEND` | **전설의 풍모** — 전설 등급 스킨을 샀다 | **Legendary Style** — Buy a Legendary skin | **伝説の風格** — レジェンドスキンを買った | **传奇风范** — 购买传说皮肤 |
 
 ## 풀리는 조건 (코드 기준)
 
@@ -44,13 +50,13 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_FIRST_ULT` | 우클릭 필살기 발동 (조준형 · 즉발형 모두) |
 | `ACH_ENTER_HELL` / `ACH_ENTER_MEADOW` | 스테이지 2 / 3 시작 |
 | `ACH_MIDBOSS` | 중간 보스 처치 |
-| `ACH_EVOLVE` | 특수 강화(T)에서 능력 진화 |
+| `ACH_EVOLVE` | 능력 진화 (영혼 트리의 패시브 진화, 거너 무기 2차 진화) |
 | `ACH_LEVEL_10` | 플레이어 레벨 10 |
 | `ACH_KILLS_500` | 한 판(게임 씬을 새로 시작한 뒤) 처치 수 500 |
 | `ACH_BOSS_LICH` / `ACH_BOSS_DEMON` / `ACH_CLEAR` | 스테이지 1 / 2 / 3 보스 처치 |
 | `ACH_FIRST_DEATH` | 게임 오버 화면에 처음 도달 |
 | `ACH_SHOPPER` | 떠돌이 상점 제단에서 상점을 엶 |
-| `ACH_FULL_SKILLS` / `ACH_ARSENAL` | 스킬 3개 보유 / 특수 무기 2개 보유 |
+| `ACH_FULL_SKILLS` / `ACH_ARSENAL` | 한 판에서 운명 가지 칸 3개 / 무기 2차 진화 (1.8.6에 조건 변경: 예전 조건인 스킬 3개 · 특수 무기 2개는 1.8.2에 스킬이 빠지며 달성할 수 없게 됨. API 이름은 그대로) |
 | `ACH_EVOLVE_3` / `ACH_ULT_30` | 한 판에서 진화 3회 / 필살기 30회 |
 | `ACH_LEVEL_15` | 플레이어 레벨 15 |
 | `ACH_KILLS_3000_TOTAL` | 여러 판 누적 처치 수 3000 |
@@ -59,6 +65,10 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_UNLOCK_DIFFICULTY` / `ACH_CLEAR_NORMAL` / `ACH_CLEAR_HARD` | 쉬움 / 보통 / 어려움에서 3장 보스(킹 슬라임) 처치 |
 | `ACH_ENDLESS_10` / `ACH_ENDLESS_20` | 무한 모드 한 판에서 10분 / 20분 생존 (일시정지 시간은 빼고) |
 | `ACH_ENDLESS_BOSSES` | 무한 모드 한 판에서 보스 5마리 처치 |
+| `ACH_WEAPON_EVOLVE` | 보스를 쓰러뜨리고 무기 1차 진화 |
+| `ACH_TREE_20` / `ACH_TREE_40` | 한 판에서 영혼 트리 칸 20 / 40개 배움 (모든 가지 합) |
+| `ACH_REROLL` | 레벨업 창에서 [R] 다시 뽑기 (운명의 실) |
+| `ACH_SKIN` / `ACH_SKIN_LEGEND` | 스킨을 처음 삼 / 전설 스킨을 삼 (예전에 산 스킨도 다음 실행 때 인정) |
 
 ## Steamworks 현지화 파일
 

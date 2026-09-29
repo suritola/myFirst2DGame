@@ -74,10 +74,13 @@ public partial class SpecialAbilities
     }
 
     // ---------------- 운명의 실: 레벨업 창에서 다시 뽑기 (LevelShop)
+    public static event System.Action Rerolled;     // 업적
+
     public bool TryReroll()
     {
         if (rerolls <= 0) return false;
         rerolls--;
+        Rerolled?.Invoke();
         if (fx != null) fx.Play("shimmer", 0.6f, 1.4f);
         return true;
     }

@@ -61,6 +61,21 @@ public class SteamManager : MonoBehaviour
         };
         Shop.StallOpened += () => SteamAchievements.Unlock(SteamAchievements.Shopper);
         StageManager.Cleared += OnCleared;
+        SpecialAbilities.Rerolled += () => SteamAchievements.Unlock(SteamAchievements.Reroll);
+        SkinData.Bought += OnSkinBought;
+    }
+
+    // 스킨 구매 (예전에 산 스킨은 씬을 불러올 때 CheckOwnedSkins로 확인)
+    void OnSkinBought(SkinDef s)
+    {
+        SteamAchievements.Unlock(SteamAchievements.Skin);
+        if (s.tier >= 3) SteamAchievements.Unlock(SteamAchievements.SkinLegend);
+    }
+
+    void CheckOwnedSkins()
+    {
+        foreach (SkinDef s in SkinData.All)
+            if (SkinData.Owns(s.id)) OnSkinBought(s);
     }
 
     // 한 판 클리어 (3장 보스): 난이도별 업적
@@ -87,6 +102,7 @@ public class SteamManager : MonoBehaviour
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "GameOver") SteamAchievements.Unlock(SteamAchievements.FirstDeath);
+        CheckOwnedSkins();
         if (scene.name != "GameScene") return;
         runKills = runEvolves = runUlts = 0;
         bossFight = false;
@@ -142,8 +158,18 @@ public class SteamManager : MonoBehaviour
         if (player != null && player.level >= 10) SteamAchievements.Unlock(SteamAchievements.Level10);
         if (player != null && player.level >= 15) SteamAchievements.Unlock(SteamAchievements.Level15);
         SpecialAbilities special = player != null ? player.special : null;
-        if (special != null && special.SkillCount >= 3) SteamAchievements.Unlock(SteamAchievements.FullSkills);
-        if (special != null && special.Weapons.Count >= 2) SteamAchievements.Unlock(SteamAchievements.Arsenal);
+        if (special != null)
+        {
+            // 1.8.2에 액티브 스킬이 빠져서 FullSkills는 운명 가지 3칸, Arsenal은 무기 2차 진화로 바꿈 (API 이름은 그대로)
+            int[] branch = special.OwnedPerBranch();
+            int learned = 0;
+            foreach (int c in branch) learned += c;
+            if (branch[2] >= 3) SteamAchievements.Unlock(SteamAchievements.FullSkills);
+            if (special.EvolutionTier >= 1) SteamAchievements.Unlock(SteamAchievements.WeaponEvolve);
+            if (special.EvolutionTier >= 2) SteamAchievements.Unlock(SteamAchievements.Arsenal);
+            if (learned >= 20) SteamAchievements.Unlock(SteamAchievements.Tree20);
+            if (learned >= 40) SteamAchievements.Unlock(SteamAchievements.Tree40);
+        }
         if (GameMode.IsEndless)
         {
             float s = GameMode.EndlessSeconds;
@@ -196,6 +222,12 @@ public static class SteamAchievements
     public const string Endless10 = "ACH_ENDLESS_10";
     public const string Endless20 = "ACH_ENDLESS_20";
     public const string EndlessBosses = "ACH_ENDLESS_BOSSES";
+    public const string WeaponEvolve = "ACH_WEAPON_EVOLVE";
+    public const string Tree20 = "ACH_TREE_20";
+    public const string Tree40 = "ACH_TREE_40";
+    public const string Reroll = "ACH_REROLL";
+    public const string Skin = "ACH_SKIN";
+    public const string SkinLegend = "ACH_SKIN_LEGEND";
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 

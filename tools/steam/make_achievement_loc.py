@@ -6,7 +6,7 @@ for line in open('docs/steam/achievements.md', encoding='utf-8'):
     m = re.match(r'\| `(ACH_[A-Z0-9_]+)` \| (.+) \| (.+) \| (.+) \| (.+) \|$', line.strip())
     if m and '**' in m.group(2):
         rows.append(m.groups())
-assert len(rows) == 26, len(rows)
+assert len(rows) == 32, len(rows)
 
 def split(cell):
     m = re.match(r'\*\*(.+?)\*\* — (.+)', cell.strip())
