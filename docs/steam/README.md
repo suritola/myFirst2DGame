@@ -74,7 +74,7 @@ pwsh tools/steam-upload.ps1 -Version v2.4            # 업로드 (처음엔 비�
 | `library_hero.png` | 3840×1240 | 라이브러리 히어로 (글자 없음) |
 | `library_logo.png` | 1280×720 | 라이브러리 로고 (투명 배경) |
 | `community_icon.jpg` | 184×184 | 커뮤니티 아이콘 |
-| `art/screenshots/*.png` | 1920×1080 | 스크린샷 (최소 5장) |
+| `art/screenshots/*.png` | 1920×1080 | 스크린샷 (최소 5장) · 1.8.6부터 실제 플레이 화면 (`tools/trailer/record.ps1`) |
 | `art/achievements/*.jpg` | 256×256 | 업적 아이콘 (달성 / 미달성) |
 
 이미지는 `tools/steam/store-art/`의 PlayMode 테스트로 게임 화면을 합성해 만들었습니다. 다시 만들려면 두 파일을 프로젝트 복사본의 `Assets/StoreArt/`에 넣고 `Unity -batchmode -runTests -testPlatform PlayMode`를 실행하세요 (환경 변수 `ART_OUT` = 저장 폴더). 스크린샷은 초안이라 직접 플레이하며 찍은 화면으로 바꾸는 것을 추천합니다.
