@@ -24,6 +24,23 @@ public static class Fx
         return id;
     }
 
+    // 1.8.7: 이펙트를 더 잘 보이게 — 장식 이펙트는 1.3배로 키우고, 크기가 곧 판정 범위인 이펙트는 그대로 (범위를 속이지 않게)
+    // 모든 이펙트에 짙은 윤곽선 · 채도 · 밝기 (SpriteOutline.EffectMaterial)
+    const float DecorScale = 1.3f;
+    static readonly HashSet<string> AreaFx = new HashSet<string>
+    {
+        "fx_shock", "fx_explosion", "fx_rune", "fx_reticle", "fx_warn", "fx_target_rune", "fx_puddle", "fx_vortex",
+        "fx_alchemyblast", "fx_fissure", "fx_geyser", "fx_firepillar", "fx_meteor", "fx_net", "fx_arrowrain", "fx_tornado",
+        "fx_beam", "fx_bolt", "fx_orb", "fx_slash", "fx_swordswing", "fx_spinslash", "fx_bigsword", "fx_swordwave",
+    };
+    static float Visible(string name, float size) => AreaFx.Contains(name) ? size : size * DecorScale;
+
+    static void Style(SpriteRenderer sr)
+    {
+        Material m = SpriteOutline.EffectMaterial;
+        if (m != null) sr.sharedMaterial = m;
+    }
+
     static int Index(string spriteName)
     {
         int i = spriteName.LastIndexOf('_');
@@ -37,10 +54,12 @@ public static class Fx
         Sprite[] frames = Frames(name);
         if (frames == null || frames.Length == 0) return null;
 
+        size = Visible(name, size);
         GameObject go = new GameObject(name);
         go.transform.position = new Vector3(pos.x, pos.y, 0f);
         go.transform.rotation = Quaternion.Euler(0f, 0f, rotation);
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        Style(sr);
         sr.sprite = frames[0];
         sr.color = color ?? Color.white;
         sr.sortingLayerID = LayerId(layer);
@@ -78,10 +97,12 @@ public static class Fx
             a.sr = fsr;
             a.pooled = true;
         }
+        size = Visible(name, size);
         Transform tr = a.transform;
         tr.position = new Vector3(pos.x, pos.y, 0f);
         tr.rotation = Quaternion.Euler(0f, 0f, rotation);
         SpriteRenderer sr = a.sr;
+        Style(sr);
         sr.sprite = frames[0];
         sr.color = color ?? Color.white;
         sr.sortingLayerID = LayerId(layer);

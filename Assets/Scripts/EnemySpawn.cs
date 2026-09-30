@@ -142,7 +142,7 @@ public class EnemySpawner : MonoBehaviour
     }
 
     // 지금 페이즈에 나오는 적 중 하나를 크고 단단하게 만들어 소환 (처치하면 특수 능력 포인트)
-    void SpawnMidBoss()
+    public void SpawnMidBoss()
     {
         var candidates = new System.Collections.Generic.List<GameObject>();
         for (int i = 0; i < Stage.enemies.Length; i++)

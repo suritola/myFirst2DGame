@@ -16,7 +16,11 @@ public class EndlessMode : MonoBehaviour
     public static float BestSeconds => PlayerPrefs.GetFloat(BestKey, 0f);
 
     const float FirstBossAt = 90f;          // 시작 후 첫 보스
-    const float BossEvery = 150f;           // 보스를 쓰러뜨린 뒤 다음 보스까지
+    const float BossEvery = 150f;           // 보스를 쓰러뜨린 뒤 다음 보스까지 (보스를 잡을 때마다 15초씩 짧아짐, 최소 75초)
+    const float BossEveryMin = 75f;
+    const float MidBossFrom = 360f;         // 6분부터 중간 보스가 주기적으로 (후반이 지루하지 않게)
+    const float MidBossEvery = 70f;         // 강도가 오를수록 짧아짐 (최소 30초)
+    float nextMidBoss;
 
     public int BossesDefeated { get; private set; }
 
@@ -35,6 +39,7 @@ public class EndlessMode : MonoBehaviour
         spawner = sm.spawner;
         bossPrefabs = bosses;
         nextBoss = Time.time + FirstBossAt;
+        nextMidBoss = Time.time + MidBossFrom;
         BuildHud();
         StartCoroutine(StartAtLevel(10));
     }
@@ -68,6 +73,11 @@ public class EndlessMode : MonoBehaviour
         }
 
         if (!spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
+        if (Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
+        {
+            spawner.SpawnMidBoss();
+            nextMidBoss = Time.time + Mathf.Max(30f, MidBossEvery / Mathf.Max(1f, GameMode.EndlessIntensity * 0.6f));
+        }
     }
 
     void SpawnBoss()
@@ -89,10 +99,10 @@ public class EndlessMode : MonoBehaviour
     {
         BossesDefeated++;
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
-        nextBoss = Time.time + BossEvery;
+        nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
         if (SpecialAbilities.UsesEvolution)
         {
-            // 거너: 진화할 단계가 남았으면 무기 진화, 아니면 영혼 조각으로 충분 (보스가 이미 많이 줌)
+            // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번), 그 뒤로는 영혼 조각으로 충분 (보스가 이미 많이 줌)
             stages.ShowBanner(Loc.T("보스 처치!"), 2.5f);
             stages.StartCoroutine(stages.Evolution(true));
             return;

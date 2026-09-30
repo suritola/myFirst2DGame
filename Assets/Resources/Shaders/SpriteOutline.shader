@@ -7,6 +7,9 @@ Shader "SoulSaver/SpriteOutline"
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
         _OutlineColor ("Outline", Color) = (0.06,0.04,0.09,0.9)
+        _Saturation ("Saturation", Float) = 1
+        _Brightness ("Brightness", Float) = 1
+        _EmptyAlpha ("Empty below alpha", Float) = 0.5
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
         [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
@@ -34,13 +37,15 @@ Shader "SoulSaver/SpriteOutline"
 
             float4 _MainTex_TexelSize;
             fixed4 _OutlineColor;
+            float _Saturation, _Brightness, _EmptyAlpha;
 
             fixed4 Frag (v2f IN) : SV_Target
             {
                 // 판정은 그림 자체의 알파로 (무적 깜빡임처럼 반투명해져도 몸이 윤곽선 색으로 바뀌지 않게)
                 fixed4 tex = SampleSpriteTexture(IN.texcoord);
                 fixed4 c = tex * IN.color;
-                if (tex.a < 0.5)
+                // 빈칸 판정: 캐릭터는 0.5, 이펙트는 0.05 (반투명한 빛 번짐이 검은 테두리로 바뀌지 않게)
+                if (tex.a < _EmptyAlpha)
                 {
                     float2 t = _MainTex_TexelSize.xy;
                     float a = max(max(SampleSpriteTexture(IN.texcoord + float2(t.x, 0)).a, SampleSpriteTexture(IN.texcoord - float2(t.x, 0)).a),
@@ -53,6 +58,9 @@ Shader "SoulSaver/SpriteOutline"
                         return o;
                     }
                 }
+                // 채도 · 밝기 (이펙트를 더 선명하게, 캐릭터는 1 · 1 그대로)
+                float l = dot(c.rgb, float3(0.299, 0.587, 0.114));
+                c.rgb = saturate(lerp(l.xxx, c.rgb, _Saturation) * _Brightness);
                 c.rgb *= c.a;
                 return c;
             }

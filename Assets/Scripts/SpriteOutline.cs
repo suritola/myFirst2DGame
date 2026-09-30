@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 도트를 더 잘 보이게 (1.8.7~): 캐릭터 · 적 · 보스 스프라이트에 1도트 윤곽선 (Resources/Shaders/SpriteOutline.shader)
+// 도트를 더 잘 보이게 (1.8.7~): 캐릭터 · 적 · 보스 스프라이트에 1도트 윤곽선, 이펙트는 윤곽선 + 채도 · 밝기 (Resources/Shaders/SpriteOutline.shader)
 // 적 · 보스는 짙은 윤곽선으로 배경과 분리, 플레이어는 밝은 윤곽선으로 적 무리 속에서도 바로 보이게
 public static class SpriteOutline
 {
@@ -10,6 +10,24 @@ public static class SpriteOutline
     static bool failed;
 
     public static void Enemy(GameObject go) => Apply(go, ref dark, Dark);
+
+    // 이펙트용 (Fx): 얇고 짙은 윤곽선 + 채도 1.3배 · 밝기 1.08배 (1.8.7~)
+    static Material effect;
+    public static Material EffectMaterial
+    {
+        get
+        {
+            if (effect != null || failed) return effect;
+            Shader s = Resources.Load<Shader>("Shaders/SpriteOutline");
+            if (s == null || !s.isSupported) { failed = true; return null; }
+            effect = new Material(s) { name = "EffectOutline" };
+            effect.SetColor("_OutlineColor", new Color(0.05f, 0.03f, 0.08f, 0.7f));
+            effect.SetFloat("_Saturation", 1.3f);
+            effect.SetFloat("_Brightness", 1.08f);
+            effect.SetFloat("_EmptyAlpha", 0.05f);
+            return effect;
+        }
+    }
     public static void Player(GameObject go) => Apply(go, ref light, Light);
 
     static void Apply(GameObject go, ref Material mat, Color color)

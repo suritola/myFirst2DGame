@@ -203,7 +203,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         burst2 = Img("Burst2", root, new Vector2(0f, -40f), new Vector2(1700f, 700f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.08f));
 
         title = UIKit.Text(root, "", 72f, Gold, new Vector2(0f, 380f), new Vector2(1500f, 100f));
-        title.text = tier >= 2 ? Loc.T("무기 최종 진화") : Loc.T("무기 진화");
+        title.text = tier >= 3 ? Loc.T("무기 각성") : tier >= 2 ? Loc.T("무기 최종 진화") : Loc.T("무기 진화");
         title.fontStyle = FontStyles.Bold;
         title.gameObject.SetActive(false);
         subtitle = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, 305f), new Vector2(1500f, 50f));
@@ -242,7 +242,7 @@ public class WeaponEvolutionUI : MonoBehaviour
 
         // 같은 계열을 한 번 더 고르면 '강화판'
         bool same = tier >= 2 && sp.WeaponActive && id == sp.CurrentWeapon;
-        string tag = !CharacterData.IsGunner ? (tier >= 2 ? Loc.T("추가 강화") : Loc.T("1차 진화"))
+        string tag = tier >= 3 ? Loc.T("각성") : !CharacterData.IsGunner ? (tier >= 2 ? Loc.T("추가 강화") : Loc.T("1차 진화"))
                    : tier >= 2 ? (same ? Loc.T("같은 계열 · 극대화") : Loc.T("새 계열로 분기")) : Loc.T("1차 진화");
         TMP_Text tg = UIKit.Text(c, "", 22f, same ? Gold : new Color(0.7f, 0.85f, 1f), new Vector2(0f, 285f), new Vector2(400f, 34f));
         tg.text = tag;

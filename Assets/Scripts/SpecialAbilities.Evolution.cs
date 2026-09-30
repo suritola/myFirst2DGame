@@ -20,6 +20,28 @@ public partial class SpecialAbilities
 
     public static readonly int[] Tier1Options = { FlameId, SniperId, DualId };
 
+    // 무한 모드 3번째 진화 (1.8.7~): 각성 — 2차까지 마친 무기에 덧붙는 공통 강화 (모든 캐릭터)
+    public const int AwakenFirst = 9000;
+    public static readonly int[] AwakenOptions = { AwakenFirst, AwakenFirst + 1, AwakenFirst + 2 };
+    static readonly string[] AwakenNames = { "파괴의 각성", "질풍의 각성", "영혼의 각성" };
+    static readonly string[] AwakenDescs =
+    {
+        "모든 공격 피해 +50% (기본 공격력 기준)",
+        "모든 공격 · 발사 간격 -30%",
+        "치명타 확률 +20%, 치명타 피해 +80%",
+    };
+    public static bool IsAwaken(int id) => id >= AwakenFirst && id < AwakenFirst + AwakenOptions.Length;
+
+    void ApplyAwaken(int id)
+    {
+        switch (id - AwakenFirst)
+        {
+            case 0: AddAttack(0.5f); break;
+            case 1: AddRate(0.7f); break;
+            default: TreeCrit += 0.2f; TreeCritDamage += 0.8f; break;
+        }
+    }
+
     public static int[] Tier2Options(int tier1) => tier1 switch
     {
         FlameId => new[] { FlameId, GrenadeId, ShotgunId },
@@ -31,6 +53,7 @@ public partial class SpecialAbilities
     public int[] NextEvolutionOptions()
     {
         if (!UsesEvolution) return null;
+        if (EvolutionTier == 2 && GameMode.IsEndless) return AwakenOptions;
         if (!Gunner)
         {
             // 1차: 캐릭터 전용 무기 셋의 모양으로 평타가 바뀜 · 2차: 형태 위에 덧붙는 강화
@@ -64,6 +87,7 @@ public partial class SpecialAbilities
 
     public string EvolutionName(int id, int tier)
     {
+        if (IsAwaken(id)) return Loc.T(AwakenNames[id - AwakenFirst]);
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentName(id));
         if (id < 0) return Gunner ? Loc.T("기본 권총") : Loc.T(CharacterData.Current.weapon);
         if (tier >= 2 && id == FlameId) return Loc.T("지옥불 방사기");
@@ -87,6 +111,7 @@ public partial class SpecialAbilities
     // 진화 카드 · 트리 가운데 그림
     public Sprite EvolutionIcon(int id)
     {
+        if (IsAwaken(id)) return id == AwakenFirst ? StatIcon(0) : id == AwakenFirst + 1 ? StatIcon(2) : LvIcon(3);
         if (id >= CharacterKit.AugFirst) return Resources.Load<Sprite>("Icons/ability_" + (id - CharacterKit.AugFirst + 92));
         if (id < 0) return Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
         Sprite s = Resources.Load<Sprite>("Weapons/weapon_" + id);
@@ -107,6 +132,7 @@ public partial class SpecialAbilities
     // 진화 카드 설명: 1차는 무기 설명, 2차는 진화한 무기 설명 + 진화 효과
     public string EvolutionDesc(int id, int tier)
     {
+        if (IsAwaken(id)) return Loc.T(AwakenDescs[id - AwakenFirst]);
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
         if (!Gunner) return Loc.T(CharacterKit.FormDesc(id));
         string body = Loc.T(abilities[id].description);
@@ -121,6 +147,7 @@ public partial class SpecialAbilities
     public void EvolveWeapon(int id)
     {
         EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionName(id, EvolutionTier + 1), RunStats.Seconds));
+        if (IsAwaken(id)) { ApplyAwaken(id); EvolutionTier = 3; return; }
         if (!Gunner) { KitEvolve(id); return; }
         int prev = WeaponActive ? CurrentWeapon : -1;
         int tier = EvolutionTier + 1;

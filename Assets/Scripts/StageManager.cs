@@ -121,11 +121,8 @@ public class StageManager : MonoBehaviour
         bool endless = GameMode.IsEndless;
         if (endless) PrepareEndless();
         yield return StoryDirector.Intro(endless);
-        if (endless)
-        {
-            if (Evo) yield return Evolution(false);
-            else yield return PickEndlessSpecials();
-        }
+        // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
+        if (endless && !Evo) yield return PickEndlessSpecials();
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;
         if (endless)

@@ -28,9 +28,13 @@ public static class GameMode
     static readonly float[] Kills =              { 0.7f, 0.8f,  0.9f,   1f };
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
 
-    // 무한 모드: 보통 수치에서 시작해 1분마다 +8%, 최대 +130% (약 16분)
-    const float EndlessRampPerMinute = 0.08f;
-    const float EndlessRampMax = 1.3f;
+    // 무한 모드 (1.8.7 조정): 초반이 너무 어렵고 후반이 지루하던 곡선을 바꿈
+    //   처음 3분은 0.7배에서 1배로 워밍업, 그 뒤로는 멈추지 않고 가속 (10분 ≈ 2배, 20분 ≈ 3.6배, 30분 ≈ 6배)
+    const float EndlessWarmup = 180f;
+    const float EndlessStartMul = 0.7f;
+    const float EndlessLinear = 0.06f;        // 1분마다
+    const float EndlessQuad = 0.0035f;        // 1분² 마다 (갈수록 빨라짐)
+    const float EndlessRampMax = 10f;
 
     static bool loaded;
     static Difficulty current;
@@ -97,7 +101,18 @@ public static class GameMode
     public static void StartEndlessClock() => endlessStart = Time.time;
     // 무한 모드 판이 진행 중일 때만 (메뉴에서는 0)
     public static float EndlessSeconds => IsEndless && endlessStart >= 0f && EndlessMode.Instance != null ? Time.time - endlessStart : 0f;
-    static float Ramp => IsEndless ? 1f + Mathf.Min(EndlessRampMax, EndlessSeconds / 60f * EndlessRampPerMinute) : 1f;
+    static float Ramp
+    {
+        get
+        {
+            if (!IsEndless) return 1f;
+            float s = EndlessSeconds, m = s / 60f;
+            float warm = Mathf.Lerp(EndlessStartMul, 1f, Mathf.SmoothStep(0f, 1f, s / EndlessWarmup));
+            return Mathf.Min(EndlessRampMax, warm * (1f + EndlessLinear * m + EndlessQuad * m * m));
+        }
+    }
+    // 무한 모드 강도 (1 = 기본). 보스 간격 · 중간 보스 주기 등에 씀
+    public static float EndlessIntensity => Ramp;
 
     // ================================================================= 배율 (지금 난이도 기준)
     // 1.8.7: 모든 난이도를 30% 어렵게 (적 · 보스 체력, 적이 주는 피해). 생성 속도 · 이동 속도는 그대로
@@ -112,7 +127,8 @@ public static class GameMode
     // 보스 · 페이즈까지 필요한 처치 수 배율
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
-    public static int ExtraAliveCount => ExtraAlive[I];
+    // 무한 모드는 강도가 오를수록 한 번에 나오는 적도 늘어남
+    public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, Ramp - 1f) * 4f) : 0);
     public static float BossHpMul => BossHp[I] * Ramp * Harder;
     public static float GaugeMul => Gauge[I];
     public static float RewardMul => Reward[I] / Kills[I];
