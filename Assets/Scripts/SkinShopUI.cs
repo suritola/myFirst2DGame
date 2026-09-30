@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 메인 메뉴 스킨 상점: 종류(캐릭터 · 무기 · 이펙트) → 캐릭터 → 스킨 카드. 카드를 누르면 아래에 설명 · 소리 듣기 · 구매/장착
+// 메인 메뉴 스킨 상점: 종류(캐릭터 · 무기 · 이펙트 · 커서) → 캐릭터 → 스킨 카드. 카드를 누르면 아래에 설명 · 소리 듣기 · 구매/장착
 // 비싼 물건이라 구매는 두 번 눌러야 함 (처음 누르면 "한 번 더 누르면 구매")
 public class SkinShopUI : MonoBehaviour
 {
@@ -57,7 +57,7 @@ public class SkinShopUI : MonoBehaviour
         UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
         pointsText = UIKit.Text(win, "", 26f, Gold, new Vector2(-590f, 425f), new Vector2(420f, 50f), TextAlignmentOptions.Left);
 
-        string[] tabs = { "캐릭터", "무기", "이펙트" };
+        string[] tabs = { "캐릭터", "무기", "이펙트", "커서" };
         for (int i = 0; i < tabs.Length; i++)
         {
             SkinKind k = (SkinKind)i;
@@ -103,17 +103,17 @@ public class SkinShopUI : MonoBehaviour
         for (int i = 0; i < tabButtons.Count; i++) tabButtons[i].GetComponent<Image>().color = (int)kind == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
         foreach (Button b in whoButtons)
         {
-            b.gameObject.SetActive(kind != SkinKind.Effect);
+            b.gameObject.SetActive(!SkinData.IsGlobal(kind));
             b.GetComponent<Image>().color = b.name == "Who_" + who ? Gold : new Color(0.72f, 0.7f, 0.78f);
         }
 
         // 카드: 기본 + 이 종류 · 캐릭터의 스킨
         List<SkinDef> list = new List<SkinDef> { null };
         foreach (SkinDef s in SkinData.All)
-            if (s.kind == kind && (kind == SkinKind.Effect || s.who == who)) list.Add(s);
+            if (s.kind == kind && (SkinData.IsGlobal(kind) || s.who == who)) list.Add(s);
         float w = 290f, gap = 20f;
         float x0 = -(list.Count - 1) * (w + gap) / 2f;
-        for (int i = 0; i < list.Count; i++) dynamic.Add(Card(list[i], new Vector2(x0 + i * (w + gap), kind == SkinKind.Effect ? 60f : 20f)));
+        for (int i = 0; i < list.Count; i++) dynamic.Add(Card(list[i], new Vector2(x0 + i * (w + gap), SkinData.IsGlobal(kind) ? 60f : 20f)));
         ShowDetail();
     }
 
@@ -176,6 +176,11 @@ public class SkinShopUI : MonoBehaviour
                     Sprite sp = Resources.Load<Sprite>("Weapons/weapon_" + (s != null ? s.id : held));
                     return sp != null ? new[] { sp } : new Sprite[0];
                 }
+            case SkinKind.Cursor:
+                {
+                    Sprite sp = Resources.Load<Sprite>("Icons/" + (s != null ? s.id : "cursor_default"));
+                    return sp != null ? new[] { sp } : new Sprite[0];
+                }
             default:
                 {
                     Sprite sp = s != null ? Resources.Load<Sprite>("Icons/" + s.id) : null;
@@ -223,6 +228,7 @@ public class SkinShopUI : MonoBehaviour
         audioFx?.PlayRaw(sound, 0.6f);
         confirm = false;
         SkinFx.Refresh();
+        CursorSkin.Refresh();
         Rebuild();
     }
 
@@ -247,6 +253,9 @@ public class SkinShopUI : MonoBehaviour
                     if (s.layer != null) audioFx.PlayRaw(s.layer, 0.25f);
                     yield return new WaitForSecondsRealtime(0.35f);
                 }
+                break;
+            case SkinKind.Cursor:
+                audioFx.PlayRaw("clank", 0.5f, 1.4f + 0.1f * s.tier);
                 break;
             default:
                 float p = s.id == "skin_sakura" ? 1.3f : s.id == "skin_starlight" ? 1.5f : 1f;

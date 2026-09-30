@@ -116,6 +116,7 @@ public class bosss : MonoBehaviour
 
     void Start()
     {
+        SpriteOutline.Enemy(gameObject);
         if (!difficultyApplied)
         {
             difficultyApplied = true;

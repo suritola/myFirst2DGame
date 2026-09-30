@@ -214,6 +214,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         EnermyController.Killed += HealOnKill;
+        SpriteOutline.Player(gameObject);       // 1.8.7 밝은 윤곽선 (적 무리 속에서도 잘 보이게)
 
         needEXP = 100f;
         isShop = 0;

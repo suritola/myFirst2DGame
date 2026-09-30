@@ -531,13 +531,14 @@ public static class SettingsUI
         return list;
     }
 
-    // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘
+    // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘 · 게임 커서
     static void BuildGameplay()
     {
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
         CycleRow("피해 숫자", 90f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
         ToggleRow("색각 이상 모드", -20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
         ToggleRow("키 아이콘", -130f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
+        ToggleRow("게임 커서", -240f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
     }
 
     // 누를 때마다 다음 값으로

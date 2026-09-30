@@ -100,9 +100,12 @@ public static class GameMode
     static float Ramp => IsEndless ? 1f + Mathf.Min(EndlessRampMax, EndlessSeconds / 60f * EndlessRampPerMinute) : 1f;
 
     // ================================================================= 배율 (지금 난이도 기준)
+    // 1.8.7: 모든 난이도를 30% 어렵게 (적 · 보스 체력, 적이 주는 피해). 생성 속도 · 이동 속도는 그대로
+    const float Harder = 1.3f;
+
     static int I => (int)Current;
-    public static float EnemyHpMul => EnemyHp[I] * Ramp;
-    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f);
+    public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder;
+    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f) * Harder;
     public static float EnemySpeedMul => EnemySpeed[I];
     public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, Ramp, 0.3f);
     public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, Ramp, 0.4f);
@@ -110,7 +113,7 @@ public static class GameMode
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
     public static int ExtraAliveCount => ExtraAlive[I];
-    public static float BossHpMul => BossHp[I] * Ramp;
+    public static float BossHpMul => BossHp[I] * Ramp * Harder;
     public static float GaugeMul => Gauge[I];
     public static float RewardMul => Reward[I] / Kills[I];
 

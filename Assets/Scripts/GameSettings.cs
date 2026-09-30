@@ -17,13 +17,14 @@ public static class GameSettings
     const string DamageNumKey = "settings.damageNumbers";
     const string ColorBlindKey = "settings.colorBlind";
     const string KeyIconKey = "settings.keyIcons";
+    const string CursorKey = "settings.gameCursor";
 
     static bool loaded;
     static Loc.Lang language = Loc.Lang.Korean;
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
     static bool shake = true, flash = true, vsync = true;
-    static bool hints = true, colorBlind = false, keyIcons = true;
+    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true;
     static int damageNumbers;
 
     public static Loc.Lang Language
@@ -70,6 +71,7 @@ public static class GameSettings
         damageNumbers = Mathf.Clamp(PlayerPrefs.GetInt(DamageNumKey, 0), 0, 2);
         colorBlind = PlayerPrefs.GetInt(ColorBlindKey, 0) == 1;
         keyIcons = PlayerPrefs.GetInt(KeyIconKey, 1) == 1;
+        gameCursor = PlayerPrefs.GetInt(CursorKey, 1) == 1;
     }
 
     // 음악 · 효과음 볼륨 (0 ~ 1, 전체 볼륨에 곱해짐)
@@ -126,6 +128,13 @@ public static class GameSettings
     {
         get { Load(); return keyIcons; }
         set { Load(); keyIcons = value; PlayerPrefs.SetInt(KeyIconKey, value ? 1 : 0); }
+    }
+
+    // 게임 전용 마우스 커서 (끄면 윈도우 기본 포인터) · 1.8.7~
+    public static bool GameCursor
+    {
+        get { Load(); return gameCursor; }
+        set { Load(); gameCursor = value; PlayerPrefs.SetInt(CursorKey, value ? 1 : 0); CursorSkin.Refresh(); }
     }
 
     public static bool VSync

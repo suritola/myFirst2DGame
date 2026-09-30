@@ -2,21 +2,24 @@
 # 에디터가 켜져 있어도 되도록 release.ps1 · steam-upload.ps1 과 같은 프로젝트 복사본에서 실행한다.
 # 복사본은 제품 이름을 바꿔서, 스킨 장착 같은 촬영용 저장값이 원래 에디터 저장 데이터와 섞이지 않게 한다.
 #
-# 사용법: pwsh tools/trailer/record.ps1                       (30fps · Medium 화질)
-#         pwsh tools/trailer/record.ps1 -Fps 60 -Quality High
-# 결과:   %LOCALAPPDATA%\SoulSaverBuild\Capture\SoulSaver_Trailer.mp4, screenshots\*.png
+# 사용법: pwsh tools/trailer/record.ps1                            (영어 · 30fps · Medium 화질)
+#         pwsh tools/trailer/record.ps1 -Lang en,ko,ja,zh -Quality High   (언어마다 한 번씩, 게임 언어 · 자막이 바뀜)
+# 결과:   %LOCALAPPDATA%\SoulSaverBuild\Capture\<언어>\SoulSaver_Trailer_<언어>.mp4, screenshots\*.png
 param(
+    [string[]]$Lang = @("en"),              # en · ko · ja · zh (쉼표로 여러 개)
     [int]$Fps = 30,
     [ValidateSet("Low", "Medium", "High")][string]$Quality = "Medium",
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
+$Lang = $Lang -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+foreach ($l in $Lang) { if ($l -notin "en", "ko", "ja", "zh") { throw "지원하지 않는 언어: $l (en · ko · ja · zh)" } }
 
 $Project = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
 $CopyDir = Join-Path $Work "Project"
-$Out = Join-Path $Work "Capture"
+$CaptureRoot = Join-Path $Work "Capture"
 
 New-Item -ItemType Directory -Force $CopyDir | Out-Null
 foreach ($d in "Assets", "Packages", "ProjectSettings") {
@@ -29,25 +32,28 @@ Copy-Item (Join-Path $PSScriptRoot "GameplayCapture.cs"), (Join-Path $PSScriptRo
 $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 (Get-Content $settings -Raw) -replace "(?m)^  productName: .*$", "  productName: Soul Saver Capture" | Set-Content $settings -NoNewline
 
-if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }
-New-Item -ItemType Directory -Force $Out | Out-Null
-$env:CAPTURE_OUT = $Out
 $env:CAPTURE_FPS = "$Fps"
 $env:CAPTURE_QUALITY = $Quality
-$log = Join-Path $Work "capture.log"
-Write-Host "촬영 중... ($Fps fps · $Quality, 로그: $log)"
-$p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
-    "-batchmode", "-projectPath", "`"$CopyDir`"",
-    "-runTests", "-testPlatform", "PlayMode", "-testFilter", "GameplayCapture",
-    "-testResults", "`"$(Join-Path $Work 'capture-results.xml')`"",
-    "-logFile", "`"$log`"")
+foreach ($l in $Lang) {
+    $Out = Join-Path $CaptureRoot $l
+    if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }
+    New-Item -ItemType Directory -Force $Out | Out-Null
+    $env:CAPTURE_OUT = $Out
+    $env:CAPTURE_LANG = $l
+    $log = Join-Path $Work "capture.log"
+    Write-Host "촬영 중: $l ($Fps fps · $Quality, 로그: $log)"
+    $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
+        "-batchmode", "-projectPath", "`"$CopyDir`"",
+        "-runTests", "-testPlatform", "PlayMode", "-testFilter", "GameplayCapture",
+        "-testResults", "`"$(Join-Path $Work 'capture-results.xml')`"",
+        "-logFile", "`"$log`"")
+    Select-String -Path $log -Pattern "\[CAP\] done" | ForEach-Object { $_.Line }
+    $mp4 = Join-Path $Out "SoulSaver_Trailer_$l.mp4"
+    if (-not (Test-Path $mp4)) { Get-Content $log -Tail 40; throw "$l 영상이 만들어지지 않았습니다 (Unity 종료 코드 $($p.ExitCode))" }
+    Write-Host ("완료: {0} ({1:N1} MB), 스크린샷 {2}장" -f $mp4, ((Get-Item $mp4).Length / 1MB), (Get-ChildItem (Join-Path $Out "screenshots")).Count)
+}
 
 # 복사본을 원래대로 (다음 빌드에 촬영 코드가 섞이지 않게)
 Remove-Item -Recurse -Force $capDir, "$capDir.meta" -ErrorAction SilentlyContinue
 robocopy (Join-Path $Project "ProjectSettings") (Join-Path $CopyDir "ProjectSettings") /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
 
-Select-String -Path $log -Pattern "\[CAP\]" | ForEach-Object { $_.Line }
-$mp4 = Join-Path $Out "SoulSaver_Trailer.mp4"
-if (-not (Test-Path $mp4)) { Get-Content $log -Tail 40; throw "영상이 만들어지지 않았습니다 (Unity 종료 코드 $($p.ExitCode))" }
-Write-Host ("완료: {0} ({1:N1} MB)" -f $mp4, ((Get-Item $mp4).Length / 1MB))
-Get-ChildItem (Join-Path $Out "screenshots") | ForEach-Object { Write-Host "  $($_.Name)" }

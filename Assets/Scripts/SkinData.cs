@@ -5,8 +5,9 @@ using UnityEngine;
 //   캐릭터 스킨: 몸 그림 · 피격 소리 (영웅부터 이동 잔상, 전설은 오라 · 처치 연출 · 필살기 소리)
 //   무기 스킨:   손에 든 무기 · 총알/투사체 색 · 공격 소리
 //   이펙트 스킨: 명중 불꽃 · 처치 효과 · 코인 효과와 소리 (모든 캐릭터 공통)
+//   커서 스킨 (1.8.7~): 마우스 포인터 색 · 모양 (모든 캐릭터 공통, CursorSkin)
 // 등급: 0 일반 · 1 희귀 · 2 영웅 · 3 전설 (가격 5천 · 1만 5천 · 4만 · 10만)
-public enum SkinKind { Character, Weapon, Effect }
+public enum SkinKind { Character, Weapon, Effect, Cursor }
 
 public class SkinDef
 {
@@ -39,6 +40,11 @@ public static class SkinData
         => new SkinDef { id = id, kind = SkinKind.Weapon, who = who, tier = tier, name = name, desc = desc, color = color, pitch = pitch, layer = layer, attackSound = attack };
     static SkinDef E(string id, int tier, string name, string desc, Color color, string kill)
         => new SkinDef { id = id, kind = SkinKind.Effect, tier = tier, name = name, desc = desc, color = color, killSound = kill };
+    static SkinDef P(string id, int tier, string name, string desc, Color color)
+        => new SkinDef { id = id, kind = SkinKind.Cursor, tier = tier, name = name, desc = desc, color = color };
+
+    // 모든 캐릭터가 같이 쓰는 종류 (캐릭터 고르기 없음)
+    public static bool IsGlobal(SkinKind kind) => kind == SkinKind.Effect || kind == SkinKind.Cursor;
 
     const int G = 0, S = 1, R = 2, A = 3, L = 4;
 
@@ -87,6 +93,12 @@ public static class SkinData
         E("skin_sakura", 1, "벚꽃", "명중하면 분홍 불꽃, 적이 쓰러지면 벚꽃잎이 흩날립니다. 코인 소리가 맑아집니다.", new Color(1f, 0.6f, 0.75f), "sk_kill_petal"),
         E("skin_thunder", 2, "뇌전", "명중하면 노란 전기, 적이 쓰러지면 작은 번개가 칩니다. 코인에 전기 튀는 소리.", new Color(1f, 0.9f, 0.35f), "sk_kill_zap"),
         E("skin_starlight", 3, "별의 축복", "명중 불꽃이 무지갯빛으로 바뀌고, 적이 쓰러지면 별이 터지며 맑은 종소리가 울립니다. 코인은 별가루로 반짝입니다.", Color.white, "sk_kill_star"),
+
+        // ---------------- 커서 (메뉴 화살표 + 전투 조준점, 설정에서 게임 커서를 켰을 때)
+        P("cursor_bone", 0, "뼈 커서", "빛바랜 뼛빛 화살표와 조준점.", new Color(0.84f, 0.82f, 0.75f)),
+        P("cursor_ember", 1, "불씨 커서", "타오르는 주황빛 화살표와 불꽃 조준점.", new Color(0.92f, 0.43f, 0.18f)),
+        P("cursor_soul", 2, "영혼 커서", "보랏빛 영혼 화살표와 푸른 빛이 도는 조준점.", new Color(0.59f, 0.37f, 0.92f)),
+        P("cursor_gold", 3, "황금 커서", "황금빛 화살표와 조준점. 둘레에 별빛이 반짝이며 돕니다.", new Color(0.96f, 0.78f, 0.31f)),
     };
 
     static readonly Dictionary<string, SkinDef> byId = new Dictionary<string, SkinDef>();
@@ -100,7 +112,7 @@ public static class SkinData
     // ================================================================= 저장 (PlayerPrefs)
     public static bool Owns(string id) => PlayerPrefs.GetInt("skin.own." + id, 0) == 1;
 
-    static string EquipKey(SkinKind kind, int who) => "skin.eq." + (int)kind + "." + (kind == SkinKind.Effect ? -1 : who);
+    static string EquipKey(SkinKind kind, int who) => "skin.eq." + (int)kind + "." + (IsGlobal(kind) ? -1 : who);
 
     // 장착한 스킨 (없으면 null = 기본)
     public static SkinDef Equipped(SkinKind kind, int who) => Get(PlayerPrefs.GetString(EquipKey(kind, who), ""));

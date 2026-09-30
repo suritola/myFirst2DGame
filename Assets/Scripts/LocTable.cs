@@ -1210,6 +1210,10 @@ public static class LocTable
         { "끌기 · WASD · 화면 끝으로 이동, 휠 확대, [F] 전체 보기", L("Drag · WASD · screen edge to move, wheel to zoom, [F] show all", "ドラッグ・WASD・画面端で移動、ホイールで拡大、[F] 全体表示", "拖动 · WASD · 屏幕边缘移动，滚轮缩放，[F] 显示全部") },
         // 1.8.2 운명 가지 (액티브 스킬 자리)
         { "운명", L("Fate", "運命", "命运") },
+        // 1.8.7 영혼 트리 가지 이름 (범례 · 결과 화면에 한국어로 남던 셋)
+        { "생존", L("Survival", "生存", "生存") },
+        { "영혼", L("Soul", "魂", "灵魂") },
+        { "재물", L("Wealth", "財宝", "财富") },
         { "운명 가지", L("Fate branch", "運命の枝", "命运分支") },
         { "카드 다시 뽑기 · 시간의 틈 · 중력 우물 등 트리에서만 얻는 효과", L("Card rerolls · Time Rift · Gravity Well and other effects only found in the tree", "カード引き直し・時の裂け目・重力井戸など、ツリーでしか得られない効果", "卡牌重抽 · 时间裂隙 · 重力井等只能在树中获得的效果") },
         { "영혼 트리의 운명 가지 · 모든 캐릭터 공통 · 다른 어디에도 없는 효과", L("The Soul Tree's Fate branch · shared by all characters · effects found nowhere else", "魂のツリーの運命の枝 · 全キャラクター共通 · 他にはない効果", "灵魂树的命运分支 · 所有角色通用 · 别处没有的效果") },
@@ -1250,6 +1254,17 @@ public static class LocTable
         // 1.8.3 스킨 상점
         { "스킨 상점", L("Skin Shop", "スキンショップ", "皮肤商店") },
         { "이펙트", L("Effects", "エフェクト", "特效") },
+        // 1.8.7 게임 커서 · 커서 스킨
+        { "커서", L("Cursors", "カーソル", "光标") },
+        { "게임 커서", L("Game cursor", "ゲームカーソル", "游戏光标") },
+        { "뼈 커서", L("Bone Cursor", "骨のカーソル", "骨质光标") },
+        { "불씨 커서", L("Ember Cursor", "残り火のカーソル", "余烬光标") },
+        { "영혼 커서", L("Soul Cursor", "魂のカーソル", "灵魂光标") },
+        { "황금 커서", L("Golden Cursor", "黄金のカーソル", "黄金光标") },
+        { "빛바랜 뼛빛 화살표와 조준점.", L("A faded bone-white arrow and crosshair.", "色あせた骨色の矢印と照準。", "褪色骨白色的箭头与准星。") },
+        { "타오르는 주황빛 화살표와 불꽃 조준점.", L("A blazing orange arrow and a fiery crosshair.", "燃えるオレンジの矢印と炎の照準。", "燃烧的橙色箭头与火焰准星。") },
+        { "보랏빛 영혼 화살표와 푸른 빛이 도는 조준점.", L("A violet soul arrow and a crosshair with a blue glow.", "紫の魂の矢印と、青く光る照準。", "紫色灵魂箭头与泛着蓝光的准星。") },
+        { "황금빛 화살표와 조준점. 둘레에 별빛이 반짝이며 돕니다.", L("A golden arrow and crosshair, circled by twinkling starlight.", "黄金の矢印と照準。周りを星の光がきらめきながら回ります。", "黄金箭头与准星，周围有星光闪烁环绕。") },
         { "기본", L("Default", "基本", "默认") },
         { "보유", L("Owned", "所持", "已拥有") },
         { "장착 중", L("Equipped", "装備中", "装备中") },

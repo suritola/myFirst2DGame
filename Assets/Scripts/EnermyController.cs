@@ -99,6 +99,7 @@ public class EnermyController : MonoBehaviour
 
     void Start()
     {
+        SpriteOutline.Enemy(gameObject);        // 1.8.7 짙은 윤곽선 (배경과 분리)
         if (!difficultyApplied)
         {
             difficultyApplied = true;

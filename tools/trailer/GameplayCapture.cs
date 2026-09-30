@@ -21,6 +21,25 @@ public class GameplayCapture
     static readonly string Out = Environment.GetEnvironmentVariable("CAPTURE_OUT") ?? "C:/Temp/SoulSaverCapture";
     static readonly int Fps = int.TryParse(Environment.GetEnvironmentVariable("CAPTURE_FPS"), out int f) ? f : 30;
     static readonly string Quality = Environment.GetEnvironmentVariable("CAPTURE_QUALITY") ?? "Medium";
+    static readonly string Lang = Environment.GetEnvironmentVariable("CAPTURE_LANG") ?? "en";   // ko · en · ja · zh
+
+    // 트레일러 자막 (언어별)
+    static readonly Dictionary<string, string[]> Captions = new Dictionary<string, string[]>
+    {
+        ["en"] = new[] { "THE DEAD HAVE RISEN.", "BUILD YOUR RUN.", "DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", "GROW A SOUL TREE OF 100+ NODES.", "FIVE HEROES.  THREE WORLDS.  THREE KINGS.", "20 CHARACTER SKINS.  10 WEAPON SKINS.", "WISHLIST NOW ON STEAM" },
+        ["ko"] = new[] { "망자들이 깨어났다.", "나만의 빌드를 만들어라.", "보스를 쓰러뜨리고, 무기를 진화시켜라.", "100칸이 넘는 영혼 트리.", "다섯 영웅.  세 개의 세계.  세 명의 왕.", "캐릭터 스킨 20종 · 무기 스킨 10종", "지금 스팀에서 찜하세요" },
+        ["ja"] = new[] { "死者が目覚めた。", "自分だけのビルドを。", "ボスを倒し、武器を進化させろ。", "100マスを超える魂のツリー。", "五人の英雄。三つの世界。三人の王。", "キャラクタースキン20種・武器スキン10種", "Steamでウィッシュリストに追加" },
+        ["zh"] = new[] { "亡者已苏醒。", "打造你的流派。", "击败首领，进化武器。", "超过100个节点的灵魂树。", "五位英雄。三个世界。三位王者。", "20款角色皮肤 · 10款武器皮肤", "立即在Steam上添加愿望单" },
+    };
+    static string C(int i) => (Captions.TryGetValue(Lang, out string[] c) ? c : Captions["en"])[i];
+
+    // 게임 언어 바꾸기 (GameSettings.Language: 0 한국어 · 1 English · 2 日本語 · 3 中文)
+    static void SetGameLanguage(string lang)
+    {
+        int i = lang == "ko" ? 0 : lang == "ja" ? 2 : lang == "zh" ? 3 : 1;
+        Type l = T("Loc+Lang");
+        T("GameSettings").GetProperty("Language").SetValue(null, Enum.ToObject(l, i));
+    }
     const int W = 1920, H = 1080;
     const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
@@ -433,19 +452,21 @@ public class GameplayCapture
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
         In("Auto", true);                          // 업적 · 누적 기록이 풀리지 않게
+        SetGameLanguage(Lang);
         GameObject host = new GameObject("CaptureRec");
         UnityEngine.Object.DontDestroyOnLoad(host);
         rec = host.AddComponent<Rec>();
         BuildOverlay();
+        rec.sub.text = C(6);
 
         // ---------------- 1) 거너 · 지하 묘역 전투 → 레벨업 카드
         yield return Load("Gunner", 0);
         rec.autopilot = true;
         yield return F(1.2f);
-        rec.Begin(Path.Combine(Out, "SoulSaver_Trailer.mp4"));
+        rec.Begin(Path.Combine(Out, "SoulSaver_Trailer_" + Lang + ".mp4"));
         rec.recording = true;
         yield return Fade(1f, 0f, 0.6f);
-        Say("THE DEAD HAVE RISEN.", 2.4f);
+        Say(C(0), 2.4f);
         yield return F(2.6f);
         yield return Ult(1.2f);
         yield return F(0.8f);
@@ -455,7 +476,7 @@ public class GameplayCapture
         object shop = Find("LevelShop");
         rec.levelUpAllowed = true;
         Call(shop, "openLevelShop");
-        Say("BUILD YOUR RUN.", 2.2f);
+        Say(C(1), 2.2f);
         yield return F(0.9f);
         Call(shop, "onSecondButton");            // 가운데 카드를 고름 (금빛)
         yield return F(0.5f);
@@ -471,7 +492,7 @@ public class GameplayCapture
         In("AutoMove", Vector2.zero);
         In("AutoFire", false);
         ((MonoBehaviour)sm).StartCoroutine((IEnumerator)Call(sm, "Evolution", false));
-        Say("DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", 4.2f);
+        Say(C(2), 4.2f);
         yield return F(2.6f);
         object evo = Find("WeaponEvolutionUI");
         if (evo != null) Call(evo, "Select", 0);
@@ -492,7 +513,7 @@ public class GameplayCapture
         Type shards = T("SoulShards");
         shards.GetMethod("Add").Invoke(null, new object[] { 4000, Vector3.zero, false });
         Call(sm, "OpenSoulTree");
-        Say("GROW A SOUL TREE OF 100+ NODES.", 4.6f);
+        Say(C(3), 4.6f);
         yield return F(0.8f);
         object specials = Get(sm, "specials");
         // 트리 화면의 칸 누르기와 같은 처리 (새 칸이 드러나고 반짝임) · 여섯 가지를 돌아가며 배움
@@ -518,7 +539,7 @@ public class GameplayCapture
 
         // ---------------- 4) 전설 스킨을 입은 영웅들 · 세 세계의 왕
         rec.caption.alpha = 0f;
-        rec.StartCoroutine(Delayed(0.4f, () => Say("FIVE HEROES.  THREE WORLDS.  THREE KINGS.", 4.5f)));
+        rec.StartCoroutine(Delayed(0.4f, () => Say(C(4), 4.5f)));
         yield return Hero("Swordsman", 1, 1, 1, 3.2f, 1.0f, "05_swordsman_demon_lord");
         yield return Hero("Archer", 3, 0, 0, 3.0f, 0.9f, "06_archer_lich_king");
         yield return Hero("Rogue", 2, 2, 2, 3.0f, 0.05f, "07_rogue_king_slime");
@@ -536,7 +557,7 @@ public class GameplayCapture
         yield return F(0.8f);
         rec.recording = true;
         yield return Fade(1f, 0f, 0.25f);
-        Say("20 CHARACTER SKINS.  10 WEAPON SKINS.", 3f);
+        Say(C(5), 3f);
         yield return F(1.6f);
         Shot("08_skin_shop");
         yield return F(1.4f);
