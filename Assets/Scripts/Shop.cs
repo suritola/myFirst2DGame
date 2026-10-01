@@ -87,14 +87,16 @@ public partial class Shop : MonoBehaviour
     // ================================================================= 떠돌이 상점 제단
     [Header("상점 제단")]
     public int killsPerStall = 35;          // 일반 몹을 이만큼 잡을 때마다 제단이 나타남
-    int killsForStall;
+    float killsForStall;
 
     void OnEnable() => EnermyController.Killed += OnEnemyKilled;
     void OnDisable() => EnermyController.Killed -= OnEnemyKilled;
 
     void OnEnemyKilled(Vector3 pos)
     {
-        killsForStall++;
+        // 보스 전에는 처치 수가 늘어난 만큼 천천히 셈 (한 판에 나오는 상점 수 · 코인과 맞춤)
+        EnemySpawner sp = Cache<EnemySpawner>.Get;
+        killsForStall += sp != null && !sp.bossSpawned && !sp.bossCleared ? 1f / GameMode.KillStretch : 1f;
         if (killsForStall < killsPerStall || playerControllerd == null) return;
         killsForStall = 0;
 

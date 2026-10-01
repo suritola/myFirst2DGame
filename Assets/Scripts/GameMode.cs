@@ -25,7 +25,12 @@ public static class GameMode
     static readonly float[] Gauge =              { 1f,   0.9f,  0.8f,   0.8f };    // 필살기 게이지 차는 속도
     static readonly float[] Reward =             { 1f,   1.15f, 1.3f,   1.3f };    // 경험치 · 코인 (단단해진 만큼 조금 보상)
     // 템포: 보스까지 필요한 처치 수 · 적 생성 간격 (클리어 목표 쉬움 20분 · 보통 25분 · 어려움 30분 내외)
-    static readonly float[] Kills =              { 0.7f, 0.8f,  0.9f,   1f };
+    // 1.8.9: 쉬움 8분 · 어려움 13분에 끝나던 판을 늘림 (처치 수 약 2.2배). 한 판의 경험치 · 코인 · 상점 횟수 총량은 그대로
+    static readonly float[] Kills =              { 1.6f, 1.8f,  2.0f,   1f };
+    // 보상 기준 (1.8.8까지의 처치 수 배율). 보스 · 중간 보스처럼 한 판에 나오는 수가 정해진 보상은 이 기준으로
+    static readonly float[] RewardBasis =        { 0.7f, 0.8f,  0.9f,   1f };
+    // 일반 적 영혼 조각을 이만큼만 (판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게)
+    const float KillShardRate = 0.75f;
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
 
     // 무한 모드 (1.8.7 조정): 초반이 너무 어렵고 후반이 지루하던 곡선을 바꿈
@@ -131,7 +136,21 @@ public static class GameMode
     public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, Ramp - 1f) * 4f) : 0);
     public static float BossHpMul => BossHp[I] * Ramp * Harder;
     public static float GaugeMul => Gauge[I];
+    // 일반 적 한 마리 보상 (처치 수가 늘어난 만큼 줄여 한 판 총량을 맞춤)
     public static float RewardMul => Reward[I] / Kills[I];
+    // 보스 · 중간 보스 보상 (처치 수와 상관없이 나오는 수가 정해져 있음)
+    public static float FixedRewardMul => Reward[I] / RewardBasis[I];
+    // 처치 수가 예전보다 몇 배인지 (떠돌이 상점 간격 등 처치 수로 세는 것을 맞출 때)
+    public static float KillStretch => Kills[I] / RewardBasis[I];
+    // 일반 적 영혼 조각 배율 (예전 한 마리 몫 기준, 무한 모드는 그대로)
+    public static float KillShardMul(bool countsTowardBoss) => IsEndless ? 1f : KillShardRate / (countsTowardBoss ? KillStretch : 1f);
+
+    // 소수 보상을 확률로 반올림 (2.4 → 40% 확률로 3, 아니면 2): 여러 번 모으면 평균이 맞음
+    public static int RoundRandom(float v)
+    {
+        int n = Mathf.FloorToInt(v);
+        return n + (Random.value < v - n ? 1 : 0);
+    }
 
     public static string Name(Difficulty d) => Loc.T(Names[(int)d]);
 }

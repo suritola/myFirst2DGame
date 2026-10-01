@@ -110,7 +110,9 @@ public class EnemySpawner : MonoBehaviour
 
         spawnedEnemys++;
         Vector3 randomPosition = GetSpawnPosition(playerC.transform.position);
-        Instantiate(Pick(Phase.weights), randomPosition, Quaternion.identity);
+        GameObject spawned = Instantiate(Pick(Phase.weights), randomPosition, Quaternion.identity);
+        // 보스 전에 나온 적은 처치 수로 보스를 부르므로, 늘어난 처치 수만큼 보상을 나눠 받음 (Start 전에 정함)
+        if (!bossSpawned && !bossCleared && spawned.TryGetComponent(out EnermyController ec)) ec.countsTowardBoss = true;
 
         UpdatePhase();
 

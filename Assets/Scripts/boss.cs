@@ -127,8 +127,9 @@ public class bosss : MonoBehaviour
             difficultyApplied = true;
             if (IsSlime && slimeGen == 1) slimeMul = GameMode.BossHpMul;
             setEnemyHP = Mathf.RoundToInt(setEnemyHP * GameMode.BossHpMul);
-            expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
-            coinDrop = Mathf.RoundToInt(coinDrop * GameMode.RewardMul);
+            // 보스는 처치 수와 상관없이 정해진 수만 나오므로 고정 배율
+            expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul);
+            coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul);
             if (IsSlime && slimeGen == 1) gen1Max = setEnemyHP;
         }
         EnemyHealth = setEnemyHP;

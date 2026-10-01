@@ -83,6 +83,8 @@ public class EnermyController : MonoBehaviour
 
     // 난이도 배율을 이미 적용했는지 (복제돼도 두 번 곱하지 않게)
     [HideInInspector] public bool difficultyApplied;
+    // 보스가 나오기 전에 생긴 적 (처치 수로 보스를 부름): 처치 수가 늘어난 만큼 보상 · 영혼 조각을 나눔
+    [HideInInspector] public bool countsTowardBoss;
 
     // 생기자마자 대응표에 등록 (같은 물리 단계의 다른 적도 바로 알아보게), 사라지면 지움
     void Awake()
@@ -110,8 +112,19 @@ public class EnermyController : MonoBehaviour
             difficultyApplied = true;
             setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * GameMode.EnemyHpMul));
             speed *= GameMode.EnemySpeedMul;
-            expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
-            coinDrop = Mathf.Max(coinDrop, Mathf.RoundToInt(coinDrop * GameMode.RewardMul));
+            // 보스까지 세는 적은 늘어난 처치 수만큼 보상을 나눔 (한 판 총량은 그대로)
+            // 보스전 중 부하 · 중간 보스 · 소환된 적은 시간에 따라 나오므로 예전 배율 그대로
+            int coinsBefore = Mathf.Max(coinDrop, Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul));
+            if (countsTowardBoss)
+            {
+                expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
+                coinDrop = GameMode.RoundRandom(coinsBefore / GameMode.KillStretch);
+            }
+            else
+            {
+                expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul);
+                coinDrop = coinsBefore;
+            }
         }
         EnemyHealth = setEnemyHP;
         bodyCollider = GetComponent<CircleCollider2D>();

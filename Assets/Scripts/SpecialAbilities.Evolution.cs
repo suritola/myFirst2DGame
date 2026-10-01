@@ -714,6 +714,14 @@ public static class SoulShards
     }
 
     // 적 수준별 양: 일반 1~2 · 강한 적 3~7 · 중간 보스 약 20~30 · 스테이지 보스 약 50
-    public static int ForEnemy(EnermyController e) => Mathf.Max(1, Mathf.RoundToInt(e.expReward / 30f));
+    public static int ForEnemy(EnermyController e)
+    {
+        int before = Mathf.Max(1, Mathf.RoundToInt(e.expReward * (e.countsTowardBoss ? GameMode.KillStretch : 1f) / 30f));
+        // 중간 보스: 경험치 기준 그대로
+        if (e.GetComponent<MidBossMark>() != null) return before;
+        // 일반 적 (1.8.9~): 판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게 줄이고,
+        // 보스까지 세는 적은 늘어난 처치 수만큼 더 나눔. 소수는 확률로 (여러 마리 모으면 평균이 맞음)
+        return GameMode.RoundRandom(before * GameMode.KillShardMul(e.countsTowardBoss));
+    }
     public static int ForBoss(int expReward) => 30 + Mathf.RoundToInt(expReward / 30f);
 }
