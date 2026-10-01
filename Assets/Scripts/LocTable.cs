@@ -21,6 +21,7 @@ public static class LocTable
         { "전체 볼륨", L("Master Volume", "全体音量", "总音量") },
         { "음악", L("Music", "音楽", "音乐") },
         { "효과음", L("Sound Effects", "効果音", "音效") },
+        { "마우스 감도", L("Mouse Sensitivity", "マウス感度", "鼠标灵敏度") },
         { "화면 모드", L("Display Mode", "画面モード", "显示模式") },
         { "전체 화면", L("Fullscreen", "フルスクリーン", "全屏") },
         { "창 모드", L("Windowed", "ウィンドウ", "窗口") },

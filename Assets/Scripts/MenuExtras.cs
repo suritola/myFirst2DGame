@@ -431,9 +431,28 @@ public static class SettingsUI
         }
         HighlightLang(langButtons);
 
-        SliderRow("전체 볼륨", 70f, GameSettings.Volume, v => GameSettings.Volume = v);
-        SliderRow("음악", -50f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
-        SliderRow("효과음", -170f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        SliderRow("전체 볼륨", 90f, GameSettings.Volume, v => GameSettings.Volume = v);
+        SliderRow("음악", -15f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        SliderRow("효과음", -120f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        SensitivityRow(-230f);
+    }
+
+    // 마우스 감도 25% ~ 300% (5% 단위, 기본 100%) · 전투 중 조준에만 적용
+    static void SensitivityRow(float y)
+    {
+        RowLabel("마우스 감도", y);
+        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
+        slider.minValue = GameSettings.MouseSensMin;
+        slider.maxValue = GameSettings.MouseSensMax;
+        slider.value = GameSettings.MouseSensitivity;
+        percent.text = Mathf.RoundToInt(slider.value * 100f) + "%";
+        slider.onValueChanged.AddListener(v =>
+        {
+            float snapped = Mathf.Round(v * 20f) / 20f;
+            GameSettings.MouseSensitivity = snapped;
+            percent.text = Mathf.RoundToInt(snapped * 100f) + "%";
+        });
     }
 
     static void HighlightLang(List<Button> buttons)

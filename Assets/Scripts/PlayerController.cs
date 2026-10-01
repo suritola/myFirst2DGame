@@ -425,11 +425,21 @@ public class PlayerController : MonoBehaviour
         // 애니메이션
         // =========================
 
-        if (!isSkillUsing && animator != null)
-        {
-            if (move.magnitude > 0) animator.SetTrigger("Move");
-            else animator.SetTrigger("Stop");
-        }
+        if (!isSkillUsing) UpdateBodyAnimation();
+    }
+
+    // 몸 애니메이션 (거너): 트리거 대신 상태를 직접 고름
+    // 사격 상태에는 나가는 전이가 없어 한 번 쏘면 달리기 · 대기로 돌아오지 못했고,
+    // 매 프레임 건 Move · Stop 트리거가 쌓여 달리기가 계속 첫 장으로 되감기던 문제
+    // 총은 PlayerLook 이 따로 그리므로 움직이는 동안은 항상 달리기, 서서 쏠 때만 잠깐 사격 자세
+    const float ShootPoseTime = 0.4f;
+    float shootPoseUntil;
+
+    void UpdateBodyAnimation()
+    {
+        if (animator == null || !animator.isActiveAndEnabled) return;
+        string want = move.sqrMagnitude > 0f ? "PlayerRun" : Time.time < shootPoseUntil ? "PlayerShoot" : "PlayerIdle";
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName(want)) animator.Play(want, 0, 0f);
     }
 
     // =====================================
@@ -486,7 +496,9 @@ void Shoot()
         bool cursed = special != null && special.IsLastBulletCursed(NowBullet);
         NowBullet--;
 
-        if (animator != null) animator.SetTrigger("Shoot");
+        // 서서 쏠 때는 쏠 때마다 사격 자세를 처음부터
+        shootPoseUntil = Time.time + ShootPoseTime;
+        if (animator != null && animator.isActiveAndEnabled && move.sqrMagnitude == 0f) animator.Play("PlayerShoot", 0, 0f);
 
         Vector3 mousePosition = mainCamera.ScreenToWorldPoint(GameInput.MousePosition);
         mousePosition.z = 0;

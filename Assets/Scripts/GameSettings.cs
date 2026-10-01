@@ -18,8 +18,11 @@ public static class GameSettings
     const string ColorBlindKey = "settings.colorBlind";
     const string KeyIconKey = "settings.keyIcons";
     const string CursorKey = "settings.gameCursor";
+    const string MouseSensKey = "settings.mouseSensitivity";
+    public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     static bool loaded;
+    static float mouseSens = 1f;
     static Loc.Lang language = Loc.Lang.Korean;
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
@@ -72,6 +75,14 @@ public static class GameSettings
         colorBlind = PlayerPrefs.GetInt(ColorBlindKey, 0) == 1;
         keyIcons = PlayerPrefs.GetInt(KeyIconKey, 1) == 1;
         gameCursor = PlayerPrefs.GetInt(CursorKey, 1) == 1;
+        mouseSens = Mathf.Clamp(PlayerPrefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
+    }
+
+    // 전투 중 마우스 감도 (1 = 윈도우 커서 그대로, 0.25 ~ 3) · 1.8.9~ (MouseSensitivity)
+    public static float MouseSensitivity
+    {
+        get { Load(); return mouseSens; }
+        set { Load(); mouseSens = Mathf.Clamp(value, MouseSensMin, MouseSensMax); PlayerPrefs.SetFloat(MouseSensKey, mouseSens); }
     }
 
     // 음악 · 효과음 볼륨 (0 ~ 1, 전체 볼륨에 곱해짐)
