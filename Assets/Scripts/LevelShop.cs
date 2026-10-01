@@ -331,10 +331,41 @@ public partial class LevelShop : MonoBehaviour
         foreach (Graphic g in LvUpPanel.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
     }
 
-    public void toggleLevelUp()
+    // 「레벨업!」 표시를 띄우고 있는 연출 수 (겹쳐도 마지막 연출이 끝날 때 꺼짐)
+    int levelUpShowing;
+    // 아직 연출하지 않은 레벨업 (한 번에 여러 레벨이 오르면 차례로)
+    int levelUpQueued;
+
+    // 경험치를 더하고 넘친 만큼 레벨업. 처치한 적 · 보스가 곧 사라져도 연출과 포인트가 끊기지 않게 이 창이 맡음
+    public void GainExp(PlayerController p, float amount)
     {
-        showLv = !showLv;
-        LvUpPanel.SetActive(showLv && !ShopOpen);
+        if (p == null) return;
+        p.nowEXP += amount;
+        int gained = 0;
+        while (p.nowEXP >= p.needEXP && p.needEXP > 0f)
+        {
+            p.nowEXP -= p.needEXP;
+            p.level++;
+            p.needEXP = PlayerController.NeedExp(p.level);
+            gained++;
+        }
+        if (gained == 0) return;
+        // 창이 꺼져 있으면 연출 없이 포인트만
+        if (!isActiveAndEnabled) { AddPending(gained); return; }
+        for (int i = 0; i < gained; i++) StartCoroutine(LevelUpSequence(p, levelUpQueued++ * 0.35f));
+    }
+
+    IEnumerator LevelUpSequence(PlayerController p, float delay)
+    {
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+        if (p != null) Juice.LevelUp(p.transform.position);
+        levelUpShowing++;
+        showLv = true;
+        yield return new WaitForSeconds(1f);
+        levelUpShowing--;
+        levelUpQueued = Mathf.Max(0, levelUpQueued - 1);
+        showLv = levelUpShowing > 0;
+        AddPending();                       // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
     Shop shopRef;

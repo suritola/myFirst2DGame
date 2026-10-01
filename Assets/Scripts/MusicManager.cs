@@ -77,9 +77,11 @@ public class MusicManager : MonoBehaviour
         }
 
         float step = Time.unscaledDeltaTime / FadeTime * MusicGain;
-        float target = MusicGain * GameSettings.MusicVolume;
+        // 전투 중 일시정지 · 레벨업 · 상점 창이 열려 멈춘 동안에는 조금 작게
+        float duck = sceneName == "GameScene" && Time.timeScale == 0f && !StoryDirector.Playing ? 0.55f : 1f;
+        float target = MusicGain * GameSettings.MusicVolume * duck;
         // 설정에서 줄이면 페이드를 기다리지 않고 바로 따라감
-        if (current.volume > target) current.volume = target;
+        if (current.volume > target && duck == 1f) current.volume = target;
         current.volume = Mathf.MoveTowards(current.volume, target, step);
         previous.volume = Mathf.MoveTowards(previous.volume, 0f, step);
         if (previous.volume <= 0f && previous.isPlaying) previous.Stop();

@@ -20,12 +20,22 @@ public class HPpack : MonoBehaviour
         // 힐팩 충돌
         // =========================
 
-        if (collision.CompareTag("Player"))
-        {
-            Destroy(pack);
-            playerC.PlayerHealth += healAmount;
-            if (playerC.PlayerHealth > playerC.PlayerMaxHealth) playerC.PlayerHealth = playerC.PlayerMaxHealth;
-            return;
-        }
+        if (used || !collision.CompareTag("Player")) return;
+        if (playerC == null) playerC = Hostile.Player;
+        if (playerC == null || playerC.IsDying) return;
+
+        // 같은 프레임에 두 번 닿아도 한 번만 회복
+        used = true;
+        Destroy(pack);
+        float before = playerC.PlayerHealth;
+        playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + healAmount);
+
+        // 회복한 양을 머리 위에 초록 숫자로 + 짧은 소리
+        int healed = Mathf.CeilToInt(playerC.PlayerHealth - before);
+        if (healed > 0 && SpecialAbilities.SharedFx != null)
+            SpecialAbilities.SharedFx.FloatText(playerC.transform.position, "+" + healed, new Color(0.45f, 1f, 0.5f), 5f, 0f);
+        Hostile.Play("chime", 0.45f, 1.25f);
     }
+
+    bool used;
 }

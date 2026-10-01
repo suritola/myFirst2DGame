@@ -398,7 +398,7 @@ public class StoryDirector : MonoBehaviour
         CanvasScaler cs = go.GetComponent<CanvasScaler>();
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920f, 1080f);
-        cs.matchWidthOrHeight = 0.5f;
+        cs.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;     // 16:10 · 21:9 에서도 1920×1080 영역이 다 보이게
         UIKit.EnsureStyle();
 
         d.shade = FullImage(go.transform, "Shade", new Color(0.02f, 0.01f, 0.03f, 0f));

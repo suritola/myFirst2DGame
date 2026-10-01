@@ -114,6 +114,11 @@ public class bosss : MonoBehaviour
         if (spawner != null) spawner.SummonMinions(transform.position, count);
     }
 
+    // 생긴 프레임에 맞아도 (분열한 슬라임 등) 색 바꾸기 · 피해 숫자가 깨지지 않게 미리
+    void Awake() => spriteRenderer = GetComponent<SpriteRenderer>();
+    // Start 가 끝나 체력이 정해졌는지 (그 전에 맞으면 체력 0 에서 깎여 바로 죽을 수 있음)
+    bool ready;
+
     void Start()
     {
         SpriteOutline.Enemy(gameObject);
@@ -152,6 +157,7 @@ public class bosss : MonoBehaviour
             }
             slimes.Add(this);
         }
+        ready = true;
     }
     bossbar bossbar;
     void Update()
@@ -203,7 +209,7 @@ public class bosss : MonoBehaviour
 
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
-        if (isDead) return;
+        if (isDead || !ready) return;
 
         // 체력 감소
         EnemyHealth -= damage;
@@ -262,15 +268,9 @@ public class bosss : MonoBehaviour
             LevelShop levelS = Cache<LevelShop>.Get;
             Level lv = Cache<Level>.Get;
 
-            playerC.nowEXP += expReward * (lv != null ? lv.bonusEXP : 1f);
-
-            if (playerC.nowEXP >= playerC.needEXP)
-            {
-                playerC.level++;
-                playerC.nowEXP -= playerC.needEXP;
-
-                StartCoroutine(LevelUpSequence(levelS));
-            }
+            float exp = expReward * (lv != null ? lv.bonusEXP : 1f);
+            if (levelS != null) levelS.GainExp(playerC, exp);
+            else playerC.nowEXP += exp;
 
             Point point = Cache<Point>.Get;
 
@@ -284,19 +284,6 @@ public class bosss : MonoBehaviour
         if (animator != null) animator.SetTrigger("death");
 
         StartCoroutine(Death(a));
-    }
-
-    IEnumerator LevelUpSequence(LevelShop levelS)
-    {
-        if (playerC != null) Juice.LevelUp(playerC.transform.position);
-        levelS.toggleLevelUp();
-
-
-        yield return new WaitForSeconds(1f);
-
-
-        levelS.toggleLevelUp();
-        levelS.AddPending();                // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
     public GameObject hp;

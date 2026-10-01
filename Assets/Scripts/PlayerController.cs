@@ -250,6 +250,9 @@ public class PlayerController : MonoBehaviour
 
 
 
+    // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
+    public static float NeedExp(int level) => 50 + level * 50;
+
     public void addDamage(int a)
     {
         damage += a;
@@ -262,8 +265,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
-        // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
-        needEXP = 50 + level * 50;
+        needEXP = NeedExp(level);
 
         // 생명의 샘: 초당 체력 회복
         if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)
@@ -286,7 +288,7 @@ public class PlayerController : MonoBehaviour
         // 상점 · ESC · 레벨업 등으로 멈춘 동안에는 입력을 받지 않음
         // (멈춘 화면에서 클릭하면 총이 나가거나 스킬이 시간을 다시 흐르게 하던 문제)
         // 시작 · 엔딩 연출 중에도 조작하지 않음
-        if (IsPaused || StoryDirector.Playing)
+        if (IsPaused || StoryDirector.Playing || IsDying)
         {
             move = Vector3.zero;
             return;
@@ -458,7 +460,8 @@ public class PlayerController : MonoBehaviour
 
         while (reload < reloadTime)
         {
-            reload += Time.unscaledDeltaTime;
+            // 필살기 조준의 느린 시간에도 제 속도로, 메뉴로 멈춘 동안에는 멈춤
+            if (!IsPaused) reload += Time.unscaledDeltaTime;
             yield return null;
         }
 
@@ -951,13 +954,36 @@ void Shoot()
         ShowHurt(taken);
         special?.OnPlayerHurt();
 
-        if (PlayerHealth <= 0)
-        {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("GameOver");
-        }
+        if (PlayerHealth <= 0) StartCoroutine(DeathSequence());
 
         return true;
+    }
+
+    // 쓰러지는 순간: 바로 화면을 바꾸지 않고 잠깐 느려지며 붉게 물든 뒤 결과 화면으로
+    public bool IsDying { get; private set; }
+
+    IEnumerator DeathSequence()
+    {
+        if (IsDying) yield break;
+        IsDying = true;
+        invincibleUntil = float.MaxValue;
+        CancelSkill();
+        move = Vector3.zero;
+        DamageFlash.Show(1f);
+        Hostile.Play("bigboom", 0.7f, 0.6f);
+        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Shake(0.5f, 0.3f);
+        Fx.Spawn("fx_deathburst", transform.position, 4f, new Color(1f, 0.35f, 0.3f), 14f);
+
+        // 일시정지 창이 열려도 실제 시간으로 흐름
+        float t = 0f;
+        while (t < 1.1f)
+        {
+            t += Time.unscaledDeltaTime;
+            if (Time.timeScale > 0f) Time.timeScale = Mathf.Lerp(0.25f, 0.05f, t / 1.1f);
+            yield return null;
+        }
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("GameOver");
     }
 
     // 무적 시간 동안 깜빡임
@@ -965,7 +991,7 @@ void Shoot()
     {
         if (spriteRenderer == null) return;
 
-        bool blinking = Time.time < invincibleUntil && !isSkillUsing;
+        bool blinking = Time.time < invincibleUntil && !isSkillUsing && !IsDying;
         UnityEngine.Color c = spriteRenderer.color;
         c.a = (blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f) * bodyAlpha;
         spriteRenderer.color = c;

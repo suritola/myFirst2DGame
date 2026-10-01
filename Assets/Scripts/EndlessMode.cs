@@ -53,7 +53,7 @@ public class EndlessMode : MonoBehaviour
         while (shop.IsOpen || Time.timeScale == 0f) yield return null;
         int add = Mathf.Max(0, level - p.level);
         p.level += add;
-        p.needEXP = 50 + p.level * 50;
+        p.needEXP = PlayerController.NeedExp(p.level);
         Juice.LevelUp(p.transform.position);
         shop.AddPending(add);               // 올라간 레벨만큼 쌓아 두고 [Space]로 하나씩 고름
     }

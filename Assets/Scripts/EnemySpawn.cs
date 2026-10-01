@@ -77,7 +77,8 @@ public class EnemySpawner : MonoBehaviour
     // 떨어진 코인을 자동으로 회수
     void clear()
     {
-        Coin coin1 = FindFirstObjectByType<Coin>();
+        Coin coin1 = Cache<Coin>.Get;
+        if (coin1 == null || playerC == null) return;
         GameObject[] coins = GameObject.FindGameObjectsWithTag("coin");
 
         foreach (GameObject coin in coins)

@@ -89,7 +89,12 @@ public class EnermyController : MonoBehaviour
     {
         CircleCollider2D c = GetComponent<CircleCollider2D>();
         if (c != null) byCollider[c] = this;
+        // 생긴 프레임에 맞아도 색 바꾸기 · 피해 숫자가 깨지지 않게 미리
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
+
+    // Start 가 끝나 체력이 정해졌는지 (그 전에 맞으면 체력 0 에서 깎여 바로 죽던 문제)
+    bool ready;
 
     void OnDestroy()
     {
@@ -130,6 +135,7 @@ public class EnermyController : MonoBehaviour
             s.type = skill;
             s.cooldown = skillCooldown;
         }
+        ready = true;
     }
 
     void Update()
@@ -263,7 +269,7 @@ public class EnermyController : MonoBehaviour
 
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
-        if (isDead) return;
+        if (isDead || !ready) return;
 
         if (DamageHook != null) damage = DamageHook(this, damage);
 
@@ -317,15 +323,9 @@ public class EnermyController : MonoBehaviour
             Level lv = Cache<Level>.Get;
 
             // 경험치 막대가 잠깐 꺼져 있어도 멈추지 않게
-            playerC.nowEXP += expReward * (lv != null ? lv.bonusEXP : 1f);
-
-            if (playerC.nowEXP >= playerC.needEXP)
-            {
-                playerC.level++;
-                playerC.nowEXP -= playerC.needEXP;
-
-                StartCoroutine(LevelUpSequence(levelS));
-            }
+            float exp = expReward * (lv != null ? lv.bonusEXP : 1f);
+            if (levelS != null) levelS.GainExp(playerC, exp);
+            else playerC.nowEXP += exp;
 
             Point point = Cache<Point>.Get;
 
@@ -338,19 +338,6 @@ public class EnermyController : MonoBehaviour
         if (animator != null) animator.SetTrigger("death");
 
         StartCoroutine(Death(a));
-    }
-
-    IEnumerator LevelUpSequence(LevelShop levelS)
-    {
-        if (playerC != null) Juice.LevelUp(playerC.transform.position);
-        levelS.toggleLevelUp();
-
-
-        yield return new WaitForSeconds(1f);
-
-        
-        levelS.toggleLevelUp();
-        levelS.AddPending();                // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
     public GameObject hp;

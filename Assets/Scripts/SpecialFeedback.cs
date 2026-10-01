@@ -55,8 +55,41 @@ public class SpecialFeedback : MonoBehaviour
     public void PlayRaw(string name, float vol = 1f, float pitch = 1f)
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
-        oneShot.pitch = pitch;
-        oneShot.PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        PitchSource(pitch).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+    }
+
+    // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
+    // 기본 음높이는 한 소스에서, 음높이를 바꾼 소리는 돌려 쓰는 소스 묶음에서 냄
+    const int PitchedCount = 8;
+    readonly List<AudioSource> pitched = new List<AudioSource>();
+    int pitchedNext;
+
+    AudioSource PitchSource(float pitch)
+    {
+        if (Mathf.Approximately(pitch, 1f)) { oneShot.pitch = 1f; return oneShot; }
+        // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 오래된 소스
+        for (int i = 0; i < pitched.Count; i++)
+            if (Mathf.Approximately(pitched[i].pitch, pitch)) return pitched[i];
+        AudioSource s = null;
+        for (int i = 0; i < pitched.Count; i++)
+            if (!pitched[i].isPlaying) { s = pitched[i]; break; }
+        if (s == null)
+        {
+            if (pitched.Count < PitchedCount)
+            {
+                s = gameObject.AddComponent<AudioSource>();
+                s.playOnAwake = false;
+                pitched.Add(s);
+            }
+            else
+            {
+                s = pitched[pitchedNext];
+                pitchedNext = (pitchedNext + 1) % PitchedCount;
+                s.Stop();
+            }
+        }
+        s.pitch = pitch;
+        return s;
     }
 
     public void StartLoop(string name, float vol = 1f, float pitch = 1f)
