@@ -82,6 +82,7 @@ public static class GameMode
     public static bool IsUnlocked(Difficulty d)
     {
         Load();
+        if (Demo.On) return d == Difficulty.Easy;        // 체험판은 쉬움만
         return d == Difficulty.Easy || (d <= Difficulty.Hard && unlocked >= 1) || (d == Difficulty.Endless && unlocked >= 2);
     }
 

@@ -13,8 +13,14 @@ using Steamworks;
 // 업적은 게임 이벤트를 듣고 있다가 조건을 채우면 SteamAchievements.Unlock으로 풂
 public class SteamManager : MonoBehaviour
 {
-    // Steamworks 파트너 사이트의 App ID (tools/steam/steam-config.json 의 appId 와 같아야 함)
-    public const uint AppId = 5328770;
+    // Steamworks 파트너 사이트의 App ID (tools/steam/steam-config.json · steam-demo-config.json 의 appId 와 같아야 함)
+    public const uint FullAppId = 5328770;
+    public const uint DemoAppId = 5369030;
+#if SOULSAVER_DEMO
+    public const uint AppId = DemoAppId;        // 체험판 (Demo.cs)
+#else
+    public const uint AppId = FullAppId;
+#endif
 
     public static SteamManager Instance { get; private set; }
     public static bool Initialized { get; private set; }

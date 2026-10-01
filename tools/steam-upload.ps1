@@ -7,32 +7,35 @@
 # 사용법: pwsh tools/steam-upload.ps1 -Version v1.7.1             (빌드 + 업로드)
 #         pwsh tools/steam-upload.ps1 -Version v1.7.1 -Preview    (업로드 없이 steamcmd 미리보기만)
 #         pwsh tools/steam-upload.ps1 -Version v1.7.1 -SkipBuild  (마지막 빌드를 다시 올림)
+#         pwsh tools/steam-upload.ps1 -Version v1.9.2 -Demo       (체험판: steam/steam-demo-config.json 의 앱 · 디포로)
 param(
     [Parameter(Mandatory)][string]$Version,
     [switch]$Preview,
     [switch]$SkipBuild,
+    [switch]$Demo,
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8     # 한글 메시지가 깨지지 않게
 
 $Project = Split-Path $PSScriptRoot -Parent
-$Config = Get-Content (Join-Path $PSScriptRoot "steam\steam-config.json") -Raw | ConvertFrom-Json
+$Config = Get-Content (Join-Path $PSScriptRoot $(if ($Demo) { "steam\steam-demo-config.json" } else { "steam\steam-config.json" })) -Raw | ConvertFrom-Json
 $Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
 $CopyDir = Join-Path $Work "Project"
-$OutDir = Join-Path $Work "SteamOut"
-$ScriptDir = Join-Path $Work "SteamScripts"
+$OutDir = Join-Path $Work $(if ($Demo) { "SteamDemoOut" } else { "SteamOut" })
+$ScriptDir = Join-Path $Work $(if ($Demo) { "SteamDemoScripts" } else { "SteamScripts" })
 
 # ---------------------------------------------------------------- 설정 확인
 if ($Config.appId -eq 0 -or $Config.depotId -eq 0) { throw "tools/steam/steam-config.json 에 appId 와 depotId 를 채우세요" }
 if (-not $Config.steamUser) { throw "tools/steam/steam-config.json 에 steamUser (Steamworks 빌드 계정) 를 채우세요" }
 $code = Get-Content (Join-Path $Project "Assets\Scripts\SteamManager.cs") -Raw
-if ($code -notmatch "public const uint AppId = (\d+);" -or [uint32]$Matches[1] -ne [uint32]$Config.appId) {
-    throw "SteamManager.cs 의 AppId 가 steam-config.json 의 appId ($($Config.appId)) 와 다릅니다"
+$idName = if ($Demo) { "DemoAppId" } else { "FullAppId" }
+if ($code -notmatch "public const uint $idName = (\d+);" -or [uint32]$Matches[1] -ne [uint32]$Config.appId) {
+    throw "SteamManager.cs 의 $idName 가 설정 파일의 appId ($($Config.appId)) 와 다릅니다"
 }
 if (-not (Test-Path $Config.steamcmd)) { throw "steamcmd 를 찾을 수 없습니다: $($Config.steamcmd) (https://developer.valvesoftware.com/wiki/SteamCMD 에서 받기)" }
 $commit = (git -C $Project rev-parse --short HEAD).Trim()
-Write-Host "Soul Saver $Version (커밋 $commit) → App $($Config.appId) / Depot $($Config.depotId)"
+Write-Host "Soul Saver $(if ($Demo) { '체험판 ' })$Version (커밋 $commit) → App $($Config.appId) / Depot $($Config.depotId)"
 
 # ---------------------------------------------------------------- 빌드 (스팀 연동 켬)
 if (-not $SkipBuild) {
@@ -42,11 +45,11 @@ if (-not $SkipBuild) {
         if ($LASTEXITCODE -ge 8) { throw "$d 복사 실패 (robocopy $LASTEXITCODE)" }
     }
     if (Test-Path $OutDir) { Remove-Item -Recurse -Force $OutDir }
-    $log = Join-Path $Work "steam-build.log"
+    $log = Join-Path $Work $(if ($Demo) { "steam-demo-build.log" } else { "steam-build.log" })
     Write-Host "Unity 빌드 중... (로그: $log)"
     $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
         "-batchmode", "-quit", "-projectPath", "`"$CopyDir`"",
-        "-executeMethod", "BuildScript.BuildWindows", "-steam",
+        "-executeMethod", "BuildScript.BuildWindows", "-steam", $(if ($Demo) { "-demo" } else { "-steam" }),
         "-buildOutput", "`"$OutDir`"", "-buildVersion", $Version.TrimStart("v"),
         "-logFile", "`"$log`"")
     if ($p.ExitCode -ne 0 -or -not (Get-ChildItem $OutDir -Filter *.exe -ErrorAction SilentlyContinue)) {
@@ -80,7 +83,7 @@ $appVdf = Join-Path $ScriptDir "app_build_$($Config.appId).vdf"
 "AppBuild"
 {
     "AppID" "$($Config.appId)"
-    "Desc" "Soul Saver $Version ($commit)"
+    "Desc" "Soul Saver $(if ($Demo) { 'Demo ' })$Version ($commit)"
     "Preview" "$(if ($Preview) { 1 } else { 0 })"
     "SetLive" "$($Config.betaBranch)"
     "ContentRoot" "$OutDir"

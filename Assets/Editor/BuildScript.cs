@@ -11,6 +11,7 @@ public static class BuildScript
 {
     const string IconPath = "Assets/Art/Icon/GunSaverIcon.png";
     const string NoSteam = "DISABLESTEAMWORKS";
+    const string DemoDefine = "SOULSAVER_DEMO";
 
     public static void BuildWindows()
     {
@@ -19,9 +20,17 @@ public static class BuildScript
         if (!string.IsNullOrEmpty(version)) PlayerSettings.bundleVersion = version;
 
         bool steam = Environment.GetCommandLineArgs().Contains("-steam");
+        // -demo: 체험판 (Demo.cs). 저장 데이터 · 실행 파일이 정식판과 섞이지 않게 제품 이름도 바꿈
+        bool demo = Environment.GetCommandLineArgs().Contains("-demo");
         var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone)
-            .Split(';').Where(d => d.Length > 0 && d != NoSteam).ToList();
+            .Split(';').Where(d => d.Length > 0 && d != NoSteam && d != DemoDefine).ToList();
         if (!steam) defines.Add(NoSteam);
+        if (demo)
+        {
+            defines.Add(DemoDefine);
+            PlayerSettings.productName = "Soul Saver Demo";
+        }
+        Debug.Log("체험판: " + (demo ? "켬" : "끔"));
         PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", defines));
         Debug.Log("스팀 연동: " + (steam ? "켬" : "끔"));
 

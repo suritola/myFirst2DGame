@@ -14,7 +14,7 @@ public static class SaveMigration
     public static void Run()
     {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-        if (Application.productName == OldProduct || PlayerPrefs.GetInt(DoneKey, 0) == 1) return;
+        if (Application.productName == OldProduct || Demo.On || PlayerPrefs.GetInt(DoneKey, 0) == 1) return;      // 체험판은 옮기지 않음
         string root = Application.isEditor ? @"HKCU\Software\Unity\UnityEditor\" : @"HKCU\Software\";
         string from = root + Application.companyName + @"\" + OldProduct;
         string to = root + Application.companyName + @"\" + Application.productName;

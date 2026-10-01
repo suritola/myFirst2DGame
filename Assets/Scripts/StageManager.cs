@@ -476,6 +476,11 @@ public class StageManager : MonoBehaviour
             if (EndlessMode.Instance != null) EndlessMode.Instance.OnBossDefeated();
             return;
         }
+        if (stage == 0 && Demo.On)
+        {
+            StartCoroutine(DemoFinish());
+            return;
+        }
         if (stage == 0)
         {
             if (portal != null) portal.SetActive(true);
@@ -505,6 +510,17 @@ public class StageManager : MonoBehaviour
             Cleared?.Invoke(cleared);
             StartCoroutine(EndingAfter(cleared, opened));
         }
+    }
+
+    // 체험판: 리치 왕을 쓰러뜨리면 (거너는 무기 진화까지 맛본 뒤) 끝 화면 (Demo.cs)
+    IEnumerator DemoFinish()
+    {
+        if (spawner != null) spawner.spawningEnabled = false;
+        ShowBanner(Loc.T("리치 왕을 쓰러뜨렸다!"), 3f);
+        if (Evo) yield return Evolution(true);
+        yield return new WaitForSecondsRealtime(3f);
+        while (Time.timeScale == 0f) yield return null;     // 레벨업 · 상점 창이 열려 있으면 닫을 때까지
+        Demo.ShowEnd();
     }
 
     // 3장 보스를 쓰러뜨려 한 판을 클리어했을 때 (업적 등)

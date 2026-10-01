@@ -94,6 +94,7 @@ public static class CharacterData
     {
         CharacterDef d = Def(id);
         if (d.price < 0) return false;
+        if (Demo.On) return Demo.CharacterAllowed(id);      // 체험판: 거너 · 검사만 (구매 없이)
         return d.price == 0 || PlayerPrefs.GetInt(UnlockKey + (int)id, 0) == 1;
     }
 
@@ -154,7 +155,7 @@ public static class CharacterData
     public static bool Buy(CharacterId id)
     {
         CharacterDef d = Def(id);
-        if (d.price <= 0 || IsUnlocked(id) || Points < d.price) return false;
+        if (d.price <= 0 || IsUnlocked(id) || Points < d.price || Demo.On) return false;
         PlayerPrefs.SetInt(PointsKey, Points - d.price);
         PlayerPrefs.SetInt(UnlockKey + (int)id, 1);
         PlayerPrefs.Save();

@@ -18,7 +18,7 @@ public static class WindowTitle
     {
         string v = "v" + Application.version.TrimStart('v');
         foreach (TMPro.TMP_Text t in Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
-            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$")) t.text = v;
+            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$")) t.text = v + Demo.Label;      // 체험판이면 "v1.9.2  체험판"
     }
 
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
@@ -38,7 +38,7 @@ public static class WindowTitle
     static void Set()
     {
         System.IntPtr h = GetActiveWindow();
-        if (h != System.IntPtr.Zero) SetWindowTextW(h, GameName);
+        if (h != System.IntPtr.Zero) SetWindowTextW(h, Demo.On ? GameName + " Demo" : GameName);
     }
 #endif
 }
