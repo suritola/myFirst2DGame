@@ -215,6 +215,7 @@ public class bosss : MonoBehaviour
         // 체력 감소
         EnemyHealth -= damage;
         DamagePopup.Show(transform, damage, spriteRenderer);
+        SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 
         transform.position += dir * knockBack * knockBackTaken;
 

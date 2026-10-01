@@ -1346,7 +1346,7 @@ public static class LocTable
         { "용암 플라스크", L("Lava Flask", "溶岩のフラスコ", "熔岩烧瓶") },
         { "끓어오르는 용암 플라스크. 폭발이 주황빛으로 물들고 묵직한 폭음이 섞입니다.", L("A boiling lava flask. Explosions turn orange with a heavy boom.", "煮えたぎる溶岩のフラスコ。爆発が橙色に染まり、重い爆音が混じります。", "沸腾的熔岩烧瓶。爆炸染成橙色，夹杂沉重爆鸣。") },
         { "푸른 불꽃", L("Blue Flame", "青い炎", "蓝焰") },
-        { "명중 불꽃과 코인 반짝임이 푸른색이 됩니다.", L("Hit sparks and coin glitter turn blue.", "命中の火花とコインのきらめきが青くなります。", "命中火花与金币闪光变为蓝色。") },
+        { "명중 불꽃 · 처치 효과 · 코인 반짝임이 푸른 불꽃으로 바뀝니다.", L("Hit sparks, kill effects and coin glitter turn into blue flames.", "命中の火花・撃破エフェクト・コインのきらめきが青い炎に変わります。", "命中火花、击杀特效与金币闪光变为蓝色火焰。") },
         { "벚꽃", L("Cherry Blossom", "桜", "樱花") },
         { "명중하면 분홍 불꽃, 적이 쓰러지면 벚꽃잎이 흩날립니다. 코인 소리가 맑아집니다.", L("Pink sparks on hit, cherry petals scatter when enemies fall. Coin sounds become clearer.", "命中するとピンクの火花、敵が倒れると桜の花びらが舞います。コインの音が澄みます。", "命中时粉色火花，敌人倒下时樱花瓣飞舞。金币声更清脆。") },
         { "뇌전", L("Thunder", "雷電", "雷电") },

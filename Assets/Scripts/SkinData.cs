@@ -89,7 +89,7 @@ public static class SkinData
         W("flask__lava", L, 2, "용암 플라스크", "끓어오르는 용암 플라스크. 폭발이 주황빛으로 물들고 묵직한 폭음이 섞입니다.", new Color(1f, 0.5f, 0.15f), 0.85f, "thump"),
 
         // ---------------- 이펙트 (모든 캐릭터)
-        E("skin_bluefire", 0, "푸른 불꽃", "명중 불꽃과 코인 반짝임이 푸른색이 됩니다.", new Color(0.45f, 0.75f, 1f), null),
+        E("skin_bluefire", 0, "푸른 불꽃", "명중 불꽃 · 처치 효과 · 코인 반짝임이 푸른 불꽃으로 바뀝니다.", new Color(0.45f, 0.75f, 1f), null),
         E("skin_sakura", 1, "벚꽃", "명중하면 분홍 불꽃, 적이 쓰러지면 벚꽃잎이 흩날립니다. 코인 소리가 맑아집니다.", new Color(1f, 0.6f, 0.75f), "sk_kill_petal"),
         E("skin_thunder", 2, "뇌전", "명중하면 노란 전기, 적이 쓰러지면 작은 번개가 칩니다. 코인에 전기 튀는 소리.", new Color(1f, 0.9f, 0.35f), "sk_kill_zap"),
         E("skin_starlight", 3, "별의 축복", "명중 불꽃이 무지갯빛으로 바뀌고, 적이 쓰러지면 별이 터지며 맑은 종소리가 울립니다. 코인은 별가루로 반짝입니다.", Color.white, "sk_kill_star"),
