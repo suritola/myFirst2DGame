@@ -62,7 +62,7 @@ public partial class SpecialAbilities
             return null;
         }
         if (EvolutionTier == 0) return Tier1Options;
-        if (EvolutionTier == 1 && WeaponActive) return Tier2Options(CurrentWeapon);
+        if (EvolutionTier == 1 && gunEvo1 >= 0) return Tier2Options(gunEvo1);
         return null;
     }
 
@@ -77,22 +77,16 @@ public partial class SpecialAbilities
     }
 
     // 2차에서 같은 무기를 다시 고른 강화판 이름 (도감)
-    public static string MaxedName(int id) => id switch
-    {
-        FlameId => Loc.T("지옥불 방사기"),
-        SniperId => Loc.T("영혼 레일건"),
-        DualId => Loc.T("심판의 쌍권총"),
-        _ => "",
-    };
+    public static string MaxedName(int id) => Loc.T(GunAugName(id, true));
 
     public string EvolutionName(int id, int tier)
     {
         if (IsAwaken(id)) return Loc.T(AwakenNames[id - AwakenFirst]);
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentName(id));
         if (id < 0) return Gunner ? Loc.T("기본 권총") : Loc.T(CharacterData.Current.weapon);
-        if (tier >= 2 && id == FlameId) return Loc.T("지옥불 방사기");
-        if (tier >= 2 && id == SniperId) return Loc.T("영혼 레일건");
-        if (tier >= 2 && id == DualId) return Loc.T("심판의 쌍권총");
+        // 무기가 아니라 기본 공격에 붙는 능력 이름 (2차에서 같은 계열이면 극대화 이름)
+        if (IsKit(id)) return Loc.T(CharacterKit.FormAugName(id));
+        if (GunAugName(id, false).Length > 0) return Loc.T(GunAugName(id, tier >= 2 && (id == FlameId || id == SniperId || id == DualId)));
         return Loc.T(abilities[id].name);
     }
 
@@ -100,7 +94,12 @@ public partial class SpecialAbilities
     {
         get
         {
-            if (Gunner) return WeaponActive ? EvolutionName(CurrentWeapon, EvolutionTier) : Loc.T("기본 권총");
+            if (Gunner)
+            {
+                if (gunEvo1 < 0) return Loc.T("기본 권총");
+                if (gunEvo2 < 0) return EvolutionName(gunEvo1, 1);
+                return gunEvo2 == gunEvo1 ? EvolutionName(gunEvo2, 2) : EvolutionName(gunEvo1, 1) + " · " + EvolutionName(gunEvo2, 2);
+            }
             CharacterKit k = Kit;
             if (k == null || k.form < 0) return EvolutionName(-1, 0);
             string n = EvolutionName(k.form, 1);
@@ -123,7 +122,7 @@ public partial class SpecialAbilities
     {
         get
         {
-            if (Gunner) return EvolutionIcon(WeaponActive ? CurrentWeapon : -1);
+            if (Gunner) return EvolutionIcon(UltActive ? UltId : -1);
             CharacterKit k = Kit;
             return EvolutionIcon(k != null && k.form >= 0 ? k.form : -1);
         }
@@ -134,9 +133,12 @@ public partial class SpecialAbilities
     {
         if (IsAwaken(id)) return Loc.T(AwakenDescs[id - AwakenFirst]);
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
-        if (!Gunner) return Loc.T(CharacterKit.FormDesc(id));
-        string body = Loc.T(abilities[id].description);
-        return tier >= 2 ? body + "\n<color=#9fd8ff>" + Loc.T("진화") + "</color>  " + EvolveText(id) : body;
+        // 기본 공격에 붙는 능력 + 바뀌는 필살기
+        string ult = "\n<color=#9fd8ff>" + Loc.T("필살기") + " · " + UltName(id) + "</color>  ";
+        if (!Gunner) return Loc.T(CharacterKit.FormDesc(id)) + ult + Loc.T(KitUltDesc(id));
+        bool maxed = tier >= 2 && id == gunEvo1;
+        string keep = tier >= 2 && !maxed && gunEvo1 >= 0 ? "\n<color=#A89C86>" + Loc.T(GunAugName(gunEvo1, false)) + Loc.T(" 능력도 그대로") + "</color>" : "";
+        return Loc.T(GunAugDesc(id, maxed)) + keep + ult + Loc.T(VolleyDesc(id));
     }
 
     // 들었던 무기 (권총 = -1부터 진화 순서대로): 무기마다 숙련 가지가 트리에 남음
@@ -148,37 +150,24 @@ public partial class SpecialAbilities
     {
         EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionName(id, EvolutionTier + 1), RunStats.Seconds));
         if (IsAwaken(id)) { ApplyAwaken(id); EvolutionTier = 3; return; }
-        if (!Gunner) { KitEvolve(id); return; }
-        int prev = WeaponActive ? CurrentWeapon : -1;
         int tier = EvolutionTier + 1;
-
-        // 필살기 특성 강화는 새 무기로 이어받음 (권총 필살기 → 첫 진화 무기 포함)
-        int ultFrom = prev < 0 ? PistolUlt : prev;
+        // 필살기 강화(영혼 트리)는 새 필살기로 이어받음
+        int ultFrom = UltActive ? UltId : PistolUlt;
         if (ultFrom != id && ultLevels.TryGetValue(ultFrom, out int[] ul)) ultLevels[id] = (int[])ul.Clone();
-        if (prev >= 0 && prev != id)
-        {
-            equipped.Remove(prev);
-            weapons.Remove(prev);
-            evolved.Remove(prev);
-            if (flameMuzzle != null) Destroy(flameMuzzle);
-            CancelSniperCharge();
-            weaponIndex = -1;
-        }
-        if (!equipped.Contains(id))
-        {
-            equipped.Add(id);
-            weapons.Add(id);
-        }
-        weaponIndex = weapons.IndexOf(id);
+        if (!Gunner) { KitEvolve(id); return; }
+        // 무기는 권총 그대로, 능력만 덧붙음 (SpecialAbilities.EvoAugments)
+        if (tier == 1) gunEvo1 = id; else gunEvo2 = id;
         EvolutionTier = tier;
-        if (tier >= 2 && !evolved.Contains(id)) Evolve(id);
         if (!weaponHistory.Contains(id)) weaponHistory.Add(id);
         historyTier[id] = tier;
-        if (UsesAmmo(id)) { WeaponAmmo a = Ammo(id); a.ammo = MagSize(id); a.reloadEnd = -1f; }
-        nextFire = 0f;
+        if (fx != null)
+        {
+            fx.Play("pulse", 0.9f, 0.9f);
+            fx.Play("chime", 0.8f, 1.1f);
+            if (player != null) fx.FloatText(player.transform.position, EvolutionName(id, tier) + "!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
+        }
         RebuildHudRows();
     }
-
     // 다른 캐릭터: 평타의 형태(1차) · 강화(2차)를 바꿈
     void KitEvolve(int id)
     {
@@ -283,7 +272,7 @@ public partial class SpecialAbilities
         foreach (int w in weaponHistory) AddMastery(t, w);
 
         // ---------------- 1 필살기
-        Sprite ult = WeaponActive ? abilities[CurrentWeapon].icon : LvIcon(3);
+        Sprite ult = UltActive && UltId < abilities.Length ? abilities[UltId].icon : LvIcon(3);
         if (!Gunner)
         {
             // 캐릭터 우클릭 (회전 베기 · 출혈 돌진 · 화살비 · 대폭발) 전용 위력 (예전 상점 네 번째 줄)
@@ -297,7 +286,7 @@ public partial class SpecialAbilities
         t.Add(Node("u.gauge1", "u.power1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", 12, LvIcon(2), () => TreeGaugeMul += 0.12f));
         Chain(t, "u.gauge", 2, 3, "u.gauge1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", new[] { 26, 44 }, LvIcon(2), () => TreeGaugeMul += 0.12f);
         // 필살기 특성: 무기마다 다름 (권총 타겟 수 · 화염 회오리 지속 · 레일건 굵기 …), 진화해도 이어짐
-        int uw = WeaponActive ? CurrentWeapon : PistolUlt;
+        int uw = UltActive ? UltId : PistolUlt;
         string ut = UltTraitName(uw), ud = Loc.T("필살기") + " " + ut + " " + UltTraitStep(uw);
         t.Add(RawNode("u.trait1", "u.power1", 1, ut, ud, 16, ult, () => UpgradeUlt(uw, UltTraitStat)));
         t.Add(RawNode("u.trait2", "u.trait1", 1, ut + " II", ud, 32, ult, () => UpgradeUlt(uw, UltTraitStat)));
@@ -362,7 +351,7 @@ public partial class SpecialAbilities
     // 지금 무기(형태)에 잘 맞는 칸의 앞글자 (영혼 트리 추천 표시)
     string[] RecommendedPrefixes()
     {
-        int w = Gunner ? (WeaponActive ? CurrentWeapon : -1) : (Kit != null ? Kit.form : -1);
+        int w = Gunner ? (gunEvo2 >= 0 ? gunEvo2 : gunEvo1) : (Kit != null ? Kit.form : -1);
         switch (w)
         {
             case SniperId: case SeekerId: return new[] { "w.crit", "w.critdmg", "m" + w };
@@ -458,8 +447,8 @@ public partial class SpecialAbilities
             t.Add(RawNode(k + ".x", k, 0, Loc.T("기억: ") + wname, Loc.T("모든 무기 피해 +8%"), 30, icon, () => AddAttack(0.08f)));
             return;
         }
-        // 진화 무기: 그 무기만의 특성 세 단계 + 이어지는 보너스
-        string trait = TraitName(w), step = TraitStep(w);
+        // 진화 능력: 그 능력을 강하게 하는 세 단계 + 이어지는 보너스
+        string trait = AugTraitName(w), step = AugTraitStep();
         t.Add(RawNode(k + ".t1", k, 0, trait, step, 18, icon, () => AddTrait(w)));
         t.Add(RawNode(k + ".t2", k + ".t1", 0, trait + " II", step, 34, icon, () => AddTrait(w)));
         t.Add(RawNode(k + ".t3", k + ".t2", 0, trait + " III", step, 56, icon, () => AddTrait(w)));
@@ -578,6 +567,7 @@ public partial class SpecialAbilities
     void TreeOnKill(Vector3 pos)
     {
         FateOnKill(pos);
+        EvoOnKill(pos);
         if (TreeGoldChance <= 0f || Random.value >= TreeGoldChance) return;
         Coin c = Cache<Coin>.Get;
         if (c == null) return;

@@ -542,6 +542,7 @@ void Shoot()
                 special?.ApplyGunCards(b, false, i == 0);
             }
         }
+        special?.EvoExtraShots(startPosition, direction, bulletDamage / Mathf.Max(0.01f, cursed ? 3f : 1f));      // 쌍발 총구 · 산탄 총구
     }
 
 
@@ -633,7 +634,7 @@ void Shoot()
         if (skillEffectPanel != null)
         {
             if (!effectColorSaved) { baseEffectColor = skillEffectPanel.color; effectColorSaved = true; }
-            Color tint = special != null && special.WeaponActive ? Color.Lerp(baseEffectColor, special.AimTint, 0.6f) : baseEffectColor;
+            Color tint = special != null && special.UltActive ? Color.Lerp(baseEffectColor, special.AimTint, 0.6f) : baseEffectColor;
             tint.a = skillEffectPanel.color.a;
             skillEffectPanel.color = tint;
         }
@@ -681,8 +682,8 @@ void Shoot()
 
         targets.Add(closestEnemy);
 
-        // 특수 무기를 들고 있으면 무기다운 표식 (범위형 무기는 표식 없음)
-        if (special != null && special.WeaponActive)
+        // 진화한 무기의 필살기면 무기다운 표식 (범위형 무기는 표식 없음)
+        if (special != null && special.UltActive)
         {
             GameObject weaponMark = special.MarkTarget(closestEnemy.transform);
             if (weaponMark != null) targetMarks.Add(weaponMark);
@@ -774,8 +775,8 @@ void Shoot()
     {
         isVolleying = true;
 
-        // 특수 무기를 들고 있으면 그 무기다운 일제 사격
-        if (special != null && special.WeaponActive)
+        // 진화한 무기가 있으면 그 무기다운 일제 사격
+        if (special != null && special.UltActive)
         {
             yield return StartCoroutine(special.WeaponVolley(targets, skillDamage, getHP));
             targets.Clear();

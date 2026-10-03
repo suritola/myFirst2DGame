@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 거너가 아닌 캐릭터의 무기 진화 (1.7.8~): 평타 자체가 바뀜 → 레벨업 카드(검기 · 도탄 표창 …)는 그대로 붙음
-//   1차 진화(형태): 캐릭터 전용 무기 셋 중 하나의 모양으로 평타가 바뀜
-//     검사     전쟁 망치(주변 내리찍기 · 기절) · 채찍검(길고 가늘게, 끝이 아픔) · 기창(앞으로 찌르며 돌진)
-//     도적     독침 대롱(빠른 독침 · 중독) · 도박 카드(카드 세 장 · 조커 폭발) · 살상 와이어(맞은 적에서 줄이 튐)
-//     궁수     그물 활(맞은 자리 묶기) · 투창(모두 관통 · 멀리 갈수록 강함) · 속사 활(세 발 연사)
-//     연금술사 수은 구슬(두 번 더 튕겨 터짐) · 자석 폭탄(끌어모아 터짐) · 폭죽 발사기(불꽃 다섯 갈래)
-//   2차 진화(강화): 형태 위에 덧붙는 효과 (캐릭터마다 셋)
+// 거너가 아닌 캐릭터의 무기 진화 (1.9.4~): 평타 모양은 그대로, 고른 무기의 느낌이 평타 능력 + 우클릭 궁극기로 (SpecialAbilities.KitUlts)
+//   1차 진화(형태 능력): 캐릭터 전용 무기 셋 중 하나
+//     검사     대지의 일격(세 번째마다 내리찍어 기절) · 채찍 칼날(사거리 +30%, 끝이 아픔) · 창날 찌르기(벨 때마다 창날이 앞으로)
+//     도적     독 표창(독 · 공격 속도 +20%) · 도박 표창(피해 제각각 · 조커 폭발) · 와이어 표창(맞은 적에서 줄이 튐)
+//     궁수     그물 화살(맞은 자리 묶기) · 투창 화살(가득 당기면 모두 관통 · 멀리 갈수록 강함) · 연사 화살(한 발 더)
+//     연금술사 수은 플라스크(한 번 더 튕겨 터짐) · 자석 플라스크(끌어모아 터짐) · 폭죽 플라스크(불꽃 세 갈래)
+//   2차 진화(강화): 그 위에 덧붙는 효과 (캐릭터마다 셋)
 public partial class CharacterKit
 {
     // 2차 진화 강화 번호 (특수 능력 번호와 겹치지 않게 100부터)
@@ -21,7 +21,7 @@ public partial class CharacterKit
     [HideInInspector] public int form = -1;         // 1차 진화 형태 (캐릭터 전용 무기 번호), -1 = 기본
     [HideInInspector] public int augment = -1;      // 2차 진화 강화
     [HideInInspector] public float formPower = 1f;  // 영혼 트리 형태 숙련: 평타 피해 배율
-    int swingCount, throwCount;
+    int swingCount, throwCount, hammerCount;
 
     public static int[] AugmentsFor(CharacterId who) => who switch
     {
@@ -55,138 +55,84 @@ public partial class CharacterKit
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
-    // 형태 설명 (진화 카드 · 트리)
-    public static string FormDesc(int id) => id switch
+    // 형태 능력 이름 (진화 카드 · 트리 · 도감)
+    public static string FormAugName(int id) => id switch
     {
-        SpecialAbilities.KitHammer => "평타가 몸 주위를 크게 내리찍습니다. 느리지만 피해 200%, 맞은 적은 잠깐 기절.",
-        SpecialAbilities.KitWhip => "평타가 길고 가는 채찍 베기가 됩니다. 사거리 180%, 끝부분에 맞은 적은 두 배 피해.",
-        SpecialAbilities.KitLance => "평타를 누르면 마우스 쪽으로 쭉 돌진하며 지나간 적을 찌르고(60%), 도착한 곳에서 길게 찌릅니다 (사거리 150%, 피해 170%). 돌진 중 무적.",
-        SpecialAbilities.KitBlowgun => "평타가 빠른 독침이 됩니다. 공격 속도 170%, 한 발 피해 55%, 맞은 적에게 독이 쌓임.",
-        SpecialAbilities.KitCards => "평타가 카드 세 장이 됩니다. 장마다 피해가 제각각 (50~170%), 가끔 조커가 폭발.",
-        SpecialAbilities.KitWire => "평타 표창이 맞은 적에게서 가까운 적 둘에게 줄이 튀어 벱니다. (피해 70%)",
-        SpecialAbilities.KitNetBow => "화살이 맞은 자리에 그물을 펼쳐 주변 적을 잠깐 묶습니다.",
-        SpecialAbilities.KitJavelin => "화살 대신 무거운 투창. 모든 적을 꿰뚫고 멀리 날아갈수록 강해집니다. (최대 300%) 당기는 속도 80%",
-        SpecialAbilities.KitBurstBow => "한 번 쏠 때 화살 세 발을 연달아 쏩니다. (발당 피해 60%)",
-        SpecialAbilities.KitQuicksilver => "플라스크가 터진 뒤 가까운 적에게 두 번 더 튕겨 터집니다. (튕길 때마다 피해 70%)",
-        SpecialAbilities.KitMagnet => "플라스크가 터지기 전에 주변 적을 끌어모읍니다. 피해 125%",
-        SpecialAbilities.KitFirework => "플라스크가 터지면 불꽃 다섯 갈래가 퍼져 한 번씩 더 터집니다. (피해 45%)",
+        SpecialAbilities.KitHammer => "대지의 일격",
+        SpecialAbilities.KitWhip => "채찍 칼날",
+        SpecialAbilities.KitLance => "창날 찌르기",
+        SpecialAbilities.KitBlowgun => "독 표창",
+        SpecialAbilities.KitCards => "도박 표창",
+        SpecialAbilities.KitWire => "와이어 표창",
+        SpecialAbilities.KitNetBow => "그물 화살",
+        SpecialAbilities.KitJavelin => "투창 화살",
+        SpecialAbilities.KitBurstBow => "연사 화살",
+        SpecialAbilities.KitQuicksilver => "수은 플라스크",
+        SpecialAbilities.KitMagnet => "자석 플라스크",
+        SpecialAbilities.KitFirework => "폭죽 플라스크",
         _ => "",
     };
 
-    // 형태별 공격 속도 배율 (PlayerController 가 평타 간격 · 활 당기는 시간에 씀)
-    float FormRate => form switch
+    // 형태 능력 설명 (진화 카드 · 트리 · 도감)
+    public static string FormDesc(int id) => id switch
     {
-        SpecialAbilities.KitHammer => 0.6f,
-        SpecialAbilities.KitLance => 0.85f,
-        SpecialAbilities.KitBlowgun => 1.7f,
-        SpecialAbilities.KitCards => 0.85f,
-        SpecialAbilities.KitJavelin => 0.8f,
-        _ => 1f,
+        SpecialAbilities.KitHammer => "세 번 벨 때마다 땅을 내리찍어 주변 적에게 피해(150%)를 주고 잠깐 기절시킵니다.",
+        SpecialAbilities.KitWhip => "베기 사거리 +30%, 칼끝에 맞은 적은 피해 1.5배.",
+        SpecialAbilities.KitLance => "벨 때마다 앞으로 적을 꿰뚫는 창날이 날아갑니다. (피해 80%)",
+        SpecialAbilities.KitBlowgun => "표창이 맞은 적에게 독을 쌓고 (최대 5중첩), 공격 속도 +20%.",
+        SpecialAbilities.KitCards => "표창 피해가 제각각 (50~170%), 가끔 조커가 폭발합니다.",
+        SpecialAbilities.KitWire => "표창이 맞은 적에게서 가까운 적 둘에게 줄이 튀어 벱니다. (피해 50%)",
+        SpecialAbilities.KitNetBow => "반 이상 당긴 화살이 맞은 자리에 그물을 펼쳐 주변 적을 잠깐 묶습니다.",
+        SpecialAbilities.KitJavelin => "가득 당긴 화살이 모든 적을 꿰뚫고 멀리 날아갈수록 강해집니다. (최대 200%)",
+        SpecialAbilities.KitBurstBow => "쏠 때마다 뒤따르는 화살 한 발이 더 나갑니다. (피해 50%)",
+        SpecialAbilities.KitQuicksilver => "플라스크가 터진 뒤 가까운 적에게 한 번 더 튕겨 터집니다. (피해 70%)",
+        SpecialAbilities.KitMagnet => "플라스크가 터지기 전에 주변 적을 끌어모읍니다.",
+        SpecialAbilities.KitFirework => "플라스크가 터지면 불꽃 세 갈래가 퍼져 한 번씩 더 터집니다. (피해 45%)",
+        _ => "",
     };
+
+    // 형태별 공격 속도 배율 (평타 모양이 그대로라 독 표창만 빨라짐)
+    float FormRate => form == SpecialAbilities.KitBlowgun ? 1.2f : 1f;
 
     // ================================================================= 검사
-    float SwingReachMul => form switch
-    {
-        SpecialAbilities.KitHammer => 0.85f,
-        SpecialAbilities.KitWhip => 1.8f,
-        SpecialAbilities.KitLance => 1.5f,
-        _ => 1f,
-    };
+    float SwingReachMul => form == SpecialAbilities.KitWhip ? 1.3f : 1f;
 
-    float SwingHalf(float half) => form switch
-    {
-        SpecialAbilities.KitHammer => 180f,                 // 몸 주위 전부
-        SpecialAbilities.KitWhip => Mathf.Min(half, 22f),   // 가늘게
-        SpecialAbilities.KitLance => Mathf.Min(half, 16f),  // 창끝 한 줄
-        _ => half,
-    };
+    float SwingHalf(float half) => half;
 
     // 적 하나를 벨 때 피해 배율 (형태 · 강화)
     float SwingHitMul(Collider2D c, float dist, float reach)
     {
         float m = formPower;
-        if (form == SpecialAbilities.KitHammer) m *= 2f;
-        if (form == SpecialAbilities.KitWhip && dist > reach * 0.6f) m *= 2f;
-        if (form == SpecialAbilities.KitLance) m *= 1.7f;
+        if (form == SpecialAbilities.KitWhip && dist > reach * 0.6f) m *= 1.5f;
         if (augment == AugExecute && c.TryGetComponent(out EnermyController e) && e.EnemyHealth <= e.setEnemyHP * 0.25f) m *= 3f;
         return m;
     }
 
     void OnSwingHit(Collider2D c, bool first)
     {
-        if (form == SpecialAbilities.KitHammer && c.TryGetComponent(out EnermyController e)) e.Slow(0f, 0.5f);
         if (first && augment == AugThunder) ChainBolt(c, Damage * 0.6f * formPower, 3);
     }
 
     void SwingFormBefore(Vector2 dir) { }
 
-    // 기창: 평타를 누르면 먼저 쭉 돌진하고 (도적 출혈 돌진처럼, 거리는 짧게), 도착한 곳에서 길게 찌름
-    bool lanceFinishing;
-
+    // 창날 찌르기: 벨 때마다 앞으로 적을 꿰뚫는 창날 (평타는 그대로 휘두름)
     bool LanceIntercept(Vector2 dir, int shots)
     {
-        if (form != SpecialAbilities.KitLance || lanceFinishing) return false;
-        StartCoroutine(LanceCharge(dir, shots));
-        return true;
-    }
-
-    IEnumerator LanceCharge(Vector2 dir, int shots)
-    {
-        if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
-        const float dist = 7f, time = 0.2f, width = 1.3f;
-        Vector3 from = transform.position;
-        float len = dist;
-        for (float d = 0.5f; d <= dist; d += 0.5f)
-        {
-            Vector3 p = from + (Vector3)(dir * d);
-            if (Hostile.IsWall(p) || (Hostile.ClampArena(p) - p).sqrMagnitude > 0.01f) { len = d - 0.5f; break; }
-        }
-        Vector3 to = from + (Vector3)(dir * len);
-        dashUntil = Time.time + time;
-        player.GrantInvincibility(time + 0.25f);
-        Play("whoosh", 0.9f, 1.1f);
-        Fx.Spawn("fx_shock", from, 3f, new Color(0.8f, 0.9f, 1f, 0.7f), 20f);
-        float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        HashSet<Collider2D> hit = new HashSet<Collider2D>();
-        int ghosts = 0;
-        for (float t = 0f; t < time; t += Time.deltaTime)
-        {
-            Vector3 p = Vector3.Lerp(from, to, t / time);
-            transform.position = p;
-            // 지나가며 닿은 적을 찌름 (적마다 한 번, 피해 60%)
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, width))
-            {
-                if ((!c.CompareTag("enermy") && !c.CompareTag("boss")) || !hit.Add(c)) continue;
-                Vector2 side = new Vector2(-dir.y, dir.x);
-                if (Vector2.Dot(side, c.transform.position - p) < 0f) side = -side;
-                Specials.Damage(c.gameObject, Damage * 0.6f * formPower, side, 2.5f);
-                Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
-            }
-            // 은빛 잔상
-            if (t >= ghosts * 0.03f)
-            {
-                ghosts++;
-                GameObject g = SpecialAbilities.MakeSprite("LanceGhost", body.sprite, p, 1f, new Color(0.75f, 0.85f, 1f, 0.5f), "Character", -1);
-                g.transform.localScale = transform.lossyScale;
-                g.GetComponent<SpriteRenderer>().flipX = body.flipX;
-                g.AddComponent<FadeOut>().duration = 0.25f;
-                Fx.Spawn("fx_shadowdash", p - (Vector3)(dir * 1.2f), 1.1f, new Color(0.8f, 0.9f, 1f), 24f, rot, 13);
-            }
-            yield return null;
-        }
-        transform.position = to;
-        // 도착: 길게 찌르기 (평소 베기 판정 · 카드 효과 그대로)
-        lanceFinishing = true;
-        Swing(dir, shots);
-        lanceFinishing = false;
-        Hostile.Shake(0.08f);
+        if (form != SpecialAbilities.KitLance) return false;
+        Projectile(player.MuzzlePosition, dir, Damage * 0.8f * formPower, 9999, 34f, def.range * reachMul * 2.2f, "fx_swordwave", 1.8f, new Color(0.85f, 0.9f, 1f, 0.9f), false);
+        return false;
     }
 
     void SwingFormAfter(Vector3 origin, float reach)
     {
-        if (form == SpecialAbilities.KitHammer)
+        if (form == SpecialAbilities.KitHammer && ++hammerCount % 3 == 0)
         {
-            Fx.Spawn("fx_shock", origin, reach * 2.2f, new Color(0.8f, 0.85f, 1f, 0.8f), 20f);
+            // 대지의 일격: 세 번째 베기마다 내리찍어 주변 적 피해 + 잠깐 기절
+            float r = reach * 0.8f;
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(origin, r))
+                if (c.TryGetComponent(out EnermyController e) && !e.IsDead) e.Slow(0f, 0.6f);
+            DamageCircle(origin, r, Damage * 1.5f * formPower, 2f);
+            Fx.Spawn("fx_shock", origin, r * 2.4f, new Color(0.8f, 0.85f, 1f, 0.8f), 20f);
             Hostile.Shake(0.12f);
             Play("thump", 0.8f, 0.8f);
         }
@@ -231,7 +177,6 @@ public partial class CharacterKit
     void RogueThrow(Vector3 start, Vector2 dir, float dmg, int shots)
     {
         if (augment == AugVolley) shots++;
-        if (form == SpecialAbilities.KitCards) { shots += 2; dmg *= 1f; }
         float step = form == SpecialAbilities.KitCards ? 9f : 8f;
         foreach (Vector2 d in Spread(dir, shots, step)) ThrowOne(start, d, dmg, 1f);
         Play("whoosh", 0.35f, form == SpecialAbilities.KitBlowgun ? 2.3f : 1.8f);
@@ -252,7 +197,6 @@ public partial class CharacterKit
     Bullet ThrowOne(Vector3 start, Vector2 d, float dmg, float alpha)
     {
         float mul = formPower;
-        if (form == SpecialAbilities.KitBlowgun) mul *= 0.55f;
         if (form == SpecialAbilities.KitCards) mul *= Random.Range(0.5f, 1.7f);
         Bullet b = Shuriken(start, d, dmg * mul, card[0]);
         if (b == null) return null;
@@ -260,7 +204,6 @@ public partial class CharacterKit
         switch (form)
         {
             case SpecialAbilities.KitBlowgun:
-                b.transform.localScale *= 0.55f;
                 if (sr != null) sr.color = new Color(0.6f, 1f, 0.45f, alpha);
                 break;
             case SpecialAbilities.KitCards:
@@ -276,7 +219,7 @@ public partial class CharacterKit
                 break;
             case SpecialAbilities.KitWire:
                 if (sr != null) sr.color = new Color(0.8f, 0.85f, 1f, alpha);
-                b.onHitEnemy += (s, c) => ChainBolt(c, Damage * 0.7f * formPower, 2);
+                b.onHitEnemy += (s, c) => ChainBolt(c, Damage * 0.5f * formPower, 2);
                 break;
         }
         if (form == SpecialAbilities.KitBlowgun || augment == AugVenom)
@@ -305,19 +248,17 @@ public partial class CharacterKit
                     };
                 break;
             case SpecialAbilities.KitJavelin:
+                if (draw < 1f) break;
                 b.pene = 9999;
-                b.transform.localScale *= 1.6f;
-                b.speed *= 0.8f;
+                b.hitOnce = new HashSet<int>();
+                b.transform.localScale *= 1.3f;
                 float baseDmg = b.damage;
                 b.onHitEnemy += (s, c) =>
                 {
-                    // 멀리 날아갈수록 강해짐 (최대 3배): 기본 피해는 이미 들어갔으니 더할 몫만
-                    float k = Mathf.Min(3f, 1f + Vector2.Distance(start, c.transform.position) / 8f);
+                    // 멀리 날아갈수록 강해짐 (최대 2배): 기본 피해는 이미 들어갔으니 더할 몫만
+                    float k = Mathf.Min(2f, 1f + Vector2.Distance(start, c.transform.position) / 10f);
                     if (k > 1f) Specials.Damage(c.gameObject, baseDmg * (k - 1f), Vector3.zero, 0f);
                 };
-                break;
-            case SpecialAbilities.KitBurstBow:
-                b.damage *= 0.6f;
                 break;
         }
         switch (augment)
@@ -340,10 +281,10 @@ public partial class CharacterKit
         }
     }
 
-    // 속사 활: 뒤따르는 두 발
+    // 연사 화살: 뒤따르는 한 발
     IEnumerator BurstFollow(Vector2 dir, float dmg, float speed, float size, float draw)
     {
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 1; i++)
         {
             yield return new WaitForSeconds(0.08f);
             Vector3 start = player.MuzzlePosition;
@@ -355,7 +296,7 @@ public partial class CharacterKit
 
     // ================================================================= 연금술사
     float FlaskRadiusMul => augment == AugGiant ? 1.4f : 1f;
-    float FlaskDamageMul => formPower * (augment == AugGiant ? 1.2f : 1f) * (form == SpecialAbilities.KitMagnet ? 1.25f : 1f);
+    float FlaskDamageMul => formPower * (augment == AugGiant ? 1.2f : 1f);
 
     bool ForceUnstable() => augment == AugOverload && ++throwCount % 4 == 0;
 
@@ -368,7 +309,7 @@ public partial class CharacterKit
                 if (c.CompareTag("enermy")) c.transform.position = Vector3.Lerp(c.transform.position, p, 0.7f);
             Fx.Spawn("fx_shock", p, r * 4.4f, new Color(0.6f, 0.7f, 1f, 0.6f), 22f);
         }
-        if (form == SpecialAbilities.KitQuicksilver && depth < 2)
+        if (form == SpecialAbilities.KitQuicksilver && depth < 1)
         {
             Transform next = NearestOther(p, 7f, null, Vector2.right, 360f);
             Vector3 land = next != null ? next.position : p + (Vector3)(Random.insideUnitCircle.normalized * 3f);
@@ -376,9 +317,9 @@ public partial class CharacterKit
         }
         if (form == SpecialAbilities.KitFirework)
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
-                float a = i * 72f * Mathf.Deg2Rad + Random.Range(-0.3f, 0.3f);
+                float a = i * 120f * Mathf.Deg2Rad + Random.Range(-0.3f, 0.3f);
                 Vector3 q = p + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * r * 1.5f;
                 DamageCircle(q, r * 0.5f, hit * 0.45f, 0.8f);
                 Fx.Spawn("fx_sparkle", q, r * 1.2f, Color.HSVToRGB(i / 5f, 0.6f, 1f), 20f);

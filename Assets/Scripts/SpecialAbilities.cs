@@ -382,7 +382,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
     {
-        int id = CurrentWeapon;
+        int id = UltId;            // 진화한 무기의 필살기 (권총을 들고 있어도)
         float dmg = baseDamage * WeaponDamageMul(id) * UltPower(id);
         Color c = WeaponColor(id);
         fx.FloatText(player.transform.position, VolleyName(id) + "!", c, 6f, 0f);
@@ -732,7 +732,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 조준할 수 있는 적 수: 권총 · 낫은 강화로 늘어남
     public int MaxTargets(int baseCount)
     {
-        int w = WeaponActive ? CurrentWeapon : PistolUlt;
+        int w = UltActive ? UltId : PistolUlt;
         return w == PistolUlt || w == ScytheId ? baseCount + 2 * UltTrait(w) : baseCount;
     }
 
@@ -740,7 +740,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
     // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)
-    public bool IsInstantUlt => WeaponActive && (CurrentWeapon == ShotgunId || CurrentWeapon == DualId || CurrentWeapon == GrenadeId);
+    public bool IsInstantUlt => UltActive && (UltId == ShotgunId || UltId == DualId || UltId == GrenadeId);
 
     // 조준 화면 (WeaponAim)이 쓰는 값들
     public Transform PlayerTransform => player.transform;
@@ -749,18 +749,18 @@ public partial class SpecialAbilities : MonoBehaviour
     public Vector3 PlayerMuzzle => player.MuzzlePosition;
     public static Color ColorOf(int id) => WeaponColor(id);
     // 타겟팅 중 화면 색 (무기 색)
-    public Color AimTint => WeaponActive ? WeaponColor(CurrentWeapon) : new Color(1f, 0.9f, 0.6f);
+    public Color AimTint => UltActive ? WeaponColor(UltId) : new Color(1f, 0.9f, 0.6f);
 
     WeaponAim aim;
     public void BeginAim()
     {
-        if (!WeaponActive) return;
+        if (!UltActive) return;
         if (aim == null) aim = new WeaponAim(this);
-        aim.Begin(CurrentWeapon);
+        aim.Begin(UltId);
     }
-    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && WeaponActive) aim.Update(targets, charge); }
+    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && UltActive) aim.Update(targets, charge); }
     public void EndAim() { if (aim != null) aim.End(); }
-    public GameObject MarkTarget(Transform target) => aim != null && WeaponActive ? aim.MarkTarget(target) : null;
+    public GameObject MarkTarget(Transform target) => aim != null && UltActive ? aim.MarkTarget(target) : null;
 
     // ================================================================= evolution
     // order: 한 번에 여러 개를 진화할 때 알림 글자를 위로 쌓는 순서

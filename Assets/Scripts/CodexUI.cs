@@ -257,20 +257,19 @@ public static class CodexUI
     static void WeaponEvolutions(CodexData data)
     {
         Color tint = new Color(1f, 0.85f, 0.55f);
-        // 거너: 권총 → 1차 무기 → 2차 (같은 계열 극대화 또는 새 계열)
+        // 거너: 권총 그대로 + 1차 능력 → 2차 (같은 계열 극대화 또는 능력 하나 더)
         string gunner = Loc.T(CharacterData.Def(CharacterId.Gunner).name);
         foreach (int w in SpecialAbilities.Tier1Options)
         {
             SpecialDef d = data != null && data.specials != null && w < data.specials.Length ? data.specials[w] : null;
             if (d == null) continue;
+            // 권총 그대로 + 능력, 필살기는 고른 무기의 것으로 (2차: 같은 계열 극대화 또는 능력 하나 더)
             string paths = "";
             foreach (int n in SpecialAbilities.Tier2Options(w))
-            {
-                string nm = n == w ? SpecialAbilities.MaxedName(n) : (n < data.specials.Length && data.specials[n] != null ? Loc.T(data.specials[n].name) : "");
-                paths += (paths.Length > 0 ? " / " : "") + nm;
-            }
-            Card(d.icon, tint, Loc.T(d.name), gunner + " \u00B7 " + Loc.T("1차 진화"),
-                 Loc.T(d.description).Replace("\n", " ") + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths);
+                paths += (paths.Length > 0 ? " / " : "") + Loc.T(SpecialAbilities.GunAugName(n, n == w));
+            Card(d.icon, tint, Loc.T(SpecialAbilities.GunAugName(w, false)), gunner + " \u00B7 " + Loc.T("1차 진화"),
+                 Loc.T(SpecialAbilities.GunAugDesc(w, false)) + "  " + Accent.Tag(Loc.T("필살기") + " \u00B7 " + SpecialAbilities.UltName(w))
+                 + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths);
         }
         // 다른 캐릭터: 1차 형태 셋 · 2차 강화 셋
         foreach (CharacterId c in UnlockedKits())
@@ -279,7 +278,8 @@ public static class CodexUI
             foreach (int id in CharacterData.Def(c).pool)
             {
                 if (!SpecialAbilities.IsKit(id) || !SpecialAbilities.KitIsWeapon(id)) continue;
-                Card(Resources.Load<Sprite>("Icons/ability_" + id), tint, Loc.T(SpecialAbilities.KitName(id)), who + " \u00B7 " + Loc.T("1차 진화"), Loc.T(CharacterKit.FormDesc(id)));
+                Card(Resources.Load<Sprite>("Icons/ability_" + id), tint, Loc.T(CharacterKit.FormAugName(id)), who + " \u00B7 " + Loc.T("1차 진화"),
+                     Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기") + " \u00B7 " + Loc.T(SpecialAbilities.KitUltName(id))));
             }
             foreach (int a in CharacterKit.AugmentsFor(c))
                 Card(Resources.Load<Sprite>("Icons/ability_" + (a - CharacterKit.AugFirst + 92)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));

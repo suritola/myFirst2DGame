@@ -241,7 +241,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         inner.raycastTarget = false;
 
         // 같은 계열을 한 번 더 고르면 '강화판'
-        bool same = tier >= 2 && sp.WeaponActive && id == sp.CurrentWeapon;
+        bool same = tier >= 2 && CharacterData.IsGunner && id == sp.GunEvo1;
         string tag = tier >= 3 ? Loc.T("각성") : !CharacterData.IsGunner ? (tier >= 2 ? Loc.T("추가 강화") : Loc.T("1차 진화"))
                    : tier >= 2 ? (same ? Loc.T("같은 계열 · 극대화") : Loc.T("새 계열로 분기")) : Loc.T("1차 진화");
         TMP_Text tg = UIKit.Text(c, "", 22f, same ? Gold : new Color(0.7f, 0.85f, 1f), new Vector2(0f, 285f), new Vector2(400f, 34f));

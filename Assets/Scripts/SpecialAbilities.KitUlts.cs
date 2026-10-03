@@ -40,15 +40,26 @@ public partial class SpecialAbilities
         return "";
     }
 
-    // 전용 무기를 들고 있으면 우클릭이 그 무기의 궁극기
-    public bool KitWeaponUltActive => WeaponActive && IsKitWeapon(CurrentWeapon);
+    // 전용 무기를 들고 있거나 그 무기로 진화했으면 우클릭이 그 무기의 궁극기
+    public bool KitWeaponUltActive => UltActive && IsKitWeapon(UltId);
 
     public void KitWeaponUlt()
     {
-        int id = CurrentWeapon;
+        int id = UltId;
         fx.Play("levelup", 0.5f, 1.3f);
         Hostile.Shake(0.15f);
-        StartCoroutine(KitUltRoutine(id, Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id))));
+        // 캐릭터 우클릭 강화(영혼 트리 · 상점)도 진화한 궁극기에 그대로
+        float D = Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f);
+        // 도적: 출혈 돌진으로 파고든 뒤 궁극기 (그림자 숙련이 계속 쓸모 있게)
+        if (CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
+        else StartCoroutine(KitUltRoutine(id, D));
+    }
+
+    IEnumerator RogueDashUlt(int id, float D)
+    {
+        Vector2 dir = ((Vector2)(MouseWorld() - player.transform.position)).normalized;
+        yield return Kit.StartCoroutine(Kit.BleedDash(dir));
+        yield return StartCoroutine(KitUltRoutine(id, D));
     }
 
     // 전용 무기 발사 소리 (케이스 안에서 이미 소리를 내는 무기는 여기서 안 냄)

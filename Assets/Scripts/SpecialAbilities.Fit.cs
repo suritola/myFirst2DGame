@@ -51,10 +51,7 @@ public partial class SpecialAbilities
             if (key.StartsWith("u.slow") && IsInstantUlt) return true;
             return false;
         }
-        CharacterKit k = Kit;
-        int form = k != null ? k.form : -1;
-        if (key.StartsWith("w.arc") && (form == KitHammer || form == KitWhip || form == KitLance)) return true;     // 형태가 베기 폭을 정함
-        if (key.StartsWith("w.pene") && form == KitJavelin) return true;                                              // 투창은 이미 다 뚫음
+        // 1.9.4~: 진화해도 평타 모양이 그대로라 형태 때문에 쓸모없어지는 칸은 없음
         return false;
     }
 

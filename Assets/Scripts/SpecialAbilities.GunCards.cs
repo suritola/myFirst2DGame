@@ -15,12 +15,8 @@ public partial class SpecialAbilities
     {
         if (b == null || !CharacterData.IsGunner) return;
         // 영혼 트리: 치명타 (피해 2배, 금색) · 탄속
-        if (TreeCrit > 0f && Random.value < TreeCrit)
-        {
-            b.damage *= TreeCritDamage;
-            b.transform.localScale *= 1.25f;
-            if (b.TryGetComponent(out SpriteRenderer csr)) csr.color = new Color(1f, 0.85f, 0.3f);
-        }
+        if (TreeCrit > 0f && Random.value < TreeCrit) MakeCrit(b);
+        ApplyEvoAugments(b, light);                 // 무기 진화 능력 (SpecialAbilities.EvoAugments)
         if (!light && TreeBulletSpeed != 1f) b.speed *= TreeBulletSpeed;
         if (TreeExecute > 0f) b.onHitEnemy += (bullet, col) => Execute(col, bullet.damage);
         bool boom = countShot && !light && GunBoomShot();

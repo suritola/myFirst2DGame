@@ -34,6 +34,8 @@ public class Bullet : MonoBehaviour
     // 채워 두면 벽에 닿아도 사라지지 않고 이걸 부름 (부메랑 낫: 벽에서 되돌아옴)
     public System.Action onHitWall;
     public float lifetime = 2f;
+    // 치명타 총알 (맞힌 피해 숫자를 크게 · 금색으로)
+    public bool isCrit;
 
     public Vector2 Dir
     {

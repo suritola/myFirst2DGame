@@ -359,7 +359,7 @@ public partial class CharacterKit : MonoBehaviour
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
             if (card[2] > 0 && draw >= 1f) BlastArrow(b);
         }
-        if (form == SpecialAbilities.KitBurstBow) StartCoroutine(BurstFollow(dir, dmg * formPower * 0.6f, speed, 0.4f + 0.25f * draw, draw));
+        if (form == SpecialAbilities.KitBurstBow) StartCoroutine(BurstFollow(dir, dmg * formPower * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -550,7 +550,7 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 도적 출혈 돌진: 무적 상태로 마우스 쪽으로 빠르게 돌진, 지나간 적마다 한 번 베고 출혈
-    IEnumerator BleedDash(Vector2 dir)
+    public IEnumerator BleedDash(Vector2 dir)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
         int mastery = RogueMastery;
