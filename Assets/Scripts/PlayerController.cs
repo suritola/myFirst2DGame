@@ -362,7 +362,7 @@ public class PlayerController : MonoBehaviour
             }
             if (!specialWeapon) ammoTextOverride = ammo ? null : kit.WeaponName;
         }
-        else if (!specialWeapon && GameInput.FireDown && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
+        else if (!specialWeapon && GameInput.FireHeld && !IsSkillUsing && !isReloading && Time.time >= nextShootTime && !PointerOverUI()) Shoot();
 
         // =========================
         // 우클릭 스킬 시작

@@ -961,7 +961,7 @@ public partial class SpecialAbilities : MonoBehaviour
             case ShotgunId:
                 // 공격 범위(부채꼴) 표시
                 fx.SetCone(previewCone, player.MuzzlePosition, AimDir(), ShotgunHalfAngle, ShotgunRange, new Color(1f, 0.55f, 0.2f, 0.45f), 0.1f);
-                if (down && Ready()) FireShotgun();
+                if (held && Ready()) FireShotgun();
                 break;
             case SniperId:
                 UpdateSniper(down, held, up);
@@ -981,12 +981,12 @@ public partial class SpecialAbilities : MonoBehaviour
                 }
                 break;
             case ChainId:
-                if (down && Ready()) FireChain();
+                if (held && Ready()) FireChain();
                 break;
             case ScytheId:
                 if (activeScythe == null)
                     fx.SetLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
-                if (down && activeScythe == null && !player.IsSkillUsing && Time.time >= nextScytheAt) FireScythe();
+                if (held && activeScythe == null && !player.IsSkillUsing && Time.time >= nextScytheAt) FireScythe();
                 player.ammoTextOverride = activeScythe == null ? Loc.T("낫 준비") : Loc.T("낫 회수 중");
                 break;
             case GrenadeId:
@@ -995,11 +995,12 @@ public partial class SpecialAbilities : MonoBehaviour
                     Vector3 land = GrenadeLanding();
                     fx.SetLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
                     fx.SetRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
-                    if (down && Ready()) FireGrenade();
+                    if (held && Ready()) FireGrenade();
                 }
                 break;
             default:
-                if (IsKit(CurrentWeapon)) KitUpdateWeapon(CurrentWeapon, down, held, up);
+                // 모든 무기: 꾹 누르고 있으면 공격 속도에 맞춰 계속 공격
+                if (IsKit(CurrentWeapon)) KitUpdateWeapon(CurrentWeapon, held, held, up);
                 break;
         }
     }
