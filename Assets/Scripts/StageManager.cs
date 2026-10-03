@@ -737,6 +737,20 @@ public class StageManager : MonoBehaviour
         bannerGroup.interactable = false;
     }
 
+    // 알림판 높이: 평소엔 플레이 시간 바로 아래, 보스 체력바가 떠 있으면 그 아래 (체력바를 가리지 않게)
+    readonly Vector3[] bossBarCorners = new Vector3[4];
+    float BannerY()
+    {
+        const float Normal = -64f;
+        if (bossBar == null || !bossBar.bossSpawn || bossBar.backBar == null || !bossBar.backBar.activeInHierarchy) return Normal;
+        RectTransform bb = bossBar.backBar.GetComponent<RectTransform>();
+        RectTransform parent = banner.transform.parent as RectTransform;
+        if (bb == null || parent == null) return Normal;
+        bb.GetWorldCorners(bossBarCorners);
+        float bottom = parent.InverseTransformPoint(bossBarCorners[0]).y - parent.rect.yMax;     // 부모 위쪽 기준
+        return Mathf.Min(Normal, bottom - 12f);
+    }
+
     IEnumerator BannerRoutine(string text, float seconds)
     {
         bannerText.text = text;
@@ -746,16 +760,22 @@ public class StageManager : MonoBehaviour
         for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
         {
             float k = t / 0.2f;
+            float y = BannerY();
             if (bannerGroup != null) bannerGroup.alpha = k;
-            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(-44f, -64f, k));
+            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(y + 20f, y, k));
             yield return null;
         }
         if (bannerGroup != null) bannerGroup.alpha = 1f;
-        if (r != null) r.anchoredPosition = new Vector2(0f, -64f);
-        yield return new WaitForSecondsRealtime(Mathf.Max(0.3f, seconds - 0.5f));
+        // 떠 있는 동안 보스 체력바가 나타나거나 사라지면 따라 움직임
+        for (float t = 0f; t < Mathf.Max(0.3f, seconds - 0.5f); t += Time.unscaledDeltaTime)
+        {
+            if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
+            yield return null;
+        }
         for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
         {
             if (bannerGroup != null) bannerGroup.alpha = 1f - t / 0.3f;
+            if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
             yield return null;
         }
         banner.SetActive(false);
