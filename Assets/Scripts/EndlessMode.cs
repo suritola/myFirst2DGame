@@ -95,6 +95,8 @@ public class EndlessMode : MonoBehaviour
     }
 
     // StageManager가 보스 처치를 알려 줌
+    int trophies;
+
     public void OnBossDefeated()
     {
         BossesDefeated++;
@@ -102,7 +104,15 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
         if (SpecialAbilities.UsesEvolution)
         {
-            // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번), 그 뒤로는 영혼 조각으로 충분 (보스가 이미 많이 줌)
+            // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번)
+            // 진화가 다 끝난 뒤에도 보스를 잡을 이유가 있게: 잡을 때마다 계속 쌓이는 전리품
+            SpecialAbilities sp = SpecialAbilities.SharedInstance;
+            if (sp != null && sp.NextEvolutionOptions() == null)
+            {
+                string loot = sp.BossTrophy(++trophies);
+                stages.ShowBanner(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, 3f);
+                return;
+            }
             stages.ShowBanner(Loc.T("보스 처치!"), 2.5f);
             stages.StartCoroutine(stages.Evolution(true));
             return;

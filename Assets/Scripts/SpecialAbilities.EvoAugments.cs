@@ -150,6 +150,26 @@ public partial class SpecialAbilities
         }
     }
 
+    // ---------------- 무한 모드: 진화를 다 마친 뒤 보스를 잡을 때마다 쌓이는 전리품 (돌아가며)
+    public string BossTrophy(int n)
+    {
+        if (player == null) return "";
+        string got;
+        switch (n % 3)
+        {
+            case 1: AddAttack(0.12f); got = Loc.T("모든 공격 피해 +12%"); break;
+            case 2:
+                GrowHp(player, 1.15f);
+                player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.3f);
+                got = Loc.T("최대 체력 +15% · 체력 30% 회복");
+                break;
+            default: AddRate(0.92f); got = Loc.T("모든 무기 발사 간격 -8%"); break;
+        }
+        if (fx != null) { fx.Play("levelup", 0.7f, 1f); fx.FloatText(player.transform.position, got, new Color(1f, 0.85f, 0.4f), 6f, 0f); }
+        Flash(player.transform.position, 6f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.5f);
+        return got;
+    }
+
     // ---------------- 처치할 때: 사신의 탄환
     void EvoOnKill(Vector3 pos)
     {
