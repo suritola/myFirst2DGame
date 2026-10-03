@@ -306,9 +306,12 @@ public class StageManager : MonoBehaviour
 
     IEnumerator EvolutionThenPortal(string banner, float time)
     {
+        int fromStage = CurrentStage;
         yield return Evolution(true);
+        // 진화 창이 뜨기 전에 이미 문으로 들어갔으면 안내 · 카운트다운은 생략
+        if (CurrentStage != fromStage) yield break;
         ShowBanner(banner, time);
-        StartCoroutine(PortalCountdown());
+        StartCoroutine(PortalCountdown(fromStage));
     }
 
     // ================================================================= 특수 능력 포인트
@@ -488,7 +491,7 @@ public class StageManager : MonoBehaviour
             else
             {
                 ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
-                StartCoroutine(PortalCountdown());
+                StartCoroutine(PortalCountdown(stage));
             }
         }
         else if (stage == 1)
@@ -498,7 +501,7 @@ public class StageManager : MonoBehaviour
             else
             {
                 ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
-                StartCoroutine(PortalCountdown());
+                StartCoroutine(PortalCountdown(stage));
             }
         }
         else
@@ -606,11 +609,10 @@ public class StageManager : MonoBehaviour
     }
 
     // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장
-    IEnumerator PortalCountdown()
+    IEnumerator PortalCountdown(int fromStage)
     {
-        if (portal == null || player == null) yield break;
+        if (portal == null || player == null || CurrentStage != fromStage) yield break;
         EnsureCountdownUI();
-        int fromStage = CurrentStage;
         // 포탈 판정 상자(문 아래쪽) 위치
         Vector3 target = portal.transform.position + new Vector3(0f, -3.8f, 0f);
         float left = portalTimeLimit;
