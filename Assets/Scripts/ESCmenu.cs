@@ -45,6 +45,8 @@ public class ESCmenu : MonoBehaviour
         ToggleEsc();
     }
 
+    void OnDestroy() => IsOpen = false;
+
     public void onPressRestart()
     {
         SceneManager.LoadScene("GameScene");
@@ -56,9 +58,29 @@ public class ESCmenu : MonoBehaviour
         Time.timeScale = 1f;
     }
 
+    public static bool IsOpen { get; private set; }
+    // 레벨업 카드 창이 일시정지 창을 가려 버튼을 못 누르던 문제: 일시정지 동안 카드 창을 숨겼다가 닫으면 다시 띄움
+    LevelShop hiddenLevelShop;
+
     void ToggleEsc()
     {
         isEscOpen = !isEscOpen;
+        IsOpen = isEscOpen;
+
+        if (isEscOpen)
+        {
+            LevelShop ls = FindFirstObjectByType<LevelShop>();
+            if (ls != null && ls.IsOpen)
+            {
+                ls.LvshopPanel.SetActive(false);
+                hiddenLevelShop = ls;
+            }
+        }
+        else if (hiddenLevelShop != null)
+        {
+            hiddenLevelShop.LvshopPanel.SetActive(true);
+            hiddenLevelShop = null;
+        }
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
         RunStats.ShowSummary(isEscOpen);

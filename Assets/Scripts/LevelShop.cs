@@ -166,7 +166,7 @@ public partial class LevelShop : MonoBehaviour
 
     void UpdatePendingBadge()
     {
-        bool show = PendingLevels > 0 && !IsOpen;
+        bool show = PendingLevels > 0 && !IsOpen && !ESCmenu.IsOpen;
         if (!show)
         {
             if (pendingBadge != null && pendingBadge.activeSelf) pendingBadge.SetActive(false);
