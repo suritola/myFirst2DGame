@@ -299,6 +299,18 @@ public partial class SpecialAbilities
         }
         t.Add(Node("u.refund1", "u.gauge2", 1, "잔불", "필살기를 쓴 뒤 게이지가 15% 남습니다", 30, LvIcon(2), () => TreeUltRefund += 0.15f));
         t.Add(Node("u.refund2", "u.refund1", 1, "잔불 II", "필살기를 쓴 뒤 게이지가 15% 더 남습니다", 54, LvIcon(2), () => TreeUltRefund += 0.15f));
+        if (CharacterData.Selected == CharacterId.Rogue)
+        {
+            // 도적 그림자 숙련: 출혈 돌진에 유틸을 한 단계씩 (이동 속도 · 착지 둔화 · 거리 · 연속 돌진 · 게이지 반환)
+            string[] roman = { "I", "II", "III", "IV", "V" };
+            int[] costs = { 12, 24, 38, 54, 72 };
+            for (int i = 0; i < 5; i++)
+            {
+                int lv = i + 1;
+                t.Add(RawNode("u.shadow" + lv, i == 0 ? "u.power1" : "u.shadow" + i, 1, Loc.T("그림자 숙련") + " " + roman[i],
+                              Loc.T(CharacterKit.MasteryNames[i]), costs[i], ult, () => { if (Kit != null) Kit.shadowLevel = Mathf.Max(Kit.shadowLevel, lv); }));
+            }
+        }
 
         // ---------------- 2 운명 (1.8.2~, 예전 액티브 스킬 자리): 다른 가지 · 레벨업 카드에 없는 새 효과만
         List<int> myPassives = new List<int>();

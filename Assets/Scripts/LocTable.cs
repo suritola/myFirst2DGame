@@ -715,7 +715,7 @@ public static class LocTable
         { "돌진으로 벤 적 하나당 스킬 게이지 4% 되돌려 받음 (최대 40%)", L("Refund 4% skill gauge per enemy cut by the dash (max 40%)", "突進で斬った敵1体ごとにスキルゲージ4%回復（最大40%）", "突进每斩中一个敌人返还4%技能能量（最多40%）") },
         { "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.", L("A frail assassin who fights with a hail of fast throwing stars and shadow dashes.", "非力だが素早い手裏剣の雨と影の突進で戦う暗殺者。", "虽然柔弱，却以飞快的飞镖和暗影突进作战的刺客。") },
         { "출혈 돌진", L("Bleeding Dash", "出血突進", "出血突进") },
-        { "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발). 레벨이 오를수록 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다 (그림자 숙련)", L("Dash toward the mouse while invincible, making every enemy you pass bleed (instant). As you level up, the dash gains speed, slows, chained dashes and more (Shadow Mastery)", "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（即発動）。レベルが上がるほど突進に移動速度・鈍化・連続突進などが付きます（影の熟練）", "在无敌状态下朝鼠标方向突进，使途经的敌人流血（瞬发）。等级越高，突进会附带移速 · 减速 · 连续突进等效果（暗影精通）") },
+        { "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다", L("Dash toward the mouse while invincible, making every enemy you pass bleed (instant). Learning Shadow Mastery in the Soul Tree adds speed, slows, chained dashes and more to the dash", "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（即発動）。魂のツリーで影の熟練を覚えると突進に移動速度・鈍化・連続突進などが付きます", "在无敌状态下朝鼠标方向突进，使途经的敌人流血（瞬发）。在灵魂树学习暗影精通后，突进会附带移速 · 减速 · 连续突进等效果") },
         { "높을수록 늦게 참", L("Higher = fills slower", "高いほど遅く溜まる", "越高积累越慢") },
         // 1.7.3 레벨업 쌓기
         { "능력 고르기", L("Choose ability", "能力を選ぶ", "选择能力") },

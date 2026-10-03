@@ -109,11 +109,6 @@ public partial class CharacterKit : MonoBehaviour
         lastPos = transform.position;
     }
 
-    void Update()
-    {
-        if (Id == CharacterId.Rogue) UpdateMastery();
-    }
-
     static int Index(string n)
     {
         int i = n.LastIndexOf('_');
@@ -477,7 +472,7 @@ public partial class CharacterKit : MonoBehaviour
                     StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
                     if (recast) break;
                     Spend(gauge);
-                    if (player.level >= MasteryLevels[3]) recastUntil = Time.time + 3f;
+                    if (RogueMastery >= 4) recastUntil = Time.time + 3f;
                 }
                 break;
             case CharacterId.Archer:
@@ -605,10 +600,9 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // ================================================================= 도적 그림자 숙련
-    // 레벨이 오르면 출혈 돌진에 유틸이 붙음 (카드 · 트리 없이 자동): 초반엔 약하지만 갈수록 빠져나가고 묶는 힘이 커짐
+    // 영혼 트리 필살기 가지에서 한 단계씩 배우면 출혈 돌진에 유틸이 붙음 (SpecialAbilities.Evolution 의 u.shadow1~5)
     //   1 이동 속도 · 2 착지 둔화 · 3 거리 · 무적 · 4 연속 돌진 · 5 게이지 반환
-    static readonly int[] MasteryLevels = { 3, 6, 10, 14, 18 };
-    static readonly string[] MasteryNames =
+    public static readonly string[] MasteryNames =
     {
         "돌진 뒤 2초 동안 이동 속도 +35%",
         "돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 느리게",
@@ -617,29 +611,9 @@ public partial class CharacterKit : MonoBehaviour
         "돌진으로 벤 적 하나당 스킬 게이지 4% 되돌려 받음 (최대 40%)",
     };
     float recastUntil;
-    int masteryShown;
+    [HideInInspector] public int shadowLevel;        // 배운 그림자 숙련 단계 (0 = 없음)
 
-    int RogueMastery
-    {
-        get
-        {
-            if (Id != CharacterId.Rogue || player == null) return 0;
-            int n = 0;
-            while (n < MasteryLevels.Length && player.level >= MasteryLevels[n]) n++;
-            return n;
-        }
-    }
-
-    // 새 단계에 오르면 머리 위에 알림
-    void UpdateMastery()
-    {
-        int m = RogueMastery;
-        if (m <= masteryShown) return;
-        masteryShown = m;
-        if (SpecialAbilities.SharedFx != null)
-            SpecialAbilities.SharedFx.FloatText(transform.position + Vector3.up * 1.5f, Loc.T("그림자 숙련") + " " + m + " : " + Loc.T(MasteryNames[m - 1]), new Color(0.8f, 0.6f, 1f), 5f, 0.4f);
-        Play("shimmer", 0.5f, 1.2f);
-    }
+    int RogueMastery => Id == CharacterId.Rogue ? shadowLevel : 0;
 
     void DashMastery(Vector3 at, int mastery, int hits)
     {
