@@ -30,7 +30,10 @@ public class StatsHUD : MonoBehaviour
     RectTransform arrowRect;
 
     // 한국어 원문 (static 초기화 중엔 설정을 읽을 수 없으므로 쓸 때 번역)
-    static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도" };
+    static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도",
+                                        "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생" };
+    // 6번째 줄부터는 레벨업 카드 아이콘을 빌려 씀 (강철같은 심장 · 노려보는 눈빛 · 관통하는 총알 · 생명의 샘)
+    static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10 };
 
     PlayerController player;
     TextMeshProUGUI[] values;
@@ -46,6 +49,8 @@ public class StatsHUD : MonoBehaviour
         for (int i = 0; i < Labels.Length; i++) BuildRow(i);
 
         panelRect = GetComponent<RectTransform>();
+        // 줄이 늘어난 만큼 패널을 키움 (아래쪽 기준이라 위로 자람)
+        panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x, padding * 2f + Labels.Length * rowHeight);
         BuildTab();
 
         open = PlayerPrefs.GetInt(PrefKey, startOpen ? 1 : 0) == 1;
@@ -123,7 +128,8 @@ public class StatsHUD : MonoBehaviour
         iconRect.sizeDelta = new Vector2(rowHeight - 4f, rowHeight - 4f);
         iconRect.anchoredPosition = new Vector2(padding + rowHeight * 0.5f, y);
         Image icon = iconGo.GetComponent<Image>();
-        icon.sprite = i < icons.Length ? icons[i] : null;
+        icon.sprite = i < icons.Length ? icons[i] : RowIcon(i);
+        if (icon.sprite == null) icon.enabled = false;
         icon.preserveAspect = true;
         icon.raycastTarget = false;
 
@@ -131,6 +137,15 @@ public class StatsHUD : MonoBehaviour
                  padding + rowHeight + 8f, y);
         values[i] = MakeText("Value", "", new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.Right,
                              padding, y);
+    }
+
+    Sprite RowIcon(int i)
+    {
+        int k = i - icons.Length;
+        if (k < 0 || k >= CardIcons.Length) return null;
+        if (CardIcons[k] < 0) return icons.Length > 0 ? icons[0] : null;      // 피해 배율: 공격력 아이콘
+        AbilityHUD hud = FindFirstObjectByType<AbilityHUD>(FindObjectsInactive.Include);
+        return hud != null ? hud.GetIcon(CardIcons[k]) : null;
     }
 
     TextMeshProUGUI MakeText(string name, string text, Color color, TextAlignmentOptions align, float inset, float y)
@@ -197,5 +212,21 @@ public class StatsHUD : MonoBehaviour
 
         // 이동 속도: 시작 속도 대비
         values[4].text = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
+
+        values[5].text = Mathf.CeilToInt(player.PlayerHealth) + " / " + Mathf.RoundToInt(player.PlayerMaxHealth);
+
+        // 치명타: 영혼 트리에서 얻음 (없으면 0%)
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        values[6].text = ((sp != null ? sp.TreeCrit : 0f) * 100f).ToString("0") + "%";
+        values[7].text = ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
+
+        // 피해 배율: 버프 · 특수 능력으로 곱해지는 값
+        values[8].text = (player.damageMultiplier * 100f).ToString("0") + "%";
+
+        // 관통: 뚫고 지나가는 적 수
+        values[9].text = Mathf.Max(0, player.pene - 1) + Loc.T("마리");
+
+        // 체력 재생: 초당 · 처치 시
+        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0") + Loc.T("/처치") : "");
     }
 }
