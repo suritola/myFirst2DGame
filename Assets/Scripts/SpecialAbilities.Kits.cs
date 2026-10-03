@@ -1031,6 +1031,10 @@ public partial class SpecialAbilities
     }
 
     // 적이 받는 피해 (EnermyController.DamageHook): 약점 간파 · 도적 급소 노리기 · 궁수 사냥감 표식
+    // 검사 · 궁수 · 소각탄이 없는 거너
+    bool NoNativeDot => CharacterData.Selected == CharacterId.Swordsman || CharacterData.Selected == CharacterId.Archer
+                        || (CharacterData.IsGunner && gunCard[GunIncendiary] == 0);
+
     float KitDamageHook(EnermyController e, float damage)
     {
         // 치명타 · 처형: 거너 총알은 총알에서 (GunCards), 그 밖(다른 캐릭터 · 거너 산탄총 · 용암 유탄)은 여기서
@@ -1046,6 +1050,9 @@ public partial class SpecialAbilities
         if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.7f : 1.35f;
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null) damage *= kit.TargetDamageMul(e);
+        // 저주 전이: 화상 · 독 · 출혈을 스스로 못 거는 캐릭터는 공격이 25% 확률로 3초 출혈 (옮길 상태 이상이 생기게)
+        if (curseTargets > 0 && NoNativeDot && e.GetComponent<Bleed>() == null && Random.value < 0.25f)
+            Bleed.Apply(e.gameObject, Damage * 0.3f, 3f);
         return damage;
     }
 

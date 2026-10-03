@@ -1284,7 +1284,7 @@ public static class LocTable
         { "15초마다, 더 넓게 빨아들이고 마지막에 터집니다", L("Every 15 seconds, pulls wider and explodes at the end", "15秒ごと、より広く吸い込み最後に爆発します", "每15秒，吸引范围更大，最后爆炸") },
         { "저주 전이", L("Curse Transfer", "呪いの伝染", "诅咒转移") },
         { "저주 전이 II", L("Curse Transfer II", "呪いの伝染 II", "诅咒转移 II") },
-        { "적이 쓰러질 때 걸려 있던 화상 · 독 · 출혈이 가까운 적 둘에게 옮겨 갑니다", L("When an enemy falls, its burn · poison · bleed spreads to the 2 nearest enemies", "敵が倒れる時、かかっていた火傷・毒・出血が近くの敵2体に移ります", "敌人倒下时，其身上的灼烧 · 毒 · 流血会转移到最近的2个敌人") },
+        { "적이 쓰러질 때 걸려 있던 화상 · 독 · 출혈이 가까운 적 둘에게 옮겨 갑니다. 상태 이상을 걸지 못하는 캐릭터는 공격이 25% 확률로 3초 출혈을 입힙니다", L("When an enemy falls, its burn · poison · bleed spreads to the 2 nearest enemies. Characters who can't inflict these get a 25% chance on hit to cause a 3s bleed", "敵が倒れる時、かかっていた火傷・毒・出血が近くの敵2体に移ります。状態異常を付与できないキャラクターは攻撃が25%の確率で3秒間の出血を与えます", "敌人倒下时，其身上的灼烧 · 毒 · 流血会转移到最近的2个敌人。无法施加异常状态的角色攻击时有25%几率造成3秒流血") },
         { "가까운 적 넷에게 옮겨 갑니다", L("Spreads to the 4 nearest enemies", "近くの敵4体に移ります", "转移到最近的4个敌人") },
         { "영혼 메아리", L("Soul Echo", "魂の残響", "灵魂回响") },
         { "영혼 메아리 II", L("Soul Echo II", "魂の残響 II", "灵魂回响 II") },
