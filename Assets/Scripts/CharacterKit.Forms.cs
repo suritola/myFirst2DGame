@@ -60,13 +60,13 @@ public partial class CharacterKit
     {
         SpecialAbilities.KitHammer => "대지의 일격",
         SpecialAbilities.KitWhip => "채찍 칼날",
-        SpecialAbilities.KitLance => "창날 찌르기",
+        SpecialAbilities.KitLance => "기사의 기세",
         SpecialAbilities.KitBlowgun => "독 표창",
         SpecialAbilities.KitCards => "도박 표창",
-        SpecialAbilities.KitWire => "와이어 표창",
+        SpecialAbilities.KitWire => "와이어 덫",
         SpecialAbilities.KitNetBow => "그물 화살",
         SpecialAbilities.KitJavelin => "투창 화살",
-        SpecialAbilities.KitBurstBow => "연사 화살",
+        SpecialAbilities.KitBurstBow => "속사 화살",
         SpecialAbilities.KitQuicksilver => "수은 플라스크",
         SpecialAbilities.KitMagnet => "자석 플라스크",
         SpecialAbilities.KitFirework => "폭죽 플라스크",
@@ -78,13 +78,13 @@ public partial class CharacterKit
     {
         SpecialAbilities.KitHammer => "세 번 벨 때마다 땅을 내리찍어 주변 적에게 피해(150%)를 주고 잠깐 기절시킵니다.",
         SpecialAbilities.KitWhip => "베기 사거리 +30%, 칼끝에 맞은 적은 피해 1.5배.",
-        SpecialAbilities.KitLance => "벨 때마다 앞으로 적을 꿰뚫는 창날이 날아갑니다. (피해 80%)",
+        SpecialAbilities.KitLance => "움직이면서 베면 피해 +40%.",
         SpecialAbilities.KitBlowgun => "표창이 맞은 적에게 독을 쌓고 (최대 5중첩), 공격 속도 +20%.",
         SpecialAbilities.KitCards => "표창 피해가 제각각 (50~170%), 가끔 조커가 폭발합니다.",
-        SpecialAbilities.KitWire => "표창이 맞은 적에게서 가까운 적 둘에게 줄이 튀어 벱니다. (피해 50%)",
+        SpecialAbilities.KitWire => "표창에 맞은 적과 가까운 적 하나가 줄로 묶여 1초 동안 70% 느려집니다.",
         SpecialAbilities.KitNetBow => "반 이상 당긴 화살이 맞은 자리에 그물을 펼쳐 주변 적을 잠깐 묶습니다.",
         SpecialAbilities.KitJavelin => "가득 당긴 화살이 모든 적을 꿰뚫고 멀리 날아갈수록 강해집니다. (최대 200%)",
-        SpecialAbilities.KitBurstBow => "쏠 때마다 뒤따르는 화살 한 발이 더 나갑니다. (피해 50%)",
+        SpecialAbilities.KitBurstBow => "시위를 25% 더 빨리 당기고, 반 이상 당긴 화살은 적을 하나 더 꿰뚫습니다.",
         SpecialAbilities.KitQuicksilver => "플라스크가 터진 뒤 가까운 적에게 한 번 더 튕겨 터집니다. (피해 70%)",
         SpecialAbilities.KitMagnet => "플라스크가 터지기 전에 주변 적을 끌어모읍니다.",
         SpecialAbilities.KitFirework => "플라스크가 터지면 불꽃 세 갈래가 퍼져 한 번씩 더 터집니다. (피해 45%)",
@@ -92,7 +92,7 @@ public partial class CharacterKit
     };
 
     // 형태별 공격 속도 배율 (평타 모양이 그대로라 독 표창만 빨라짐)
-    float FormRate => form == SpecialAbilities.KitBlowgun ? 1.2f : 1f;
+    float FormRate => form == SpecialAbilities.KitBlowgun ? 1.2f : form == SpecialAbilities.KitBurstBow ? 1.25f : 1f;
 
     // ================================================================= 검사
     float SwingReachMul => form == SpecialAbilities.KitWhip ? 1.3f : 1f;
@@ -104,6 +104,7 @@ public partial class CharacterKit
     {
         float m = formPower;
         if (form == SpecialAbilities.KitWhip && dist > reach * 0.6f) m *= 1.5f;
+        if (form == SpecialAbilities.KitLance && stillTime <= 0.05f) m *= 1.4f;      // 기사의 기세: 움직이면서 벨 때
         if (augment == AugExecute && c.TryGetComponent(out EnermyController e) && e.EnemyHealth <= e.setEnemyHP * 0.25f) m *= 3f;
         return m;
     }
@@ -115,13 +116,8 @@ public partial class CharacterKit
 
     void SwingFormBefore(Vector2 dir) { }
 
-    // 창날 찌르기: 벨 때마다 앞으로 적을 꿰뚫는 창날 (평타는 그대로 휘두름)
-    bool LanceIntercept(Vector2 dir, int shots)
-    {
-        if (form != SpecialAbilities.KitLance) return false;
-        Projectile(player.MuzzlePosition, dir, Damage * 0.8f * formPower, 9999, 34f, def.range * reachMul * 2.2f, "fx_swordwave", 1.8f, new Color(0.85f, 0.9f, 1f, 0.9f), false);
-        return false;
-    }
+    // (예전 기창 돌진 자리) 평타를 가로채지 않음
+    bool LanceIntercept(Vector2 dir, int shots) => false;
 
     void SwingFormAfter(Vector3 origin, float reach)
     {
@@ -219,7 +215,7 @@ public partial class CharacterKit
                 break;
             case SpecialAbilities.KitWire:
                 if (sr != null) sr.color = new Color(0.8f, 0.85f, 1f, alpha);
-                b.onHitEnemy += (s, c) => ChainBolt(c, Damage * 0.5f * formPower, 2);
+                b.onHitEnemy += (s, c) => WireSnare(c);
                 break;
         }
         if (form == SpecialAbilities.KitBlowgun || augment == AugVenom)
@@ -246,6 +242,9 @@ public partial class CharacterKit
                             if (o.TryGetComponent(out EnermyController e)) e.Slow(0f, 0.8f + 0.6f * draw);
                         Fx.Spawn("fx_shock", c.transform.position, 5.2f, new Color(0.7f, 1f, 0.6f, 0.7f), 18f);
                     };
+                break;
+            case SpecialAbilities.KitBurstBow:
+                if (draw >= 0.5f) b.pene += 1;
                 break;
             case SpecialAbilities.KitJavelin:
                 if (draw < 1f) break;
@@ -281,19 +280,16 @@ public partial class CharacterKit
         }
     }
 
-    // 연사 화살: 뒤따르는 한 발
-    IEnumerator BurstFollow(Vector2 dir, float dmg, float speed, float size, float draw)
+    // 와이어 덫: 맞은 적과 가까운 적 하나를 줄로 묶어 1초 동안 느리게
+    void WireSnare(Collider2D c)
     {
-        for (int i = 0; i < 1; i++)
-        {
-            yield return new WaitForSeconds(0.08f);
-            Vector3 start = player.MuzzlePosition;
-            Bullet b = Projectile(start, dir, dmg, player.pene + 1, speed, 0f, "fx_arrow", size, Color.white, false);
-            if (b != null) ArrowForm(b, draw, start);
-            Play("pew", 0.35f, 1.1f);
-        }
+        if (c == null) return;
+        if (c.TryGetComponent(out EnermyController a)) a.Slow(0.3f, 1f);
+        Transform other = NearestOther(c.transform.position, 6f, c.transform, Vector2.right, 360f);
+        if (other == null) return;
+        if (other.TryGetComponent(out EnermyController b)) b.Slow(0.3f, 1f);
+        SparkLine(c.transform.position, other.position, new Color(0.85f, 0.85f, 1f));
     }
-
     // ================================================================= 연금술사
     float FlaskRadiusMul => augment == AugGiant ? 1.4f : 1f;
     float FlaskDamageMul => formPower * (augment == AugGiant ? 1.2f : 1f);

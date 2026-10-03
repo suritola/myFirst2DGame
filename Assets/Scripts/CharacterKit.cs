@@ -47,7 +47,7 @@ public partial class CharacterKit : MonoBehaviour
     // 캐릭터 전용 레벨업 카드 4장의 레벨 (LevelShop.Kits, 0 = 아직 없음). 기본 스펙이 아닌 특수 능력
     //   검사: 0 검기 · 1 흡혈 베기 · 2 쳐내기 · 3 칼바람
     //   도적: 0 도탄 표창 · 1 갈고리 표창 · 2 그림자 분신 · 3 표창 폭풍
-    //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 파열 화살 · 3 가시 덤불
+    //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 강풍 화살 · 3 가시 덤불
     //   연금술사: 0 연쇄 반응 · 1 급속 냉동 · 2 호문쿨루스 · 3 파편 플라스크
     //   도적만 4: 사냥의 기세 (처치할 때마다 스킬 게이지)
     //   5 · 6 (레벨업 12 · 13번 칸): 검사 굳건한 자세 · 연속 베기 / 도적 급소 노리기 · 표창 회수
@@ -352,9 +352,8 @@ public partial class CharacterKit : MonoBehaviour
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
-            if (card[2] > 0 && draw >= 1f) BlastArrow(b);
+            if (card[2] > 0 && draw >= 1f) GustArrow(b);
         }
-        if (form == SpecialAbilities.KitBurstBow) StartCoroutine(BurstFollow(dir, dmg * formPower * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -939,19 +938,15 @@ public partial class CharacterKit : MonoBehaviour
         if (b != null) Play("arrowfly", 0.25f, 1.6f);
     }
 
-    // 궁수 파열 화살: 가득 당긴 화살이 처음 맞힌 적의 자리에서 폭발 (피해 60 · 80 · 100%, 범위 2 · 2.5 · 3칸)
-    void BlastArrow(Bullet b)
+    // 궁수 강풍 화살: 가득 당긴 화살에 맞은 적이 크게 밀려나고 잠깐 기절 (0.4 · 0.6 · 0.8초)
+    void GustArrow(Bullet b)
     {
-        bool done = false;
         b.onHitEnemy += (arrow, c) =>
         {
-            if (done || c == null) return;
-            done = true;
-            Vector3 at = c.transform.position;
-            float r = 1.5f + 0.5f * card[2];
-            DamageCircle(at, r, arrow.damage * (0.4f + 0.2f * card[2]), 1.2f);
-            Fx.Spawn("fx_explosion", at, r * 2f, new Color(1f, 0.85f, 0.5f), 18f);
-            Play("boom", 0.4f, 1.3f);
+            if (c == null) return;
+            Specials.Damage(c.gameObject, arrow.damage * 0.1f, arrow.Direction, 3.5f);
+            if (c.TryGetComponent(out EnermyController e) && !e.IsDead) e.Slow(0f, 0.2f + 0.2f * card[2]);
+            Fx.Spawn("fx_shock", c.transform.position, 2.4f, new Color(0.8f, 1f, 0.9f, 0.7f), 22f);
         };
     }
     // 궁수 가시 덤불: 화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌름

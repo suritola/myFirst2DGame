@@ -26,23 +26,24 @@ public partial class SpecialAbilities
         FlameId => maxed ? "지옥불 총구" : "화염 총구",
         SniperId => maxed ? "레일 탄두" : "영혼 탄두",
         DualId => maxed ? "심판의 삼연발" : "쌍발 총구",
-        GrenadeId => "작열탄",
+        GrenadeId => "점착탄",
         ShotgunId => "산탄 총구",
-        SeekerId => "추적 영혼탄",
-        ChainId => "뇌전 탄환",
+        SeekerId => "영혼 사냥",
+        ChainId => "낙뢰탄",
         ScytheId => "사신의 탄환",
         _ => "",
     };
 
     public static string GunAugDesc(int id, bool maxed) => id switch
     {
-        FlameId => maxed ? "불길이 더 세지고 (초당 공격력 60%) 맞은 적 주변으로 번집니다." : "총알이 맞힌 적을 3초 동안 불태웁니다. (초당 공격력 35%)",
-        SniperId => maxed ? "총알이 모든 적을 꿰뚫고 치명타 확률이 30%가 됩니다." : "총알이 적 둘을 더 꿰뚫고 50% 빠르게 날아가며, 15% 확률로 치명타가 됩니다.",
+        // 레벨업 카드(소각탄 · 폭발 탄두 · 유도 탄두 · 전기탄)와 영혼 트리(철갑탄 · 고속탄 · 급소 사격)와 겹치지 않게
+        FlameId => maxed ? "불길이 더 길고 넓어지며 (사거리 6칸, 피해 50%) 맞은 적이 불탑니다." : "쏠 때마다 총구에서 짧은 불길이 뿜어져 앞쪽 적을 태웁니다. (사거리 4.5칸, 피해 30%)",
+        SniperId => maxed ? "충전이 더 빨리 되고, 충전탄 피해 400%." : "사격을 잠깐 멈췄다 쏘면 첫 발이 충전탄이 되어 모든 적을 꿰뚫고 피해 250%.",
         DualId => maxed ? "쏠 때마다 총알 두 발이 더 나갑니다. (피해 70%)" : "쏠 때마다 총알 한 발이 더 나갑니다. (피해 70%)",
-        GrenadeId => "총알이 처음 맞힌 자리에서 작게 폭발합니다. (범위 2칸, 피해 70%)",
+        GrenadeId => "총알에 맞은 적에게 폭탄이 붙어 1.5초 뒤 터집니다. (범위 2.5칸, 피해 80%)",
         ShotgunId => "쏠 때마다 짧게 날아가는 산탄 네 발이 함께 퍼집니다. (발당 피해 45%)",
-        SeekerId => "총알이 가까운 적을 강하게 쫓아갑니다.",
-        ChainId => "총알이 맞힌 적에게서 35% 확률로 번개가 적 둘에게 튑니다. (피해 50%)",
+        SeekerId => "적을 처치하면 영혼탄 두 발이 튀어나와 가까운 적을 쫓아갑니다. (피해 50%)",
+        ChainId => "총알이 여덟 번 맞힐 때마다 맞은 자리에 낙뢰가 떨어집니다. (범위 3칸, 피해 120%)",
         ScytheId => "적을 처치하면 25% 확률로 영혼 낫이 휘돌아 주변을 벱니다. (공격력 150%)",
         _ => "",
     };
@@ -65,51 +66,64 @@ public partial class SpecialAbilities
     static string AugTraitName(int id) => Loc.T(GunAugName(id, false)) + " " + Loc.T("강화");
     static string AugTraitStep() => Loc.T("능력 효과 +25%");
 
-    // ---------------- 총알에 붙는 능력 (ApplyGunCards 에서, 권총 총알마다)
-    void ApplyEvoAugments(Bullet b, bool light)
+    // ---------------- 총알에 붙는 능력 (ApplyGunCards 에서, 권총 총알마다). main = 쏠 때 나가는 첫 발 (쌍발 · 산탄 덤 총알이 아님)
+    float lastMainShot = -99f;
+    int thunderHits;
+    readonly HashSet<int> stuckBombs = new HashSet<int>();
+
+    void ApplyEvoAugments(Bullet b, bool light, bool main)
     {
         if (gunEvo1 < 0 || light || b == null) return;
-        // 영혼 탄두: 관통 · 탄속 · 치명타
-        if (HasAug(SniperId))
+        // 영혼 탄두: 잠깐 쉬었다 쏘면 충전탄 (모두 관통 · 큰 피해)
+        if (HasAug(SniperId) && main)
         {
-            float p = AugPower(SniperId);
-            b.speed *= 1.5f;
-            if (AugMaxed(SniperId)) { b.pene = 9999; b.hitOnce = new HashSet<int>(); }
-            else b.pene += 2;
-            if (Random.value < (AugMaxed(SniperId) ? 0.3f : 0.15f) * p) MakeCrit(b);
+            bool rail = AugMaxed(SniperId);
+            // 평소 연사 간격의 두 배(극대화 1.4배) 넘게 쉬었다 쏜 첫 발 (공격 속도가 느려도 매 발이 충전되지 않게)
+            float interval = player.ShootSpeed / Mathf.Max(0.1f, player.fireRateMultiplier);
+            if (Time.time - lastMainShot >= Mathf.Max(rail ? 0.4f : 0.6f, interval * (rail ? 1.4f : 2f)))
+            {
+                b.damage *= (rail ? 4f : 2.5f) * AugPower(SniperId);
+                b.pene = 9999;
+                b.hitOnce = new HashSet<int>();
+                b.speed *= 1.6f;
+                b.transform.localScale *= 1.5f;
+                if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(0.5f, 0.95f, 1f);
+                if (fx != null) fx.Play("railgun", 0.35f, 1.6f);
+            }
         }
-        // 추적 영혼탄
-        if (HasAug(SeekerId))
-        {
-            Homing h = b.GetComponent<Homing>();
-            if (h == null) h = b.gameObject.AddComponent<Homing>();
-            h.turnSpeed = Mathf.Max(h.turnSpeed, 300f * AugPower(SeekerId));
-        }
+        if (main) lastMainShot = Time.time;
 
-        bool flame = HasAug(FlameId), blast = HasAug(GrenadeId), chain = HasAug(ChainId);
-        if (!flame && !blast && !chain) return;
-        bool first = true;
+        bool sticky = HasAug(GrenadeId), thunder = HasAug(ChainId);
+        if (!sticky && !thunder) return;
         b.onHitEnemy += (bullet, col) =>
         {
             if (col == null) return;
-            Vector3 at = col.transform.position;
-            if (flame)
+            if (sticky && stuckBombs.Add(col.GetInstanceID())) StartCoroutine(StickyBomb(col.transform, col.GetInstanceID()));
+            if (thunder && ++thunderHits >= 8)
             {
-                bool hell = AugMaxed(FlameId);
-                float dps = Damage * (hell ? 0.6f : 0.35f) * AugPower(FlameId);
-                Burn.Apply(col.gameObject, dps, 3f);
-                if (hell)
-                    foreach (Collider2D o in Specials.Overlap(at, 2.5f, gunHits))
-                        if (o != col && (o.CompareTag("enermy") || o.CompareTag("boss"))) Burn.Apply(o.gameObject, dps * 0.5f, 3f);
+                thunderHits = 0;
+                Vector3 at = col.transform.position;
+                Fx.Bolt(at + new Vector3(Random.Range(-1.5f, 1.5f), 14f), at, 1.4f, new Color(0.6f, 0.9f, 1f), 0.2f);
+                Fx.Spawn("fx_shock", at, 6f, new Color(0.6f, 0.9f, 1f), 22f);
+                CharacterKit.DamageCircle(at, 3f, Damage * 1.2f * AugPower(ChainId), 0.5f);
+                if (fx != null) fx.Play("thunder", 0.5f, Random.Range(0.95f, 1.15f));
             }
-            if (blast && first)
-                Explode(at, 2f + 0.3f * Trait(GrenadeId), Damage * 0.7f * AugPower(GrenadeId), 1.2f, new Color(1f, 0.55f, 0.2f, 0.85f));
-            if (chain && Random.value < 0.35f * AugPower(ChainId))
-                ChainLightning(at, col, Damage * 0.5f, 2);
-            first = false;
         };
     }
 
+    // 점착탄: 맞은 적에 붙은 폭탄이 1.5초 뒤 터짐 (적마다 하나씩)
+    System.Collections.IEnumerator StickyBomb(Transform target, int key)
+    {
+        Fx.Spawn("fx_spark", target.position, 1f, new Color(1f, 0.55f, 0.2f), 20f);
+        Vector3 at = target.position;
+        for (float t = 0f; t < 1.5f; t += Time.deltaTime)
+        {
+            if (target != null) at = target.position;
+            yield return null;
+        }
+        stuckBombs.Remove(key);
+        Explode(at, 2.5f + 0.3f * Trait(GrenadeId), Damage * 0.8f * AugPower(GrenadeId), 1.2f, new Color(1f, 0.55f, 0.2f, 0.85f));
+    }
     // 치명타 (금색 · 크게) — 영혼 탄두 · 영혼 트리 치명타가 같이 씀
     void MakeCrit(Bullet b)
     {
@@ -124,6 +138,23 @@ public partial class SpecialAbilities
     public void EvoExtraShots(Vector3 start, Vector2 dir, float dmg)
     {
         if (!Gunner || gunEvo1 < 0) return;
+        // 화염 총구: 총구 앞 짧은 불길 (부채꼴)
+        if (HasAug(FlameId))
+        {
+            bool hell = AugMaxed(FlameId);
+            float range = hell ? 6f : 4.5f, half = hell ? 30f : 22f;
+            float hit = Damage * (hell ? 0.5f : 0.3f) * AugPower(FlameId);
+            foreach (Collider2D c in Specials.Overlap(start, range, gunHits))
+            {
+                if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
+                Vector2 to = c.transform.position - start;
+                if (Vector2.Angle(dir, to) > half) continue;
+                Specials.Damage(c.gameObject, hit, to.normalized, 0.3f);
+                if (hell) Burn.Apply(c.gameObject, Damage * 0.3f, 2f);
+            }
+            for (int i = 1; i <= 3; i++)
+                Fx.Spawn("fx_explosion", start + (Vector3)(dir * range * i / 3.5f), 0.8f + i * (hell ? 0.6f : 0.4f), new Color(1f, 0.55f, 0.15f, 0.8f), 30f);
+        }
         if (HasAug(DualId))
         {
             int extra = AugMaxed(DualId) ? 2 : 1;
@@ -173,7 +204,18 @@ public partial class SpecialAbilities
     // ---------------- 처치할 때: 사신의 탄환
     void EvoOnKill(Vector3 pos)
     {
-        if (!Gunner || !HasAug(ScytheId) || player == null || Random.value >= 0.25f) return;
+        if (!Gunner || player == null) return;
+        // 영혼 사냥: 처치한 자리에서 가까운 적을 쫓는 영혼탄 두 발
+        if (HasAug(SeekerId))
+            for (int i = 0; i < 2; i++)
+            {
+                Bullet b = player.CreateBullet(pos, Random.insideUnitCircle.normalized, Damage * 0.5f * AugPower(SeekerId), 1, 0, false, 0.3f);
+                if (b == null) continue;
+                b.gameObject.AddComponent<Homing>().turnSpeed = 420f;
+                b.transform.localScale *= 0.8f;
+                if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(0.75f, 0.5f, 1f);
+            }
+        if (!HasAug(ScytheId) || Random.value >= 0.25f) return;
         float r = 3f;
         CharacterKit.DamageCircle(pos, r, Damage * 1.5f * AugPower(ScytheId), 1.5f);
         Fx.Spawn("fx_slash", pos, r * 2.2f, new Color(0.8f, 0.55f, 1f), 30f, Random.Range(0f, 360f), 16);
