@@ -125,7 +125,9 @@ public class Bullet : MonoBehaviour
         }
         if (collision.CompareTag("boss"))
         {
-            bosss enemy = Cache<bosss>.Get;
+            // 맞은 그 보스 (분열한 킹 슬라임이 여럿일 때 다른 슬라임이 맞던 문제)
+            bosss enemy = collision.GetComponent<bosss>();
+            if (enemy == null) enemy = collision.GetComponentInParent<bosss>();
 
             if (enemy != null)
             {

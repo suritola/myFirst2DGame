@@ -764,7 +764,7 @@ public class StageManager : MonoBehaviour
     {
         const float Normal = -64f;
         if (bossBar == null || !bossBar.bossSpawn || bossBar.backBar == null || !bossBar.backBar.activeInHierarchy) return Normal;
-        RectTransform bb = bossBar.backBar.GetComponent<RectTransform>();
+        RectTransform bb = bossBar.LowestBar;      // 분열한 슬라임 체력바가 여럿이면 맨 아래 것 기준
         RectTransform parent = banner.transform.parent as RectTransform;
         if (bb == null || parent == null) return Normal;
         bb.GetWorldCorners(bossBarCorners);

@@ -42,15 +42,84 @@ public class bossbar : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!bossSpawn) backBar.SetActive(false);
-        else
+        if (!bossSpawn)
         {
-            backBar.SetActive(true);
-            UpdateName();
-            if (MaxHealth <= 0) return;
-            BarX = Mathf.Clamp01((float)NowHealth / (float)MaxHealth) * MaxBarX;
-            if (barRect == null) barRect = bar.GetComponent<RectTransform>();
-            barRect.sizeDelta = new Vector2(BarX, BarY);
+            backBar.SetActive(false);
+            ShowExtraBars(0);
+            return;
+        }
+        backBar.SetActive(true);
+        UpdateName();
+        if (barRect == null) barRect = bar.GetComponent<RectTransform>();
+
+        // 킹 슬라임이 갈라진 뒤에는 슬라임마다 따로 보스 체력바 (첫 줄 + 아래로 쌓음)
+        if (bossKind == 2)
+        {
+            bosss.CollectLiveSlimes(liveSlimes);
+            bool split = liveSlimes.Exists(s => s.slimeGen >= 2);
+            if (split && liveSlimes.Count > 0)
+            {
+                SetBar(barRect, nameText, liveSlimes[0], 0);
+                ShowExtraBars(liveSlimes.Count - 1);
+                for (int i = 1; i < liveSlimes.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveSlimes[i], i);
+                wasMulti = true;
+                return;
+            }
+        }
+        // 슬라임마다 그리던 것에서 돌아오면 첫 줄 이름을 다시 씀
+        if (wasMulti) { wasMulti = false; shownKind = -1; }
+        ShowExtraBars(0);
+        if (MaxHealth <= 0) return;
+        BarX = Mathf.Clamp01((float)NowHealth / (float)MaxHealth) * MaxBarX;
+        barRect.sizeDelta = new Vector2(BarX, BarY);
+    }
+
+    // ================================================================= 분열한 킹 슬라임: 슬라임마다 보스 체력바
+    const float ExtraGap = 8f;
+    bool wasMulti;
+    readonly List<bosss> liveSlimes = new List<bosss>();
+    readonly List<GameObject> extraBars = new List<GameObject>();
+    readonly List<RectTransform> extraFills = new List<RectTransform>();
+    readonly List<TMP_Text> extraNames = new List<TMP_Text>();
+
+    void SetBar(RectTransform fill, TMP_Text label, bosss s, int index)
+    {
+        float ratio = s.setEnemyHP > 0 ? Mathf.Clamp01(s.EnemyHealth / s.setEnemyHP) : 0f;
+        if (fill != null) fill.sizeDelta = new Vector2(ratio * MaxBarX, BarY);
+        string n = BossName(2) + " " + (index + 1);
+        if (label != null && label.text != n) label.text = n;
+    }
+
+    // 위쪽 보스 체력바(배경 · 채움 · 이름)를 복제해 아래로 쌓음
+    void ShowExtraBars(int count)
+    {
+        while (extraBars.Count < count)
+        {
+            GameObject clone = Instantiate(backBar, backBar.transform.parent);
+            clone.name = backBar.name + "_" + (extraBars.Count + 1);
+            RectTransform main = backBar.GetComponent<RectTransform>();
+            RectTransform r = clone.GetComponent<RectTransform>();
+            r.anchoredPosition = main.anchoredPosition - new Vector2(0f, (main.sizeDelta.y + ExtraGap) * (extraBars.Count + 1));
+            Transform fill = clone.transform.Find(bar.name);
+            TMP_Text label = null;
+            foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))
+                if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; }    // 원래 이름 글자 찾기와 헷갈리지 않게
+            extraBars.Add(clone);
+            extraFills.Add(fill as RectTransform);
+            extraNames.Add(label);
+        }
+        for (int i = 0; i < extraBars.Count; i++)
+            if (extraBars[i] != null && extraBars[i].activeSelf != (i < count)) extraBars[i].SetActive(i < count);
+    }
+
+    // 가장 아래에 보이는 보스 체력바 (알림판을 그 아래로 내릴 때)
+    public RectTransform LowestBar
+    {
+        get
+        {
+            for (int i = extraBars.Count - 1; i >= 0; i--)
+                if (extraBars[i] != null && extraBars[i].activeInHierarchy) return extraBars[i].GetComponent<RectTransform>();
+            return backBar != null ? backBar.GetComponent<RectTransform>() : null;
         }
     }
 

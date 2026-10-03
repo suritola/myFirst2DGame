@@ -56,6 +56,7 @@ public class bosss : MonoBehaviour
     static readonly List<bosss> slimes = new List<bosss>();
     static int gen2Deaths;
     static int gen3Spawned;
+    static bool slimeBossCleared;    // 마지막 두 마리가 거의 같이 쓰러져도 보스 처치는 한 번만
     const int Gen2Hp = 600;
     const int Gen3Hp = 280;
     // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
@@ -80,6 +81,13 @@ public class bosss : MonoBehaviour
         if (gen1Alive) sum += 2 * ScaledHp(Gen2Hp);
         sum += (3 - gen3Spawned) * ScaledHp(Gen3Hp);
         return sum;
+    }
+
+    // 살아 있는 킹 슬라임 (위쪽 보스 체력바가 분열한 슬라임마다 따로 그림)
+    public static void CollectLiveSlimes(List<bosss> into)
+    {
+        into.Clear();
+        foreach (bosss s in slimes) if (s != null && !s.isDead) into.Add(s);
     }
 
     void Split()
@@ -155,10 +163,9 @@ public class bosss : MonoBehaviour
                 slimes.Clear();
                 gen2Deaths = 0;
                 gen3Spawned = 0;
+                slimeBossCleared = false;
             }
             slimes.Add(this);
-            // 갈라진 슬라임은 각자 따로 싸우는 개체: 머리 위에 자기 체력바
-            if (slimeGen >= 2) EnemyHealthBar.AttachBoss(this, spriteRenderer);
         }
         ready = true;
     }
@@ -320,7 +327,11 @@ public class bosss : MonoBehaviour
 
         // 스테이지 진행 (신전 문 열기 등) - 슬라임은 모두 쓰러졌을 때만
         bool allDown = !IsSlime || SlimeRemaining() <= 0;
-        if (IsSlime) slimes.Remove(this);
+        if (IsSlime)
+        {
+            slimes.Remove(this);
+            if (allDown) { if (slimeBossCleared) allDown = false; else slimeBossCleared = true; }
+        }
         if (enemySpawner != null && allDown) enemySpawner.OnBossDefeated();
 
         Destroy(gameObject);
