@@ -31,7 +31,10 @@ public class Level : MonoBehaviour
 
         PlayerController player = Cache<PlayerController>.Get;
         playerLevel = player.level;
-        if (playerLevel != shownLevel) { shownLevel = playerLevel; levelText.text = "Lv. " + playerLevel; }
+        // 레벨업 카드를 모두 배우면 만렙 (LevelShop.NothingToLearn)
+        LevelShop shop = Cache<LevelShop>.Get;
+        int show = shop != null && shop.NothingToLearn ? -2 : playerLevel;
+        if (show != shownLevel) { shownLevel = show; levelText.text = "Lv. " + playerLevel + (show == -2 ? " MAX" : ""); }
         playerEXP = player.nowEXP;
         playerMaxEXP = player.needEXP;
         if (gauge == null) gauge = EXPgauge.GetComponent<RectTransform>();

@@ -90,6 +90,8 @@ public partial class LevelShop : MonoBehaviour
         UpdateSelectLock();
 
         UpdateReroll();
+        // 마지막 카드를 배워 만렙이 되면 남은 레벨업은 버림
+        if (PendingLevels > 0 && !IsOpen && NothingToLearn) PendingLevels = 0;
         // 클릭으로 고른 카드를 스페이스바로 확정
         if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
         {
@@ -340,6 +342,12 @@ public partial class LevelShop : MonoBehaviour
     public void GainExp(PlayerController p, float amount)
     {
         if (p == null) return;
+        // 만렙: 더 배울 카드가 없으면 레벨이 오르지 않음 (비상 보급만 끝없이 나와 체력을 채우던 문제)
+        if (NothingToLearn)
+        {
+            p.nowEXP = Mathf.Min(p.nowEXP + amount, p.needEXP);
+            return;
+        }
         p.nowEXP += amount;
         int gained = 0;
         while (p.nowEXP >= p.needEXP && p.needEXP > 0f)
@@ -384,6 +392,18 @@ public partial class LevelShop : MonoBehaviour
         if (LvUpPanel != null && LvUpPanel.activeSelf != (showLv && !ShopOpen)) LvUpPanel.SetActive(showLv && !ShopOpen);
     }
     public bool IsOpen => LvshopPanel != null && LvshopPanel.activeSelf;
+
+    // 지금 고를 수 있는 레벨업 카드가 하나도 없음 = 만렙 (무기가 바뀌어 맞는 카드가 생기면 다시 오름)
+    public bool NothingToLearn
+    {
+        get
+        {
+            if (Total_abilitys <= 0 || ability_selected == null) return false;
+            for (int i = 0; i < Total_abilitys && i < ability_selected.Length; i++)
+                if (!ability_selected[i] && KitFits(i)) return false;
+            return true;
+        }
+    }
 
     public void openLevelShop()
     {
