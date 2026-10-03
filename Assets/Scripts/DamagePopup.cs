@@ -14,16 +14,23 @@ public class DamagePopup : MonoBehaviour
     static readonly Dictionary<int, DamagePopup> byTarget = new Dictionary<int, DamagePopup>();
     static int active;
 
+    // 다음 피해가 치명타인지 (총알 · 피해 훅이 피해를 주기 직전에 켜 둠, Show 가 읽고 끔)
+    public static bool NextCrit;
+
     TextMeshPro text;
     int key;
+    bool crit;
     float amount, t, lastAdd, size = 1f;
     Vector3 start;
 
     public static void Show(Transform target, float damage, SpriteRenderer body)
     {
+        bool isCrit = NextCrit;
+        NextCrit = false;
         if (target == null || damage <= 0f || GameSettings.DamageNumbers == 2) return;
         int k = target.GetInstanceID();
-        if (byTarget.TryGetValue(k, out DamagePopup p) && p != null && Time.time - p.lastAdd < Merge)
+        // 치명타는 다른 숫자와 합치지 않고 따로 크게
+        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && Time.time - p.lastAdd < Merge)
         {
             p.Add(damage);
             return;
@@ -34,6 +41,11 @@ public class DamagePopup : MonoBehaviour
         Vector3 at = new Vector3(target.position.x + Random.Range(-0.3f, 0.3f), top + 0.35f, 0f);
 
         // 다 떠오른 숫자를 버리지 않고 다시 씀 (맞을 때마다 글자 오브젝트를 새로 만들고 지우지 않게)
+        if (isCrit)
+        {
+            at += new Vector3(Random.Range(-0.25f, 0.25f), 0.3f, 0f);
+            Fx.Spawn("fx_sparkle", at, 1.4f, new Color(1f, 0.85f, 0.3f), 24f);
+        }
         p = null;
         while (pool.Count > 0 && p == null) p = pool.Pop();
         if (p == null)
@@ -58,9 +70,10 @@ public class DamagePopup : MonoBehaviour
         p.amount = 0f;
         p.t = 0f;
         p.size = 1f;
+        p.crit = isCrit;
         p.live = true;
         p.gameObject.SetActive(true);
-        byTarget[k] = p;
+        if (!isCrit) byTarget[k] = p;
         active++;
         p.Add(damage);
     }
@@ -104,13 +117,19 @@ public class DamagePopup : MonoBehaviour
         amount += damage;
         lastAdd = Time.time;
         t = 0f;
-        text.text = amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString();
+        text.text = (amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString()) + (crit ? "!" : "");
         // 큰 피해일수록 크고 붉은 금색
         PlayerController pl = Hostile.Player;
         float baseDmg = pl != null ? Mathf.Max(0.1f, pl.damage) : 1f;
         float k = Mathf.Clamp01((amount / baseDmg - 1f) / 4f);
         text.color = Color.Lerp(new Color(1f, 1f, 0.95f), new Color(1f, 0.55f, 0.2f), k);
         size = 1f + 0.5f * k;
+        // 치명타: 금색으로 훨씬 크게
+        if (crit)
+        {
+            text.color = new Color(1f, 0.82f, 0.15f);
+            size = 1.9f + 0.4f * k;
+        }
     }
 
     void Update()
@@ -119,7 +138,7 @@ public class DamagePopup : MonoBehaviour
         float k = t / Life;
         if (k >= 1f) { Release(); return; }
         float up = 1f - (1f - k) * (1f - k);
-        float pop = t < 0.08f ? 1.35f - 0.35f * (t / 0.08f) : 1f;
+        float pop = t < 0.08f ? (crit ? 1.8f - 0.8f * (t / 0.08f) : 1.35f - 0.35f * (t / 0.08f)) : 1f;
         transform.position = start + new Vector3(0f, Rise * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
         Color c = text.color;

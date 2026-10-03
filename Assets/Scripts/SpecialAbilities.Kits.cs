@@ -1043,7 +1043,7 @@ public partial class SpecialAbilities
             if (TreeCrit > 0f && Random.value < TreeCrit)
             {
                 damage *= TreeCritDamage;
-                Fx.Spawn("fx_sparkle", e.transform.position, 1f, new Color(1f, 0.85f, 0.3f), 24f);
+                DamagePopup.NextCrit = true;        // 피해 숫자를 치명타로 (곧 이어 DamagePopup.Show)
             }
             if (TreeExecute > 0f && e.EnemyHealth <= e.setEnemyHP * 0.2f) damage *= 1f + TreeExecute;
         }

@@ -98,7 +98,9 @@ public class Bullet : MonoBehaviour
                 if (enemy.EnemyHealth <= 0f) return;
                 if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
+                DamagePopup.NextCrit = isCrit;
                 enemy.TakeDamage(damage, knockBack, dir);
+                DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
 
@@ -127,7 +129,9 @@ public class Bullet : MonoBehaviour
                 if (enemy.EnemyHealth <= 0f) return;
                 if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
+                DamagePopup.NextCrit = isCrit;
                 enemy.TakeDamage(damage, knockBack, dir);
+                DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
 
