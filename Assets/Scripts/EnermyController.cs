@@ -119,6 +119,8 @@ public class EnermyController : MonoBehaviour
             {
                 expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
                 coinDrop = GameMode.RoundRandom(coinsBefore / GameMode.KillStretch);
+                // 회복약도 처치 수가 늘어난 만큼 덜 나오게 (한 판 총량을 1.8.8 수준으로)
+                hpChance = chanceofHP / GameMode.KillStretch;
             }
             else
             {
@@ -357,6 +359,7 @@ public class EnermyController : MonoBehaviour
     public GameObject hp;
     [Header("힐팩")]
     public int chanceofHP = 30;
+    float hpChance = -1f;               // 난이도를 반영한 실제 확률 (%), 음수면 chanceofHP 그대로
 
     IEnumerator Death(int a)
     {
@@ -370,7 +373,7 @@ public class EnermyController : MonoBehaviour
             
 
             enemySpawner.killedEnemy++;
-            if ( Random.Range(0,100) < chanceofHP) Instantiate(hp, transform.position, Quaternion.identity);
+            if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, transform.position, Quaternion.identity);
             for (int i = 0; i < coinDrop; i++)
             {
                 Vector2 drop = transform.position;
