@@ -58,3 +58,6 @@ Thumbs.db
 
 # Python
 __pycache__/
+
+# Claude Code 개인 설정
+.claude/settings.local.json
