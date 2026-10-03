@@ -109,6 +109,11 @@ public partial class CharacterKit : MonoBehaviour
         lastPos = transform.position;
     }
 
+    void Update()
+    {
+        if (Id == CharacterId.Rogue) UpdateMastery();
+    }
+
     static int Index(string n)
     {
         int i = n.LastIndexOf('_');
@@ -463,10 +468,15 @@ public partial class CharacterKit : MonoBehaviour
                 UpdateCharged(gauge, full);
                 break;
             case CharacterId.Rogue:
-                if (GameInput.UltDown && full && !Dashing)
+                bool recast = Time.time < recastUntil;
+                if (GameInput.UltDown && !Dashing && (full || recast))
                 {
+                    // 그림자 숙련 4단계: 게이지로 돌진한 뒤 잠깐은 한 번 더 공짜로 (게이지는 아껴 둠)
+                    recastUntil = 0f;
                     StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
+                    if (recast) break;
                     Spend(gauge);
+                    if (player.level >= MasteryLevels[3]) recastUntil = Time.time + 3f;
                 }
                 break;
             case CharacterId.Archer:
@@ -542,7 +552,9 @@ public partial class CharacterKit : MonoBehaviour
     IEnumerator BleedDash(Vector2 dir)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
-        const float dist = 25f, time = 0.32f, width = 1.4f;
+        int mastery = RogueMastery;
+        float dist = mastery >= 3 ? 32f : 25f;          // 그림자 숙련 3단계: 더 멀리 · 더 오래 무적
+        const float time = 0.32f, width = 1.4f;
         Vector3 from = transform.position;
         // 벽 · 경기장 끝 앞에서 멈춤
         float len = dist;
@@ -555,7 +567,7 @@ public partial class CharacterKit : MonoBehaviour
 
         dashUntil = Time.time + time;
         // 돌진하는 동안 + 끝난 뒤 0.4초 무적
-        player.GrantInvincibility(time + 0.4f);
+        player.GrantInvincibility(time + (mastery >= 3 ? 0.8f : 0.4f));
         if (card[2] > 0) StartCoroutine(ShadowClone(from, 1f + card[2]));
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
@@ -588,6 +600,72 @@ public partial class CharacterKit : MonoBehaviour
         Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
+        DashMastery(to, mastery, hit.Count);
+    }
+
+    // ================================================================= 도적 그림자 숙련
+    // 레벨이 오르면 출혈 돌진에 유틸이 붙음 (카드 · 트리 없이 자동): 초반엔 약하지만 갈수록 빠져나가고 묶는 힘이 커짐
+    //   1 이동 속도 · 2 착지 둔화 · 3 거리 · 무적 · 4 연속 돌진 · 5 게이지 반환
+    static readonly int[] MasteryLevels = { 3, 6, 10, 14, 18 };
+    static readonly string[] MasteryNames =
+    {
+        "돌진 뒤 2초 동안 이동 속도 +35%",
+        "돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 느리게",
+        "돌진 거리 +30% · 돌진 뒤 무적 시간 두 배",
+        "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이)",
+        "돌진으로 벤 적 하나당 스킬 게이지 4% 되돌려 받음 (최대 40%)",
+    };
+    float recastUntil;
+    int masteryShown;
+
+    int RogueMastery
+    {
+        get
+        {
+            if (Id != CharacterId.Rogue || player == null) return 0;
+            int n = 0;
+            while (n < MasteryLevels.Length && player.level >= MasteryLevels[n]) n++;
+            return n;
+        }
+    }
+
+    // 새 단계에 오르면 머리 위에 알림
+    void UpdateMastery()
+    {
+        int m = RogueMastery;
+        if (m <= masteryShown) return;
+        masteryShown = m;
+        if (SpecialAbilities.SharedFx != null)
+            SpecialAbilities.SharedFx.FloatText(transform.position + Vector3.up * 1.5f, Loc.T("그림자 숙련") + " " + m + " : " + Loc.T(MasteryNames[m - 1]), new Color(0.8f, 0.6f, 1f), 5f, 0.4f);
+        Play("shimmer", 0.5f, 1.2f);
+    }
+
+    void DashMastery(Vector3 at, int mastery, int hits)
+    {
+        if (mastery >= 1) StartCoroutine(DashHaste(2f, 1.35f));
+        if (mastery >= 2)
+        {
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(at, 4f))
+            {
+                EnermyController e = c.GetComponent<EnermyController>();
+                if (e != null && !e.IsDead) e.Slow(0.4f, 1.5f);
+            }
+            Fx.Spawn("fx_shock", at, 8f, new Color(0.6f, 0.4f, 0.9f, 0.6f), 20f);
+        }
+        if (mastery >= 4 && recastUntil > Time.time)
+            Fx.Spawn("fx_sparkle", at, 1.6f, new Color(0.8f, 0.6f, 1f), 20f);
+        if (mastery >= 5 && hits > 0)
+        {
+            if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
+            if (gaugeRef != null) gaugeRef.AddSkillPoint(gaugeRef.MaxSkillPoint * Mathf.Min(0.4f, 0.04f * hits));
+        }
+    }
+
+    IEnumerator DashHaste(float seconds, float mul)
+    {
+        player.speed *= mul;
+        yield return new WaitForSeconds(seconds);
+        if (player != null) player.speed /= mul;
     }
 
     // 이번 프레임에 지나간 구간 전체 (프레임이 길어도 건너뛰지 않게)

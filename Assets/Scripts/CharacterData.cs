@@ -40,8 +40,8 @@ public static class CharacterData
             name = "도적", title = "그림자 칼날", body = "rogue", held = "shuriken",
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
-            skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발)",
-            hp = 0.7f, damage = 0.7f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
+            skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발). 레벨이 오를수록 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다 (그림자 숙련)",
+            hp = 0.7f, damage = 0.85f, attackSpeed = 1.4f, gauge = 1.5f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
