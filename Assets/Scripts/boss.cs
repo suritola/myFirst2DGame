@@ -157,6 +157,8 @@ public class bosss : MonoBehaviour
                 gen3Spawned = 0;
             }
             slimes.Add(this);
+            // 갈라진 슬라임은 각자 따로 싸우는 개체: 머리 위에 자기 체력바
+            if (slimeGen >= 2) EnemyHealthBar.AttachBoss(this, spriteRenderer);
         }
         ready = true;
     }
