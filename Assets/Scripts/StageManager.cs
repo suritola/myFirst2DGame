@@ -82,6 +82,26 @@ public class StageManager : MonoBehaviour
         Instance = this;
     }
 
+    // 3장 초원: 배경이 너무 밝아 이펙트(밝은 색 불꽃 · 번개 · 피해 숫자)가 묻혀서 바닥 · 장식을 어둡고 탁하게
+    const float MeadowDim = 0.58f;
+
+    void DimMeadow()
+    {
+        meadowBackground = Dim(meadowBackground);
+        if (meadowMap == null) return;
+        foreach (SpriteRenderer sr in meadowMap.GetComponentsInChildren<SpriteRenderer>(true)) sr.color = Dim(sr.color);
+        foreach (UnityEngine.Tilemaps.Tilemap tm in meadowMap.GetComponentsInChildren<UnityEngine.Tilemaps.Tilemap>(true)) tm.color = Dim(tm.color);
+    }
+
+    // 밝기를 낮추고 채도도 조금 빼서 (형광 초록이 이펙트를 덮지 않게), 알파는 그대로
+    static Color Dim(Color c)
+    {
+        float grey = (c.r + c.g + c.b) / 3f;
+        Color d = Color.Lerp(c, new Color(grey, grey, grey), 0.25f) * MeadowDim;
+        d.a = c.a;
+        return d;
+    }
+
     void Start()
     {
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
@@ -94,6 +114,7 @@ public class StageManager : MonoBehaviour
 
         if (hellMap != null) hellMap.SetActive(false);
         if (meadowMap != null) meadowMap.SetActive(false);
+        DimMeadow();
         if (portal != null) portal.SetActive(false);
         if (specialPanel != null) specialPanel.SetActive(false);
         if (banner != null) banner.SetActive(false);
