@@ -475,7 +475,11 @@ public partial class SpecialAbilities : MonoBehaviour
                             float a = (angle + arm * 180f) * Mathf.Deg2Rad;
                             Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
                             Bullet b = player.CreateBullet(player.transform.position + (Vector3)(d * 0.6f), d, dmg * 0.3f, player.pene, 0f, true, 0.4f);
-                            if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                            if (b == null) continue;
+                            // 모든 적을 꿰뚫음 (적마다 한 번씩)
+                            b.pene = 9999;
+                            b.hitOnce = new HashSet<int>();
+                            if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
                             Fx.Spawn("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }
                         angle += 22f;

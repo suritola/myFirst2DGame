@@ -212,6 +212,9 @@ public class bosss : MonoBehaviour
     {
         if (isDead || !ready) return;
 
+        // 치명타: 보스도 모든 캐릭터의 공격 · 스킬에 치명타를 맞음 (거너 평타 총알은 쏠 때 이미 굴림)
+        if (!SpecialAbilities.CritRolled && SpecialAbilities.SharedInstance != null) damage = SpecialAbilities.SharedInstance.RollCrit(damage);
+
         // 체력 감소
         EnemyHealth -= damage;
         DamagePopup.Show(transform, damage, spriteRenderer);

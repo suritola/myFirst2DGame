@@ -14,6 +14,7 @@ public partial class SpecialAbilities
     public void ApplyGunCards(Bullet b, bool light, bool countShot = true)
     {
         if (b == null || !CharacterData.IsGunner) return;
+        b.critRolled = true;                        // 치명타는 여기서 한 번만 (피해 훅에서 또 굴리지 않게)
         // 영혼 트리: 치명타 (피해 2배, 금색) · 탄속
         if (TreeCrit > 0f && Random.value < TreeCrit) MakeCrit(b);
         ApplyEvoAugments(b, light, countShot);                 // 무기 진화 능력 (SpecialAbilities.EvoAugments)

@@ -1035,16 +1035,23 @@ public partial class SpecialAbilities
     bool NoNativeDot => CharacterData.Selected == CharacterId.Swordsman || CharacterData.Selected == CharacterId.Archer
                         || (CharacterData.IsGunner && gunCard[GunIncendiary] == 0);
 
+    // 지금 들어가는 피해가 이미 치명타를 굴린 총알인지 (Bullet 이 피해를 주는 동안만 켜짐)
+    public static bool CritRolled;
+
+    // 치명타 판정: 영혼 트리 치명타 확률 · 피해 (피해 숫자도 치명타로)
+    public float RollCrit(float damage)
+    {
+        if (TreeCrit <= 0f || Random.value >= TreeCrit) return damage;
+        DamagePopup.NextCrit = true;
+        return damage * TreeCritDamage;
+    }
+
     float KitDamageHook(EnermyController e, float damage)
     {
-        // 치명타 · 처형: 거너 총알은 총알에서 (GunCards), 그 밖(다른 캐릭터 · 거너 산탄총 · 용암 유탄)은 여기서
-        if (!CharacterData.IsGunner || !BulletWeapon)
+        // 치명타 · 처형: 거너 평타 총알은 쏠 때 이미 굴림 (GunCards), 그 밖의 모든 공격 · 스킬 · 필살기는 여기서
+        if (!CritRolled)
         {
-            if (TreeCrit > 0f && Random.value < TreeCrit)
-            {
-                damage *= TreeCritDamage;
-                DamagePopup.NextCrit = true;        // 피해 숫자를 치명타로 (곧 이어 DamagePopup.Show)
-            }
+            damage = RollCrit(damage);
             if (TreeExecute > 0f && e.EnemyHealth <= e.setEnemyHP * 0.2f) damage *= 1f + TreeExecute;
         }
         if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.7f : 1.35f;

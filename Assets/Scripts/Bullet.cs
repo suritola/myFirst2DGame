@@ -36,6 +36,8 @@ public class Bullet : MonoBehaviour
     public float lifetime = 2f;
     // 치명타 총알 (맞힌 피해 숫자를 크게 · 금색으로)
     public bool isCrit;
+    // 쏠 때 이미 치명타를 굴린 총알 (거너 평타). 아니면 맞힐 때 피해 훅이 굴림 (스킬 · 필살기 · 다른 캐릭터)
+    public bool critRolled;
 
     public Vector2 Dir
     {
@@ -99,7 +101,9 @@ public class Bullet : MonoBehaviour
                 if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
                 DamagePopup.NextCrit = isCrit;
+                SpecialAbilities.CritRolled = critRolled;
                 enemy.TakeDamage(damage, knockBack, dir);
+                SpecialAbilities.CritRolled = false;
                 DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
@@ -130,7 +134,9 @@ public class Bullet : MonoBehaviour
                 if (hitOnce != null && !hitOnce.Add(enemy.GetInstanceID())) return;
 
                 DamagePopup.NextCrit = isCrit;
+                SpecialAbilities.CritRolled = critRolled;
                 enemy.TakeDamage(damage, knockBack, dir);
+                SpecialAbilities.CritRolled = false;
                 DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
