@@ -126,6 +126,7 @@ public class EnemySkill : MonoBehaviour
     // 몸이 깜빡이며 기를 모음 (빛 + 머리 위 느낌표)
     IEnumerator Windup(Color color, float seconds, float speed = 8f)
     {
+        seconds *= GameMode.WindupMul;      // 어려울수록 예고가 짧음
         GameObject aura = Hostile.Glow != null
             ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 0) : null;
         FxAnim mark = Fx.Play("fx_warn", transform.position + Vector3.up * 1.6f * Size, 1.1f, Color.white, 1f, 0f, 30, true, seconds);
@@ -606,7 +607,7 @@ public static class Hostile
         GameObject go = SpecialAbilities.MakeSprite("HostileShot", Glow, pos, scale, color, "Effect", 9);
         HostileProjectile h = go.AddComponent<HostileProjectile>();
         h.dir = dir.normalized;
-        h.speed = speed;
+        h.speed = speed * GameMode.ProjectileSpeedMul;     // 어려울수록 탄이 빠름
         h.damage = damage;
         h.radius = radius;
         h.life = life;

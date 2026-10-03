@@ -15,18 +15,22 @@ public static class GameMode
     public static readonly string[] Names = { "쉬움", "보통", "어려움", "무한" };
 
     // 난이도별 배율                                쉬움   보통   어려움  무한(시작)
-    static readonly float[] EnemyHp =            { 1f,   1.35f, 1.75f,  1.35f };
-    static readonly float[] Damage =             { 1f,   1.2f,  1.45f,  1.2f };
-    static readonly float[] EnemySpeed =         { 1f,   1.05f, 1.1f,   1.05f };
-    static readonly float[] SkillCooldown =      { 1f,   0.85f, 0.72f,  0.85f };   // 작을수록 스킬을 자주 씀
-    static readonly float[] SpawnInterval =      { 1f,   0.9f,  0.8f,   0.8f };
-    static readonly int[] ExtraAlive =           { 0,    2,     4,      2 };
-    static readonly float[] BossHp =             { 1f,   1.2f,  1.4f,   1.4f };    // 보스는 1~3분 안에 잡히게 (대신 보스 공격이 셈)
+    // 1.9.4: 어려울수록 판이 길어지기만 하던 것을 바꿈 — 체력 · 처치 수는 거의 같게,
+    //        대신 적이 빠르고 · 공격을 자주 하고 · 예고가 짧고 · 탄이 빠르고 · 한꺼번에 많이 몰려옴 (피하고 맞히는 실력)
+    static readonly float[] EnemyHp =            { 1f,   1.15f, 1.3f,   1.35f };
+    static readonly float[] Damage =             { 1f,   1.25f, 1.5f,   1.2f };
+    static readonly float[] EnemySpeed =         { 1f,   1.1f,  1.2f,   1.05f };
+    static readonly float[] SkillCooldown =      { 1f,   0.75f, 0.55f,  0.85f };   // 작을수록 스킬을 자주 씀
+    static readonly float[] Windup =             { 1f,   0.85f, 0.7f,   1f };      // 적 스킬 예고(기 모으기) 시간
+    static readonly float[] ProjectileSpeed =    { 1f,   1.15f, 1.3f,   1f };      // 적 · 보스 탄속
+    static readonly float[] SpawnInterval =      { 1f,   0.85f, 0.72f,  0.8f };
+    static readonly int[] ExtraAlive =           { 0,    3,     6,      2 };
+    static readonly float[] BossHp =             { 1f,   1.15f, 1.3f,   1.4f };    // 보스는 1~3분 안에 잡히게 (대신 보스 공격이 셈)
     static readonly float[] Gauge =              { 1f,   0.9f,  0.8f,   0.8f };    // 필살기 게이지 차는 속도
-    static readonly float[] Reward =             { 1f,   1.15f, 1.3f,   1.3f };    // 경험치 · 코인 (단단해진 만큼 조금 보상)
-    // 템포: 보스까지 필요한 처치 수 · 적 생성 간격 (클리어 목표 쉬움 20분 · 보통 25분 · 어려움 30분 내외)
+    static readonly float[] Reward =             { 1f,   1.05f, 1.1f,   1.3f };    // 경험치 · 코인 (많이 주면 어려움에서 레벨업 · 트리가 너무 빨리 다 참)
+    // 템포: 보스까지 필요한 처치 수 · 적 생성 간격 (모든 난이도 20분 내외)
     // 1.8.9: 쉬움 8분 · 어려움 13분에 끝나던 판을 늘림 (처치 수 약 2.2배). 한 판의 경험치 · 코인 · 상점 횟수 총량은 그대로
-    static readonly float[] Kills =              { 1.6f, 1.8f,  2.0f,   1f };
+    static readonly float[] Kills =              { 1.6f, 1.6f,  1.6f,   1f };
     // 보상 기준 (1.8.8까지의 처치 수 배율). 보스 · 중간 보스처럼 한 판에 나오는 수가 정해진 보상은 이 기준으로
     static readonly float[] RewardBasis =        { 0.7f, 0.8f,  0.9f,   1f };
     // 일반 적 영혼 조각을 이만큼만 (판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게)
@@ -128,6 +132,8 @@ public static class GameMode
     public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder;
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f) * Harder;
     public static float EnemySpeedMul => EnemySpeed[I];
+    public static float WindupMul => Windup[I];
+    public static float ProjectileSpeedMul => ProjectileSpeed[I];
     public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, Ramp, 0.3f);
     public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, Ramp, 0.4f);
     // 보스 · 페이즈까지 필요한 처치 수 배율
