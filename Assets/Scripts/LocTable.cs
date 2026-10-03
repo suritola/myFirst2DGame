@@ -631,6 +631,8 @@ public static class LocTable
         { "파열 화살", L("Bursting Arrow", "破裂の矢", "爆裂箭") },
         { "가득 당긴 화살이 처음 맞힌 적의 자리에서 폭발합니다. (범위 2 · 2.5 · 3칸)", L("A fully drawn arrow explodes where it first hits. (Radius 2 · 2.5 · 3)", "引き絞った矢が最初に当たった敵の位置で爆発します。（範囲2・2.5・3マス）", "满弓之箭在首个命中的敌人处爆炸。（范围2 · 2.5 · 3格）") },
         { "폭발 피해", L("Blast damage", "爆発ダメージ", "爆炸伤害") },
+        { "레벨업 능력", L("Level-up Abilities", "レベルアップ能力", "升级能力") },
+        { "눌러서 능력 아이콘을 접고 펼칩니다.", L("Click to collapse or expand the ability icons.", "クリックで能力アイコンを折りたたみ・展開します。", "点击折叠或展开能力图标。") },
         { "치명타 확률", L("Crit Chance", "クリティカル率", "暴击率") },
         { "치명타 피해", L("Crit Damage", "クリティカルダメージ", "暴击伤害") },
         { "피해 배율", L("Damage Multiplier", "ダメージ倍率", "伤害倍率") },

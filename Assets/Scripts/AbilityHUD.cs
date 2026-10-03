@@ -37,12 +37,74 @@ public class AbilityHUD : MonoBehaviour
         return icons[id];
     }
 
+    // 접기 · 펼치기 (아이콘이 화면을 많이 가려서): 왼쪽 위 작은 단추, 상태는 저장
+    const string OpenKey = "AbilityHUDOpen";
+    const float ToggleWidth = 36f;
+    bool open = true;
+    TextMeshProUGUI toggleText;
+
+    void Start()
+    {
+        open = PlayerPrefs.GetInt(OpenKey, 1) == 1;
+        BuildToggle();
+    }
+
+    void BuildToggle()
+    {
+        GameObject go = new GameObject("AbilityToggle", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(transform, false);
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 1f);
+        r.sizeDelta = new Vector2(ToggleWidth, slotSize.y);
+        r.anchoredPosition = Vector2.zero;
+        Image bg = go.GetComponent<Image>();
+        bg.sprite = slotSprite;
+        bg.type = Image.Type.Sliced;
+        bg.color = new Color(1f, 1f, 1f, 0.85f);
+        Button b = go.GetComponent<Button>();
+        b.onClick.AddListener(Toggle);
+        TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
+        tip.title = Loc.T("레벨업 능력");
+        tip.body = Loc.T("눌러서 능력 아이콘을 접고 펼칩니다.");
+
+        GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform tr = tg.GetComponent<RectTransform>();
+        tr.SetParent(r, false);
+        tr.anchorMin = Vector2.zero;
+        tr.anchorMax = Vector2.one;
+        tr.offsetMin = tr.offsetMax = Vector2.zero;
+        toggleText = tg.GetComponent<TextMeshProUGUI>();
+        if (font != null) toggleText.font = font;
+        if (fontMaterial != null) toggleText.fontSharedMaterial = fontMaterial;
+        toggleText.fontSize = 28f;
+        toggleText.color = new Color(0.96f, 0.83f, 0.47f);
+        toggleText.alignment = TextAlignmentOptions.Center;
+        toggleText.raycastTarget = false;
+        ApplyOpen();
+    }
+
+    void Toggle()
+    {
+        open = !open;
+        PlayerPrefs.SetInt(OpenKey, open ? 1 : 0);
+        if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+        ApplyOpen();
+    }
+
+    void ApplyOpen()
+    {
+        foreach (Slot s in slots.Values) s.rect.gameObject.SetActive(open);
+        // 접혀 있으면 가진 능력 수를 보여 줌
+        if (toggleText != null) toggleText.text = open ? "<" : (slots.Count > 0 ? slots.Count.ToString() : ">");
+    }
+
     public void SetAbility(int id, int level)
     {
         if (!slots.TryGetValue(id, out Slot slot))
         {
             slot = CreateSlot(id, slots.Count);
             slots.Add(id, slot);
+            ApplyOpen();
         }
 
         slot.level = level;
@@ -86,7 +148,7 @@ public class AbilityHUD : MonoBehaviour
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.sizeDelta = slotSize;
         rect.anchoredPosition = new Vector2(
-            slotSize.x * 0.5f + col * (slotSize.x + spacing),
+            ToggleWidth + spacing + slotSize.x * 0.5f + col * (slotSize.x + spacing),
             -slotSize.y * 0.5f - row * (slotSize.y + spacing));
 
         Image bg = slotGo.GetComponent<Image>();
