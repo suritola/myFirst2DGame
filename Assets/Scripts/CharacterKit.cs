@@ -47,7 +47,7 @@ public partial class CharacterKit : MonoBehaviour
     // 캐릭터 전용 레벨업 카드 4장의 레벨 (LevelShop.Kits, 0 = 아직 없음). 기본 스펙이 아닌 특수 능력
     //   검사: 0 검기 · 1 흡혈 베기 · 2 쳐내기 · 3 칼바람
     //   도적: 0 도탄 표창 · 1 갈고리 표창 · 2 그림자 분신 · 3 표창 폭풍
-    //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 바람 걸음 · 3 가시 덤불
+    //   궁수: 0 분열 화살 · 1 메아리 화살 · 2 파열 화살 · 3 가시 덤불
     //   연금술사: 0 연쇄 반응 · 1 급속 냉동 · 2 호문쿨루스 · 3 파편 플라스크
     //   도적만 4: 사냥의 기세 (처치할 때마다 스킬 게이지)
     //   5 · 6 (레벨업 12 · 13번 칸): 검사 굳건한 자세 · 연속 베기 / 도적 급소 노리기 · 표창 회수
@@ -357,11 +357,11 @@ public partial class CharacterKit : MonoBehaviour
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
+            if (card[2] > 0 && draw >= 1f) BlastArrow(b);
         }
         if (form == SpecialAbilities.KitBurstBow) StartCoroutine(BurstFollow(dir, dmg * formPower * 0.6f, speed, 0.4f + 0.25f * draw, draw));
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
-        if (card[2] > 0 && draw >= 1f) StartCoroutine(Backstep(-dir));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
         Play("bowtwang", 0.55f + 0.35f * draw, 1.15f - 0.25f * draw);
         Play("arrowfly", 0.3f + 0.4f * draw, 1f + 0.4f * draw);
@@ -965,29 +965,21 @@ public partial class CharacterKit : MonoBehaviour
         if (b != null) Play("arrowfly", 0.25f, 1.6f);
     }
 
-    // 궁수 바람 걸음: 가득 당긴 화살을 쏘면 반동으로 뒤로 휙 물러남
-    IEnumerator Backstep(Vector2 dir)
+    // 궁수 파열 화살: 가득 당긴 화살이 처음 맞힌 적의 자리에서 폭발 (피해 60 · 80 · 100%, 범위 2 · 2.5 · 3칸)
+    void BlastArrow(Bullet b)
     {
-        const float dist = 3f, time = 0.12f;
-        Vector3 from = transform.position;
-        float len = dist;
-        for (float d = 0.5f; d <= dist; d += 0.5f)
+        bool done = false;
+        b.onHitEnemy += (arrow, c) =>
         {
-            Vector3 p = from + (Vector3)(dir * d);
-            if (Hostile.IsWall(p) || (Hostile.ClampArena(p) - p).sqrMagnitude > 0.01f) { len = d - 0.5f; break; }
-        }
-        if (len <= 0f) yield break;
-        Vector3 to = from + (Vector3)(dir * len);
-        dashUntil = Time.time + time;
-        Fx.Spawn("fx_smoke", from, 1.4f, new Color(0.8f, 1f, 0.8f, 0.7f), 18f);
-        for (float t = 0f; t < time; t += Time.deltaTime)
-        {
-            transform.position = Vector3.Lerp(from, to, t / time);
-            yield return null;
-        }
-        transform.position = to;
+            if (done || c == null) return;
+            done = true;
+            Vector3 at = c.transform.position;
+            float r = 1.5f + 0.5f * card[2];
+            DamageCircle(at, r, arrow.damage * (0.4f + 0.2f * card[2]), 1.2f);
+            Fx.Spawn("fx_explosion", at, r * 2f, new Color(1f, 0.85f, 0.5f), 18f);
+            Play("boom", 0.4f, 1.3f);
+        };
     }
-
     // 궁수 가시 덤불: 화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌름
     IEnumerator Thorns(Vector3 center, float radius, float duration)
     {
