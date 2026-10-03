@@ -697,6 +697,7 @@ public static class LocTable
         { "피해 배율", L("Damage Multiplier", "ダメージ倍率", "伤害倍率") },
         { "체력 재생", L("HP Regen", "体力再生", "生命回复") },
         { "/처치", L("/kill", "/撃破", "/击杀") },
+        { "효과 중", L("Active", "効果中", "生效中") },
         { "물약", L("Potions", "ポーション", "药水") },
         { "회복 물약", L("Healing Potion", "回復ポーション", "治疗药水") },
         { "축소 물약", L("Shrinking Potion", "縮小ポーション", "缩小药水") },

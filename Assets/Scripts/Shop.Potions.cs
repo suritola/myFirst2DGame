@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 // 떠돌이 상점 물약 (1.9.4~): 코인으로 사는 소모품. 상점 창 오른쪽에 한 줄로
 //   회복 물약 (즉시) · 축소 물약 · 신속 물약 · 질풍 물약 (상점을 닫은 뒤 일정 시간)
-// 다시 사면 남은 시간이 처음으로 돌아감 (겹쳐서 세지지 않음), 살 때마다 조금씩 비싸짐
+// 효과가 남아 있는 동안은 같은 물약을 다시 살 수 없음 (회복 물약은 체력이 가득이면), 살 때마다 조금씩 비싸짐
 public partial class Shop
 {
     static readonly (string name, string desc, int price)[] Potions =
@@ -59,7 +59,7 @@ public partial class Shop
 
     void BuyPotion(int id)
     {
-        if (playerControllerd == null || !TryPay(potionPrice[id])) return;
+        if (playerControllerd == null || PotionBlocked(id) || !TryPay(potionPrice[id])) return;
         potionPrice[id] = Mathf.CeilToInt(potionPrice[id] * PotionPriceGrowth);
         PotionBuffs buffs = PotionBuffs.Of(playerControllerd);
         switch (id)
@@ -75,14 +75,29 @@ public partial class Shop
         UpdateShopText();
     }
 
+    // 지금 살 수 없는 물약 (회복: 체력 가득 · 나머지: 효과가 남아 있음)
+    bool PotionBlocked(int id)
+    {
+        if (playerControllerd == null) return true;
+        if (id == 0) return playerControllerd.PlayerHealth >= playerControllerd.PlayerMaxHealth;
+        PotionBuffs b = playerControllerd.GetComponent<PotionBuffs>();
+        return b != null && b.Remaining((PotionBuffs.Kind)(id - 1)) > 0f;
+    }
+
     void PotionText()
     {
         if (potionLabels == null) return;
         for (int i = 0; i < Potions.Length; i++)
         {
             if (potionLabels[i] == null) continue;
-            bool full = i == 0 && playerControllerd != null && playerControllerd.PlayerHealth >= playerControllerd.PlayerMaxHealth;
-            string price = full ? Loc.T("체력 가득") : Discounted(potionPrice[i]) + Loc.T(" 코인");
+            string price = Discounted(potionPrice[i]) + Loc.T(" 코인");
+            if (PotionBlocked(i))
+            {
+                PotionBuffs b = i > 0 && playerControllerd != null ? playerControllerd.GetComponent<PotionBuffs>() : null;
+                price = b != null ? Loc.T("효과 중") + " " + Mathf.CeilToInt(b.Remaining((PotionBuffs.Kind)(i - 1))) + Loc.T("초") : Loc.T("체력 가득");
+            }
+            Button btn = potionLabels[i].GetComponentInParent<Button>();
+            if (btn != null) btn.interactable = !PotionBlocked(i);
             potionLabels[i].text = "<color=#F5D478>" + Loc.T(Potions[i].name) + "</color>  " + price + "\n<size=80%>" + Loc.T(Potions[i].desc) + "</size>";
         }
     }
@@ -104,6 +119,8 @@ public class PotionBuffs : MonoBehaviour
         if (b == null) { b = p.gameObject.AddComponent<PotionBuffs>(); b.player = p; }
         return b;
     }
+
+    public float Remaining(Kind k) => left[(int)k];
 
     public void Begin(Kind k, float seconds)
     {
