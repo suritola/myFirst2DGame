@@ -337,7 +337,8 @@ public partial class CharacterKit : MonoBehaviour
             Fx.Spawn("fx_sparkle", start, 1f, new Color(1f, 0.9f, 0.5f), 20f);
         }
 
-        if (GameInput.FireHeld && canDraw) return;
+        // 가득 당기면 바로 발사 (계속 누르고 있으면 다시 당김)
+        if (GameInput.FireHeld && canDraw && draw < 1f) return;
 
         // 발사: 피해 30% → 280%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
         drawing = false;
@@ -683,6 +684,8 @@ public partial class CharacterKit : MonoBehaviour
         }
     }
 
+    const int RainBossHits = 6;
+
     // 화살비: 마우스 둘레에 화살이 1.2초 동안 쏟아짐
     IEnumerator ArrowRain(Vector3 center)
     {
@@ -690,11 +693,24 @@ public partial class CharacterKit : MonoBehaviour
         float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         Play("whoosh", 0.8f, 0.9f);
+        // 몸집이 큰 보스는 화살이 거의 다 맞아 피해가 너무 컸음: 한 번의 화살비에 보스 하나당 6발까지만
+        Dictionary<Collider2D, int> bossHits = new Dictionary<Collider2D, int>();
         for (int i = 0; i < Mathf.RoundToInt(20 * UltMul); i++)
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Spawn("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
-            DamageCircle(at, 1.3f, Damage * 2.5f, 0.5f);
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(at, 1.3f))
+            {
+                bool boss = c.CompareTag("boss");
+                if (!boss && !c.CompareTag("enermy")) continue;
+                if (boss)
+                {
+                    bossHits.TryGetValue(c, out int n);
+                    if (n >= RainBossHits) continue;
+                    bossHits[c] = n + 1;
+                }
+                Specials.Damage(c.gameObject, Damage * 2.5f, (c.transform.position - at).normalized, 0.5f);
+            }
             if (i % 4 == 0) Play("arrowfly", 0.35f, Random.Range(0.8f, 1.2f));
             yield return new WaitForSeconds(0.06f);
         }
