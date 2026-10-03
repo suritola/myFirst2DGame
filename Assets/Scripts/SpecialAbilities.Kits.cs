@@ -864,7 +864,6 @@ public partial class SpecialAbilities
     float rewindRecord;
     // 매 프레임 곱해 둔 값 (다음 프레임에 되돌리고 다시 곱함)
     float appliedDmg = 1f, appliedRate = 1f, appliedSpeed = 1f;
-    Vector3 giantBaseScale;
     float giantTick;
 
     public bool KitFocusActive => Time.time < focusUntil;
@@ -917,8 +916,8 @@ public partial class SpecialAbilities
     {
         if (Time.time >= giantUntil)
         {
-            giantBaseScale = player.transform.localScale;
-            player.transform.localScale = giantBaseScale * 1.5f;
+            // 곱했다가 나눔 (축소 물약과 겹쳐도 원래 크기로 돌아오게)
+            player.transform.localScale *= 1.5f;
             player.def += 0.5f;
         }
         giantUntil = Time.time + seconds;
@@ -933,7 +932,7 @@ public partial class SpecialAbilities
         if (Time.time >= giantUntil)
         {
             giantUntil = 0f;
-            player.transform.localScale = giantBaseScale;
+            player.transform.localScale /= 1.5f;
             player.def -= 0.5f;
             fx.Play("pop", 0.6f, 0.8f);
             return;
