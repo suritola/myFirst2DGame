@@ -29,7 +29,8 @@ public partial class SpecialAbilities
         ("f.echo2", "f.echo1", "영혼 메아리 II", "확률 12%, 유령이 더 세게 칩니다", 52, 111),
     };
 
-    int rerollMax, rerolls;
+    // 다시 뽑기는 트리 없이도 한 판에 1회는 갖고 시작 (운명의 실을 배우면 레벨업마다 채워짐)
+    int rerollMax, rerolls = 1;
     public int Rerolls => rerolls;
     float riftSeconds, riftEvery, riftReadyAt;
     float novaRadius, novaMul;
