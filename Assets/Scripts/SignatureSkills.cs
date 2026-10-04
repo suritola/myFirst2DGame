@@ -271,7 +271,8 @@ public partial class SignatureSkills : MonoBehaviour
     }
 
     // 지속 장판 (원 또는 선): tick 마다 onTick, 끝나면 onEnd. 그림은 반복 이펙트
-    public SigZone Zone(Vector3 pos, float r, float life, float tick, System.Action<SigZone> onTick, string fx = null, Color? tint = null, float fxSize = 0f)
+    // ground: 그림을 바닥 층에 (캐릭터 · 적을 가리지 않게)
+    public SigZone Zone(Vector3 pos, float r, float life, float tick, System.Action<SigZone> onTick, string fx = null, Color? tint = null, float fxSize = 0f, bool ground = false)
     {
         GameObject go = new GameObject("SigZone");
         go.transform.position = pos;
@@ -282,7 +283,7 @@ public partial class SignatureSkills : MonoBehaviour
         z.onTick = onTick;
         if (fx != null)
         {
-            FxAnim a = Fx.Play(fx, pos, fxSize > 0f ? fxSize : r * 2.2f, tint ?? Color.white, 8f, 0f, 3, true, life);
+            FxAnim a = Fx.Play(fx, pos, fxSize > 0f ? fxSize : r * 2.2f, tint ?? Color.white, 8f, 0f, ground ? 8 : 3, true, life, ground ? "Background" : "Effect");
             if (a != null) { a.transform.SetParent(go.transform, true); z.visual = a; }
         }
         return z;

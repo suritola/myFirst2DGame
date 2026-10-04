@@ -228,12 +228,12 @@ public partial class SignatureSkills
     void EmberPatch(Vector3 at, float r)
     {
         embers.RemoveAll(z => z == null);
-        if (embers.Count >= 16) { if (embers[0] != null) Destroy(embers[0].gameObject); embers.RemoveAt(0); }
+        if (embers.Count >= 10) { if (embers[0] != null) Destroy(embers[0].gameObject); embers.RemoveAt(0); }
         float dmg = Atk * V(Mathf.Max(1, L("l.embers")), 0.15f, 0.07f) * 0.5f;
         embers.Add(Zone(at, r, 2f, 0.5f, zone =>
         {
             foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f);
-        }, "fx_puddle", new Color(1f, 0.5f, 0.15f, 0.7f), r * 2.2f));
+        }, "fx_puddle", new Color(1f, 0.5f, 0.15f, 0.4f), r * 1.8f, true));        // 바닥에 옅게 (시야를 가리지 않게)
     }
 
     void AlchemistTick()
@@ -243,7 +243,7 @@ public partial class SignatureSkills
         if (L("l.embers") > 0)
         {
             stepDist += (me - lastStep).magnitude;
-            if (stepDist >= 0.9f)
+            if (stepDist >= 1.4f)
             {
                 stepDist = 0f;
                 EmberPatch(me, E("le.march") ? 1.6f : 0.8f);
