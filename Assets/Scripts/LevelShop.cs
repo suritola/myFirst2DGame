@@ -61,6 +61,7 @@ public partial class LevelShop : MonoBehaviour
         }
         CompactLevelUp();
         CompactTitle();
+        freePick = true;            // 시작할 때 주는 카드는 레벨을 올리지 않음
         SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
@@ -367,24 +368,40 @@ public partial class LevelShop : MonoBehaviour
         if (p == null) return;
         // 만렙: 더 배울 카드가 없으면 레벨이 오르지 않음 (비상 보급만 끝없이 나와 체력을 채우던 문제)
         // 최대 레벨 50 (무한 모드 100): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
-        if (NothingToLearn || p.level >= LevelCap)
+        // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
+        if (NothingToLearn || LevelsReserved(p) >= LevelCap)
         {
             p.nowEXP = Mathf.Min(p.nowEXP + amount, p.needEXP);
             return;
         }
         p.nowEXP += amount;
         int gained = 0;
-        while (p.nowEXP >= p.needEXP && p.needEXP > 0f && p.level < LevelCap)
+        while (p.nowEXP >= p.needEXP && p.needEXP > 0f && LevelsReserved(p) + gained < LevelCap)
         {
             p.nowEXP -= p.needEXP;
-            p.level++;
-            p.needEXP = PlayerController.NeedExp(p.level);
+            earned++;
+            p.needEXP = PlayerController.NeedExp(1 + earned);
             gained++;
         }
         if (gained == 0) return;
         // 창이 꺼져 있으면 연출 없이 포인트만
         if (!isActiveAndEnabled) { AddPending(gained); return; }
         for (int i = 0; i < gained; i++) StartCoroutine(LevelUpSequence(p, levelUpQueued++ * 0.35f));
+    }
+
+    bool freePick;
+    // 경험치로 얻은 레벨업 횟수 (경험치 요구량은 이 횟수로 오름 · 레벨 자체는 카드를 고를 때 오름)
+    int earned;
+    // 지금 레벨 + 아직 고르지 않은 레벨업 (상한 계산용)
+    int LevelsReserved(PlayerController p) => p.level + PendingLevels + levelUpQueued + (IsOpen ? 1 : 0);
+
+    // 한꺼번에 레벨업 포인트를 줌 (무한 모드는 레벨 10 만큼 미리)
+    public void GrantLevels(PlayerController p, int n)
+    {
+        if (p == null || n <= 0) return;
+        earned += n;
+        p.needEXP = PlayerController.NeedExp(1 + earned);
+        AddPending(n);
     }
 
     IEnumerator LevelUpSequence(PlayerController p, float delay)
@@ -601,6 +618,9 @@ public partial class LevelShop : MonoBehaviour
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
+        // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외)
+        if (freePick) freePick = false;
+        else if (bul != null) bul.level++;
 
         // 비상 보급은 능력이 아니라 HUD에 남기지 않음
         if (what != SupplyId)

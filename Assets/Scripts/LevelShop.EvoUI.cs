@@ -169,6 +169,7 @@ public partial class LevelShop
         if (!selectReady || !IsOpen) return;
         selectReady = false;
         pendingSlot = -1;
+        freePick = false;
         RefreshCards();
         closeLevelShop();
         SpecialAbilities.SharedFx?.Play("whoosh", 0.5f, 1.3f);
