@@ -113,6 +113,7 @@ public static class MenuExtras
 
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
+        PatchNotesUI.OpenOnLaunch(sr.root);
     }
 
     // 버튼 안에 도트 아이콘 (Resources/Icons/menu_*.png)

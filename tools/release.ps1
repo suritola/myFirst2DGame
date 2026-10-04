@@ -51,6 +51,9 @@ foreach ($d in "Assets", "Packages", "ProjectSettings") {
     robocopy (Join-Path $Project $d) (Join-Path $CopyDir $d) /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "$d 복사 실패 (robocopy $LASTEXITCODE)" }
 }
+# 게임 안 패치노트 (메인 메뉴에서 켤 때마다 띄움): 이 버전의 패치노트를 넣음
+$patchNotes = Join-Path $Project "docs/patch-notes/$Version.md"
+if (Test-Path $patchNotes) { Copy-Item $patchNotes (Join-Path $CopyDir "Assets/Resources/PatchNotes.txt") -Force }
 
 # ---------------------------------------------------------------- 빌드
 if (Test-Path $OutDir) { Remove-Item -Recurse -Force $OutDir }
