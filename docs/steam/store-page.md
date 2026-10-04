@@ -5,6 +5,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 > 게임 이름은 v3.2부터 **Soul Saver** 입니다. (예전 이름 Gun Saver)
 > 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
+> 2.0.6 기준으로 고쳤습니다: 영웅별 고유 스킬 50종 · 스킬 진화 37종 · 보스 필살기 「결계 침식」 · 최대 레벨 50 · 레벨업 건너뛰기 · 모든 우클릭 스킬 조준. 스크린샷 12장 · 트레일러는 `tools/trailer/record.ps1` 로 다시 찍음.
 > 1.8.6 기준으로 다시 썼습니다: 무기 진화 · 영혼 트리(운명 가지) · 스킨 상점 · 도전 과제 32개. 예전 글의 "특수 능력 52종 · 상점 무기 강화"는 1.7.8에 없어진 방식이라 뺐습니다.
 
 ## 기본 정보
@@ -28,7 +29,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **짧은 설명**
 
 ```
-리치 왕이 깨운 망자들로부터 세상의 영혼을 지켜라! 영웅을 골라 보스를 쓰러뜨릴 때마다 무기를 진화시키고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 탑다운 액션 로그라이트.
+리치 왕이 깨운 망자들로부터 세상의 영혼을 지켜라! 영웅마다 다른 고유 스킬을 모아 37가지 스킬 진화로 합치고, 보스를 쓰러뜨릴 때마다 무기를 진화시키며, 보스의 결계를 버텨 내는 도트 그래픽 탑다운 액션 로그라이트.
 ```
 
 **상세 설명**
@@ -64,6 +65,23 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [*]지금 무기에 쓸모없는 칸과 카드는 나오지 않습니다
 [/list]
 
+[h2]고유 스킬 50종 · 스킬 진화 37종[/h2]
+레벨이 오를 때마다 카드 세 장 중 하나를 고릅니다. 영웅마다 [b]고유 스킬 10종[/b]이 따로 있어, 같은 영웅이라도 판마다 전혀 다른 싸움이 됩니다.
+[list]
+[*]정해진 [b]2~3개의 스킬을 모두 최대로 올리면 하나로 합쳐지는 스킬 진화[/b] — 재료의 능력은 그대로 남고 새로운 능력이 더해집니다
+[*]레벨업 카드 위에 그 카드가 들어가는 진화 조합이 보이고, 진화에 가까울수록 그 카드가 조금 더 잘 나옵니다
+[*]최대 레벨은 50 — 모든 스킬을 올릴 수 없으니 어떤 진화를 노릴지가 곧 빌드입니다. 원하지 않는 카드는 [b]건너뛰기[/b]
+[*]메인 메뉴의 [b]스킬 진화 도감[/b]에서 영웅별 조합을 미리 볼 수 있습니다
+[/list]
+
+[h2]보스의 필살기 · 결계 침식[/h2]
+보스를 때릴수록 보스의 필살기 게이지가 찹니다. 가득 차면 보스가 결계의 이름을 외치고, [b]맵 전체가 어둠에 잠긴 채 거대한 결계[/b]가 펼쳐집니다. 그 안에 쏟아지는 공격을 버텨 내세요.
+[list]
+[*]리치 왕 「망자의 묘역」 — 회전하는 영혼 광선과 틈이 있는 저주의 고리
+[*]지옥의 군주 「연옥 낙화」 — 쏟아지는 운석, 화염 파동, 결계를 가로지르는 용암
+[*]킹 슬라임 「산성 범람」 — 결계 벽에 튕기는 산성 덩어리와 번갈아 솟는 간헐천
+[/list]
+
 [h2]세 개의 세계, 세 명의 왕[/h2]
 지하 묘역의 리치 왕, 불타는 지옥의 군주, 초원의 킹 슬라임. 보스마다 등장 연출과 대사, 체력이 줄면 시작되는 특수 패턴이 기다립니다.
 
@@ -75,7 +93,8 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 [h2]그 밖에[/h2]
 [list]
-[*]적 · 보스 · 무기 · 운명 · 진화 도감
+[*]모든 우클릭 스킬은 꾹 눌러 범위를 보며 조준
+[*]적 · 보스 · 무기 · 운명 · 진화 · 스킬 진화 도감
 [*]머리 위로 튀는 피해 숫자, 화려한 도트 이펙트와 스테이지별 음악
 [*]스팀 도전 과제 32개
 [*]한국어 · English · 日本語 · 简体中文
@@ -87,7 +106,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **Short description**
 
 ```
-Save the world's souls from the dead the Lich King awakened! Choose a hero, evolve your weapon with every boss you defeat, and shape your own build across a Soul Tree of 100+ nodes in this pixel-art top-down action roguelite.
+Save the world's souls from the dead the Lich King awakened! Max out each hero's unique skills and fuse them into 37 skill evolutions, evolve your weapon with every boss you defeat, and survive their deadly barriers in this pixel-art top-down action roguelite.
 ```
 
 **About this game**
@@ -123,6 +142,23 @@ Spend the [b]soul shards[/b] dropped by enemies on six branches: [b]Weapon, Ulti
 [*]Nodes and cards that don't fit your current weapon simply don't appear
 [/list]
 
+[h2]50 unique skills · 37 skill evolutions[/h2]
+Each level-up offers three cards. Every hero has [b]10 unique skills[/b] of their own, so the same hero can fight a completely different way every run.
+[list]
+[*][b]Max out two or three specific skills and they fuse into a skill evolution[/b] — the ingredients keep their powers and a brand-new one is added
+[*]Level-up cards show which evolution they feed into, and cards closer to an evolution show up a little more often
+[*]Levels cap at 50 — you can't max everything, so the evolutions you chase are your build. [b]Skip[/b] the cards you don't want
+[*]Browse every hero's recipes in the [b]Skill Evolution Codex[/b] on the main menu
+[/list]
+
+[h2]Boss ultimates · Barrier Erosion[/h2]
+Every hit you land fills the boss's ultimate gauge. When it's full, the boss calls out its barrier's name and [b]the whole map sinks into darkness inside a huge barrier[/b]. Survive the storm of attacks within.
+[list]
+[*]Lich King "Graveyard of the Dead" — sweeping soul beams and cursed rings with a single gap
+[*]Demon Lord "Purgatory's Fall" — raining meteors, fire waves and lava rifts across the barrier
+[*]King Slime "Acid Deluge" — acid blobs bouncing off the barrier walls and alternating geysers
+[/list]
+
 [h2]Three worlds, three kings[/h2]
 The Lich King of the Catacombs, the Demon Lord of the Burning Hell and the King Slime of the Meadow. Every boss has a cinematic entrance, lines of their own and special patterns once their health runs low.
 
@@ -134,7 +170,8 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 
 [h2]And more[/h2]
 [list]
-[*]A codex for enemies, bosses, weapons, Fate and evolutions
+[*]Hold right-click to aim every skill with a range preview
+[*]Codexes for enemies, bosses, weapons, Fate, evolutions and skill evolutions
 [*]Damage numbers, flashy pixel effects and music for every stage
 [*]32 Steam achievements
 [*]한국어 · English · 日本語 · 简体中文
@@ -146,7 +183,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **短い説明**
 
 ```
-リッチ王が目覚めさせた亡者から世界の魂を守れ！英雄を選び、ボスを倒すたびに武器を進化させ、100マスを超える魂のツリーで自分だけのビルドを完成させるドット絵トップダウンアクション・ローグライト。
+リッチ王が目覚めさせた亡者から世界の魂を守れ！英雄ごとの固有スキルを集めて37のスキル進化に融合し、ボスを倒すたびに武器を進化させ、ボスの結界を耐え抜くドット絵トップダウンアクション・ローグライト。
 ```
 
 **このゲームについて**
@@ -182,6 +219,23 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]今の武器に合わないマスやカードは出てこない
 [/list]
 
+[h2]固有スキル50種・スキル進化37種[/h2]
+レベルが上がるたびに3枚のカードから1枚を選ぶ。英雄ごとに[b]固有スキル10種[/b]があり、同じ英雄でもプレイごとにまったく違う戦い方になる。
+[list]
+[*]決まった[b]2〜3個のスキルをすべて最大まで上げると一つに融合するスキル進化[/b] — 素材の能力はそのまま、新しい能力が加わる
+[*]レベルアップカードの上にそのカードが入る進化の組み合わせが表示され、進化に近いほどそのカードが少し出やすくなる
+[*]最大レベルは50 — すべては上げられないので、どの進化を狙うかがビルドそのもの。いらないカードは[b]スキップ[/b]
+[*]メインメニューの[b]スキル進化図鑑[/b]で英雄ごとの組み合わせを確認できる
+[/list]
+
+[h2]ボスの必殺技・結界侵食[/h2]
+ボスを攻撃するほどボスの必殺技ゲージがたまる。満タンになるとボスが結界の名を叫び、[b]マップ全体が闇に沈み巨大な結界[/b]が広がる。その中に降り注ぐ攻撃を耐え抜け。
+[list]
+[*]リッチ王「亡者の墓域」 — 回転する魂の光線と隙間のある呪いの輪
+[*]地獄の君主「煉獄落火」 — 降り注ぐ隕石、炎の波、結界を横切る溶岩
+[*]キングスライム「酸の氾濫」 — 結界の壁で跳ね返る酸の塊と交互に噴き出す間欠泉
+[/list]
+
 [h2]三つの世界、三人の王[/h2]
 地下墓所のリッチ王、燃える地獄の君主、草原のキングスライム。ボスごとの登場演出と台詞、体力が減ると始まる特殊パターンが待ち受ける。
 
@@ -193,7 +247,8 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 
 [h2]その他[/h2]
 [list]
-[*]敵・ボス・武器・運命・進化の図鑑
+[*]すべての右クリック技は長押しで範囲を見ながら狙える
+[*]敵・ボス・武器・運命・進化・スキル進化の図鑑
 [*]頭上に飛び出すダメージ数値、派手なドットエフェクトとステージごとのBGM
 [*]Steam実績32個
 [*]한국어・English・日本語・简体中文
@@ -205,7 +260,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **简短描述**
 
 ```
-从巫妖王唤醒的亡者手中守护世界的灵魂！选择英雄，每击败一位首领就进化你的武器，在超过100个节点的灵魂树中打造专属流派——像素风俯视角动作肉鸽游戏。
+从巫妖王唤醒的亡者手中守护世界的灵魂！收集每位英雄的专属技能并融合为37种技能进化，每击败一位首领就进化武器，在首领的结界中幸存——像素风俯视角动作肉鸽游戏。
 ```
 
 **关于这款游戏**
@@ -241,6 +296,23 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]与当前武器不匹配的节点和卡牌不会出现
 [/list]
 
+[h2]50种专属技能 · 37种技能进化[/h2]
+每次升级从三张卡牌中选择一张。每位英雄都有[b]10种专属技能[/b]，即使是同一位英雄，每一局的战斗方式也截然不同。
+[list]
+[*]将指定的[b]两到三个技能全部升到满级，即可融合为技能进化[/b] — 素材的能力保留，并获得全新能力
+[*]升级卡牌上会显示该卡牌所属的进化组合，越接近进化的卡牌出现几率越高
+[*]等级上限为50 — 无法升满所有技能，追求哪种进化就是你的流派。不想要的卡牌可以[b]跳过[/b]
+[*]可在主菜单的[b]技能进化图鉴[/b]中查看每位英雄的组合
+[/list]
+
+[h2]首领必杀技 · 结界侵蚀[/h2]
+每次攻击首领都会积累首领的必杀槽。槽满时，首领会喊出结界之名，[b]整张地图沉入黑暗，巨大的结界随之展开[/b]。在其中撑过倾泻而下的攻击吧。
+[list]
+[*]巫妖王「亡者墓域」 — 旋转的灵魂光束与带缺口的诅咒之环
+[*]地狱领主「炼狱落火」 — 倾泻的陨石、火焰波与横贯结界的熔岩
+[*]史莱姆王「酸性泛滥」 — 在结界壁上反弹的酸液团与交替喷发的间歇泉
+[/list]
+
 [h2]三个世界，三位王者[/h2]
 地下墓穴的巫妖王、燃烧地狱的领主、草原的史莱姆王。每位首领都有登场演出与台词，血量降低后还会施展特殊攻击模式。
 
@@ -252,7 +324,8 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 
 [h2]更多内容[/h2]
 [list]
-[*]敌人·首领·武器·命运·进化图鉴
+[*]所有右键技能均可长按，查看范围后瞄准
+[*]敌人·首领·武器·命运·进化·技能进化图鉴
 [*]头顶弹出的伤害数字、华丽的像素特效与各关卡专属音乐
 [*]32个Steam成就
 [*]한국어 · English · 日本語 · 简体中文

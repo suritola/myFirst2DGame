@@ -15,7 +15,8 @@ using UnityEngine.UI;
 
 // 실제 게임 플레이 트레일러 + 스팀 스크린샷 (1.8.6~, tools/trailer/record.ps1 로 프로젝트 복사본에서 배치 실행)
 // 게임 씬을 자동 조종으로 플레이하며 매 프레임 카메라를 MP4로 인코딩하고, 중요한 순간은 PNG 스크린샷으로 저장
-// 흐름: 거너 전투 · 레벨업 카드 → 무기 진화 → 영혼 트리 → 전설 스킨 영웅 4명 · 보스 3종 → 스킨 상점 → 로고
+// 흐름: 거너 전투 · 레벨업 카드 → 무기 진화 → 영혼 트리 → 스킬 진화 (2.1~) → 전설 스킨 영웅 3명 · 보스 3종
+//       → 보스 필살기 결계 (2.1~) → 스킨 상점 → 로고
 public class GameplayCapture
 {
     static readonly string Out = Environment.GetEnvironmentVariable("CAPTURE_OUT") ?? "C:/Temp/SoulSaverCapture";
@@ -26,10 +27,14 @@ public class GameplayCapture
     // 트레일러 자막 (언어별)
     static readonly Dictionary<string, string[]> Captions = new Dictionary<string, string[]>
     {
-        ["en"] = new[] { "THE DEAD HAVE RISEN.", "BUILD YOUR RUN.", "DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", "GROW A SOUL TREE OF 100+ NODES.", "FIVE HEROES.  THREE WORLDS.  THREE KINGS.", "20 CHARACTER SKINS.  10 WEAPON SKINS.", "WISHLIST NOW ON STEAM" },
-        ["ko"] = new[] { "망자들이 깨어났다.", "나만의 빌드를 만들어라.", "보스를 쓰러뜨리고, 무기를 진화시켜라.", "100칸이 넘는 영혼 트리.", "다섯 영웅.  세 개의 세계.  세 명의 왕.", "캐릭터 스킨 20종 · 무기 스킨 10종", "지금 스팀에서 찜하세요" },
-        ["ja"] = new[] { "死者が目覚めた。", "自分だけのビルドを。", "ボスを倒し、武器を進化させろ。", "100マスを超える魂のツリー。", "五人の英雄。三つの世界。三人の王。", "キャラクタースキン20種・武器スキン10種", "Steamでウィッシュリストに追加" },
-        ["zh"] = new[] { "亡者已苏醒。", "打造你的流派。", "击败首领，进化武器。", "超过100个节点的灵魂树。", "五位英雄。三个世界。三位王者。", "20款角色皮肤 · 10款武器皮肤", "立即在Steam上添加愿望单" },
+        ["en"] = new[] { "THE DEAD HAVE RISEN.", "BUILD YOUR RUN.", "DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", "GROW A SOUL TREE OF 100+ NODES.", "FIVE HEROES.  THREE WORLDS.  THREE KINGS.", "20 CHARACTER SKINS.  10 WEAPON SKINS.", "WISHLIST NOW ON STEAM",
+                         "MAX OUT SKILLS.  FUSE 37 EVOLUTIONS.", "SURVIVE THE BOSS'S BARRIER." },
+        ["ko"] = new[] { "망자들이 깨어났다.", "나만의 빌드를 만들어라.", "보스를 쓰러뜨리고, 무기를 진화시켜라.", "100칸이 넘는 영혼 트리.", "다섯 영웅.  세 개의 세계.  세 명의 왕.", "캐릭터 스킨 20종 · 무기 스킨 10종", "지금 스팀에서 찜하세요",
+                         "스킬을 모아 합쳐라.  37가지 스킬 진화.", "보스의 결계를 버텨라." },
+        ["ja"] = new[] { "死者が目覚めた。", "自分だけのビルドを。", "ボスを倒し、武器を進化させろ。", "100マスを超える魂のツリー。", "五人の英雄。三つの世界。三人の王。", "キャラクタースキン20種・武器スキン10種", "Steamでウィッシュリストに追加",
+                         "スキルを極め、合わせろ。37のスキル進化。", "ボスの結界を耐え抜け。" },
+        ["zh"] = new[] { "亡者已苏醒。", "打造你的流派。", "击败首领，进化武器。", "超过100个节点的灵魂树。", "五位英雄。三个世界。三位王者。", "20款角色皮肤 · 10款武器皮肤", "立即在Steam上添加愿望单",
+                         "练满技能，融合进化。37种技能进化。", "撑过首领的结界。" },
     };
     static string C(int i) => (Captions.TryGetValue(Lang, out string[] c) ? c : Captions["en"])[i];
 
@@ -445,6 +450,77 @@ public class GameplayCapture
         yield return Fade(0f, 1f, 0.2f);
     }
 
+    // ---------------- 스킬 진화: 진화에 한 단계 남은 카드를 가운데에 놓고 골라서 진화 연출까지
+    // 거너 「천둥 장전」 = 장전 충격파(13, 3단계) + 탄피 지뢰(15, 4단계) + 섬광 장전(19, 4단계)
+    static void ForceCards(object shop, int a, int b, int c)
+    {
+        string[] names = (string[])Get(shop, "ability_name");
+        string[] contents = (string[])Get(shop, "ability_content");
+        Set(shop, "first", a); Set(shop, "second", b); Set(shop, "third", c);
+        foreach (var (title, body, icon, id) in new[] { ("FirstTitle", "FirstAbility", "FirstIcon", a), ("SecondTitle", "SecondAbility", "SecondIcon", b), ("ThirdTitle", "ThirdAbility", "ThirdIcon", c) })
+        {
+            ((TMP_Text)Get(shop, title)).text = names[id];
+            ((TMP_Text)Get(shop, body)).text = contents[id];
+            Call(shop, "SetCardIcon", Get(shop, icon), id);
+        }
+        Call(shop, "ShowEvoHints");
+    }
+
+    static IEnumerator SkillEvolution()
+    {
+        object shop = Find("LevelShop");
+        int[] lv = (int[])Get(shop, "ability_level");
+        bool[] sel = (bool[])Get(shop, "ability_selected");
+        // 진화 재료 단계를 미리 채워 둠 (거너 카드: 장전 충격파 3/3 · 탄피 지뢰 4/4 · 섬광 장전 3/4, 그 밖에 진행 중인 조합 몇 개)
+        void Lv(int id, int n) { lv[id] = n; if (n >= (int)T("LevelShop").GetMethod("MaxLevelOf").Invoke(null, new object[] { Enum.Parse(T("CharacterId"), "Gunner"), id })) sel[id] = true; }
+        Lv(13, 3); Lv(15, 4); Lv(19, 3); Lv(0, 2); Lv(16, 2); Lv(17, 1); Lv(6, 2);
+        rec.levelUpAllowed = true;
+        Call(shop, "openLevelShop");
+        Call(shop, "setAbilitys");
+        ForceCards(shop, 16, 19, 17);
+        Say(C(7), 4.6f);
+        yield return F(0.9f);
+        Call(shop, "onSecondButton");
+        yield return F(0.5f);
+        Shot("09_skill_evolution_cards");
+        yield return F(0.6f);
+        ConfirmCard(shop, 1);                       // 마지막 재료 → 진화 연출
+        rec.levelUpAllowed = false;
+        yield return F(2.9f);
+        Shot("10_skill_evolution");
+        yield return F(0.8f);
+        object ui = Find("SkillEvolutionUI");
+        if (ui != null) Set(ui, "closeRequested", true);
+        yield return F(0.6f);
+    }
+
+    // ---------------- 보스 필살기 결계: 외침 화면 → 어두워진 맵 · 둥근 결계 안의 공격
+    static IEnumerator Barrier(string hero, int who, int stage)
+    {
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, stage);
+        object b = SpawnBoss(stage, 0.8f);
+        rec.autopilot = true;
+        yield return F(1.2f);
+        rec.recording = true;
+        yield return Fade(1f, 0f, 0.2f);
+        yield return F(1.4f);
+        Component bc = (Component)b;
+        Component ult = bc.GetComponent(T("BossUltimate"));
+        if (ult == null) ult = bc.gameObject.AddComponent(T("BossUltimate"));
+        yield return null;
+        ((MonoBehaviour)ult).StartCoroutine((IEnumerator)Call(ult, "Run"));
+        Say(C(8), 4f);
+        yield return F(1.7f);
+        Shot("11_boss_barrier_title");
+        yield return F(4.4f);                      // 외침(약 3.3초) → 결계가 펼쳐지고 공격이 쏟아지는 중
+        Shot("12_boss_barrier");
+        yield return F(1.6f);
+        yield return Fade(0f, 1f, 0.2f);
+    }
+
     [UnityTest]
     public IEnumerator Capture()
     {
@@ -452,6 +528,7 @@ public class GameplayCapture
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
         In("Auto", true);                          // 업적 · 누적 기록이 풀리지 않게
+        AudioListener.volume = 0f;                 // 촬영하는 동안 스피커로 소리를 내지 않음 (영상 음악은 아래에서 파일로 직접 넣음)
         SetGameLanguage(Lang);
         GameObject host = new GameObject("CaptureRec");
         UnityEngine.Object.DontDestroyOnLoad(host);
@@ -535,6 +612,9 @@ public class GameplayCapture
         yield return F(0.6f);
         T("SoulTreeUI").GetMethod("Close").Invoke(null, null);
         yield return F(0.2f);
+
+        // ---------------- 3-2) 스킬 진화 (2.1~)
+        yield return SkillEvolution();
         yield return Fade(0f, 1f, 0.25f);
 
         // ---------------- 4) 전설 스킨을 입은 영웅들 · 세 세계의 왕
@@ -543,7 +623,8 @@ public class GameplayCapture
         yield return Hero("Swordsman", 1, 1, 1, 3.2f, 1.0f, "05_swordsman_demon_lord");
         yield return Hero("Archer", 3, 0, 0, 3.0f, 0.9f, "06_archer_lich_king");
         yield return Hero("Rogue", 2, 2, 2, 3.0f, 0.05f, "07_rogue_king_slime");
-        yield return Hero("Alchemist", 4, 1, -1, 2.6f, 1.0f, null);
+        // 보스 필살기 결계 (2.1~): 연금술사가 지옥의 군주의 「연옥 낙화」에 갇힘
+        yield return Barrier("Alchemist", 4, 1);
 
         // ---------------- 5) 스킨 상점
         rec.recording = false;
