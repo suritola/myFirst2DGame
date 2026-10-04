@@ -18,7 +18,7 @@ public class BossUltimate : MonoBehaviour
     static readonly float[] refHp = new float[3];
     public static float Gauge(int kind) => kind >= 0 && kind < gauge.Length ? gauge[kind] : 0f;
 
-    const float Radius = 13f;
+    const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
     const float Duration = 9f;
     const float Power = 1.25f;            // BossSkills 와 같은 피해 배율
 
@@ -52,19 +52,20 @@ public class BossUltimate : MonoBehaviour
         if (running) EndNow();
     }
 
-    // 보스가 맞을 때 (bosss.TakeDamage): 피해 비율의 1.3제곱 → 약한 공격 여러 번보다 강한 한 방이 훨씬 많이 채움
+    // 보스가 맞을 때 (bosss.TakeDamage): 피해 비율의 1.2제곱 → 약한 공격 여러 번보다 강한 한 방이 더 많이 채움
+    // (예전 5 · 1.3제곱은 너무 늦게 차서, 한 판에 약한 공격만으로도 두세 번 · 센 공격 위주면 네댓 번 차게)
     public static void OnBossHit(bosss b, float damage)
     {
         if (b == null || Active || b.IsDead || damage <= 0f) return;
         int k = Mathf.Clamp(b.bossKind, 0, 2);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
-        gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.35f, 5f * Mathf.Pow(f, 1.3f)));
+        gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.5f, 7f * Mathf.Pow(f, 1.2f)));
     }
 
     void Update()
     {
         if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
-        if (Time.time - spawnedAt < 4f || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
+        if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
         if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ESCmenu.IsOpen) return;
         // 킹 슬라임: 살아 있는 덩어리 중 체력이 가장 많은 하나만 씀
         if (kind == 2 && !IsStrongestSlime()) return;
@@ -117,8 +118,12 @@ public class BossUltimate : MonoBehaviour
         EndNow();
     }
 
+    // 결계가 끝난 뒤 쉬는 시간 (게이지가 빨리 차도 연달아 펼치지 않게)
+    static float restUntil;
+
     void EndNow()
     {
+        restUntil = Time.time + 15f;
         if (domainRoot != null) Destroy(domainRoot);
         if (aura != null) Destroy(aura);
         if (boss != null) boss.casting = false;
@@ -146,7 +151,7 @@ public class BossUltimate : MonoBehaviour
         band.rectTransform.sizeDelta = new Vector2(0f, 0f);
 
         UIKit.EnsureStyle();
-        TMP_Text tag = UIKit.Text(root, "결계 전개", 34f, new Color(0.85f, 0.8f, 0.9f), new Vector2(0f, 120f), new Vector2(1400f, 50f));
+        TMP_Text tag = UIKit.Text(root, "결계 침식", 34f, new Color(0.85f, 0.8f, 0.9f), new Vector2(0f, 120f), new Vector2(1400f, 50f));
         TMP_Text name = UIKit.Text(root, title, 120f, color, new Vector2(0f, 25f), new Vector2(1800f, 160f));
         name.fontStyle = FontStyles.Bold;
         name.outlineWidth = 0.25f;
@@ -197,7 +202,7 @@ public class BossUltimate : MonoBehaviour
         Time.timeScale = before > 0f ? before : 1f;
     }
 
-    // ---------------- 2. 결계 전개: 맵이 어두워지고 둥근 결계가 퍼짐
+    // ---------------- 2. 결계 침식: 맵이 어두워지고 둥근 결계가 퍼짐
     IEnumerator Expand(Color color)
     {
         domainRoot = new GameObject("BossDomain");
