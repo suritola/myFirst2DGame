@@ -89,8 +89,9 @@ public partial class SignatureSkills
             if ((a.p - p).sqrMagnitude > (a.r + r) * (a.r + r)) continue;
             acids.RemoveAt(i);
             Circle(a.p, a.r * 1.3f, Atk * V(L("l.ignite"), 1.2f, 0.5f), 1.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));
-            Fx.Spawn("fx_firepillar", a.p + Vector3.up * 1.2f, a.r * 2.4f, Color.white, 18f);
-            Fx.Spawn("fx_explosion", a.p, a.r * 2.6f, new Color(1f, 0.7f, 0.4f), 18f);
+            Fx.Spawn("fx_firepillar", a.p + Vector3.up * 1.2f, a.r * 2.4f * Fs("l.ignite"), Color.white, 18f);
+            Fx.Spawn("fx_explosion", a.p, a.r * 2.6f * Fs("l.ignite"), new Color(1f, 0.7f, 0.4f), 18f);
+            Flair("l.ignite", a.p, a.r * 1.5f, Ember);
             Hostile.Play("ignite", 0.6f, 0.8f);
             if (E("le.swamp"))
             {
@@ -120,7 +121,8 @@ public partial class SignatureSkills
             int two = new[] { 3, 5, 6 }[Random.Range(0, 3)];
             elements[c.gameObject] = (two, Time.time + 6f);
         });
-        Fx.Spawn("fx_alchemyblast", p, big ? 9f : 5f, new Color(0.95f, 0.75f, 1f), 16f);
+        Fx.Spawn("fx_alchemyblast", p, (big ? 9f : 5f) * Fs("l.catalyst"), new Color(0.95f, 0.75f, 1f), 16f);
+        Flair("l.catalyst", p, big ? 6f : 4f, new Color(0.95f, 0.75f, 1f));
         ShockRing.Spawn(p, 0.3f, big ? 4.5f : 2.5f, 0.35f, new Color(1f, 0.8f, 1f, 0.9f), 0.2f);
         Hostile.Play("boom", 0.6f, 1.2f);
         if (elements.Count > 300) elements.Clear();
@@ -153,10 +155,12 @@ public partial class SignatureSkills
     void GlassDrop(Vector3 from, Vector3 at)
     {
         float dmg = Atk * 0.5f;
-        FlaskLob.Throw(from, at, 0.35f, 0.5f, new Color(0.85f, 0.95f, 1f), q =>
+        float fs = Fs("l.glassrain");
+        FlaskLob.Throw(from, at, 0.35f, 0.5f * fs, new Color(0.85f, 0.95f, 1f), q =>
         {
             Circle(q, 1.4f, dmg, 0.6f);
-            Fx.Spawn("fx_alchemyblast", q, 3f, new Color(0.85f, 0.95f, 1f), 20f);
+            Fx.Spawn("fx_alchemyblast", q, 3f * fs, new Color(0.85f, 0.95f, 1f), 20f);
+            Flair("l.glassrain", q, 1.6f, new Color(0.85f, 0.95f, 1f));
         });
     }
 
@@ -210,7 +214,7 @@ public partial class SignatureSkills
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n + Random.Range(-10f, 10f)) * Vector2.right;
-                Bullet b = Shot(p, d, Atk * 0.5f, 2, 22f, 7f, "fx_spark", 0.7f, Ice);
+                Bullet b = Shot(p, d, Atk * 0.5f, 2, 22f, 7f, "fx_spark", 0.7f * Fs("l.frost"), Ice);
                 if (b != null && E("le.frost"))
                     b.onHitEnemy += (bullet, col) =>
                     {
@@ -219,7 +223,8 @@ public partial class SignatureSkills
                         Mark(col.gameObject, 3f, 1.3f);
                     };
             }
-            Fx.Spawn("fx_shock", p, 3.6f, Ice, 22f);
+            Fx.Spawn("fx_shock", p, 3.6f * Fs("l.frost"), Ice, 22f);
+            Flair("l.frost", p, 3f, Ice);
             Hostile.Play("shatter", 0.35f, 1.6f);
         }
         if (chilled.Count > 300) chilled.Clear();

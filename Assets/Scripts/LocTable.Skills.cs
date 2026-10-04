@@ -8,6 +8,48 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        // ---------------- 카드 설명 고침 (2.0.7~): 검사 밸런스 · 숫자 보강 · 진화 무기 필살기에도 적용
+        A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
+        A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
+        A("벤 적 하나당 최대 체력의 1.2 ~ 3%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (몸이 붉게 빛남)", "Each enemy you cut builds a shield worth 1.2–3% of max health that absorbs damage first. (Your body glows red)", "斬った敵1体ごとに最大体力の1.2〜3%のシールドがたまり、受けるダメージを先に防ぎます。（体が赤く光る）", "每斩中一名敌人，积累相当于最大生命1.2~3%的护盾，优先吸收伤害。（身体发出红光）");
+        A("회전 베기를 쓴 뒤 1.5 ~ 4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다. (진화 무기의 우클릭 필살기에도 적용)", "After a Spin Slash you swing faster for 1.5–4s; the longer you charged, the longer it lasts. (Also works with an evolved weapon's right-click ultimate)", "回転斬りの後1.5〜4秒間、振りが速くなります。長くためるほど長く続きます。（進化武器の右クリック必殺技にも適用）", "回旋斩后1.5~4秒内挥砍加快，蓄力越久持续越长。（也适用于进化武器的右键必杀技）");
+        A("회전 베기를 모으는 동안 (무기 진화 뒤에는 필살기를 조준하는 동안) 범위 안의 적을 초당 2.5칸씩 끌어당깁니다. (보스 제외)", "While charging Spin Slash (or aiming your ultimate after weapon evolution), pull enemies in range toward you at 2.5 tiles/s. (Not bosses)", "回転斬りをためている間（武器進化後は必殺技を狙っている間）、範囲内の敵を毎秒2.5マス引き寄せます。（ボス除く）", "蓄力回旋斩时（武器进化后为瞄准必杀技时），以每秒2.5格的速度拉近范围内的敌人。（首领除外）");
+        A("적을 벤 휘두르기마다 1.5초 동안 이동 속도가 오릅니다. (최대 5중첩, 계속 베면 유지)", "Each swing that cuts an enemy raises move speed for 1.5s. (Up to 5 stacks, kept while you keep cutting)", "敵を斬った振りごとに1.5秒間移動速度が上がります。（最大5重、斬り続ければ維持）", "每次斩中敌人的挥砍提升1.5秒移动速度。（最多5层，持续斩击即可保持）");
+        A("평타로 같은 적을 세 번 벨 때마다 균열이 터져 그 적에게 추가 피해를 줍니다.", "Every third basic-attack cut on the same enemy shatters it for bonus damage.", "通常攻撃で同じ敵を3回斬るたびに亀裂が弾け、その敵に追加ダメージを与えます。", "普通攻击每斩同一敌人三次，裂痕爆开对其造成额外伤害。");
+        A("회전 베기 0.45초 뒤 범위 85%의 잔향 회전 베기가 한 번 더 일어납니다. (진화 무기의 우클릭 필살기에도 적용)", "0.45s after Spin Slash, an echo spin with 85% radius strikes again. (Also works with an evolved weapon's right-click ultimate)", "回転斬りの0.45秒後、範囲85%の残響回転斬りがもう一度起こります。（進化武器の右クリック必殺技にも適用）", "回旋斩0.45秒后，再发生一次范围85%的余响回旋斩。（也适用于进化武器的右键必杀技）");
+        A("화살비가 쏟아지는 동안 그 안의 적이 받는 피해가 늘어납니다. (진화 무기의 우클릭 필살기에도 적용)", "Enemies inside Arrow Rain take more damage while it falls. (Also works with an evolved weapon's right-click ultimate)", "矢の雨が降る間、その中の敵が受けるダメージが増えます。（進化武器の右クリック必殺技にも適用）", "箭雨落下期间，其中的敌人受到的伤害提升。（也适用于进化武器的右键必杀技）");
+        A("화살비가 끝나면 가운데에 거대한 유성 화살이 떨어집니다. (진화 무기의 우클릭 필살기에도 적용)", "When Arrow Rain ends, a giant meteor arrow strikes its center. (Also works with an evolved weapon's right-click ultimate)", "矢の雨が終わると中央に巨大な流星の矢が落ちます。（進化武器の右クリック必殺技にも適用）", "箭雨结束时，一支巨大的流星箭落在中央。（也适用于进化武器的右键必杀技）");
+        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크가 강해집니다. (최대 20) (진화 무기의 우클릭 필살기에도 적용)", "Each flask kill strengthens your next Grand Flask. (Up to 20) (Also works with an evolved weapon's right-click ultimate)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）（進化武器の右クリック必殺技にも適用）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）（也适用于进化武器的右键必杀技）");
+        A("대폭발 플라스크를 모으는 동안 (무기 진화 뒤에는 필살기를 조준하는 동안) 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Grand Flask (or aiming your ultimate after weapon evolution), small flasks rain on nearby enemies. (50% attack)", "大爆発フラスコをためている間（武器進化後は必殺技を狙っている間）、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力大爆炸烧瓶时（武器进化后为瞄准必杀技时），小烧瓶落向周围敌人并爆炸。（攻击力50%）");
+        A("평타로 벤 적 하나당 체력을 회복합니다. (한 번 휘두를 때 최대 3마리까지)", "Heal for each enemy your basic attack cuts. (Up to 3 per swing)", "通常攻撃で斬った敵1体ごとに体力を回復します。（1回の振りで最大3体まで）", "普通攻击每斩中一名敌人恢复生命。（每次挥砍最多3名）");
+        A("평타를 휘두르면 베기 범위 안으로 날아오는 적 투사체를 모두 베어 없앱니다.", "Your basic swing cuts down every enemy projectile within its arc.", "通常攻撃を振ると、斬撃範囲に飛んでくる敵の投射物をすべて斬り消します。", "普通攻击挥砍时，斩灭挥砍范围内飞来的所有敌方投射物。");
+        A("우클릭 회전 베기를 모으는 동안 (무기 진화 뒤에는 필살기를 조준하는 동안) 받는 피해가 줄어듭니다.", "Take less damage while charging Spin Slash (or aiming your ultimate after weapon evolution).", "右クリックの回転斬りをためている間（武器進化後は必殺技を狙っている間）、受けるダメージが減ります。", "蓄力右键回旋斩时（武器进化后为瞄准必杀技时），受到的伤害降低。");
+        A("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 2배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "Every few swings, one becomes a heavy strike with 1.4x reach and 2x damage. (Rank 3: the heavy strike also sends out a shockwave)", "何回か振るごとに1回は射程1.4倍・ダメージ2倍の強打になります。（3段階：強打に周囲の衝撃波）", "每挥砍几次，就有一次变为射程1.4倍、伤害2倍的强力一击。（3级：强力一击附带周围冲击波）");
+        A("회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다. (0.3초마다 공격력 35%, 진화 무기의 우클릭 필살기에도 적용)", "After Spin Slash, a blade gale whirls around you cutting nearby foes. (35% attack every 0.3s; also works with an evolved weapon's right-click ultimate)", "回転斬りの後、刃の風が体を包んで回り周りを斬ります。（0.3秒ごとに攻撃力35%、進化武器の右クリック必殺技にも適用）", "回旋斩后，刀风环绕身体旋转斩击周围。（每0.3秒攻击力35%，也适用于进化武器的右键必杀技）");
+        A("화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다. (진화 무기의 우클릭 필살기에도 적용)", "Arrow Rain leaves thornbushes that slow and prick enemies. (Also works with an evolved weapon's right-click ultimate)", "矢の雨が落ちた場所に茨が残り、敵を遅くして刺します。（進化武器の右クリック必殺技にも適用）", "箭雨落下处留下荆棘丛，减速并刺伤敌人。（也适用于进化武器的右键必杀技）");
+        A("대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다. (진화 무기의 우클릭 필살기에도 적용)", "The Grand Flask bursts into small flasks that scatter and explode again. (Also works with an evolved weapon's right-click ultimate)", "大爆発フラスコが爆発すると小さなフラスコが散らばって再び爆発します。（進化武器の右クリック必殺技にも適用）", "大爆炸烧瓶爆炸时小烧瓶四散并再次爆炸。（也适用于进化武器的右键必杀技）");
+
+        // ---------------- 도감 (2.1~)
+        A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀槽满时展开结界");
+        A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화", "Pick one of three cards or skip on each level-up · Max level 50 · Max all ingredients to evolve a skill", "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・素材をすべて上げるとスキル進化", "每次升级从三张中选一张或跳过 · 等级上限50 · 素材全部升满即可技能进化");
+        A("필살기 「망자의 묘역」 — 9초 동안 회전하는 영혼 광선 넷 · 틈이 있는 저주 고리 · 발밑에서 솟는 뼈 가시", "Ultimate 「Graveyard of the Dead」 — for 9s: four sweeping soul beams · cursed rings with a gap · bone spikes from below", "必殺技「亡者の墓域」 — 9秒間、回転する魂の光線4本・隙間のある呪いの輪・足元から突き出す骨の棘", "必杀技「亡者墓域」 — 9秒内：四道旋转灵魂光束 · 带缺口的诅咒之环 · 脚下升起的骨刺");
+        A("필살기 「연옥 낙화」 — 9초 동안 쏟아지는 운석 · 틈이 있는 화염 고리 · 결계를 가로지르는 용암 줄기", "Ultimate 「Purgatory's Fall」 — for 9s: raining meteors · fire rings with gaps · lava rifts across the barrier", "必殺技「煉獄落火」 — 9秒間、降り注ぐ隕石・隙間のある炎の輪・結界を横切る溶岩", "必杀技「炼狱落火」 — 9秒内：倾泻的陨石 · 带缺口的火焰之环 · 横贯结界的熔岩");
+        A("필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 산성 비 · 번갈아 솟는 간헐천. 갈라진 슬라임은 각자 체력을 가진 따로 된 몸이며, 모두 쓰러뜨려야 이깁니다", "Ultimate 「Acid Deluge」 — for 9s: acid blobs bouncing off the barrier · acid rain · alternating geysers. Split slimes are separate bodies with their own health; defeat them all to win", "必殺技「酸の氾濫」 — 9秒間、結界の壁で跳ねる酸の塊・酸の雨・交互に噴き出す間欠泉。分裂したスライムはそれぞれ体力を持つ別の体で、すべて倒すと勝利", "必杀技「酸性泛滥」 — 9秒内：在结界壁上反弹的酸液团 · 酸雨 · 交替喷发的间歇泉。分裂的史莱姆是各自拥有血量的独立个体，全部击败才算胜利");
+        A("모든 보스의 필살기", "Every boss's ultimate", "すべてのボスの必殺技", "所有首领的必杀技");
+        A("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 9초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.",
+          "Every hit on a boss fills the purple gauge under its health bar — one heavy blow fills far more than many weak ones, and it drains very slowly if you stop hitting. When full, the whole map darkens and a huge barrier rises around the boss, raining boss-specific attacks for 9s. An exclamation mark warns of every strike.",
+          "ボスを攻撃するたびに体力バーの下の紫ゲージがたまる。弱い攻撃を何度も当てるより強い一撃のほうがずっと多くたまり、しばらく攻撃しないとごくゆっくり減る。満タンになるとマップ全体が暗くなりボスの周りに巨大な結界が広がり、9秒間ボスごとに異なる攻撃が降り注ぐ。攻撃の場所には先にビックリマークが出る。",
+          "每次攻击首领，血条下方的紫色槽就会积累。一次重击比多次弱攻击积累得多得多，一段时间不攻击会极其缓慢地下降。槽满时整张地图变暗，首领周围展开巨大结界，9秒内倾泻首领专属攻击。每次攻击位置都会先出现感叹号。");
+        A("꾹 눌러 조준", "hold to aim", "長押しで狙う", "长按瞄准");
+        A("종", "", "種", "种");
+        A("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 100) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
+          "Max out two or three specific level-up cards and they fuse into one with a new power. Levels cap at 50 (100 in Endless), so pick which evolutions to chase. You can skip unwanted cards, and you only level up when you take a card. See every recipe under Skill Evolution on the main menu.",
+          "決まった2〜3枚のレベルアップカードをすべて最大段階にすると一つに合わさり、新しい能力が生まれる。最大レベルは50（無限モード100）なので全部は上げられない。狙う進化を選ぼう。不要なカードはスキップでき、レベルはカードを選んだときだけ上がる。組み合わせはメインメニューの「スキル進化」で見られる。",
+          "将指定的两到三张升级卡全部升到满级后会合而为一，获得新能力。等级上限为50（无尽模式100），无法全部升满，请选择要追求的进化。不想要的卡牌可以跳过，只有选择卡牌时才会升级。组合可在主菜单的「技能进化」中查看。");
+        A("무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
+          "Dash toward the mouse while invincible, making every enemy you pass bleed (hold to see the path, release to dash). Learning Shadow Mastery in the Soul Tree adds speed, slows, chained dashes and more to the dash",
+          "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（押している間は経路が見え、離すと突進）。魂のツリーで影の熟練を覚えると突進に移動速度・鈍化・連続突進などが付きます",
+          "在无敌状态下朝鼠标方向突进，使途经的敌人流血（按住可看到路径，松开即突进）。在灵魂树学习暗影精通后，突进会附带移速 · 减速 · 连续突进等效果");
         A("진화 재료", "Evolution ingredient", "進化の素材", "进化素材");
         A("결계 침식", "Barrier Erosion", "結界侵食", "结界侵蚀");
         A("망자의 묘역", "Graveyard of the Dead", "亡者の墓域", "亡者墓域");

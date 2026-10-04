@@ -59,6 +59,13 @@ ICONS = [
     ('ACH_REROLL', frame('FX/fx_card.png', 0), (0.22, 0.14, 0.32)),
     ('ACH_SKIN', frame('Icons/menu_skin.png'), (0.34, 0.16, 0.30)),
     ('ACH_SKIN_LEGEND', frame('Icons/skin_starlight.png'), (0.50, 0.38, 0.10)),
+    # 2.0.8: 스킬 진화 · 보스 결계
+    ('ACH_SKILL_EVOLVE', frame('Icons/ability_170.png'), (0.30, 0.16, 0.42)),
+    ('ACH_SKILL_EVOLVE_3', frame('Icons/menu_evolution.png'), (0.42, 0.20, 0.50)),
+    ('ACH_SKILL_EVOLVE_15', frame('Icons/ability_205.png'), (0.48, 0.36, 0.10)),
+    ('ACH_BARRIER_SURVIVE', frame('FX/fx_rune.png', 0), (0.10, 0.08, 0.20)),
+    ('ACH_BARRIER_NOHIT', frame('FX/fx_warn.png', 0), (0.12, 0.26, 0.30)),
+    ('ACH_BARRIER_BREAK', frame('FX/fx_markskull.png', 0), (0.40, 0.08, 0.10)),
 ]
 
 

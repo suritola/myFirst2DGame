@@ -67,5 +67,17 @@
 		"NEW_ACHIEVEMENT_1_30_DESC"	"Buy your first skin in the Skin Shop"
 		"NEW_ACHIEVEMENT_1_31_NAME"	"Legendary Style"
 		"NEW_ACHIEVEMENT_1_31_DESC"	"Buy a Legendary skin"
+		"NEW_ACHIEVEMENT_1_32_NAME"	"United Power"
+		"NEW_ACHIEVEMENT_1_32_DESC"	"Evolve a skill for the first time"
+		"NEW_ACHIEVEMENT_1_33_NAME"	"Master of Fusion"
+		"NEW_ACHIEVEMENT_1_33_DESC"	"Evolve 3 skills in one run"
+		"NEW_ACHIEVEMENT_1_34_NAME"	"Evolution Collector"
+		"NEW_ACHIEVEMENT_1_34_DESC"	"Achieve 15 different skill evolutions"
+		"NEW_ACHIEVEMENT_1_35_NAME"	"Endure the Barrier"
+		"NEW_ACHIEVEMENT_1_35_DESC"	"Survive a boss barrier to the end"
+		"NEW_ACHIEVEMENT_1_36_NAME"	"Not a Scratch"
+		"NEW_ACHIEVEMENT_1_36_DESC"	"Survive a boss barrier without being hit"
+		"NEW_ACHIEVEMENT_1_37_NAME"	"Barrier Breaker"
+		"NEW_ACHIEVEMENT_1_37_DESC"	"Defeat a boss while its barrier is up"
 	}
 }

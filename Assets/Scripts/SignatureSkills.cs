@@ -52,6 +52,14 @@ public partial class SignatureSkills : MonoBehaviour
     {
         shop = s;
         lv.Clear();
+        evolvedKeys.Clear();
+        foreach (LevelShop.SkillEvo e in s.MyEvos)
+            if (s.IsEvolved(e.key))
+                foreach (int p in e.parts)
+                {
+                    string k = LevelShop.SigKey(who, p);
+                    if (k != null) evolvedKeys.Add(k);
+                }
         for (int id = LevelShop.SigFirstId; id < LevelShop.SigFirstId + LevelShop.SigCount; id++)
         {
             string key = LevelShop.SigKey(who, id);
@@ -60,6 +68,24 @@ public partial class SignatureSkills : MonoBehaviour
     }
 
     int L(string key) => lv.TryGetValue(key, out int v) ? v : 0;
+
+    // ---------------- 진화한 스킬의 이펙트: 가장 크고 화려하게
+    // 진화의 재료가 된 고유 스킬 (그 스킬로 생기는 이펙트를 키우고 금빛 장식을 덧붙임)
+    readonly HashSet<string> evolvedKeys = new HashSet<string>();
+    bool Big(string key) => evolvedKeys.Contains(key);
+    // 이펙트 크기 배율 (진화했으면 1.7배)
+    float Fs(string key) => Big(key) ? 1.7f : 1f;
+    static readonly Color EvoGold = new Color(1f, 0.85f, 0.4f);
+
+    // 진화한 스킬이 터질 때 덧붙이는 장식: 금빛 충격파 · 반짝임 · 퍼지는 고리 (진화가 아니면 아무것도 안 함)
+    void Flair(string key, Vector3 p, float size, Color c)
+    {
+        if (key != null && !Big(key)) return;
+        Fx.Spawn("fx_shock", p, size * 1.8f, new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.9f), 20f);
+        Fx.Spawn("fx_sparkle", p, size * 0.9f, Color.white, 22f);
+        Fx.Spawn("fx_soulburst", p, size * 0.8f, new Color(c.r, c.g, c.b, 0.85f), 20f);
+        ShockRing.Spawn(p, 0.2f, size * 1.2f, 0.35f, new Color(c.r, c.g, c.b, 0.9f), 0.22f);
+    }
     bool E(string key) => shop != null && shop.IsEvolved(key);
     // 단계별 값: 1단계 a, 단계마다 + step (0단계면 0)
     static float V(int level, float a, float step) => level <= 0 ? 0f : a + step * (level - 1);
@@ -166,6 +192,30 @@ public partial class SignatureSkills : MonoBehaviour
         CommonTick();
     }
 
+    // ================================================================= 쌓이는 스킬의 지금 상태 (HUD 칸 오른쪽 위 숫자)
+    // 비어 있으면 null (표시 안 함)
+    public static string StackText(string key) => Instance != null && key != null ? Instance.Stack(key) : null;
+
+    string Stack(string key)
+    {
+        if (L(key) <= 0) return null;
+        switch (key)
+        {
+            case "g.heat": return heat > 0 && Time.time - lastShot <= 1.5f ? "+" + Mathf.RoundToInt(V(L(key), 0.2f, 0.1f) * heat / HeatMax * 100f) + "%" : null;
+            case "g.quick": return quickShots > 0 ? "x" + quickShots : null;
+            case "s.bloodguard": return shield > 0.5f ? Mathf.CeilToInt(shield).ToString() : null;
+            case "s.dance": return danceStacks > 0 && Time.time < danceUntil ? "x" + danceStacks : null;
+            case "s.soul": return souls > 0 ? "x" + souls : null;
+            case "s.whirl": return Time.time < rateUntil ? (rateUntil - Time.time).ToString("0.0") + "s" : null;
+            case "r.practice": return practiceStacks > 0 && Time.time - practiceAt < 2f ? "x" + practiceStacks : null;
+            case "r.ambush": return Time.time < ambushUntil ? (ambushUntil - Time.time).ToString("0.0") + "s" : null;
+            case "a.breath": return breath > 0 ? "x" + breath : null;
+            case "l.amplify": return amplify > 0 ? "+" + Mathf.RoundToInt(amplify * V(L(key), 0.03f, 0.01f) * 100f) + "%" : null;
+            case "l.concentrate": return (throws % 4) + "/3";
+        }
+        return null;
+    }
+
     // ================================================================= 공통 진화 (공용 카드끼리)
     // 황금 시대: 코인을 주울 때 경험치 · 40개마다 황금 파동 / 불멸의 육체: 체력이 가득하면 3초마다 심장 파동
     int goldCount;
@@ -181,8 +231,9 @@ public partial class SignatureSkills : MonoBehaviour
         goldCount = 0;
         Vector3 p = transform.position;
         Circle(p, 7f, Atk * 3f, 2f);
-        Fx.Spawn("fx_shock", p, 14f, new Color(1f, 0.85f, 0.3f, 0.9f), 18f);
-        Fx.Spawn("fx_soulburst", p, 6f, new Color(1f, 0.9f, 0.4f), 18f);
+        Fx.Spawn("fx_shock", p, 20f, new Color(1f, 0.85f, 0.3f, 0.9f), 18f);
+        Fx.Spawn("fx_soulburst", p, 9f, new Color(1f, 0.9f, 0.4f), 18f);
+        Flair(null, p, 8f, EvoGold);
         ShockRing.Spawn(p, 0.5f, 8f, 0.45f, new Color(1f, 0.85f, 0.35f, 0.9f), 0.3f);
         Hostile.Play("chime", 0.8f, 1.3f);
     }
@@ -196,7 +247,8 @@ public partial class SignatureSkills : MonoBehaviour
         Vector3 p = transform.position;
         Circle(p, 5f, player.PlayerMaxHealth * 0.25f, 3f);
         ShockRing.Spawn(p, 0.4f, 6f, 0.4f, new Color(1f, 0.35f, 0.4f, 0.9f), 0.3f);
-        Fx.Spawn("fx_shock", p, 11f, new Color(1f, 0.4f, 0.45f, 0.8f), 20f);
+        Fx.Spawn("fx_shock", p, 16f, new Color(1f, 0.4f, 0.45f, 0.8f), 20f);
+        Flair(null, p, 6f, new Color(1f, 0.4f, 0.45f));
         Hostile.Play("thump", 0.6f, 0.8f);
     }
 
@@ -317,6 +369,12 @@ public partial class SignatureSkills : MonoBehaviour
         if (a != null) Destroy(a.gameObject);
         Circle(at, r, dmg, 0.6f);
         Fx.Spawn("fx_spark", at, r * 1.6f, tint, 22f);
+    }
+
+    IEnumerator FlairLater(Vector3 p, float delay, float size, Color c)
+    {
+        yield return new WaitForSeconds(delay);
+        Flair(null, p, size, c);
     }
 
     void Heal(float amount)

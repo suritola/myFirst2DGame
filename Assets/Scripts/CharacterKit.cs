@@ -29,7 +29,9 @@ public partial class CharacterKit : MonoBehaviour
     bool swingAlt;
 
     public bool Busy => charging || Dashing;
-    public bool Charging => charging;               // 우클릭을 모으는 중 (고유 스킬: 강철 의지 · 유리 비)
+    // 우클릭을 모으는 중 (고유 스킬: 강철 의지 · 유리 비 · 굳건한 자세)
+    // 무기 진화 뒤에는 진화 무기 필살기를 꾹 눌러 조준하는 동안도 같게 셈 (회전 베기 · 대폭발이 없어져도 카드가 쓸모 있게)
+    public bool Charging => charging || (ultAiming && ultAimKit);
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     public float MoveMul => 1f;
     public string WeaponName => Loc.T(def.weapon);
@@ -563,6 +565,7 @@ public partial class CharacterKit : MonoBehaviour
             {
                 Special.KitWeaponUlt();
                 Spend(gauge);
+                KitUltFollowUp();
                 if (RogueMastery >= 4) recastUntil = Time.time + 3f;
             }
             return;
@@ -595,6 +598,45 @@ public partial class CharacterKit : MonoBehaviour
             case CharacterId.Archer:
                 UpdateRainAim(gauge, full);
                 break;
+        }
+    }
+
+    // 진화 무기의 우클릭 필살기를 쓸 때도 원래 우클릭(회전 베기 · 화살비 · 대폭발)에 붙는 카드 · 고유 스킬이 함께 터짐
+    // (예전엔 무기 진화 뒤 칼바람 · 잔향 베기 · 가시 덤불 · 유성 화살 · 파편 플라스크 등이 아무 일도 안 했음)
+    void KitUltFollowUp()
+    {
+        Vector3 me = transform.position;
+        switch (Id)
+        {
+            case CharacterId.Swordsman:
+                {
+                    float radius = 5f * UltMul;
+                    if (card[3] > 0) StartCoroutine(BladeStorm(1f + card[3], radius * 0.7f));       // 칼바람
+                    SignatureSkills.Spin(me, radius, Damage * 4f * UltMul, 1f);                    // 회전 가속 · 잔향 베기 · 폭풍의 눈
+                    break;
+                }
+            case CharacterId.Archer:
+                {
+                    Vector3 at = ClampRange(me, Mouse, 14f);
+                    float radius = 4f * UltMul;
+                    if (card[3] > 0) StartCoroutine(Thorns(at, radius, 2f + card[3]));            // 가시 덤불
+                    SignatureSkills.Rain(at, radius);                                             // 높은 자리 · 유성 화살
+                    break;
+                }
+            case CharacterId.Alchemist:
+                {
+                    Vector3 at = ClampRange(me, Mouse, 14f);
+                    float radius = (2f + 4f) * UltMul;
+                    if (card[3] > 0) Shards(at, radius, 2 + 2 * card[3]);                          // 파편 플라스크
+                    float amp = SignatureSkills.BigFlaskMul();                                     // 증폭 용액: 모아 둔 만큼 증폭 폭발
+                    if (amp > 1f)
+                    {
+                        DamageCircle(at, radius * 0.8f, Damage * 4f * UltMul * (amp - 1f) * 2f, 2f);
+                        Fx.Spawn("fx_alchemyblast", at, radius * 2.2f, new Color(1f, 0.85f, 0.5f), 16f);
+                    }
+                    SignatureSkills.BigFlask(at, radius);                                          // 유리 폭풍
+                    break;
+                }
         }
     }
 
@@ -933,7 +975,7 @@ public partial class CharacterKit : MonoBehaviour
             if (Id != CharacterId.Swordsman) return 1f;
             float mul = 1f;
             if (Time.time < swingGuardUntil) mul *= 0.5f;
-            if (charging && card[5] > 0) mul *= 1f - (0.15f + 0.15f * card[5]);
+            if (Charging && card[5] > 0) mul *= 1f - (0.15f + 0.15f * card[5]);
             return mul;
         }
     }
@@ -997,10 +1039,10 @@ public partial class CharacterKit : MonoBehaviour
         }
         // 근접 특성: 휘두르는 동안 받는 피해 절반
         swingGuardUntil = Time.time + 0.3f;
-        // 근접 특성: 벤 적(최대 3) 하나당 체력 0.3 회복, 흡혈 베기 카드가 레벨마다 +1
+        // 근접 특성: 벤 적(최대 3) 하나당 체력 0.3 회복, 흡혈 베기 카드가 레벨마다 +0.5
         if (hits > 0 && player.PlayerHealth > 0f)
         {
-            float heal = Mathf.Min(hits, 3) * (0.3f + card[1]);
+            float heal = Mathf.Min(hits, 3) * (0.3f + 0.5f * card[1]);      // 흡혈 베기: 0.8 / 1.3 / 1.8 (예전 1.3 / 2.3 / 3.3 은 너무 많이 회복)
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
             if (card[1] > 0) Fx.Spawn("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
         }

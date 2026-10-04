@@ -234,6 +234,13 @@ public static class SteamAchievements
     public const string Reroll = "ACH_REROLL";
     public const string Skin = "ACH_SKIN";
     public const string SkinLegend = "ACH_SKIN_LEGEND";
+    // 2.1~: 스킬 진화 · 보스 필살기 결계
+    public const string SkillEvolve = "ACH_SKILL_EVOLVE";
+    public const string SkillEvolve3 = "ACH_SKILL_EVOLVE_3";
+    public const string SkillEvolve15 = "ACH_SKILL_EVOLVE_15";
+    public const string BarrierSurvive = "ACH_BARRIER_SURVIVE";
+    public const string BarrierNoHit = "ACH_BARRIER_NOHIT";
+    public const string BarrierBreak = "ACH_BARRIER_BREAK";
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 

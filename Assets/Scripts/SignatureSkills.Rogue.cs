@@ -37,7 +37,8 @@ public partial class SignatureSkills
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null) e.Slow(0.3f, 0.35f);
             }
-        }, "fx_cloud", new Color(0.35f, 0.3f, 0.45f, 0.75f), 8.5f);
+        }, "fx_cloud", Big("r.smoke") ? new Color(0.55f, 0.4f, 0.8f, 0.8f) : new Color(0.35f, 0.3f, 0.45f, 0.75f), 8.5f * Fs("r.smoke"));
+        Flair("r.smoke", from, 4f, Shade);
         smokes.Add(z);
         Fx.Spawn("fx_smoke", from, 5f, new Color(0.5f, 0.45f, 0.6f), 14f);
     }
@@ -67,7 +68,7 @@ public partial class SignatureSkills
                     if (near.Count > 0) Shot(at, ((Vector2)(near[0].position - at)).normalized, Atk * 0.8f, 1, 30f, 12f, "fx_shuriken", 0.7f, Color.white, true);
                 }
             };
-            LineRenderer lr = Hostile.NewLine("BladePath", new Color(0.75f, 0.45f, 1f, 0.6f), 0.5f, 3);
+            LineRenderer lr = Hostile.NewLine("BladePath", Big("r.path") ? new Color(1f, 0.75f, 1f, 0.85f) : new Color(0.75f, 0.45f, 1f, 0.6f), 0.5f * Fs("r.path"), 3);
             lr.positionCount = 2;
             lr.SetPosition(0, from);
             lr.SetPosition(1, to);
@@ -89,7 +90,7 @@ public partial class SignatureSkills
         foreach (Collider2D c in cut)
         {
             if (c == null) continue;
-            if (prev != null) Fx.Beam(prev.transform.position, c.transform.position, 0.25f, new Color(0.55f, 0.3f, 0.9f, 0.8f), 0.6f, 12);
+            if (prev != null) Fx.Beam(prev.transform.position, c.transform.position, 0.25f * Fs("r.knot"), new Color(0.55f, 0.3f, 0.9f, 0.8f), 0.6f, 12);
             prev = c;
         }
     }
@@ -116,7 +117,7 @@ public partial class SignatureSkills
         for (int i = 0; i < n; i++)
         {
             Vector2 d = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 10f) * back;
-            Bullet b = Shot(far, d, dmg, 2, 26f, RogueRange, "fx_shuriken", 0.7f, new Color(0.85f, 0.8f, 1f), true);
+            Bullet b = Shot(far, d, dmg, 2, 26f, RogueRange, "fx_shuriken", 0.7f * Fs("r.boomerang"), Big("r.boomerang") ? EvoGold : new Color(0.85f, 0.8f, 1f), true);
             if (b != null) b.hitOnce = new HashSet<int>();
         }
         if (E("re.return"))
@@ -137,7 +138,7 @@ public partial class SignatureSkills
         {
             Vector3 at = near.Count > 0 ? near[i % near.Count].position + (Vector3)(Random.insideUnitCircle * 0.8f)
                                         : transform.position + (Vector3)(Random.insideUnitCircle * 6f);
-            StartCoroutine(Drop(at, "fx_shuriken", 1.4f, Color.white, 1.2f, Atk, i * 0.06f));
+            StartCoroutine(Drop(at, "fx_shuriken", 1.4f * Fs("r.rain"), Big("r.rain") ? EvoGold : Color.white, 1.2f, Atk, i * 0.06f));
         }
         Hostile.Play("whoosh", 0.5f, 1.6f);
     }
@@ -178,8 +179,9 @@ public partial class SignatureSkills
                 {
                     Deal(target, burst, Vector3.zero, 0f);
                     if (E("re.sea")) { Circle(p, 3f, burst, 0.5f); Heal(3f); }
-                    Fx.Spawn("fx_bleed", p, 3.4f, Color.white, 16f);
-                    Fx.Spawn("fx_shock", p, 4f, Blood, 22f);
+                    Fx.Spawn("fx_bleed", p, 3.4f * Fs("r.burst"), Color.white, 16f);
+                    Fx.Spawn("fx_shock", p, 4f * Fs("r.burst"), Blood, 22f);
+                    Flair("r.burst", p, 3f, Blood);
                     Hostile.Play("crack", 0.5f, 0.9f);
                 }
             }
@@ -207,7 +209,8 @@ public partial class SignatureSkills
             acrobatAt = Time.time + 0.5f;
             Vector3 p = target.transform.position;
             Circle(p, 2.6f, Atk * 1.5f, 0.6f);
-            Fx.Spawn("fx_spinslash", p, 5.5f, new Color(0.85f, 0.7f, 1f, 0.9f), 24f);
+            Fx.Spawn("fx_spinslash", p, 8f, new Color(1f, 0.8f, 1f, 0.95f), 24f);
+            Flair(null, p, 3.5f, Shade);
         }
         // 사냥의 절정: 게이지가 가득 찬 동안 처치하면 표창 비
         if (killed && E("re.peak") && Time.time >= peakAt)
@@ -251,7 +254,8 @@ public partial class SignatureSkills
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n) * Vector2.right;
                 Shot(p, d, Atk, 1, 26f, RogueRange, "fx_shuriken", 0.7f, Color.white, true);
             }
-            Fx.Spawn("fx_shock", p, 6f, Shade, 20f);
+            Fx.Spawn("fx_shock", p, 6f * Fs("r.overflow"), Shade, 20f);
+            Flair("r.overflow", p, 5f, Shade);
             Hostile.Play("whoosh", 0.6f, 1.4f);
         }
         gaugeWasFull = full;

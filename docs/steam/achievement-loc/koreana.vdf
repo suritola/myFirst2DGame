@@ -67,5 +67,17 @@
 		"NEW_ACHIEVEMENT_1_30_DESC"	"스킨 상점에서 스킨을 처음 샀다"
 		"NEW_ACHIEVEMENT_1_31_NAME"	"전설의 풍모"
 		"NEW_ACHIEVEMENT_1_31_DESC"	"전설 등급 스킨을 샀다"
+		"NEW_ACHIEVEMENT_1_32_NAME"	"하나가 된 힘"
+		"NEW_ACHIEVEMENT_1_32_DESC"	"스킬을 처음으로 진화시켰다"
+		"NEW_ACHIEVEMENT_1_33_NAME"	"융합의 달인"
+		"NEW_ACHIEVEMENT_1_33_DESC"	"한 판에서 스킬을 3번 진화시켰다"
+		"NEW_ACHIEVEMENT_1_34_NAME"	"진화 수집가"
+		"NEW_ACHIEVEMENT_1_34_DESC"	"서로 다른 스킬 진화를 15종 이루었다"
+		"NEW_ACHIEVEMENT_1_35_NAME"	"결계를 버티다"
+		"NEW_ACHIEVEMENT_1_35_DESC"	"보스의 결계를 끝까지 버텨 냈다"
+		"NEW_ACHIEVEMENT_1_36_NAME"	"흠집 하나 없이"
+		"NEW_ACHIEVEMENT_1_36_DESC"	"결계 안에서 한 번도 맞지 않고 버텼다"
+		"NEW_ACHIEVEMENT_1_37_NAME"	"결계 파괴자"
+		"NEW_ACHIEVEMENT_1_37_DESC"	"결계가 펼쳐진 동안 보스를 쓰러뜨렸다"
 	}
 }

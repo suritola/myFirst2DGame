@@ -88,7 +88,8 @@ public partial class SignatureSkills
             {
                 Vector3 p = col.transform.position;
                 Circle(p, 2.6f, bullet.damage, 1f);
-                Fx.Spawn("fx_explosion", p, 5f, Color.white, 18f);
+                Fx.Spawn("fx_explosion", p, 8f, Color.white, 18f);
+                Flair(null, p, 4f, Leaf);
                 Hostile.Play("boom", 0.4f, 1.3f);
             }
         };
@@ -107,7 +108,8 @@ public partial class SignatureSkills
                 if (E("ae.forest")) Mark(c.gameObject, 0.4f, 1.2f);
                 Deal(c.gameObject, dmg, Vector3.zero, 0f);
             }
-        }, "fx_spike", Leaf, r * 1.6f);
+        }, "fx_spike", Big("a.seed") ? new Color(0.8f, 1f, 0.5f) : Leaf, r * 1.6f * Fs("a.seed"));
+        Flair("a.seed", at, r, Leaf);
     }
 
     IEnumerator Ring(Vector3 at, float dmg, int times)
@@ -116,7 +118,8 @@ public partial class SignatureSkills
         {
             yield return new WaitForSeconds(0.4f);
             Circle(at, 1.9f, dmg, 0.3f);
-            ShockRing.Spawn(at, 0.2f, 2.2f, 0.3f, new Color(1f, 0.95f, 0.7f, 0.8f), 0.12f);
+            ShockRing.Spawn(at, 0.2f, 2.2f * Fs("a.ring"), 0.3f, new Color(1f, 0.95f, 0.7f, 0.8f), 0.12f * Fs("a.ring"));
+            Flair("a.ring", at, 1.8f, new Color(1f, 0.95f, 0.7f));
             if (i == 1)
                 foreach (Transform t in Nearest(at, 8f, 3))
                     Shot(at, ((Vector2)(t.position - at)).normalized, dmg, 1, 40f, 9f, "fx_arrow", 0.35f, Color.white);
@@ -134,7 +137,7 @@ public partial class SignatureSkills
             Vector3 end = start + (Vector3)(dir * 24f);
             windPaths.Add((start, end, Time.time + 3f));
             if (windPaths.Count > 6) windPaths.RemoveAt(0);
-            Fx.Beam(start, end, 0.9f, new Color(0.6f, 0.95f, 1f, 0.35f), 3f, 2);
+            Fx.Beam(start, end, 0.9f * Fs("a.wind"), Big("a.wind") ? new Color(0.75f, 1f, 1f, 0.55f) : new Color(0.6f, 0.95f, 1f, 0.35f), 3f, 2);
         }
         int rt = L("a.retreat");
         if (rt > 0) StartCoroutine(Retreat(-dir, V(rt, 2f, 0.5f)));
@@ -161,7 +164,8 @@ public partial class SignatureSkills
         if (E("ae.storm"))
         {
             Circle(from, 3f, Atk * 0.6f, 4f);
-            Fx.Spawn("fx_tornado", from, 4.5f, new Color(0.8f, 1f, 1f, 0.7f), 18f);
+            Fx.Spawn("fx_tornado", from, 7.5f, new Color(0.8f, 1f, 1f, 0.8f), 18f);
+            Flair(null, from, 4f, Wind);
             Hostile.Play("whoosh", 0.5f, 1.1f);
         }
     }
@@ -182,7 +186,8 @@ public partial class SignatureSkills
         for (int i = 0; i < n; i++)
         {
             Vector3 at = i == 0 ? center : center + (Vector3)(Random.insideUnitCircle * radius * 0.7f);
-            StartCoroutine(Drop(at, "fx_meteor", 4f, new Color(1f, 0.95f, 0.7f), 3f, dmg, i * 0.2f));
+            StartCoroutine(Drop(at, "fx_meteor", 4f * Fs("a.meteor"), new Color(1f, 0.95f, 0.7f), 3f, dmg, i * 0.2f));
+            if (Big("a.meteor")) StartCoroutine(FlairLater(at, 0.45f + i * 0.2f, 5f, new Color(1f, 0.9f, 0.5f)));
             if (E("ae.sky")) StartCoroutine(Starlight(at, i * 0.2f + 0.3f));
         }
         Hostile.Play("bigboom", 0.6f, 1.2f);
@@ -231,7 +236,8 @@ public partial class SignatureSkills
             Vector3 p = target.transform.position;
             marks.Remove(target);
             Circle(p, 2.6f, Atk * 1.2f, 1f);
-            Fx.Spawn("fx_explosion", p, 4.5f, new Color(1f, 0.6f, 0.5f), 18f);
+            Fx.Spawn("fx_explosion", p, 7f, new Color(1f, 0.6f, 0.5f), 18f);
+            Flair(null, p, 3.5f, new Color(1f, 0.5f, 0.45f));
         }
     }
 

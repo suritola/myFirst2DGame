@@ -67,5 +67,17 @@
 		"NEW_ACHIEVEMENT_1_30_DESC"	"スキンショップで初めてスキンを買った"
 		"NEW_ACHIEVEMENT_1_31_NAME"	"伝説の風格"
 		"NEW_ACHIEVEMENT_1_31_DESC"	"レジェンドスキンを買った"
+		"NEW_ACHIEVEMENT_1_32_NAME"	"一つになった力"
+		"NEW_ACHIEVEMENT_1_32_DESC"	"初めてスキルを進化させた"
+		"NEW_ACHIEVEMENT_1_33_NAME"	"融合の達人"
+		"NEW_ACHIEVEMENT_1_33_DESC"	"1回のプレイでスキルを3回進化させた"
+		"NEW_ACHIEVEMENT_1_34_NAME"	"進化コレクター"
+		"NEW_ACHIEVEMENT_1_34_DESC"	"異なるスキル進化を15種達成した"
+		"NEW_ACHIEVEMENT_1_35_NAME"	"結界を耐えて"
+		"NEW_ACHIEVEMENT_1_35_DESC"	"ボスの結界を最後まで耐え抜いた"
+		"NEW_ACHIEVEMENT_1_36_NAME"	"傷ひとつなく"
+		"NEW_ACHIEVEMENT_1_36_DESC"	"結界の中で一度も被弾せずに耐え抜いた"
+		"NEW_ACHIEVEMENT_1_37_NAME"	"結界破り"
+		"NEW_ACHIEVEMENT_1_37_DESC"	"結界が展開している間にボスを倒した"
 	}
 }

@@ -42,7 +42,8 @@ public partial class SignatureSkills
         if (counterReady)
         {
             counterReady = false;
-            Bullet b = Shot(origin + (Vector3)(dir * 0.8f), dir, Atk * 2.5f * mul, 999, 30f, 18f, "fx_swordwave", 4f, new Color(1f, 0.9f, 0.6f));
+            Bullet b = Shot(origin + (Vector3)(dir * 0.8f), dir, Atk * 2.5f * mul, 999, 30f, 18f, "fx_swordwave", 6f, new Color(1f, 0.9f, 0.6f));
+            Flair(null, origin, 4f, new Color(1f, 0.9f, 0.6f));
             if (b != null) b.hitOnce = new HashSet<int>();
             Fx.Spawn("fx_shock", origin, 5f, new Color(1f, 0.85f, 0.45f, 0.9f), 22f);
             Hostile.Play("crack", 0.8f, 0.8f);
@@ -56,7 +57,7 @@ public partial class SignatureSkills
         GameObject g = c.gameObject;
         // 혈갑: 벤 적마다 보호막
         int bg = L("s.bloodguard");
-        if (bg > 0) shield = Mathf.Min(ShieldCap, shield + player.PlayerMaxHealth * 0.012f * (1 + bg));
+        if (bg > 0) shield = Mathf.Min(ShieldCap, shield + player.PlayerMaxHealth * 0.006f * (1 + bg));     // 1.2 ~ 3% (몰린 적을 한 번 베면 가득 차던 것 줄임)
         // 검무: 벨 때마다 이동 속도 (한 번 휘두를 때 한 중첩)
         if (L("s.dance") > 0 && !danceCounted)
         {
@@ -78,8 +79,9 @@ public partial class SignatureSkills
                 Vector3 p = c.transform.position;
                 Deal(g, dmg, Vector3.zero, 0f);
                 if (E("se.giant")) Circle(p, 2.6f, dmg * 0.6f, 0.5f);
-                Fx.Spawn("fx_fissure", p, 2.4f, Color.white, 14f, Random.Range(0f, 360f), 14);
-                Fx.Spawn("fx_shock", p, 3f, new Color(1f, 0.8f, 0.5f, 0.9f), 24f);
+                Fx.Spawn("fx_fissure", p, 2.4f * Fs("s.crack"), Color.white, 14f, Random.Range(0f, 360f), 14);
+                Fx.Spawn("fx_shock", p, 3f * Fs("s.crack"), new Color(1f, 0.8f, 0.5f, 0.9f), 24f);
+                Flair("s.crack", p, 2.6f, new Color(1f, 0.8f, 0.5f));
                 Hostile.Play("crack", 0.45f, 1.3f);
             }
             if (g != null) crackHits[g] = n;
@@ -97,10 +99,10 @@ public partial class SignatureSkills
         if (tr <= 0) return;
         Vector3 at = origin + (Vector3)(dir * reach * 0.55f);
         float r = reach * 0.55f;
-        float dmg = Atk * V(tr, 0.15f, 0.07f);
+        float dmg = Atk * V(tr, 0.08f, 0.03f);         // 휘두를 때마다 겹쳐서 예전 15 ~ 36% 는 너무 셌음
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SigZone z = Zone(at, r, 1f, 0.25f, zone => { foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f); });
-        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, Big("s.trail") ? new Color(1f, 0.85f, 0.45f, 0.7f) : new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
         if (a != null) a.transform.SetParent(z.transform, true);
         if (E("se.trail"))
             z.onEnd = zone =>
@@ -108,7 +110,7 @@ public partial class SignatureSkills
                 for (int i = 0; i < 6; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 60f + rot) * Vector2.right;
-                    Shot(zone.transform.position, d, Atk * 0.6f, 3, 22f, 10f, "fx_swordwave", 1.6f, Steel);
+                    Shot(zone.transform.position, d, Atk * 0.6f, 3, 22f, 10f, "fx_swordwave", 2.8f, EvoGold);
                 }
                 Hostile.Play("whoosh", 0.4f, 1.4f);
             };
@@ -141,13 +143,15 @@ public partial class SignatureSkills
         }
         Vector3 p = transform.position;
         Circle(p, r, dmg, 2f);
-        Fx.Spawn("fx_spinslash", p, r * 2.4f, new Color(0.8f, 0.9f, 1f, 0.7f), 22f);
+        Fx.Spawn("fx_spinslash", p, r * 2.4f * Fs("s.echo"), Big("s.echo") ? new Color(1f, 0.85f, 0.5f, 0.9f) : new Color(0.8f, 0.9f, 1f, 0.7f), 22f);
+        Flair("s.echo", p, r, new Color(0.8f, 0.9f, 1f));
         Hostile.Play("slash", 0.6f, 1.2f);
     }
 
     IEnumerator EyeOfStorm(float seconds)
     {
-        FxAnim t = Fx.Play("fx_tornado", transform.position, 9f, new Color(0.8f, 0.9f, 1f, 0.55f), 14f, 0f, 3, true, seconds);
+        FxAnim t = Fx.Play("fx_tornado", transform.position, 14f, new Color(1f, 0.9f, 0.6f, 0.6f), 14f, 0f, 3, true, seconds);
+        Flair(null, transform.position, 7f, Steel);
         if (t != null) t.follow = transform;
         for (float time = 0f; time < seconds && Alive; time += 0.25f)
         {
@@ -166,7 +170,7 @@ public partial class SignatureSkills
     {
         float mul = 1f;
         int r = L("s.riposte");
-        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.4f, 0.2f);
+        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.3f, 0.15f);
         int g = L("s.giant");
         if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.12f, 0.08f);
         return mul;
@@ -191,8 +195,9 @@ public partial class SignatureSkills
             {
                 Vector3 p = transform.position;
                 Circle(p, 4.5f, Atk * 2f, 2.5f);
-                Fx.Spawn("fx_shock", p, 10f, Blood, 20f);
-                Fx.Spawn("fx_bleed", p, 4f, Color.white, 16f);
+                Fx.Spawn("fx_shock", p, 15f, Blood, 20f);
+                Fx.Spawn("fx_bleed", p, 7f, Color.white, 16f);
+                Flair(null, p, 6f, Blood);
                 Hostile.Play("boom", 0.5f, 1.3f);
             }
         }

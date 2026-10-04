@@ -23,13 +23,13 @@ public static class CodexUI
     static readonly string[] Hints =
     {
         "스테이지마다 나오는 적과 스킬 · 붉은 경고가 보이면 피하세요",
-        "각 스테이지의 마지막 적 · 체력이 절반 아래로 떨어지면 특수 스킬을 씁니다",
+        "각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다",
         "메인 메뉴의 캐릭터에서 고릅니다 · 잠긴 캐릭터는 포인트로 해금하면 정보가 보입니다",
         "무기 진화로 얻는 무기 · 우클릭 필살기는 무기마다 다릅니다",
         "영혼 트리의 운명 가지 · 모든 캐릭터 공통 · 다른 어디에도 없는 효과",
         "영혼 트리의 영혼 가지에서 배우면 항상 적용되는 능력",
         "영혼 트리({UPGRADE})에서 배운 능력의 다음 칸을 배우면 진화합니다",
-        "레벨이 오를 때 세 장의 카드 중 하나를 고릅니다",
+        "레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화",
         "상점 제단(적을 처치하다 보면 나타남)에서 코인으로 강화합니다",
     };
 
@@ -61,6 +61,14 @@ public static class CodexUI
         "부하를 부르며 망령의 손아귀 · 저주 표식 · 뼈 가시 격자를 씁니다.\n특수: 망자의 의식 - 영혼 등불이 돌며 나선 탄막을 쏜 뒤 대폭발",
         "화염 돌진 · 운석 낙하 · 화염 파동(틈으로 피하세요)을 씁니다.\n특수: 십자 불길 - 네 줄기 불기둥이 천천히 회전",
         "대점프 · 산성 비 · 구르기 돌진을 씁니다. 쓰러질 때마다 작고 빠르게 분열합니다 (1 → 2 → 3마리).\n특수: 슬라임 폭우 - 빠른 대점프 3연속",
+    };
+
+    // 보스 필살기 「결계」 (2.1~)
+    static readonly string[] BarrierDesc =
+    {
+        "필살기 「망자의 묘역」 — 9초 동안 회전하는 영혼 광선 넷 · 틈이 있는 저주 고리 · 발밑에서 솟는 뼈 가시",
+        "필살기 「연옥 낙화」 — 9초 동안 쏟아지는 운석 · 틈이 있는 화염 고리 · 결계를 가로지르는 용암 줄기",
+        "필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 산성 비 · 번갈아 솟는 간헐천. 갈라진 슬라임은 각자 체력을 가진 따로 된 몸이며, 모두 쓰러뜨려야 이깁니다",
     };
 
     // 필살기 설명 (무기 ID 순서) · 즉발 여부
@@ -201,6 +209,8 @@ public static class CodexUI
 
     static void Bosses(CodexData data)
     {
+        Card(FxIcon("fx_rune"), new Color(0.79f, 0.63f, 1f), Loc.T("결계 침식"), Loc.T("모든 보스의 필살기"),
+             Loc.T("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 9초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다."));
         if (data == null || data.bosses == null) return;
         for (int i = 0; i < data.bosses.Length; i++)
         {
@@ -210,7 +220,7 @@ public static class CodexUI
             int kind = b != null ? b.bossKind : i;
             string tag = Loc.T(StageNames[Mathf.Clamp(i, 0, 2)]);
             if (b != null) tag += "  ·  " + Stats(b.setEnemyHP, b.speed, b.contactDamage);
-            Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, Loc.T(BossDesc[Mathf.Clamp(kind, 0, 2)]));
+            Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, Loc.T(BossDesc[Mathf.Clamp(kind, 0, 2)]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
         }
     }
 
@@ -230,7 +240,7 @@ public static class CodexUI
             if (kind == SpecialKind.Weapon && id < UltDesc.Length)
             {
                 tag += "  ·  " + Loc.T("강화 특성") + ": " + SpecialAbilities.TraitName(id) + " (" + SpecialAbilities.TraitStep(id) + ")";
-                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(id) + " (" + Loc.T(UltInstant[id] ? "즉발" : "조준") + ")")
+                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(id) + " (" + Loc.T("꾹 눌러 조준") + ")")
                         + "  " + Loc.T(UltDesc[id]);
             }
             tag += "  ·  " + Loc.T("거너");
@@ -296,6 +306,8 @@ public static class CodexUI
 
     static void LevelUpCards(CodexData data)
     {
+        Card(Resources.Load<Sprite>("Icons/ability_205"), Color.white, Loc.T("스킬 진화"), Loc.T("모든 캐릭터") + " · 37" + Loc.T("종"),
+             Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 100) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
         for (int i = 0; i < LevelUps.Length; i++)
         {
             // 무기 · 스킬 카드(관통 · 재활용 에너지 · 노려보는 눈빛 · 멀티 샷 · 밀어내기)는 더 이상 나오지 않음
@@ -372,7 +384,7 @@ public static class CodexUI
                          + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + " " + Loc.T("전용");
             string body = Loc.T(SpecialAbilities.KitDesc(id)).Replace("\n", " ");
             if (kind == SpecialKind.Weapon)
-                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + Loc.T(SpecialAbilities.KitUltName(id)) + " (" + Loc.T("즉발") + ")") + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
+                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + Loc.T(SpecialAbilities.KitUltName(id)) + " (" + Loc.T("꾹 눌러 조준") + ")") + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
             Card(Resources.Load<Sprite>("Icons/ability_" + id), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
         }
     }

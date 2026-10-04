@@ -1,6 +1,6 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 32개를 만듭니다.
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 38개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개 추가)
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
 - 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `tools/steam/make_achievement_icons.py` 로 만든 PNG를 JPG로 변환 (Steamworks는 JPG 권장)
@@ -42,6 +42,12 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_REROLL` | **운명 비틀기** — 레벨업 카드를 다시 뽑았다 | **Twist of Fate** — Reroll your level-up cards | **運命のいたずら** — レベルアップカードを引き直した | **命运转折** — 重抽升级卡牌 |
 | `ACH_SKIN` | **새 옷** — 스킨 상점에서 스킨을 처음 샀다 | **New Look** — Buy your first skin in the Skin Shop | **新しい装い** — スキンショップで初めてスキンを買った | **新装扮** — 首次在皮肤商店购买皮肤 |
 | `ACH_SKIN_LEGEND` | **전설의 풍모** — 전설 등급 스킨을 샀다 | **Legendary Style** — Buy a Legendary skin | **伝説の風格** — レジェンドスキンを買った | **传奇风范** — 购买传说皮肤 |
+| `ACH_SKILL_EVOLVE` | **하나가 된 힘** — 스킬을 처음으로 진화시켰다 | **United Power** — Evolve a skill for the first time | **一つになった力** — 初めてスキルを進化させた | **合一之力** — 首次进化技能 |
+| `ACH_SKILL_EVOLVE_3` | **융합의 달인** — 한 판에서 스킬을 3번 진화시켰다 | **Master of Fusion** — Evolve 3 skills in one run | **融合の達人** — 1回のプレイでスキルを3回進化させた | **融合大师** — 单局进化3次技能 |
+| `ACH_SKILL_EVOLVE_15` | **진화 수집가** — 서로 다른 스킬 진화를 15종 이루었다 | **Evolution Collector** — Achieve 15 different skill evolutions | **進化コレクター** — 異なるスキル進化を15種達成した | **进化收藏家** — 达成15种不同的技能进化 |
+| `ACH_BARRIER_SURVIVE` | **결계를 버티다** — 보스의 결계를 끝까지 버텨 냈다 | **Endure the Barrier** — Survive a boss barrier to the end | **結界を耐えて** — ボスの結界を最後まで耐え抜いた | **熬过结界** — 坚持到首领结界结束 |
+| `ACH_BARRIER_NOHIT` | **흠집 하나 없이** — 결계 안에서 한 번도 맞지 않고 버텼다 | **Not a Scratch** — Survive a boss barrier without being hit | **傷ひとつなく** — 結界の中で一度も被弾せずに耐え抜いた | **毫发无伤** — 在结界中一次都没被击中 |
+| `ACH_BARRIER_BREAK` | **결계 파괴자** — 결계가 펼쳐진 동안 보스를 쓰러뜨렸다 | **Barrier Breaker** — Defeat a boss while its barrier is up | **結界破り** — 結界が展開している間にボスを倒した | **结界破坏者** — 在结界展开时击败首领 |
 
 ## 풀리는 조건 (코드 기준)
 
@@ -69,6 +75,10 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_TREE_20` / `ACH_TREE_40` | 한 판에서 영혼 트리 칸 20 / 40개 배움 (모든 가지 합) |
 | `ACH_REROLL` | 레벨업 창에서 [R] 다시 뽑기 (운명의 실) |
 | `ACH_SKIN` / `ACH_SKIN_LEGEND` | 스킨을 처음 삼 / 전설 스킨을 삼 (예전에 산 스킨도 다음 실행 때 인정) |
+| `ACH_SKILL_EVOLVE` / `ACH_SKILL_EVOLVE_3` | 스킬 진화 1회 / 한 판에서 스킬 진화 3회 (2.0.8) |
+| `ACH_SKILL_EVOLVE_15` | 서로 다른 스킬 진화(캐릭터별) 15종, 이 PC에 누적 (PlayerPrefs `stats.skillEvos`) |
+| `ACH_BARRIER_SURVIVE` / `ACH_BARRIER_NOHIT` | 보스 결계가 끝날 때까지 버팀 / 그 동안 피해를 한 번도 받지 않음 |
+| `ACH_BARRIER_BREAK` | 결계가 펼쳐진 동안 그 보스를 쓰러뜨림 |
 
 ## Steamworks 현지화 파일
 

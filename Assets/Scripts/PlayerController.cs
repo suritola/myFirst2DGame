@@ -978,6 +978,9 @@ void Shoot()
         }
     }
 
+    // 실제로 피해를 받은 횟수 (보스 결계를 맞지 않고 버텼는지 · 업적)
+    public static int HurtCount;
+
     // 피해를 받았으면 true, 무적이라 무시됐으면 false
     public bool TryHit(float amount)
     {
@@ -1008,6 +1011,7 @@ void Shoot()
         }
 
         PlayerHealth -= taken;
+        HurtCount++;
         ShowHurt(taken);
         special?.OnPlayerHurt();
         SignatureSkills.Hurt(taken);

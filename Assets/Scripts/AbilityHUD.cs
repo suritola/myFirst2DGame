@@ -22,6 +22,9 @@ public class AbilityHUD : MonoBehaviour
         public RectTransform rect;
         public TextMeshProUGUI label;
         public int level;
+        public int id;
+        public TextMeshProUGUI badge;      // 쌓이는 스킬의 지금 상태 (검무 x3 · 총열 과열 +30% …)
+        public string shown;
     }
 
     LevelShop levelShop;
@@ -124,7 +127,55 @@ public class AbilityHUD : MonoBehaviour
         foreach (Slot slot in slots.Values)
         {
             slot.rect.localScale = Vector3.MoveTowards(slot.rect.localScale, Vector3.one, Time.unscaledDeltaTime * 2f);
+            UpdateBadge(slot);
         }
+    }
+
+    // 쌓이는 고유 스킬은 칸 오른쪽 위에 지금 스택 (진화한 칸은 그 진화의 고유 스킬 재료를 따름)
+    void UpdateBadge(Slot slot)
+    {
+        string key = null;
+        if (LevelShop.IsSig(slot.id)) key = LevelShop.SigKey(slot.id);
+        else if (slot.id >= 1000 && Shop != null)
+        {
+            LevelShop.SkillEvo e = Shop.EvoById(slot.id);
+            if (e != null)
+                foreach (int p in e.parts)
+                    if (LevelShop.IsSig(p) && SignatureSkills.StackText(LevelShop.SigKey(p)) != null) { key = LevelShop.SigKey(p); break; }
+        }
+        string text = key != null ? SignatureSkills.StackText(key) : null;
+        if (text == slot.shown) return;
+        slot.shown = text;
+        if (slot.badge == null)
+        {
+            if (text == null) return;
+            GameObject go = new GameObject("Stack", typeof(RectTransform), typeof(Image));
+            RectTransform r = go.GetComponent<RectTransform>();
+            r.SetParent(slot.rect, false);
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(1f, 1f);
+            r.anchoredPosition = new Vector2(6f, 6f);
+            r.sizeDelta = new Vector2(46f, 24f);
+            Image bg = go.GetComponent<Image>();
+            bg.color = new Color(0.12f, 0.06f, 0.18f, 0.92f);
+            bg.raycastTarget = false;
+            GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform tr = tg.GetComponent<RectTransform>();
+            tr.SetParent(r, false);
+            tr.anchorMin = Vector2.zero;
+            tr.anchorMax = Vector2.one;
+            tr.offsetMin = tr.offsetMax = Vector2.zero;
+            slot.badge = tg.GetComponent<TextMeshProUGUI>();
+            if (font != null) slot.badge.font = font;
+            if (fontMaterial != null) slot.badge.fontSharedMaterial = fontMaterial;
+            slot.badge.enableAutoSizing = true;
+            slot.badge.fontSizeMin = 10f;
+            slot.badge.fontSizeMax = 20f;
+            slot.badge.alignment = TextAlignmentOptions.Center;
+            slot.badge.color = new Color(1f, 0.85f, 0.45f);
+            slot.badge.raycastTarget = false;
+        }
+        slot.badge.transform.parent.gameObject.SetActive(text != null);
+        if (text != null) slot.badge.text = text;
     }
 
     LevelShop Shop => levelShop != null ? levelShop : (levelShop = FindFirstObjectByType<LevelShop>());
@@ -231,6 +282,6 @@ public class AbilityHUD : MonoBehaviour
         label.enableWordWrapping = false;
         label.raycastTarget = false;
 
-        return new Slot { rect = rect, label = label };
+        return new Slot { rect = rect, label = label, id = id };
     }
 }

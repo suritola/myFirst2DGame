@@ -49,8 +49,9 @@ public partial class SignatureSkills
         {
             if (Inside(zone).Count == 0) return;
             Vector3 p = zone.transform.position;
-            Circle(p, 2f, Atk * 0.8f, 1f);
-            Fx.Spawn("fx_explosion", p, 3.6f, Color.white, 20f);
+            Circle(p, 2f * Fs("g.mine"), Atk * 0.8f, 1f);
+            Fx.Spawn("fx_explosion", p, 3.6f * Fs("g.mine"), Color.white, 20f);
+            Flair("g.mine", p, 3f, Brass);
             Hostile.Play("pop", 0.4f, 1.2f);
             Destroy(zone.gameObject);
         };
@@ -65,17 +66,20 @@ public partial class SignatureSkills
         if (f > 0)
         {
             Circle(p, 5f, 0f, 0f, c => Stun(c.gameObject, V(f, 0.6f, 0.3f)));
-            Fx.Spawn("fx_shock", p, 10f, new Color(1f, 1f, 0.85f, 0.9f), 24f);
-            Fx.Spawn("fx_sparkle", p, 4f, Color.white, 20f);
+            Fx.Spawn("fx_shock", p, 10f * Fs("g.flash"), new Color(1f, 1f, 0.85f, 0.9f), 24f);
+            Fx.Spawn("fx_sparkle", p, 4f * Fs("g.flash"), Color.white, 20f);
+            Flair("g.flash", p, 6f, Color.white);
             Hostile.Play("shimmer", 0.5f, 1.8f);
         }
         if (E("ge.thunder"))
         {
             foreach (Transform t in Nearest(p, 9f, 6))
             {
-                Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 12f), t.position, 1.2f, SoulBlue, 0.2f);
+                Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 2.4f, SoulBlue, 0.3f);
+                Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 1.1f, Color.white, 0.25f);
                 Deal(t.gameObject, Atk * 1.5f, Vector3.zero, 0f);
-                Fx.Spawn("fx_shock", t.position, 2.6f, SoulBlue, 24f);
+                Fx.Spawn("fx_shock", t.position, 4.6f, SoulBlue, 24f);
+                Flair(null, t.position, 2.6f, SoulBlue);
             }
             Hostile.Play("thunder", 0.6f, 1.2f);
         }
@@ -107,7 +111,8 @@ public partial class SignatureSkills
             {
                 Vector3 p = col.transform.position;
                 Circle(p, 1.7f, Atk * 0.5f, 0.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));
-                Fx.Spawn("fx_explosion", p, 3.2f, new Color(1f, 0.6f, 0.3f), 22f);
+                Fx.Spawn("fx_explosion", p, 5.2f, new Color(1f, 0.6f, 0.3f), 22f);
+                Fx.Spawn("fx_firepillar", p + Vector3.up * 1f, 3f, Color.white, 22f);
             };
         }
         // 영혼 탄환: 필살기 게이지가 가득 찬 동안
@@ -126,7 +131,7 @@ public partial class SignatureSkills
                     List<Transform> near = Nearest(col.transform.position, 10f, 1, col.gameObject);
                     if (near.Count == 0) return;
                     Vector2 d = ((Vector2)(near[0].position - col.transform.position)).normalized;
-                    Bullet orb = Shot(col.transform.position, d, Atk * 0.6f, 1, 22f, 12f, "fx_orb", 0.8f, SoulBlue);
+                    Bullet orb = Shot(col.transform.position, d, Atk * 0.6f, 1, 22f, 12f, "fx_orb", 1.5f, SoulBlue);
                     if (orb != null) orb.gameObject.AddComponent<Homing>().turnSpeed = 720f;
                 };
             }
@@ -177,12 +182,13 @@ public partial class SignatureSkills
         if (E("ge.thunderback"))
         {
             Circle(p, 6f, Atk * 2f, 2f, col => Stun(col.gameObject, 0.8f));
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 10; i++)
             {
-                Vector3 to = p + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(2f, 6f));
-                Fx.Bolt(p, to, 1f, SoulBlue, 0.25f);
+                Vector3 to = p + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(3f, 7f));
+                Fx.Bolt(p, to, 2f, SoulBlue, 0.3f);
             }
-            Fx.Spawn("fx_shock", p, 12f, SoulBlue, 20f);
+            Fx.Spawn("fx_shock", p, 18f, SoulBlue, 20f);
+            Flair(null, p, 8f, SoulBlue);
             Hostile.Play("thunder", 0.7f, 1f);
         }
     }
@@ -198,10 +204,11 @@ public partial class SignatureSkills
             n = Mathf.Min(n, fragBudget);
             fragBudget -= n;
             float off = Random.Range(0f, 360f);
+            Flair("g.shrapnel", pos, 2.4f, Brass);
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, off + i * 360f / Mathf.Max(1, n)) * Vector2.right;
-                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f, Brass);
+                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Big("g.shrapnel") ? EvoGold : Brass);
                 if (b != null && E("ge.storm"))
                 {
                     bool bounced = false;
@@ -245,7 +252,8 @@ public partial class SignatureSkills
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null) e.Slow(0.5f, 4f);
         });
-        ShockRing.Spawn(p, 0.5f, 12f, 0.5f, new Color(1f, 0.35f, 0.3f, 0.8f), 0.3f);
+        ShockRing.Spawn(p, 0.5f, 12f, 0.5f, new Color(1f, 0.35f, 0.3f, 0.8f), 0.3f * Fs("g.threat"));
+        Flair("g.threat", p, 9f, new Color(1f, 0.35f, 0.3f));
     }
 
     float GunnerOutgoing(GameObject target) => MarkMul(target);

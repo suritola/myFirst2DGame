@@ -16,6 +16,10 @@ public class BossUltimate : MonoBehaviour
     // 보스 종류마다 게이지 (0 ~ 1)
     static readonly float[] gauge = new float[3];
     static readonly float[] refHp = new float[3];
+    // 마지막으로 맞은 때 (3초 동안 안 맞으면 게이지가 아주 서서히 줄어듦) · 이번 보스전에 결계를 펼쳤는지
+    static readonly float[] lastHit = new float[3];
+    static readonly bool[] usedThisFight = new bool[3];
+    static int decayFrame = -1;
     public static float Gauge(int kind) => kind >= 0 && kind < gauge.Length ? gauge[kind] : 0f;
 
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
@@ -44,6 +48,8 @@ public class BossUltimate : MonoBehaviour
         {
             gauge[kind] = 0f;
             refHp[kind] = Mathf.Max(1f, boss.setEnemyHP);
+            usedThisFight[kind] = false;
+            lastHit[kind] = Time.time;
         }
     }
 
@@ -60,10 +66,23 @@ public class BossUltimate : MonoBehaviour
         int k = Mathf.Clamp(b.bossKind, 0, 2);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.5f, 7f * Mathf.Pow(f, 1.2f)));
+        lastHit[k] = Time.time;
     }
 
     void Update()
     {
+        if (!Active && boss != null && !boss.IsDead)
+        {
+            // 3초 동안 안 맞으면 게이지가 아주 서서히 (초당 0.4%) 줄어듦 · 갈라진 슬라임은 한 번만 줄게
+            if (decayFrame != Time.frameCount && Time.time - lastHit[kind] > 3f && gauge[kind] < 1f)
+            {
+                decayFrame = Time.frameCount;
+                gauge[kind] = Mathf.Max(0f, gauge[kind] - 0.004f * Time.deltaTime);
+            }
+            // 보스전마다 적어도 한 번: 아직 펼치지 않았는데 체력이 40% 아래로 내려가면 게이지가 가득 참
+            if (!usedThisFight[kind] && boss.setEnemyHP > 0 && boss.EnemyHealth < boss.setEnemyHP * 0.4f)
+                gauge[kind] = 1f;
+        }
         if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
         if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
         if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ESCmenu.IsOpen) return;
@@ -97,6 +116,7 @@ public class BossUltimate : MonoBehaviour
         running = true;
         Active = true;
         gauge[kind] = 0f;
+        usedThisFight[kind] = true;
         boss.casting = true;
         PlayerController player = Hostile.Player;
         player.CancelSkill();
@@ -107,6 +127,7 @@ public class BossUltimate : MonoBehaviour
         center = Hostile.ClampArena(boss.transform.position);
         yield return Expand(info.color);
         float until = Time.time + Duration;
+        int hurtBefore = PlayerController.HurtCount;
         IEnumerator attack = kind == 0 ? LichBarrage(until) : kind == 1 ? HellBarrage(until) : SlimeBarrage(until);
         StartCoroutine(attack);
         while (Time.time < until && boss != null && !boss.IsDead && player != null && !player.IsDying)
@@ -116,6 +137,13 @@ public class BossUltimate : MonoBehaviour
             yield return null;
         }
         StopCoroutine(attack);
+        // 업적: 결계 중 보스를 쓰러뜨림 · 끝까지 버팀 · 한 번도 맞지 않음
+        if (boss == null || boss.IsDead) SteamAchievements.Unlock(SteamAchievements.BarrierBreak);
+        else if (player != null && !player.IsDying && Time.time >= until)
+        {
+            SteamAchievements.Unlock(SteamAchievements.BarrierSurvive);
+            if (PlayerController.HurtCount == hurtBefore) SteamAchievements.Unlock(SteamAchievements.BarrierNoHit);
+        }
         yield return Shatter(info.color);
         EndNow();
     }
