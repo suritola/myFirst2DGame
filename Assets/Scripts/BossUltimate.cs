@@ -23,7 +23,7 @@ public class BossUltimate : MonoBehaviour
     public static float Gauge(int kind) => kind >= 0 && kind < gauge.Length ? gauge[kind] : 0f;
 
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
-    const float Duration = 9f;
+    const float Duration = 15f;
     const float Power = 1.25f;            // BossSkills 와 같은 피해 배율
 
     static readonly (string title, string line, Color color)[] Info =
@@ -133,6 +133,7 @@ public class BossUltimate : MonoBehaviour
         while (Time.time < until && boss != null && !boss.IsDead && player != null && !player.IsDying)
         {
             Confine(player);
+            RepelMobs(Radius);
             Animate(info.color);
             yield return null;
         }
@@ -276,6 +277,7 @@ public class BossUltimate : MonoBehaviour
             // 결계 밖에 있으면 안쪽으로 끌려 들어옴
             PlayerController p = Hostile.Player;
             if (p != null && (p.transform.position - center).magnitude > r - 0.8f && r > 4f) Confine(p, r);
+            RepelMobs(r);
             yield return null;
         }
         SetDark(dark, 1f);
@@ -316,6 +318,38 @@ public class BossUltimate : MonoBehaviour
         {
             float a = Random.Range(0f, Mathf.PI * 2f);
             Fx.Spawn("fx_spark", center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Radius, 2f, color, 18f);
+        }
+    }
+
+    // 결계 안의 잡몹은 가장자리 밖으로 튕겨 나가고, 바깥 잡몹은 벽에 막혀 들어오지 못함 (보스와 1:1)
+    EnermyController[] mobs = new EnermyController[0];
+    float mobsAt;
+
+    void RepelMobs(float r)
+    {
+        if (Time.time > mobsAt)
+        {
+            mobsAt = Time.time + 0.2f;
+            mobs = FindObjectsOfType<EnermyController>();
+        }
+        float edge = r + 0.9f;
+        int sparks = 0;
+        foreach (EnermyController e in mobs)
+        {
+            if (e == null) continue;
+            Vector3 pos = e.transform.position;
+            Vector3 d = pos - center;
+            d.z = 0f;
+            if (d.sqrMagnitude >= edge * edge) continue;
+            if (d.sqrMagnitude < 0.01f) d = Vector3.right;
+            Vector3 to = center + d.normalized * edge;
+            to.z = pos.z;
+            // 안쪽 깊이 있던 잡몹이 튕겨 나갈 때만 불꽃 (벽에 막히는 잡몹은 조용히)
+            if ((to - pos).sqrMagnitude > 1.5f * 1.5f && sparks++ < 6)
+            {
+                Fx.Spawn("fx_spark", to, 2.2f, Color.white, 18f);
+            }
+            e.transform.position = to;
         }
     }
 

@@ -117,7 +117,7 @@ public partial class SignatureSkills
         for (int i = 0; i < n; i++)
         {
             Vector2 d = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 10f) * back;
-            Bullet b = Shot(far, d, dmg, 2, 26f, RogueRange, "fx_shuriken", 0.7f * Fs("r.boomerang"), Big("r.boomerang") ? EvoGold : new Color(0.85f, 0.8f, 1f), true);
+            Bullet b = Shot(far, d, dmg, 2, 26f, RogueRange, "fx_shuriken", 0.7f * Fs("r.boomerang"), Tint("r.boomerang", new Color(0.85f, 0.8f, 1f)), true);
             if (b != null) b.hitOnce = new HashSet<int>();
         }
         if (E("re.return"))
@@ -138,7 +138,7 @@ public partial class SignatureSkills
         {
             Vector3 at = near.Count > 0 ? near[i % near.Count].position + (Vector3)(Random.insideUnitCircle * 0.8f)
                                         : transform.position + (Vector3)(Random.insideUnitCircle * 6f);
-            StartCoroutine(Drop(at, "fx_shuriken", 1.4f * Fs("r.rain"), Big("r.rain") ? EvoGold : Color.white, 1.2f, Atk, i * 0.06f));
+            StartCoroutine(Drop(at, "fx_shuriken", 1.4f * Fs("r.rain"), Tint("r.rain", new Color(0.8f, 0.9f, 1f)), 1.2f, Atk, i * 0.06f));
         }
         Hostile.Play("whoosh", 0.5f, 1.6f);
     }

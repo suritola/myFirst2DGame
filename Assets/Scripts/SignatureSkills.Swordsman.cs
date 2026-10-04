@@ -102,7 +102,7 @@ public partial class SignatureSkills
         float dmg = Atk * V(tr, 0.08f, 0.03f);         // 휘두를 때마다 겹쳐서 예전 15 ~ 36% 는 너무 셌음
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SigZone z = Zone(at, r, 1f, 0.25f, zone => { foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f); });
-        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, Big("s.trail") ? new Color(1f, 0.85f, 0.45f, 0.7f) : new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, Big("s.trail") ? Vivid(new Color(0.7f, 0.85f, 1f), 0.75f) : new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
         if (a != null) a.transform.SetParent(z.transform, true);
         if (E("se.trail"))
             z.onEnd = zone =>
@@ -110,7 +110,7 @@ public partial class SignatureSkills
                 for (int i = 0; i < 6; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 60f + rot) * Vector2.right;
-                    Shot(zone.transform.position, d, Atk * 0.6f, 3, 22f, 10f, "fx_swordwave", 2.8f, EvoGold);
+                    Shot(zone.transform.position, d, Atk * 0.6f, 3, 22f, 10f, "fx_swordwave", 2.8f, Vivid(new Color(0.7f, 0.85f, 1f)));
                 }
                 Hostile.Play("whoosh", 0.4f, 1.4f);
             };

@@ -208,7 +208,7 @@ public partial class SignatureSkills
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, off + i * 360f / Mathf.Max(1, n)) * Vector2.right;
-                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Big("g.shrapnel") ? EvoGold : Brass);
+                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Tint("g.shrapnel", Brass));
                 if (b != null && E("ge.storm"))
                 {
                     bool bounced = false;

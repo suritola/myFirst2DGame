@@ -70,21 +70,35 @@ public partial class SignatureSkills : MonoBehaviour
     int L(string key) => lv.TryGetValue(key, out int v) ? v : 0;
 
     // ---------------- 진화한 스킬의 이펙트: 가장 크고 화려하게
-    // 진화의 재료가 된 고유 스킬 (그 스킬로 생기는 이펙트를 키우고 금빛 장식을 덧붙임)
+    // 진화의 재료가 된 고유 스킬 (그 스킬로 생기는 이펙트를 키우고 그 스킬의 색으로 장식을 덧붙임)
     readonly HashSet<string> evolvedKeys = new HashSet<string>();
     bool Big(string key) => evolvedKeys.Contains(key);
     // 이펙트 크기 배율 (진화했으면 1.7배)
     float Fs(string key) => Big(key) ? 1.7f : 1f;
     static readonly Color EvoGold = new Color(1f, 0.85f, 0.4f);
 
-    // 진화한 스킬이 터질 때 덧붙이는 장식: 금빛 충격파 · 반짝임 · 퍼지는 고리 (진화가 아니면 아무것도 안 함)
+    // 스킬마다 제 색을 더 진하고 밝게 (전부 금색이면 어느 진화인지 구분이 안 됨 · 흰색 계열은 그대로)
+    static Color Vivid(Color c, float a = 1f)
+    {
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if (s < 0.12f) return new Color(1f, 1f, 1f, a);
+        Color o = Color.HSVToRGB(h, Mathf.Min(1f, s * 1.35f + 0.15f), 1f);
+        o.a = a;
+        return o;
+    }
+    // 진화했으면 제 색을 진하게, 아니면 원래 색
+    Color Tint(string key, Color c) => Big(key) ? Vivid(c, Mathf.Max(c.a, 0.8f)) : c;
+
+    // 진화한 스킬이 터질 때 덧붙이는 장식: 그 스킬 색의 충격파 · 반짝임 · 퍼지는 고리 (진화가 아니면 아무것도 안 함)
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
-        Fx.Spawn("fx_shock", p, size * 1.8f, new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.9f), 20f);
-        Fx.Spawn("fx_sparkle", p, size * 0.9f, Color.white, 22f);
+        Color v = Vivid(c, 0.9f);
+        Fx.Spawn("fx_shock", p, size * 1.8f, v, 20f);
+        Fx.Spawn("fx_sparkle", p, size * 0.9f, Color.Lerp(Color.white, v, 0.45f), 22f);
         Fx.Spawn("fx_soulburst", p, size * 0.8f, new Color(c.r, c.g, c.b, 0.85f), 20f);
-        ShockRing.Spawn(p, 0.2f, size * 1.2f, 0.35f, new Color(c.r, c.g, c.b, 0.9f), 0.22f);
+        ShockRing.Spawn(p, 0.2f, size * 1.2f, 0.35f, v, 0.22f);
+        ShockRing.Spawn(p, 0.1f, size * 0.7f, 0.25f, Color.Lerp(Color.white, v, 0.3f), 0.12f);
     }
     bool E(string key) => shop != null && shop.IsEvolved(key);
     // 단계별 값: 1단계 a, 단계마다 + step (0단계면 0)
