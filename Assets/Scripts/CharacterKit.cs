@@ -461,7 +461,7 @@ public partial class CharacterKit : MonoBehaviour
         FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
         {
             float r = 1.8f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc;
-            float hit = dmg * 1.6f * (unstable ? 1.8f : 1f) * FlaskDamageMul * conc;
+            float hit = dmg * 1.45f * (unstable ? 1.8f : 1f) * FlaskDamageMul * conc;
             FlaskExtras(p, r, hit, depth);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
@@ -751,7 +751,7 @@ public partial class CharacterKit : MonoBehaviour
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐
-            float dmg = Damage * (2f + 4f * charge) * UltMul;
+            float dmg = Damage * (3f + 5f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
@@ -893,8 +893,8 @@ public partial class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
-            Specials.Damage(c.gameObject, Damage * 1.5f * UltMul, dir, 1f);
-            Bleed.Apply(c.gameObject, Damage * 1.2f * UltMul, 4f);
+            Specials.Damage(c.gameObject, Damage * 2.2f * UltMul, dir, 1f);
+            Bleed.Apply(c.gameObject, Damage * 1.5f * UltMul, 4f);
             Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }

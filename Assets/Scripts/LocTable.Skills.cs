@@ -71,6 +71,7 @@ public static partial class LocTable
           "本次升级不学习任何能力。想专注于目标技能与进化时使用。");
         A("회전 베기의 ", "Spin Slash ", "回転斬りの", "回旋斩的");
         A("남은 출혈의 ", "remaining bleed ", "残り出血の", "剩余流血的");
+        A("필살기 충전", "Ult charge", "必殺技チャージ", "必杀充能");
         A("호문쿨루스 필요", "Requires Homunculus", "ホムンクルスが必要", "需要侏儒助手");
         A("필요", "Requires", "必要", "需要");
         A("진화 조합", "Evolution recipes", "進化の組み合わせ", "进化组合");

@@ -357,7 +357,7 @@ public static class CodexUI
                 continue;
             }
             string tag = Loc.T("체력") + " " + Pct(d.hp) + " · " + Loc.T("공격력") + " " + Pct(d.damage) + " · " + Loc.T("공격 속도") + " " + Pct(d.attackSpeed)
-                         + " · " + Loc.T("스킬 게이지") + " " + Pct(d.gauge) + " · " + Loc.T("탄창") + " " + (d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"));
+                         + " · " + Loc.T("필살기 충전") + " " + Pct(1f / Mathf.Max(0.1f, d.gauge)) + " · " + Loc.T("탄창") + " " + (d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"));
             string body = Loc.T(d.description)
                 + "\n" + Accent.Tag(Loc.T("기본 무기") + " · " + Loc.T(d.weapon)) + "  " + Loc.T(d.attack)
                 + "  (" + Loc.T("사거리") + " " + (d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한")) + ")"

@@ -154,7 +154,7 @@ public partial class SignatureSkills
             if (target == practiceTarget && Time.time - practiceAt < 2f) practiceStacks = Mathf.Min(5, practiceStacks + 1);
             else { practiceTarget = target; practiceStacks = 0; }
             practiceAt = Time.time;
-            mul *= 1f + practiceStacks * V(p, 0.05f, 0.03f);
+            mul *= 1f + practiceStacks * V(p, 0.04f, 0.02f);
         }
         return mul;
     }
@@ -172,7 +172,7 @@ public partial class SignatureSkills
             else if (Time.time - since >= 3f)
             {
                 bleedSince.Remove(target);
-                float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 1f, 0.3f);
+                float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 0.8f, 0.2f);
                 Vector3 p = target.transform.position;
                 Destroy(bleed);
                 if (burst > 0f)
@@ -193,7 +193,7 @@ public partial class SignatureSkills
         int k = L("r.knot");
         if (k > 0 && !Dealing && knots.TryGetValue(target, out float until) && until > Time.time)
         {
-            float share = dmg * V(k, 0.2f, 0.1f);
+            float share = dmg * V(k, 0.15f, 0.07f);
             foreach (var kv in new List<KeyValuePair<GameObject, float>>(knots))
             {
                 if (kv.Key == null || kv.Key == target || kv.Value < Time.time) continue;
@@ -247,7 +247,7 @@ public partial class SignatureSkills
         bool full = g != null && g.IsFull();
         if (o > 0 && full && !gaugeWasFull)
         {
-            int n = (int)V(o, 8f, 4f);
+            int n = (int)V(o, 6f, 3f);
             Vector3 p = transform.position;
             for (int i = 0; i < n; i++)
             {
