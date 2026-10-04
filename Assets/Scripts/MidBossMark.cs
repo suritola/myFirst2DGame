@@ -34,7 +34,7 @@ public class MidBossMark : MonoBehaviour
         if (UIKit.Font != null) tag.font = UIKit.Font;
         if (UIKit.FontMaterial != null) tag.fontSharedMaterial = UIKit.FontMaterial;
         tag.text = Loc.T("중간 보스") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
-        tag.fontSize = 3.6f;
+        tag.fontSize = 9f;          // 3.6 은 화면(세로 40칸)에서 10픽셀 남짓이라 안 보였음
         tag.fontStyle = FontStyles.Bold;
         tag.color = new Color(1f, 0.86f, 0.35f);
         tag.alignment = TextAlignmentOptions.Center;
@@ -47,8 +47,8 @@ public class MidBossMark : MonoBehaviour
         // 글자 크기에 맞춘 판 (금빛 테두리 → 어두운 붉은 판 → 글자)
         Vector2 size = tag.GetPreferredValues(tag.text);
         tag.rectTransform.sizeDelta = size;
-        border = Plate("Border", size + new Vector2(0.55f, 0.34f), new Color(1f, 0.78f, 0.3f, 0.95f), layer, 50);
-        plate = Plate("Plate", size + new Vector2(0.4f, 0.2f), new Color(0.22f, 0.03f, 0.05f, 0.88f), layer, 51);
+        border = Plate("Border", size + new Vector2(0.9f, 0.5f), new Color(1f, 0.78f, 0.3f, 0.95f), layer, 50);
+        plate = Plate("Plate", size + new Vector2(0.65f, 0.3f), new Color(0.22f, 0.03f, 0.05f, 0.88f), layer, 51);
     }
 
     SpriteRenderer Plate(string name, Vector2 size, Color color, int layer, int order)
@@ -69,7 +69,7 @@ public class MidBossMark : MonoBehaviour
         if (root == null) return;
         float top = body != null ? body.bounds.max.y : transform.position.y + 1.5f;
         // 체력바(머리 위) 바로 위
-        root.position = new Vector3(transform.position.x, top + 0.95f, 0f);
+        root.position = new Vector3(transform.position.x, top + 1.7f, 0f);
         root.localScale = Vector3.one * (1f + 0.05f * Mathf.Sin(Time.time * 4f));
         if (border != null) border.color = new Color(1f, 0.78f, 0.3f, 0.7f + 0.25f * Mathf.Sin(Time.time * 4f));
     }

@@ -108,7 +108,7 @@ public class EnemySkill : MonoBehaviour
     {
         busy = true;
         enemy.casting = true;
-        GameObject tag = Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 0.9f));
+        GameObject tag = Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 1.5f));
         IEnumerator routine = type switch
         {
             EnemySkillType.BoneSpike => BoneSpike(p),
@@ -808,13 +808,13 @@ public class SkillTag : MonoBehaviour
         if (UIKit.Font != null) t.font = UIKit.Font;
         if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;
         t.text = label;
-        t.fontSize = 4.5f;
+        t.fontSize = 9f;            // 4.5 는 화면에서 너무 작아 안 보였음
         t.fontStyle = TMPro.FontStyles.Bold;
         t.color = Hostile.Accessible(new Color(1f, 0.35f, 0.3f));
         t.alignment = TMPro.TextAlignmentOptions.Center;
         t.outlineWidth = 0.3f;
         t.outlineColor = new Color32(0, 0, 0, 255);
-        t.rectTransform.sizeDelta = new Vector2(10f, 2f);
+        t.rectTransform.sizeDelta = new Vector2(20f, 3f);
         t.sortingLayerID = SortingLayer.NameToID("Effect");
         t.sortingOrder = 41;
         SkillTag s = go.AddComponent<SkillTag>();

@@ -614,7 +614,7 @@ public class SpecialFeedback : MonoBehaviour
         if (font != null) tmp.font = font;
         if (fontMaterial != null) tmp.fontSharedMaterial = fontMaterial;
         tmp.text = text;
-        tmp.fontSize = size;
+        tmp.fontSize = size * 1.6f;         // 화면(세로 40칸)에서 작아 잘 안 보였음 · 부르는 쪽 크기 비율은 그대로
         tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableWordWrapping = false;

@@ -157,11 +157,11 @@ public partial class CharacterKit : MonoBehaviour
             reagentText.color = Color.Lerp(c, Color.white, 0.35f);
             // 글자 왼쪽에 플라스크 그림 (둘을 합쳐 가운데 정렬)
             float w = reagentText.preferredWidth;
-            reagentText.transform.localPosition = new Vector3(0.3f, 0f, 0f);
-            reagentIcon.transform.localPosition = new Vector3(0.3f - w * 0.5f - 0.35f, 0.02f, 0f);
+            reagentText.transform.localPosition = new Vector3(0.6f, 0f, 0f);
+            reagentIcon.transform.localPosition = new Vector3(0.6f - w * 0.5f - 0.8f, 0.05f, 0f);
         }
         float top = body.bounds.max.y;
-        reagentTag.transform.position = new Vector3(transform.position.x, top + 0.45f + Mathf.Sin(Time.time * 4f) * 0.05f, 0f);
+        reagentTag.transform.position = new Vector3(transform.position.x, top + 1f + Mathf.Sin(Time.time * 4f) * 0.08f, 0f);
     }
 
     bool BuildReagentTag()
@@ -176,7 +176,7 @@ public partial class CharacterKit : MonoBehaviour
         reagentIcon.sprite = f[0];
         reagentIcon.sortingLayerName = "Effect";
         reagentIcon.sortingOrder = 40;
-        icon.transform.localScale = Vector3.one * (0.55f / f[0].bounds.size.y);
+        icon.transform.localScale = Vector3.one * (1.3f / f[0].bounds.size.y);
 
         GameObject label = new GameObject("Label", typeof(TMPro.TextMeshPro));
         label.transform.SetParent(reagentTag.transform, false);
@@ -184,13 +184,13 @@ public partial class CharacterKit : MonoBehaviour
         UIKit.EnsureStyle();
         if (UIKit.Font != null) reagentText.font = UIKit.Font;
         if (UIKit.FontMaterial != null) reagentText.fontSharedMaterial = UIKit.FontMaterial;
-        reagentText.fontSize = 3.2f;
+        reagentText.fontSize = 8f;          // 플레이어 몸(약 3칸) 폭에 맞는 크기
         reagentText.fontStyle = TMPro.FontStyles.Bold;
         reagentText.alignment = TMPro.TextAlignmentOptions.Center;
         reagentText.enableWordWrapping = false;
         reagentText.outlineWidth = 0.3f;
         reagentText.outlineColor = new Color32(0, 0, 0, 255);
-        reagentText.rectTransform.sizeDelta = new Vector2(6f, 1f);
+        reagentText.rectTransform.sizeDelta = new Vector2(16f, 2.5f);
         reagentText.sortingLayerID = SortingLayer.NameToID("Effect");
         reagentText.sortingOrder = 41;
         shownReagent = -1;
