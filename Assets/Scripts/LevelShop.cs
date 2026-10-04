@@ -471,10 +471,19 @@ public partial class LevelShop : MonoBehaviour
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
         // 지금 무기에 안 맞는 카드는 빼고 (예: 영혼 저격총에 유도 탄두) — 무기가 바뀌면 다시 나옴
         for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) open.Add(i);
+        // 스킬 진화에 가까운 카드일수록 조금 더 잘 나옴 (가중치 1 ~ 1.8, LevelShop.Signature)
         int Draw()
         {
             if (open.Count == 0) return SupplyId;
-            int k = Random.Range(0, open.Count);
+            float total = 0f;
+            foreach (int c in open) total += DrawWeight(c);
+            float roll = Random.Range(0f, total);
+            int k = open.Count - 1;
+            for (int i = 0; i < open.Count; i++)
+            {
+                roll -= DrawWeight(open[i]);
+                if (roll < 0f) { k = i; break; }
+            }
             int id = open[k];
             open.RemoveAt(k);
             return id;

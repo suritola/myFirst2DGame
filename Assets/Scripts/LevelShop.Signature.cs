@@ -318,6 +318,26 @@ public partial class LevelShop
         }
     }
 
+    // 레벨업 카드 뽑기 가중치: 이 카드가 재료인 진화가 가까울수록 소폭 올라감
+    // 진행도 = 재료 단계 합 / 최대 단계 합 (아직 시작하지 않은 조합은 0), 가중치 1 + 0.8 × 진행도 (최대 1.8배)
+    float DrawWeight(int id)
+    {
+        float best = 0f;
+        foreach (SkillEvo e in MyEvos)
+        {
+            if (evolved.Contains(e.key) || System.Array.IndexOf(e.parts, id) < 0) continue;
+            int have = 0, need = 0;
+            foreach (int p in e.parts)
+            {
+                int max = MaxLevelOf(CharacterData.Selected, p);
+                need += max;
+                have += Mathf.Min(LevelOf(p), max);
+            }
+            if (need > 0) best = Mathf.Max(best, have / (float)need);
+        }
+        return 1f + 0.8f * best;
+    }
+
     // 카드에 붙는 진화 미리보기: 이 카드가 재료인 (아직 안 된) 진화
     public SkillEvo EvoUsing(int id)
     {
