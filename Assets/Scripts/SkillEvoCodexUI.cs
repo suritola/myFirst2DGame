@@ -111,7 +111,9 @@ public static class SkillEvoCodexUI
         for (int i = 0; i < n; i++)
         {
             float x = x0 + i * 74f;
-            Icon(inner, new Vector2(x, 54f), 64f, LevelShop.CardIcon(who, e.parts[i]), new Color(0.22f, 0.18f, 0.3f));
+            int part = e.parts[i];
+            Image f = Icon(inner, new Vector2(x, 54f), 64f, LevelShop.CardIcon(who, part), new Color(0.22f, 0.18f, 0.3f));
+            Tip(f, LevelShop.CardName(who, part), LevelShop.CardInfo(who, part));
             if (i < n - 1)
             {
                 TMP_Text plus = UIKit.Text(inner, "", 24f, Dim, new Vector2(x + 37f, 54f), new Vector2(20f, 30f));
@@ -121,7 +123,8 @@ public static class SkillEvoCodexUI
         float arrowX = x0 + n * 74f - 30f;
         TMP_Text arrow = UIKit.Text(inner, "", 30f, Purple, new Vector2(arrowX, 54f), new Vector2(30f, 40f));
         arrow.text = "▶";
-        Icon(inner, new Vector2(arrowX + 50f, 54f), 76f, Resources.Load<Sprite>("Icons/ability_" + e.icon), new Color(0.45f, 0.32f, 0.62f));
+        Image evo = Icon(inner, new Vector2(arrowX + 50f, 54f), 76f, Resources.Load<Sprite>("Icons/ability_" + e.icon), new Color(0.45f, 0.32f, 0.62f));
+        Tip(evo, Loc.T(e.name) + "  ◆ " + Loc.T("진화"), LevelShop.EvoTooltip(e, who));
 
         TMP_Text name = UIKit.Text(inner, "", 32f, Gold, new Vector2(arrowX + 100f + 160f, 70f), new Vector2(330f, 44f), TextAlignmentOptions.Left);
         name.text = Loc.T(e.name);
@@ -167,17 +170,28 @@ public static class SkillEvoCodexUI
         return inner;
     }
 
-    static void Icon(RectTransform parent, Vector2 pos, float size, Sprite sprite, Color frame)
+    // 마우스를 올리면 설명 (재료 · 진화 아이콘)
+    static void Tip(Image target, string title, string body)
+    {
+        target.raycastTarget = true;
+        TooltipTrigger t = target.gameObject.AddComponent<TooltipTrigger>();
+        t.title = title;
+        t.body = body;
+    }
+
+    static Image Icon(RectTransform parent, Vector2 pos, float size, Sprite sprite, Color frame)
     {
         RectTransform f = UIKit.Rect("IconFrame", parent, pos, new Vector2(size, size));
-        f.gameObject.AddComponent<Image>().color = frame;
-        if (sprite == null) return;
+        Image fi = f.gameObject.AddComponent<Image>();
+        fi.color = frame;
+        if (sprite == null) return fi;
         RectTransform ir = UIKit.Rect("Icon", f, Vector2.zero, new Vector2(size - 8f, size - 8f));
         Image img = ir.gameObject.AddComponent<Image>();
         img.sprite = sprite;
         img.preserveAspect = true;
         img.raycastTarget = false;
         if (frame == Color.black) img.color = Color.black;
+        return fi;
     }
 
     public static void Close()

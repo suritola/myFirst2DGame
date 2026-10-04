@@ -11,13 +11,16 @@ public partial class LevelShop
 
     // ================================================================= 진화 미리보기 (카드 바로 위 띠)
     // [재료 아이콘 + Lv] [재료] (→) [진화 아이콘] 진화 이름 — 최대 단계인 재료는 초록, 이 카드는 금빛 테두리
+    // 아이콘에 마우스를 올리면 설명 (재료: 그 스킬 카드 글 · 진화: 새 능력과 재료)
     class EvoRow
     {
         public RectTransform root;
         public Image[] parts = new Image[3];
         public Image[] frames = new Image[3];
+        public int[] ids = new int[3];
         public TextMeshProUGUI[] levels = new TextMeshProUGUI[3];
         public Image evoIcon;
+        public SkillEvo evo;
         public TextMeshProUGUI name;
     }
     readonly EvoRow[] evoRows = new EvoRow[3];
@@ -39,6 +42,7 @@ public partial class LevelShop
                 row.frames[i].gameObject.SetActive(has);
                 if (!has) continue;
                 int p = e.parts[i];
+                row.ids[i] = p;
                 row.parts[i].sprite = CardIcon(CharacterData.Selected, p);
                 int max = MaxLevelOf(CharacterData.Selected, p);
                 int lv = LevelOf(p);
@@ -48,6 +52,7 @@ public partial class LevelShop
                 row.levels[i].text = (me ? lv + 1 : lv) + "/" + max;
                 row.levels[i].color = done ? EvoDone : Color.white;
             }
+            row.evo = e;
             row.evoIcon.sprite = Resources.Load<Sprite>("Icons/ability_" + e.icon);
             row.name.text = "<size=70%>" + Loc.T("진화") + "</size>\n" + Loc.T(e.name);
         }
@@ -78,6 +83,12 @@ public partial class LevelShop
             frame.sprite = UIKit.ButtonSprite;
             frame.type = Image.Type.Sliced;
             row.frames[i] = frame;
+            // 마우스를 올리면 이 재료 스킬의 설명 (카드와 같은 글)
+            frame.raycastTarget = true;
+            int idx = i;
+            TooltipTrigger tip = frame.gameObject.AddComponent<TooltipTrigger>();
+            tip.titleProvider = () => CardName(CharacterData.Selected, row.ids[idx]);
+            tip.bodyProvider = () => GetAbilityTooltip(row.ids[idx]);
             row.parts[i] = Box(frame.rectTransform, Vector2.zero, new Vector2(40f, 40f), Color.white);
             row.parts[i].preserveAspect = true;
             row.levels[i] = Label(frame.rectTransform, new Vector2(0f, -30f), new Vector2(60f, 22f), 17f);
@@ -85,8 +96,13 @@ public partial class LevelShop
         TextMeshProUGUI arrow = Label(r, new Vector2(-4f, 4f), new Vector2(30f, 40f), 30f);
         arrow.text = "▶";
         arrow.color = EvoPurple;
+        // 진화 결과 (마우스를 올리면 새 능력 · 재료)
         row.evoIcon = Box(r, new Vector2(38f, 4f), new Vector2(52f, 52f), Color.white);
         row.evoIcon.preserveAspect = true;
+        row.evoIcon.raycastTarget = true;
+        TooltipTrigger evoTip = row.evoIcon.gameObject.AddComponent<TooltipTrigger>();
+        evoTip.titleProvider = () => row.evo != null ? Loc.T(row.evo.name) + "  ◆ " + Loc.T("진화") : "";
+        evoTip.bodyProvider = () => row.evo != null ? EvoTooltip(row.evo, CharacterData.Selected) : "";
         row.name = Label(r, new Vector2(140f, 2f), new Vector2(150f, 64f), 21f);
         row.name.alignment = TextAlignmentOptions.Left;
         row.name.color = EvoPurple;

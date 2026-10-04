@@ -8,6 +8,7 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        A("진화 재료", "Evolution ingredient", "進化の素材", "进化素材");
         A("결계 침식", "Barrier Erosion", "結界侵食", "结界侵蚀");
         A("망자의 묘역", "Graveyard of the Dead", "亡者の墓域", "亡者墓域");
         A("이 안에서는, 죽은 자만이 걷는다.", "In here, only the dead may walk.", "この中を歩けるのは、死者だけだ。", "在这里，只有死者能行走。");

@@ -229,6 +229,26 @@ public partial class LevelShop
         return data != null && data.abilityIcons != null && id >= 0 && id < data.abilityIcons.Length ? data.abilityIcons[id] : null;
     }
 
+    // 도감용 카드 설명 (게임 밖에서도): 한 문장 + 단계별 수치 전부
+    public static string CardInfo(CharacterId who, int id)
+    {
+        KitCard c = KitCardOf(who, id);
+        if (c != null)
+        {
+            string[] v = new string[c.max];
+            for (int i = 0; i < c.max; i++) v[i] = Val(c.values[i]);
+            return Loc.T(c.desc) + "\n<color=#F5D478>" + Loc.T(c.stat) + "  " + string.Join(" / ", v) + "</color>";
+        }
+        string d = id switch
+        {
+            1 => "코인을 주울 때 더 많이 얻습니다.", 4 => "적을 처치할 때 얻는 경험치가 늘어납니다.", 5 => "주변의 코인을 끌어옵니다.",
+            8 => "최대 체력이 늘어나고, 선택하는 순간 체력을 모두 회복합니다.", 9 => "적에게 받는 피해가 줄어듭니다.",
+            10 => "시간이 지나면 체력이 조금씩 회복됩니다.", _ => "",
+        };
+        int max = MaxLevelOf(who, id);
+        return Loc.T(d) + (max > 0 ? "\n<color=#A89C86>" + Loc.T("최대") + " Lv " + max + "</color>" : "");
+    }
+
     // 최대 단계 (0 = 끝없음)
     public static int MaxLevelOf(CharacterId who, int id)
     {
