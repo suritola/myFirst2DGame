@@ -375,9 +375,20 @@ public class PlayerController : MonoBehaviour
             {
                 if (skillGauge != null && skillGauge.IsFull())
                 {
-                    // 조준이 필요 없는 필살기는 누르자마자 발동 (줌 · 감속 없음)
-                    if (special != null && special.IsInstantUlt) StartCoroutine(InstantUlt());
+                    // 적을 고르지 않는 필살기: 누르고 있는 동안 범위만 보여 주고 떼면 발동 (줌 · 감속 없음)
+                    if (special != null && special.IsInstantUlt) { instantAiming = true; special.BeginAim(); }
                     else StartSkill();
+                }
+            }
+
+            if (instantAiming)
+            {
+                if (special == null || !special.IsInstantUlt || Time.timeScale == 0f) CancelInstantAim();
+                else if (GameInput.UltHeld && !GameInput.UltUp) special.UpdateAim(noTargets, 0f);
+                else
+                {
+                    CancelInstantAim();
+                    if (skillGauge != null && skillGauge.IsFull() && !IsSkillUsing) StartCoroutine(InstantUlt());
                 }
             }
 
@@ -739,9 +750,21 @@ void Shoot()
         NowCharge = 0f;
     }
 
+    // 즉발 필살기 조준 (누르고 있는 동안 범위 표시)
+    bool instantAiming;
+    static readonly List<EnermyController> noTargets = new List<EnermyController>();
+
+    void CancelInstantAim()
+    {
+        if (!instantAiming) return;
+        instantAiming = false;
+        special?.EndAim();
+    }
+
     // 조준을 쏘지 않고 취소 (일시정지할 때): 시간 · 화면 · 줌을 되돌리고 게이지는 그대로 둠
     public void CancelSkill()
     {
+        CancelInstantAim();
         if (!isSkillUsing) return;
 
         isSkillUsing = false;

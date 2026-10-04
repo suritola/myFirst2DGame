@@ -83,6 +83,8 @@ public partial class CharacterKit : MonoBehaviour
         EnermyController.Killed -= OnKill;
         if (homunculus != null) Destroy(homunculus);
         if (reagentTag != null) Destroy(reagentTag);
+        if (ultAimLine != null) Destroy(ultAimLine.gameObject);
+        if (ultAimRing != null) Destroy(ultAimRing.gameObject);
     }
 
     void Start()
@@ -513,10 +515,17 @@ public partial class CharacterKit : MonoBehaviour
     public void UpdateUlt(SkillGauge gauge)
     {
         bool full = gauge != null && gauge.IsFull();
-        // 전용 특수 무기를 들고 있으면 우클릭은 그 무기의 궁극기
-        if (!charging && !Dashing && Special != null && Special.KitWeaponUltActive)
+        // 전용 특수 무기를 들고 있으면 우클릭은 그 무기의 궁극기: 누르고 있는 동안 범위를 보여 주고 떼면 발동
+        bool kitUlt = Special != null && Special.KitWeaponUltActive;
+        if (ultAiming && (ultAimKit != kitUlt || Time.timeScale == 0f)) CancelUltAim();       // 무기를 바꿨거나 멈춤
+        if (!charging && !Dashing && kitUlt)
         {
-            if (GameInput.UltDown && full)
+            if (GameInput.UltDown && full) { ultAiming = true; ultAimKit = true; }
+            if (!ultAiming) return;
+            DrawUltAim(Id == CharacterId.Rogue);
+            if (GameInput.UltHeld && !GameInput.UltUp) return;
+            CancelUltAim();
+            if (full)
             {
                 Special.KitWeaponUlt();
                 Spend(gauge);
@@ -530,9 +539,16 @@ public partial class CharacterKit : MonoBehaviour
                 UpdateCharged(gauge, full);
                 break;
             case CharacterId.Rogue:
+                // 출혈 돌진: 누르고 있는 동안 돌진 경로를 보여 주고 떼면 돌진
                 bool recast = Time.time < recastUntil;
-                if (GameInput.UltDown && !Dashing && (full || recast))
+                if (GameInput.UltDown && !Dashing && (full || recast)) { ultAiming = true; ultAimKit = false; }
+                if (!ultAiming) break;
+                DrawUltAim(true, false);
+                if (GameInput.UltHeld && !GameInput.UltUp) break;
+                CancelUltAim();
+                if (Dashing || !(full || Time.time < recastUntil)) break;
                 {
+                    recast = Time.time < recastUntil;
                     // 그림자 숙련 4단계: 게이지로 돌진한 뒤 잠깐은 한 번 더 공짜로 (게이지는 아껴 둠)
                     recastUntil = 0f;
                     StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
@@ -545,6 +561,79 @@ public partial class CharacterKit : MonoBehaviour
                 UpdateRainAim(gauge, full);
                 break;
         }
+    }
+
+    // 우클릭 조준 (전용 무기 궁극기 · 도적 출혈 돌진): 누르고 있는 동안 범위 · 경로를 보여 주고 떼면 발동
+    bool ultAiming, ultAimKit;
+    LineRenderer ultAimLine, ultAimRing;
+
+    void CancelUltAim()
+    {
+        ultAiming = false;
+        if (ultAimLine != null) ultAimLine.enabled = false;
+        if (ultAimRing != null) ultAimRing.enabled = false;
+    }
+
+    // dash: 도적은 먼저 돌진하므로 돌진 경로와 도착 지점 기준 범위를 보여 줌 · shape: 전용 무기 궁극기 범위까지
+    void DrawUltAim(bool dash, bool shape = true)
+    {
+        if (ultAimLine == null) ultAimLine = Hostile.NewLine("UltAimLine", Color.white, 0.12f, 25);
+        if (ultAimRing == null) { ultAimRing = Hostile.NewLine("UltAimRing", Color.white, 0.12f, 25); ultAimRing.loop = true; }
+        float pulse = 0.55f + 0.3f * Mathf.Sin(Time.time * 14f);
+        Vector3 me = transform.position;
+        Vector2 dir = ((Vector2)(Mouse - me)).normalized;
+        if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
+        Vector3 origin = me;
+        ultAimLine.enabled = false;
+        ultAimRing.enabled = false;
+
+        if (dash)
+        {
+            origin = DashEnd(dir);
+            Color purple = new Color(0.75f, 0.45f, 1f, pulse);
+            ultAimLine.enabled = true;
+            ultAimLine.positionCount = 2;
+            ultAimLine.SetPosition(0, me);
+            ultAimLine.SetPosition(1, origin);
+            ultAimLine.startColor = ultAimLine.endColor = purple;
+            ultAimLine.startWidth = ultAimLine.endWidth = 1.4f;
+            if (!shape)
+            {
+                ultAimRing.enabled = true;
+                Hostile.SetArc(ultAimRing, origin, 1f, 0f, 360f);
+                ultAimRing.startColor = ultAimRing.endColor = purple;
+                return;
+            }
+        }
+        if (!shape || Special == null) return;
+
+        Color c = SpecialAbilities.ColorOf(Special.UltId);
+        c.a = pulse;
+        switch (Special.KitUltAim(out float size, out Vector3 at))
+        {
+            case SpecialAbilities.UltAimShape.Point:
+                ultAimRing.enabled = true;
+                Hostile.SetArc(ultAimRing, at, size, 0f, 360f);
+                break;
+            case SpecialAbilities.UltAimShape.Around:
+                ultAimRing.enabled = true;
+                Hostile.SetArc(ultAimRing, origin, size, 0f, 360f);
+                break;
+            case SpecialAbilities.UltAimShape.Line:
+                if (dash) { ultAimRing.enabled = true; Hostile.SetArc(ultAimRing, origin, 1.5f, 0f, 360f); }
+                else
+                {
+                    ultAimLine.enabled = true;
+                    ultAimLine.positionCount = 2;
+                    ultAimLine.SetPosition(0, origin);
+                    ultAimLine.SetPosition(1, origin + (Vector3)(dir * size));
+                    ultAimLine.startColor = ultAimLine.endColor = c;
+                    ultAimLine.startWidth = ultAimLine.endWidth = 1.2f;
+                }
+                break;
+        }
+        ultAimRing.startColor = ultAimRing.endColor = c;
+        ultAimRing.startWidth = ultAimRing.endWidth = 0.14f;
     }
 
     float lastUlt = -99f;
@@ -610,22 +699,28 @@ public partial class CharacterKit : MonoBehaviour
         Spend(gauge);
     }
 
-    // 도적 출혈 돌진: 무적 상태로 마우스 쪽으로 빠르게 돌진, 지나간 적마다 한 번 베고 출혈
-    public IEnumerator BleedDash(Vector2 dir)
+    // 출혈 돌진이 멈출 자리 (벽 · 경기장 끝 앞). 조준 미리보기와 실제 돌진이 같은 값을 씀
+    Vector3 DashEnd(Vector2 dir)
     {
-        if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
-        int mastery = RogueMastery;
-        float dist = mastery >= 3 ? 32f : 25f;          // 그림자 숙련 3단계: 더 멀리 · 더 오래 무적
-        const float time = 0.32f, width = 1.4f;
+        float dist = RogueMastery >= 3 ? 32f : 25f;          // 그림자 숙련 3단계: 더 멀리 · 더 오래 무적
         Vector3 from = transform.position;
-        // 벽 · 경기장 끝 앞에서 멈춤
         float len = dist;
         for (float d = 0.5f; d <= dist; d += 0.5f)
         {
             Vector3 p = from + (Vector3)(dir * d);
             if (Hostile.IsWall(p) || (Hostile.ClampArena(p) - p).sqrMagnitude > 0.01f) { len = d - 0.5f; break; }
         }
-        Vector3 to = from + (Vector3)(dir * len);
+        return from + (Vector3)(dir * len);
+    }
+
+    // 도적 출혈 돌진: 무적 상태로 마우스 쪽으로 빠르게 돌진, 지나간 적마다 한 번 베고 출혈
+    public IEnumerator BleedDash(Vector2 dir)
+    {
+        if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
+        int mastery = RogueMastery;
+        const float time = 0.32f, width = 1.4f;
+        Vector3 from = transform.position;
+        Vector3 to = DashEnd(dir);
 
         dashUntil = Time.time + time;
         // 돌진하는 동안 + 끝난 뒤 0.4초 무적

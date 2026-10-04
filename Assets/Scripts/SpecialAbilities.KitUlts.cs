@@ -43,6 +43,31 @@ public partial class SpecialAbilities
     // 전용 무기를 들고 있거나 그 무기로 진화했으면 우클릭이 그 무기의 궁극기
     public bool KitWeaponUltActive => UltActive && IsKitWeapon(UltId);
 
+    // 우클릭을 누르고 있는 동안 보여 줄 궁극기 범위 (떼면 발동). CharacterKit 이 그림
+    public enum UltAimShape { Point, Line, Around }
+
+    // Point: at 에 반지름 size 원 · Line: 플레이어에서 마우스 쪽으로 길이 size · Around: 플레이어 둘레 반지름 size
+    public UltAimShape KitUltAim(out float size, out Vector3 at)
+    {
+        int id = UltId;
+        bool evo = IsEvolved(id);
+        at = KitClamp(MouseWorld());
+        switch (id)
+        {
+            case KitBlowgun: size = evo ? 6f : 5f; return UltAimShape.Point;
+            case KitNetBow: size = evo ? 8.5f : 7f; return UltAimShape.Point;
+            case KitMagnet: size = evo ? 11f : 9f; return UltAimShape.Point;
+            case KitHammer: size = 6 * 2.2f; return UltAimShape.Line;
+            case KitLance: size = evo ? 20f : 16f; return UltAimShape.Line;
+            case KitJavelin: size = 24f; return UltAimShape.Line;
+            case KitWhip: size = evo ? 13f : 11f; return UltAimShape.Around;
+            case KitWire: size = evo ? 11f : 9f; return UltAimShape.Around;
+            case KitBurstBow: size = 16f; return UltAimShape.Around;
+            case KitFirework: size = 12f; return UltAimShape.Around;
+            default: size = 8f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로
+        }
+    }
+
     public void KitWeaponUlt()
     {
         int id = UltId;
