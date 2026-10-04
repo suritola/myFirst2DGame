@@ -54,6 +54,7 @@ public class MusicManager : MonoBehaviour
         string scene = sceneName;
         if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
+        if (BossUltimate.Active) return "bgm_domain";          // 보스 필살기 결계
         if (spawner != null && spawner.bossSpawned && !spawner.bossCleared) return "bgm_boss";
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
         return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_desert";

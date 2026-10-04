@@ -50,7 +50,7 @@ public class BossSkills : MonoBehaviour
 
     void Update()
     {
-        if (busy || !Alive) return;
+        if (busy || !Alive || BossUltimate.Active) return;      // 필살기 결계 동안은 결계 공격만
         PlayerController p = Hostile.Player;
         if (p == null) return;
 

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class bossbar : MonoBehaviour
 {
@@ -50,6 +51,7 @@ public class bossbar : MonoBehaviour
         }
         backBar.SetActive(true);
         UpdateName();
+        UpdateUltGauge();
         if (barRect == null) barRect = bar.GetComponent<RectTransform>();
 
         // 킹 슬라임이 갈라진 뒤에는 슬라임마다 따로 보스 체력바 (첫 줄 + 아래로 쌓음)
@@ -99,6 +101,8 @@ public class bossbar : MonoBehaviour
         {
             GameObject clone = Instantiate(backBar, backBar.transform.parent);
             clone.name = backBar.name + "_" + (extraBars.Count + 1);
+            Transform cg = clone.transform.Find("UltGauge");        // 필살기 게이지는 맨 위 줄에만
+            if (cg != null) Destroy(cg.gameObject);
             RectTransform main = backBar.GetComponent<RectTransform>();
             RectTransform r = clone.GetComponent<RectTransform>();
             // 바 위의 이름 글자 · 왼쪽 해골 아이콘까지 포함한 높이로 쌓음
@@ -130,6 +134,39 @@ public class bossbar : MonoBehaviour
                 if (extraBars[i] != null && extraBars[i].activeInHierarchy) return extraBars[i].GetComponent<RectTransform>();
             return backBar != null ? backBar.GetComponent<RectTransform>() : null;
         }
+    }
+
+    // ================================================================= 보스 필살기 게이지 (맨 위 체력바 바로 아래, 가득 차면 결계)
+    RectTransform ultFill;
+    Image ultFillImg;
+    const float UltWidth = 596f;
+
+    void UpdateUltGauge()
+    {
+        if (ultFill == null)
+        {
+            GameObject bg = new GameObject("UltGauge", typeof(RectTransform), typeof(Image));
+            RectTransform r = bg.GetComponent<RectTransform>();
+            r.SetParent(backBar.transform, false);
+            r.anchorMin = r.anchorMax = new Vector2(0f, 0f);
+            r.pivot = new Vector2(0f, 1f);
+            r.sizeDelta = new Vector2(UltWidth, 10f);
+            r.anchoredPosition = new Vector2(12f, -4f);
+            Image bi = bg.GetComponent<Image>();
+            bi.color = new Color(0.08f, 0.04f, 0.12f, 0.9f);
+            bi.raycastTarget = false;
+            GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            ultFill = fill.GetComponent<RectTransform>();
+            ultFill.SetParent(r, false);
+            ultFill.anchorMin = ultFill.anchorMax = ultFill.pivot = new Vector2(0f, 0.5f);
+            ultFill.anchoredPosition = Vector2.zero;
+            ultFillImg = fill.GetComponent<Image>();
+            ultFillImg.raycastTarget = false;
+        }
+        float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
+        ultFill.sizeDelta = new Vector2(UltWidth * g, 10f);
+        float pulse = g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
+        ultFillImg.color = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
     }
 
     // 체력바 위 이름을 지금 보스의 이름으로

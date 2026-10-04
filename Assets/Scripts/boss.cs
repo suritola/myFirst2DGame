@@ -176,6 +176,7 @@ public class bosss : MonoBehaviour
         BossSkills skills = GetComponent<BossSkills>();
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();
         skills.kind = bossKind;
+        if (GetComponent<BossUltimate>() == null) gameObject.AddComponent<BossUltimate>();     // 필살기 "결계"
         if (IsSlime)
         {
             if (slimeGen == 1)
@@ -202,8 +203,8 @@ public class bosss : MonoBehaviour
 
         if (player == null) return;
 
-        // 주기적으로 부하 소환
-        summonTimer += Time.deltaTime;
+        // 주기적으로 부하 소환 (필살기 결계 중에는 쉼)
+        if (!BossUltimate.Active) summonTimer += Time.deltaTime;
         if (summonTimer >= (Enraged ? enragedSummonInterval : summonInterval))
         {
             summonTimer = 0f;
@@ -242,6 +243,7 @@ public class bosss : MonoBehaviour
         // 체력 감소
         EnemyHealth -= damage;
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
+        if (EnemyHealth > 0) BossUltimate.OnBossHit(this, damage);       // 필살기 게이지 (센 한 방일수록 많이)
         DamagePopup.Show(transform, damage, spriteRenderer);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 

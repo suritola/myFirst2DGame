@@ -8,6 +8,13 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        A("결계 전개", "Domain Expansion", "結界展開", "结界展开");
+        A("망자의 묘역", "Graveyard of the Dead", "亡者の墓域", "亡者墓域");
+        A("이 안에서는, 죽은 자만이 걷는다.", "In here, only the dead may walk.", "この中を歩けるのは、死者だけだ。", "在这里，只有死者能行走。");
+        A("연옥 낙화", "Purgatory's Fall", "煉獄落火", "炼狱落火");
+        A("이곳의 불은 꺼지지 않는다.", "The fires here never die.", "ここの炎は、消えることがない。", "此处之火，永不熄灭。");
+        A("산성 범람", "Acid Deluge", "酸の氾濫", "酸性泛滥");
+        A("전부, 녹아내려라.", "Melt. All of it.", "すべて、溶け落ちろ。", "全部，融化吧。");
         A("정말로 메인 메뉴로 가시겠습니까?", "Really return to the main menu?", "本当にメインメニューに戻りますか？", "确定要返回主菜单吗？");
         A("지금 진행 중인 판이 끝납니다.", "Your current run will end.", "今のプレイは終了します。", "当前这一局将会结束。");
         A("스킬 진화", "Skill Evolution", "スキル進化", "技能进化");
