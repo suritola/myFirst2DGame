@@ -59,8 +59,8 @@ public class bosss : MonoBehaviour
     static int gen2Deaths;
     static int gen3Spawned;
     static bool slimeBossCleared;    // 마지막 두 마리가 거의 같이 쓰러져도 보스 처치는 한 번만
-    const int Gen2Hp = 600;
-    const int Gen3Hp = 280;
+    const int Gen2Hp = 900;            // 3장 마지막 보스인데 2장 보스보다 약해 금방 녹던 것 (예전 1400 · 600 · 280)
+    const int Gen3Hp = 450;
     // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
     static float slimeMul = 1f;
     static int ScaledHp(int hp) => Mathf.RoundToInt(hp * slimeMul);
