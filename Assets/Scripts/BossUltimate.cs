@@ -544,24 +544,25 @@ public class BossUltimate : MonoBehaviour
         while (Time.time < until)
         {
             PlayerController p = Hostile.Player;
-            if (Time.time >= nextBall && balls.Count < 8)
+            // 피하기 쉽게 (2.1): 튕기는 산성 덩어리 최대 8 → 5개 · 1.4초마다, 산성 비 1.3초마다 3곳 · 예고 1.3초, 줄무늬 세 줄에 한 줄 · 4초마다 · 예고 1.5초
+            if (Time.time >= nextBall && balls.Count < 5)
             {
-                nextBall = Time.time + 0.9f;
+                nextBall = Time.time + 1.4f;
                 balls.Add(Bouncer(boss != null ? boss.transform.position : center, acid, until - Time.time));
             }
             if (Time.time >= nextRain && p != null)
             {
-                nextRain = Time.time + 0.85f;
-                for (int i = 0; i < 5; i++)
+                nextRain = Time.time + 1.3f;
+                for (int i = 0; i < 3; i++)
                 {
                     Vector3 at = i == 0 ? p.transform.position : p.transform.position + (Vector3)(Random.insideUnitCircle * 5f);
-                    StartCoroutine(Spike(at, 1.8f, 1f, acid, 16f * Power, "fx_geyser"));
+                    StartCoroutine(Spike(at, 1.8f, 1.3f, acid, 16f * Power, "fx_geyser"));
                 }
             }
             if (Time.time >= nextStripe)
             {
-                nextStripe = Time.time + 2.4f;
-                StartCoroutine(Stripes(stripe++ % 2, acid));
+                nextStripe = Time.time + 4f;
+                StartCoroutine(Stripes(stripe++ % 3, acid));
             }
             balls.RemoveAll(g => g == null);
             yield return null;
@@ -569,7 +570,7 @@ public class BossUltimate : MonoBehaviour
         foreach (GameObject g in balls) if (g != null) Destroy(g);
     }
 
-    // 줄무늬 간헐천: 결계를 가로줄로 나눠 한 줄 건너 한 줄씩 (다른 줄로 피함)
+    // 줄무늬 간헐천: 결계를 가로줄로 나눠 세 줄에 한 줄씩 (터지지 않는 두 줄로 피함 · 예전 한 줄 건너 한 줄은 너무 빽빽했음)
     IEnumerator Stripes(int odd, Color acid)
     {
         const float w = 2.6f;
@@ -577,14 +578,14 @@ public class BossUltimate : MonoBehaviour
         int i = 0;
         for (float y = -Radius + w * 0.5f; y < Radius; y += w, i++)
         {
-            if (i % 2 != odd) continue;
+            if (i % 3 != odd) continue;
             float half = Mathf.Sqrt(Mathf.Max(0f, Radius * Radius - y * y));
             Vector3 a = center + new Vector3(-half, y), b = center + new Vector3(half, y);
             rows.Add((a, b));
-            Hostile.Line(a, b, w, 1.1f, new Color(acid.r, acid.g, acid.b, 0.75f));
-            Warn((a + b) * 0.5f, 1.1f, 1.3f);
+            Hostile.Line(a, b, w, 1.5f, new Color(acid.r, acid.g, acid.b, 0.75f));
+            Warn((a + b) * 0.5f, 1.5f, 1.3f);
         }
-        yield return new WaitForSeconds(1.1f);
+        yield return new WaitForSeconds(1.5f);
         PlayerController p = Hostile.Player;
         foreach (var r in rows)
         {
@@ -601,7 +602,7 @@ public class BossUltimate : MonoBehaviour
         DomainBall b = g.AddComponent<DomainBall>();
         b.center = center;
         b.radius = Radius - 0.6f;
-        b.velocity = Random.insideUnitCircle.normalized * 7f;
+        b.velocity = Random.insideUnitCircle.normalized * 5.5f;
         b.damage = 15f * Power;
         b.life = Mathf.Max(1f, life);
         return g;
