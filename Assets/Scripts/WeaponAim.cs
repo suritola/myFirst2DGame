@@ -7,7 +7,11 @@ public class WeaponAim
 {
     readonly SpecialAbilities owner;
     readonly List<GameObject> keep = new List<GameObject>();       // 조준이 끝날 때 지울 것
-    readonly List<GameObject> frame = new List<GameObject>();      // 매 프레임 새로 그리는 것
+    readonly List<FxAnim> frame = new List<FxAnim>();              // 매 프레임 새로 그리는 것 (다시 씀)
+    readonly List<GameObject> bolts = new List<GameObject>();      // 매 프레임 새로 만드는 번개
+    readonly List<Collider2D> hits = new List<Collider2D>(32);
+    readonly List<Vector3> pts = new List<Vector3>(16);
+    int drawn;
     readonly List<LineRenderer> lines = new List<LineRenderer>();
     readonly List<FxAnim> orbs = new List<FxAnim>();
     FxAnim rune, ghost, cloud, reticle;
@@ -101,9 +105,18 @@ public class WeaponAim
     public void Update(List<EnermyController> targets, float charge)
     {
         age += Time.unscaledDeltaTime;
-        foreach (GameObject g in frame) if (g != null) Object.Destroy(g);
-        frame.Clear();
+        foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);
+        bolts.Clear();
+        drawn = 0;
         foreach (LineRenderer l in lines) l.enabled = false;
+        DrawWeapon(targets, charge);
+        // 이번 프레임에 안 쓴 표시는 꺼 둠
+        for (int i = drawn; i < frame.Count; i++)
+            if (frame[i] != null && frame[i].gameObject.activeSelf) frame[i].gameObject.SetActive(false);
+    }
+
+    void DrawWeapon(List<EnermyController> targets, float charge)
+    {
         float pulse = 0.6f + 0.4f * Mathf.Sin(age * 10f);
         Vector3 p = Player.position;
         Vector3 mouse = owner.MouseWorldPos;
@@ -124,18 +137,18 @@ public class WeaponAim
                 {
                     Vector2 d = Quaternion.Euler(0, 0, -half + 2f * half * i / seg) * dir;
                     float a = 0.45f + 0.55f * Mathf.Repeat(i * 0.2f - age * 2.5f, 1f);
-                    Frame(Fx.Play("fx_trail_dot", p + (Vector3)(d * range), 0.6f, new Color(fire.r, fire.g, fire.b, a), 1f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 24, true));
+                    Draw("fx_trail_dot", p + (Vector3)(d * range), 0.6f, new Color(fire.r, fire.g, fire.b, a), Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 24);
                 }
                 if (Random.value < 0.6f && SpecialAbilities.GlowSprite != null)
                 {
                     Vector2 d = Quaternion.Euler(0, 0, Random.Range(-half, half)) * dir;
                     FlameParticle.Spawn(SpecialAbilities.GlowSprite, p + (Vector3)(d * Random.Range(2f, range)), d * 2f, 0.4f, 0.05f, 0.35f, false);
                 }
-                foreach (Collider2D col in Physics2D.OverlapCircleAll(p, range))
+                foreach (Collider2D col in Specials.Overlap(p, range, hits))
                 {
                     if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                     if (Vector2.Angle(dir, col.transform.position - p) > half) continue;
-                    Frame(Fx.Play("fx_reticle", col.transform.position, 1.8f, new Color(1f, 0.6f, 0.2f), 1f, age * 120f, 26, true));
+                    Draw("fx_reticle", col.transform.position, 1.8f, new Color(1f, 0.6f, 0.2f), age * 120f, 26);
                 }
                 break;
             }
@@ -150,11 +163,11 @@ public class WeaponAim
                     reticle.transform.position = mouse;
                     reticle.transform.localScale = Vector3.one * (3.5f - 1.2f * charge) / reticle.sr.sprite.bounds.size.y;
                 }
-                foreach (Collider2D col in Physics2D.OverlapCircleAll((m + end) * 0.5f, 23f))
+                foreach (Collider2D col in Specials.Overlap((m + end) * 0.5f, 23f, hits))
                 {
                     if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                     if (Hostile.DistanceToSegment(col.transform.position, m, end) > 1.5f) continue;
-                    Frame(Fx.Play("fx_reticle", col.transform.position, 2.2f, C, 1f, age * 200f, 26, true));
+                    Draw("fx_reticle", col.transform.position, 2.2f, C, age * 200f, 26);
                 }
                 break;
             }
@@ -180,9 +193,9 @@ public class WeaponAim
                 {
                     float ang = (i * 360f / n + age * 40f) * Mathf.Deg2Rad;
                     Vector3 at = mouse + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang)) * (4.8f - 0.3f * Mathf.Repeat(age * 2f + i * 0.1f, 1f));
-                    Frame(Fx.Play("fx_trail_dot", at, 0.6f, new Color(1f, 0.5f, 0.15f, 0.5f + 0.4f * pulse), 1f, ang * Mathf.Rad2Deg + 180f, 24, true));
+                    Draw("fx_trail_dot", at, 0.6f, new Color(1f, 0.5f, 0.15f, 0.5f + 0.4f * pulse), ang * Mathf.Rad2Deg + 180f, 24);
                 }
-                foreach (Collider2D col in Physics2D.OverlapCircleAll(mouse, 4.8f))
+                foreach (Collider2D col in Specials.Overlap(mouse, 4.8f, hits))
                     if (col.CompareTag("enermy") && Random.value < 0.3f && SpecialAbilities.GlowSprite != null)
                         FlameParticle.Spawn(SpecialAbilities.GlowSprite, col.transform.position, ((Vector2)(mouse - col.transform.position)).normalized * 3f, 0.4f, 0.04f, 0.25f, false);
                 break;
@@ -211,24 +224,25 @@ public class WeaponAim
                 for (int i = 1; i < targets.Count; i++)
                 {
                     if (targets[i - 1] == null || targets[i] == null) continue;
-                    if (Random.value < 0.35f) Frame(Fx.Bolt(targets[i - 1].transform.position, targets[i].transform.position, 0.7f, C, 0.08f));
+                    if (Random.value < 0.35f) Bolt(Fx.Bolt(targets[i - 1].transform.position, targets[i].transform.position, 0.7f, C, 0.08f));
                     n++;
                 }
                 if (targets.Count > 0 && targets[0] != null && Random.value < 0.3f)
-                    Frame(Fx.Bolt(p + Vector3.up * 6f, targets[0].transform.position, 0.9f, C, 0.08f));
+                    Bolt(Fx.Bolt(p + Vector3.up * 6f, targets[0].transform.position, 0.9f, C, 0.08f));
                 break;
             }
             case SpecialAbilities.ScytheId:
             {
                 // 베어 나갈 순서대로 이어지는 경로
                 Color soul = new Color(0.8f, 0.55f, 1f);
-                List<Vector3> pts = new List<Vector3> { p };
+                pts.Clear();
+                pts.Add(p);
                 foreach (EnermyController t in targets) if (t != null && !t.IsDead) pts.Add(t.transform.position);
                 for (int i = 1; i < pts.Count; i++)
                 {
                     Dots(pts[i - 1], pts[i], soul, 0.75f, 0.6f);
                     float spin = -age * 540f + i * 40f;
-                    Frame(Fx.Play("fx_scythe_ghost", pts[i], 1.9f + 0.2f * pulse, Color.white, 1f, spin, 27, true));
+                    Draw("fx_scythe_ghost", pts[i], 1.9f + 0.2f * pulse, Color.white, spin, 27);
                 }
                 if (pts.Count > 1) Dots(pts[pts.Count - 1], p, new Color(soul.r, soul.g, soul.b, 0.45f), 1.1f, 0.45f);    // 제자리로 돌아오는 길
                 break;
@@ -244,7 +258,7 @@ public class WeaponAim
                     {
                         Vector3 at = p + (Vector3)(dir * row * 2.6f + side * c * 2.6f);
                         float glow = 0.5f + 0.4f * Mathf.Sin(age * 10f - row * 0.8f);
-                        Frame(Fx.Play("fx_target_rune", at, 3.6f, new Color(1f, 0.5f, 0.15f, glow), 1f, age * 90f * (c == 0 ? 1f : -1f), 24, true));
+                        Draw("fx_target_rune", at, 3.6f, new Color(1f, 0.5f, 0.15f, glow), age * 90f * (c == 0 ? 1f : -1f), 24);
                         li++;
                     }
                 break;
@@ -252,9 +266,29 @@ public class WeaponAim
         }
     }
 
-    void Frame(FxAnim a)
+    // 매 프레임 다시 그리는 표시: 지난 프레임에 쓴 것을 차례로 다시 씀 (모자랄 때만 새로 만듦)
+    void Draw(string name, Vector3 pos, float size, Color c, float rotation, int order)
     {
-        if (a != null) frame.Add(a.gameObject);
+        if (drawn < frame.Count && Fx.Reuse(frame[drawn], name, pos, size, c, 1f, rotation, order, true))
+        {
+            drawn++;
+            return;
+        }
+        FxAnim a = Fx.Play(name, pos, size, c, 1f, rotation, order, true);
+        if (a == null) return;
+        if (drawn < frame.Count)
+        {
+            if (frame[drawn] != null) Object.Destroy(frame[drawn].gameObject);
+            frame[drawn] = a;
+        }
+        else frame.Add(a);
+        drawn++;
+    }
+
+    // 번개는 짧게 살다 스스로 사라짐 (다음 프레임에 지움)
+    void Bolt(FxAnim a)
+    {
+        if (a != null) bolts.Add(a.gameObject);
     }
 
     // a → b 방향을 가리키는 화살촉이 흘러가는 점선 (fx_trail_dot)
@@ -269,16 +303,18 @@ public class WeaponAim
         {
             float k = s / len;
             float alpha = c.a * Mathf.Lerp(0.55f, 1f, Mathf.Sin(k * Mathf.PI));
-            Frame(Fx.Play("fx_trail_dot", a + d * k, size, new Color(c.r, c.g, c.b, alpha), 1f, rot, 24, true));
+            Draw("fx_trail_dot", a + d * k, size, new Color(c.r, c.g, c.b, alpha), rot, 24);
         }
     }
 
     public void End()
     {
         foreach (GameObject g in keep) if (g != null) Object.Destroy(g);
-        foreach (GameObject g in frame) if (g != null) Object.Destroy(g);
+        foreach (FxAnim a in frame) if (a != null) Object.Destroy(a.gameObject);
+        foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);
         keep.Clear();
         frame.Clear();
+        bolts.Clear();
         lines.Clear();
         orbs.Clear();
         rune = ghost = cloud = reticle = null;

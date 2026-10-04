@@ -1880,8 +1880,7 @@ public partial class SpecialAbilities : MonoBehaviour
     {
         // 번쩍임 효과를 끄면 섬광을 옅게
         if (!GameSettings.Flashes) color.a *= 0.35f;
-        GameObject f = MakeSprite("Flash", glowSprite, pos, size / 8f, color, "Effect", 3);
-        f.AddComponent<FadeOut>().duration = duration;
+        FadeSprite.Spawn("Flash", glowSprite, pos, size / 8f, color, "Effect", 3, duration);
     }
 
     void DrawLine(Vector3 a, Vector3 b, Color color, float duration)
@@ -2041,28 +2040,52 @@ public class FlameParticle : MonoBehaviour
     bool ember;
     SpriteRenderer sr;
 
+    // 다 탄 입자는 지우지 않고 꺼 두었다가 다시 씀 (화염 방사 · 폭발마다 수십 개씩 만들고 지우지 않게)
+    static readonly Stack<FlameParticle> pool = new Stack<FlameParticle>();
+    static int effectLayer = -1;
+
+    static FlameParticle Take(string name, Sprite sprite, Vector3 pos, float scale, Color color, int order)
+    {
+        FlameParticle p = null;
+        while (pool.Count > 0 && p == null) p = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        if (p == null)
+        {
+            GameObject go = SpecialAbilities.MakeSprite(name, sprite, pos, scale, color, "Effect", order);
+            p = go.AddComponent<FlameParticle>();
+            p.sr = go.GetComponent<SpriteRenderer>();
+            return p;
+        }
+        if (effectLayer < 0) effectLayer = SortingLayer.NameToID("Effect");
+        p.sr.sprite = sprite;
+        p.sr.color = color;
+        p.sr.sortingLayerID = effectLayer;
+        p.sr.sortingOrder = order;
+        p.transform.position = pos;
+        p.transform.localScale = Vector3.one * scale;
+        p.age = 0f;
+        p.smoke = p.ember = false;
+        p.gameObject.SetActive(true);
+        return p;
+    }
+
     public static void Spawn(Sprite sprite, Vector3 pos, Vector2 velocity, float life, float startScale, float endScale, bool smoke)
     {
-        GameObject go = SpecialAbilities.MakeSprite(smoke ? "Smoke" : "Flame", sprite, pos, startScale, Color.white, "Effect", smoke ? 1 : 4);
-        FlameParticle p = go.AddComponent<FlameParticle>();
+        FlameParticle p = Take(smoke ? "Smoke" : "Flame", sprite, pos, startScale, Color.white, smoke ? 1 : 4);
         p.velocity = velocity;
         p.life = life;
         p.startScale = startScale;
         p.endScale = endScale;
         p.smoke = smoke;
-        p.sr = go.GetComponent<SpriteRenderer>();
         p.Tint(0f);
     }
 
     public static void SpawnEmber(Sprite sprite, Vector3 pos, Vector2 velocity)
     {
-        GameObject go = SpecialAbilities.MakeSprite("Ember", sprite, pos, 0.025f, new Color(1f, 0.9f, 0.5f), "Effect", 5);
-        FlameParticle p = go.AddComponent<FlameParticle>();
+        FlameParticle p = Take("Ember", sprite, pos, 0.025f, new Color(1f, 0.9f, 0.5f), 5);
         p.velocity = velocity;
         p.life = Random.Range(0.4f, 0.7f);
         p.startScale = p.endScale = 0.025f;
         p.ember = true;
-        p.sr = go.GetComponent<SpriteRenderer>();
     }
 
     void Tint(float k)
@@ -2094,7 +2117,11 @@ public class FlameParticle : MonoBehaviour
         if (ember) sr.color = new Color(1f, Random.Range(0.6f, 0.95f), 0.4f, 1f - k);
         else Tint(k);
 
-        if (k >= 1f) Destroy(gameObject);
+        if (k >= 1f)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
 
@@ -2116,8 +2143,7 @@ public class Homing : MonoBehaviour
         if (trail >= 0.03f && SpecialAbilities.GlowSprite != null)
         {
             trail = 0f;
-            GameObject t = SpecialAbilities.MakeSprite("SeekerTrail", SpecialAbilities.GlowSprite, transform.position, 0.06f, new Color(0.75f, 0.5f, 1f, 0.55f), "Effect", 4);
-            t.AddComponent<FadeOut>().duration = 0.3f;
+            FadeSprite.Spawn("SeekerTrail", SpecialAbilities.GlowSprite, transform.position, 0.06f, new Color(0.75f, 0.5f, 1f, 0.55f), "Effect", 4, 0.3f);
         }
         Transform target = Specials.NearestEnemy(transform.position, 20f);
         if (target == null) return;
@@ -2257,8 +2283,7 @@ public class Grenade : MonoBehaviour
         Sprite glow = sr.sprite;
 
         // 하얗게 달아오른 중심 섬광
-        GameObject core = SpecialAbilities.MakeSprite("GrenadeCore", glow, target, radius * 1.1f / 8f, new Color(1f, 0.97f, 0.8f, 1f), "Effect", 6);
-        core.AddComponent<FadeOut>().duration = 0.14f;
+        FadeSprite.Spawn("GrenadeCore", glow, target, radius * 1.1f / 8f, new Color(1f, 0.97f, 0.8f, 1f), "Effect", 6, 0.14f);
         // 두 겹의 충격파
         ShockRing.Spawn(target, radius * 0.2f, radius * 1.2f, 0.3f, new Color(1f, 0.8f, 0.4f, 0.95f), mini ? 0.2f : 0.35f);
         ShockRing.Spawn(target, radius * 0.1f, radius * 0.9f, 0.5f, new Color(0.8f, 0.2f, 0.05f, 0.8f), mini ? 0.3f : 0.6f);
@@ -2275,8 +2300,7 @@ public class Grenade : MonoBehaviour
             FlameParticle.Spawn(glow, target + (Vector3)(Random.insideUnitCircle * radius * 0.5f), Vector2.up * Random.Range(1.5f, 3f) + Random.insideUnitCircle,
                                 Random.Range(0.9f, 1.4f), 0.1f, Random.Range(0.4f, 0.7f), true);
         // 그을음 자국
-        GameObject scorch = SpecialAbilities.MakeSprite("Scorch", glow, target, radius * 1.6f / 8f, new Color(0.12f, 0.04f, 0.02f, 0.55f), "Background", 6);
-        scorch.AddComponent<FadeOut>().duration = 3f;
+        FadeSprite.Spawn("Scorch", glow, target, radius * 1.6f / 8f, new Color(0.12f, 0.04f, 0.02f, 0.55f), "Background", 6, 3f);
 
         if (!mini)
         {
@@ -2408,6 +2432,62 @@ public class FadeOut : MonoBehaviour
         sr.color = new Color(c.r, c.g, c.b, c.a * (1f - k));
         transform.localScale = s * (0.8f + 0.4f * k);
         if (k >= 1f) Destroy(gameObject);
+    }
+}
+
+// 옅어지며 사라지는 빛 조각 (총알 꼬리 · 섬광 · 터짐): MakeSprite + FadeOut 과 보이는 모습이 같음
+// 다 사라지면 지우지 않고 꺼 두었다가 다시 씀 (총알마다 초당 수십 개씩 만들고 지우지 않게)
+public class FadeSprite : MonoBehaviour
+{
+    static readonly Stack<FadeSprite> pool = new Stack<FadeSprite>();
+    static readonly Dictionary<string, int> layerIds = new Dictionary<string, int>();
+
+    SpriteRenderer sr;
+    float duration, t;
+    Color c;
+    Vector3 s;
+
+    public static void Spawn(string name, Sprite sprite, Vector3 pos, float scale, Color color, string layer, int order, float duration)
+    {
+        FadeSprite f = null;
+        while (pool.Count > 0 && f == null) f = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        if (f == null)
+        {
+            GameObject go = new GameObject(name);
+            f = go.AddComponent<FadeSprite>();
+            f.sr = go.AddComponent<SpriteRenderer>();
+        }
+        if (!layerIds.TryGetValue(layer, out int layerId)) layerIds[layer] = layerId = SortingLayer.NameToID(layer);
+        f.sr.sprite = sprite;
+        f.sr.sortingLayerID = layerId;
+        f.sr.sortingOrder = order;
+        f.c = color;
+        f.s = Vector3.one * scale;
+        f.duration = Mathf.Max(0.0001f, duration);
+        f.t = 0f;
+        Transform tr = f.transform;
+        tr.position = pos;
+        tr.rotation = Quaternion.identity;
+        f.Apply(0f);
+        f.gameObject.SetActive(true);
+    }
+
+    void Apply(float k)
+    {
+        sr.color = new Color(c.r, c.g, c.b, c.a * (1f - k));
+        transform.localScale = s * (0.8f + 0.4f * k);
+    }
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / duration);
+        Apply(k);
+        if (k >= 1f)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
 

@@ -34,9 +34,8 @@ public class BulletGlow : MonoBehaviour
         if (trail >= 0.025f)
         {
             trail = 0f;
-            GameObject t = SpecialAbilities.MakeSprite("BulletTrail", SpecialAbilities.GlowSprite, transform.position, 0.09f,
-                                                       new Color(color.r, color.g, color.b, 0.45f), "Effect", 2);
-            t.AddComponent<FadeOut>().duration = 0.18f;
+            FadeSprite.Spawn("BulletTrail", SpecialAbilities.GlowSprite, transform.position, 0.09f,
+                             new Color(color.r, color.g, color.b, 0.45f), "Effect", 2, 0.18f);
         }
     }
 

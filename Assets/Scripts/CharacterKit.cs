@@ -806,8 +806,10 @@ public partial class CharacterKit : MonoBehaviour
         {
             // 쳐내기: 휘두르는 범위 안의 적 투사체를 베어 없앰
             int parried = 0;
-            foreach (HostileProjectile hp in FindObjectsByType<HostileProjectile>(FindObjectsSortMode.None))
+            for (int i = HostileProjectile.Live.Count - 1; i >= 0; i--)
             {
+                HostileProjectile hp = HostileProjectile.Live[i];
+                if (hp == null) continue;
                 Vector2 to = hp.transform.position - origin;
                 if (to.magnitude > reach + 0.5f || (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half + 10f)) continue;
                 Fx.Spawn("fx_spark", hp.transform.position, 1.2f, new Color(1f, 0.95f, 0.6f), 24f);

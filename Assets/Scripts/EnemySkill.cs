@@ -625,12 +625,10 @@ public static class Hostile
             Fx.Spawn("fx_spark", pos, radius * 1.2f, color, 18f);
         }
         if (Glow == null) return;
-        GameObject f = SpecialAbilities.MakeSprite("Burst", Glow, pos, radius * 2f / 8f, color, "Effect", 3);
-        f.AddComponent<FadeOut>().duration = 0.3f;
+        FadeSprite.Spawn("Burst", Glow, pos, radius * 2f / 8f, color, "Effect", 3, 0.3f);
         ShockRing.Spawn(pos, radius * 0.3f, radius * 1.1f, 0.3f, color, 0.3f);
         ShockRing.Spawn(pos, radius * 0.1f, radius * 0.8f, 0.45f, Color.white, 0.15f);
-        GameObject core = SpecialAbilities.MakeSprite("BurstCore", Glow, pos, radius * 0.8f / 8f, new Color(1f, 1f, 1f, 0.9f), "Effect", 4);
-        core.AddComponent<FadeOut>().duration = 0.12f;
+        FadeSprite.Spawn("BurstCore", Glow, pos, radius * 0.8f / 8f, new Color(1f, 1f, 1f, 0.9f), "Effect", 4, 0.12f);
         for (int i = 0; i < 8; i++) SoulWisp.Spawn(pos, pos + (Vector3)(Random.insideUnitCircle.normalized * radius * 1.6f), color, true);
         if (!fire) return;
         for (int i = 0; i < 10; i++)
@@ -875,6 +873,11 @@ public class HostileProjectile : MonoBehaviour
     SpriteRenderer body;
     GameObject core;
 
+    // 날고 있는 탄 목록 (쳐내기가 씬 전체를 뒤지지 않게)
+    public static readonly System.Collections.Generic.List<HostileProjectile> Live = new System.Collections.Generic.List<HostileProjectile>();
+    void OnEnable() => Live.Add(this);
+    void OnDisable() => Live.Remove(this);
+
     void Start()
     {
         body = GetComponent<SpriteRenderer>();
@@ -898,8 +901,7 @@ public class HostileProjectile : MonoBehaviour
         {
             trail = 0f;
             Color c = body.color;
-            GameObject tr = SpecialAbilities.MakeSprite("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.8f, new Color(c.r, c.g, c.b, 0.5f), "Effect", 8);
-            tr.AddComponent<FadeOut>().duration = 0.25f;
+            FadeSprite.Spawn("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.8f, new Color(c.r, c.g, c.b, 0.5f), "Effect", 8, 0.25f);
         }
 
         if (fiery && Hostile.Glow != null)

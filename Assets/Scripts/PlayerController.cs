@@ -656,13 +656,15 @@ void Shoot()
     // 한 마리씩 타겟팅
     // =====================================
 
+    readonly List<Collider2D> targetHits = new List<Collider2D>(64);
+
     void FindNextTarget()
     {
         // 한 번에 조준할 수 있는 적 수 (스킬 강화로 늘어남)
         int limit = special != null ? special.MaxTargets(maxTargets) : maxTargets;
         if (targets.Count >= limit) return;
 
-        Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position,targetRange);
+        List<Collider2D> enemies = Specials.Overlap(transform.position, targetRange, targetHits);
 
         EnermyController closestEnemy = null;
 

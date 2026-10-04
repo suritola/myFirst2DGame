@@ -97,6 +97,25 @@ public static class Fx
             a.sr = fsr;
             a.pooled = true;
         }
+        Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
+        a.gameObject.SetActive(true);
+    }
+
+    // 이미 있는 이펙트를 다른 모습으로 처음부터 다시 재생 (매 프레임 다시 그리는 조준 표시 등)
+    // 보이는 모습은 Play 와 같음. 시트가 없으면 false
+    public static bool Reuse(FxAnim a, string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
+                             float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
+    {
+        Sprite[] frames = Frames(name);
+        if (a == null || frames == null || frames.Length == 0) return false;
+        Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
+        if (!a.gameObject.activeSelf) a.gameObject.SetActive(true);
+        return true;
+    }
+
+    static void Setup(FxAnim a, string name, Sprite[] frames, Vector3 pos, float size, Color? color, float fps,
+                      float rotation, int order, bool loop, float life, string layer)
+    {
         size = Visible(name, size);
         Transform tr = a.transform;
         tr.position = new Vector3(pos.x, pos.y, 0f);
@@ -116,7 +135,6 @@ public static class Fx
         a.spin = 0f;
         a.follow = null;
         a.Restart();
-        a.gameObject.SetActive(true);
     }
 
     // 두 점 사이를 잇는 도트 빔 (fx_beam을 길이 방향으로 늘림)
