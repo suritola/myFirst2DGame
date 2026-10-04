@@ -28,6 +28,8 @@ public class ESCmenu : MonoBehaviour
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open) return;
+        // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
+        if (confirm != null) { CloseConfirm(); return; }
         if (isShopOpen)
         {
             shop.isShopOpen = false;
@@ -52,8 +54,30 @@ public class ESCmenu : MonoBehaviour
     {
         if (isEscOpen) ToggleEsc();
     }
+    // 메인 메뉴로: 진행 중인 판이 끝나므로 한 번 더 묻기
+    GameObject confirm;
+
     public void onPressMainMenu()
     {
+        if (confirm != null) return;
+        Transform root = escMenu != null ? escMenu.transform.root : transform.root;
+        RectTransform win = UIKit.Modal(root, "ConfirmMainMenu", new Vector2(780f, 340f), out confirm);
+        SoulTreeUI.OnTop(confirm, 620);
+        UIKit.Text(win, "정말로 메인 메뉴로 가시겠습니까?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
+        UIKit.Text(win, "지금 진행 중인 판이 끝납니다.", 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
+        UIKit.MakeButton(win, "메인 메뉴로", new Vector2(-150f, -90f), new Vector2(260f, 76f), GoMainMenu, 28f);
+        UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+    }
+
+    void CloseConfirm()
+    {
+        if (confirm != null) Destroy(confirm);
+        confirm = null;
+    }
+
+    void GoMainMenu()
+    {
+        CloseConfirm();
         SceneManager.LoadScene("MainMenu");
         Time.timeScale = 1f;
     }
@@ -64,6 +88,7 @@ public class ESCmenu : MonoBehaviour
 
     void ToggleEsc()
     {
+        CloseConfirm();
         isEscOpen = !isEscOpen;
         IsOpen = isEscOpen;
 

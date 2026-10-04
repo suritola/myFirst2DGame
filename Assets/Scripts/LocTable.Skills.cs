@@ -8,6 +8,8 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        A("정말로 메인 메뉴로 가시겠습니까?", "Really return to the main menu?", "本当にメインメニューに戻りますか？", "确定要返回主菜单吗？");
+        A("지금 진행 중인 판이 끝납니다.", "Your current run will end.", "今のプレイは終了します。", "当前这一局将会结束。");
         A("스킬 진화", "Skill Evolution", "スキル進化", "技能进化");
         A("스킬 진화 도감", "Skill Evolution Codex", "スキル進化図鑑", "技能进化图鉴");
         A("클릭하거나 [", "Click or press [", "クリックするか [", "点击或按 [");
