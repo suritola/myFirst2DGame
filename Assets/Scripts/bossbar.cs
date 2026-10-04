@@ -59,9 +59,10 @@ public class bossbar : MonoBehaviour
             bool split = liveSlimes.Exists(s => s.slimeGen >= 2);
             if (split && liveSlimes.Count > 0)
             {
-                SetBar(barRect, nameText, liveSlimes[0], 0);
+                // 슬라임마다 자기 체력 (각자 따로 깎이고, 이름 번호는 그 개체에 고정)
+                SetBar(barRect, nameText, liveSlimes[0]);
                 ShowExtraBars(liveSlimes.Count - 1);
-                for (int i = 1; i < liveSlimes.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveSlimes[i], i);
+                for (int i = 1; i < liveSlimes.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveSlimes[i]);
                 wasMulti = true;
                 return;
             }
@@ -83,11 +84,11 @@ public class bossbar : MonoBehaviour
     readonly List<RectTransform> extraFills = new List<RectTransform>();
     readonly List<TMP_Text> extraNames = new List<TMP_Text>();
 
-    void SetBar(RectTransform fill, TMP_Text label, bosss s, int index)
+    void SetBar(RectTransform fill, TMP_Text label, bosss s)
     {
         float ratio = s.setEnemyHP > 0 ? Mathf.Clamp01(s.EnemyHealth / s.setEnemyHP) : 0f;
         if (fill != null) fill.sizeDelta = new Vector2(ratio * MaxBarX, BarY);
-        string n = BossName(2) + " " + (index + 1);
+        string n = BossName(2) + " " + (s.barSlot + 1) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
         if (label != null && label.text != n) label.text = n;
     }
 
