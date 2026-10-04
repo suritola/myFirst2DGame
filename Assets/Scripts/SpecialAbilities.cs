@@ -2064,6 +2064,7 @@ public class FlameParticle : MonoBehaviour
         p.transform.localScale = Vector3.one * scale;
         p.age = 0f;
         p.smoke = p.ember = false;
+        p.spawnFrame = Time.frameCount;
         p.gameObject.SetActive(true);
         return p;
     }
@@ -2104,8 +2105,12 @@ public class FlameParticle : MonoBehaviour
         sr.color = c;
     }
 
+    int spawnFrame = -1;
+
     void Update()
     {
+        // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
+        if (Time.frameCount == spawnFrame) return;
         age += Time.deltaTime;
         float k = Mathf.Clamp01(age / life);
         // 앞으로 나가다 점점 느려지고, 끝에서는 위로 떠오름
@@ -2468,9 +2473,14 @@ public class FadeSprite : MonoBehaviour
         Transform tr = f.transform;
         tr.position = pos;
         tr.rotation = Quaternion.identity;
-        f.Apply(0f);
+        // 첫 프레임은 MakeSprite 그대로 (FadeOut 도 다음 프레임부터 흐려지고 작아짐)
+        f.sr.color = color;
+        tr.localScale = f.s;
+        f.spawnFrame = Time.frameCount;
         f.gameObject.SetActive(true);
     }
+
+    int spawnFrame = -1;
 
     void Apply(float k)
     {
@@ -2480,6 +2490,8 @@ public class FadeSprite : MonoBehaviour
 
     void Update()
     {
+        // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
+        if (Time.frameCount == spawnFrame) return;
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
         Apply(k);
