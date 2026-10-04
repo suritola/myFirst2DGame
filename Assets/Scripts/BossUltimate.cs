@@ -125,6 +125,8 @@ public class BossUltimate : MonoBehaviour
         yield return Cutscene(info.title, info.line, info.color);
 
         center = Hostile.ClampArena(boss.transform.position);
+        // 멈췄던 화면이 풀리는 순간 옆의 잡몹 · 날아오던 탄 · 보스 몸통에 한꺼번에 맞지 않게 (결계가 다 펼쳐지고 1.2초까지 무적)
+        if (player != null) player.GrantInvincibility(2f);
         yield return Expand(info.color);
         float until = Time.time + Duration;
         int hurtBefore = PlayerController.HurtCount;
