@@ -1,0 +1,241 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+// 검사 고유 스킬 · 진화
+//   s.riposte 역습 · s.trail 검의 궤적 · s.bloodguard 혈갑 · s.whirl 회전 가속 · s.will 강철 의지
+//   s.dance 검무 · s.crack 균열 · s.giant 거인 사냥꾼 · s.echo 잔향 베기 · s.soul 영혼 흡수
+public partial class SignatureSkills
+{
+    static readonly Color Steel = new Color(0.75f, 0.88f, 1f);
+    static readonly Color Blood = new Color(1f, 0.3f, 0.35f);
+
+    float lastHurt = -99f;
+    float shield;
+    float rateUntil;
+    float rateMul = 1f;
+    int danceStacks;
+    float danceUntil;
+    int souls;
+    bool counterReady;
+    readonly Dictionary<GameObject, int> crackHits = new Dictionary<GameObject, int>();
+
+    // ---------------- 게임 코드가 부르는 검사 훅
+    // 베기 직전: 이번 베기 피해 배율 (영혼 흡수) · 반격 검기
+    public static float BeforeSwing(Vector3 origin, Vector2 dir) => Instance != null && Instance.who == CharacterId.Swordsman ? Instance.SwordBefore(origin, dir) : 1f;
+    public static void SwingHit(Collider2D c) { if (Instance != null && Instance.who == CharacterId.Swordsman && c != null) Instance.OnSwingHit(c); }
+    public static void AfterSwing(Vector3 origin, Vector2 dir, float reach, int hits) { if (Instance != null && Instance.who == CharacterId.Swordsman) Instance.OnAfterSwing(origin, dir, reach, hits); }
+    public static void Spin(Vector3 origin, float radius, float dmg, float charge) { if (Instance != null && Instance.who == CharacterId.Swordsman) Instance.OnSpin(origin, radius, dmg, charge); }
+    public static void Parried() { if (Instance != null && Instance.E("se.counter")) Instance.counterReady = true; }
+    // 광검무: 검무가 최대일 때 모든 베기가 강한 일격
+    public static bool ForceCombo => Instance != null && Instance.E("se.dance") && Instance.danceStacks >= 5 && Time.time < Instance.danceUntil;
+
+    float SwordBefore(Vector3 origin, Vector2 dir)
+    {
+        float mul = 1f;
+        int s = L("s.soul");
+        if (s > 0 && souls > 0)
+        {
+            mul += souls * V(s, 0.04f, 0.02f);
+            souls = 0;
+        }
+        if (counterReady)
+        {
+            counterReady = false;
+            Bullet b = Shot(origin + (Vector3)(dir * 0.8f), dir, Atk * 2.5f * mul, 999, 30f, 18f, "fx_swordwave", 4f, new Color(1f, 0.9f, 0.6f));
+            if (b != null) b.hitOnce = new HashSet<int>();
+            Fx.Spawn("fx_shock", origin, 5f, new Color(1f, 0.85f, 0.45f, 0.9f), 22f);
+            Hostile.Play("crack", 0.8f, 0.8f);
+            Hostile.Shake(0.15f);
+        }
+        return mul;
+    }
+
+    void OnSwingHit(Collider2D c)
+    {
+        GameObject g = c.gameObject;
+        // 혈갑: 벤 적마다 보호막
+        int bg = L("s.bloodguard");
+        if (bg > 0) shield = Mathf.Min(ShieldCap, shield + player.PlayerMaxHealth * 0.012f * (1 + bg));
+        // 검무: 벨 때마다 이동 속도 (한 번 휘두를 때 한 중첩)
+        if (L("s.dance") > 0 && !danceCounted)
+        {
+            danceCounted = true;
+            danceStacks = Time.time < danceUntil ? Mathf.Min(5, danceStacks + 1) : 1;
+            danceUntil = Time.time + 1.5f;
+        }
+        // 균열: 같은 적을 세 번 (거인 처단: 보스는 두 번)
+        int cr = L("s.crack");
+        if (cr > 0)
+        {
+            crackHits.TryGetValue(g, out int n);
+            n++;
+            int need = E("se.giant") && IsBoss(g) ? 2 : 3;
+            if (n >= need)
+            {
+                n = 0;
+                float dmg = Atk * V(cr, 0.8f, 0.4f);
+                Vector3 p = c.transform.position;
+                Deal(g, dmg, Vector3.zero, 0f);
+                if (E("se.giant")) Circle(p, 2.6f, dmg * 0.6f, 0.5f);
+                Fx.Spawn("fx_fissure", p, 2.4f, Color.white, 14f, Random.Range(0f, 360f), 14);
+                Fx.Spawn("fx_shock", p, 3f, new Color(1f, 0.8f, 0.5f, 0.9f), 24f);
+                Hostile.Play("crack", 0.45f, 1.3f);
+            }
+            if (g != null) crackHits[g] = n;
+            if (crackHits.Count > 200) crackHits.Clear();
+        }
+    }
+
+    bool danceCounted;
+    float ShieldCap => player.PlayerMaxHealth * V(L("s.bloodguard"), 0.1f, 0.05f) * (E("se.blood") ? 2f : 1f);
+
+    void OnAfterSwing(Vector3 origin, Vector2 dir, float reach, int hits)
+    {
+        danceCounted = false;
+        int tr = L("s.trail");
+        if (tr <= 0) return;
+        Vector3 at = origin + (Vector3)(dir * reach * 0.55f);
+        float r = reach * 0.55f;
+        float dmg = Atk * V(tr, 0.15f, 0.07f);
+        float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        SigZone z = Zone(at, r, 1f, 0.25f, zone => { foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f); });
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
+        if (a != null) a.transform.SetParent(z.transform, true);
+        if (E("se.trail"))
+            z.onEnd = zone =>
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    Vector2 d = Quaternion.Euler(0f, 0f, i * 60f + rot) * Vector2.right;
+                    Shot(zone.transform.position, d, Atk * 0.6f, 3, 22f, 10f, "fx_swordwave", 1.6f, Steel);
+                }
+                Hostile.Play("whoosh", 0.4f, 1.4f);
+            };
+    }
+
+    void OnSpin(Vector3 origin, float radius, float dmg, float charge)
+    {
+        int w = L("s.whirl");
+        if (w > 0)
+        {
+            rateMul = 1f + V(w, 0.2f, 0.1f);
+            rateUntil = Time.time + 1.5f + 2.5f * charge;
+        }
+        int ec = L("s.echo");
+        if (ec > 0) StartCoroutine(EchoSpin(origin, radius, dmg * V(ec, 0.4f, 0.15f)));
+        if (E("se.eye")) StartCoroutine(EyeOfStorm(3f));
+    }
+
+    IEnumerator EchoSpin(Vector3 origin, float radius, float dmg)
+    {
+        yield return new WaitForSeconds(0.45f);
+        if (!Alive) yield break;
+        float r = radius * 0.85f;
+        // 영혼 회오리: 흡수한 영혼만큼 커지고 강해짐, 쓴 영혼의 절반을 되돌려 줌
+        if (E("se.vortex") && souls > 0)
+        {
+            r *= 1f + 0.06f * souls;
+            dmg *= 1f + 0.12f * souls;
+            souls = souls / 2;
+        }
+        Vector3 p = transform.position;
+        Circle(p, r, dmg, 2f);
+        Fx.Spawn("fx_spinslash", p, r * 2.4f, new Color(0.8f, 0.9f, 1f, 0.7f), 22f);
+        Hostile.Play("slash", 0.6f, 1.2f);
+    }
+
+    IEnumerator EyeOfStorm(float seconds)
+    {
+        FxAnim t = Fx.Play("fx_tornado", transform.position, 9f, new Color(0.8f, 0.9f, 1f, 0.55f), 14f, 0f, 3, true, seconds);
+        if (t != null) t.follow = transform;
+        for (float time = 0f; time < seconds && Alive; time += 0.25f)
+        {
+            Vector3 p = transform.position;
+            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(p, 7f, hits)))
+            {
+                if (c == null || !c.CompareTag("enermy")) continue;
+                c.transform.position = Vector3.MoveTowards(c.transform.position, p, 1.2f);
+            }
+            Circle(p, 3f, Atk * 0.4f, 0f);
+            yield return new WaitForSeconds(0.25f);
+        }
+    }
+
+    float SwordOutgoing(GameObject target)
+    {
+        float mul = 1f;
+        int r = L("s.riposte");
+        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.4f, 0.2f);
+        int g = L("s.giant");
+        if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.12f, 0.08f);
+        return mul;
+    }
+
+    void SwordHit(GameObject target, float dmg, bool killed, bool proc) { }
+
+    void SwordKilled(Vector3 pos)
+    {
+        if (L("s.soul") > 0) souls = Mathf.Min(10, souls + 1);
+    }
+
+    float SwordTaken(float dmg)
+    {
+        if (shield <= 0f || dmg <= 0f) return dmg;
+        float absorbed = Mathf.Min(shield, dmg);
+        shield -= absorbed;
+        if (shield <= 0.01f)
+        {
+            shield = 0f;
+            if (E("se.blood"))
+            {
+                Vector3 p = transform.position;
+                Circle(p, 4.5f, Atk * 2f, 2.5f);
+                Fx.Spawn("fx_shock", p, 10f, Blood, 20f);
+                Fx.Spawn("fx_bleed", p, 4f, Color.white, 16f);
+                Hostile.Play("boom", 0.5f, 1.3f);
+            }
+        }
+        return dmg - absorbed;
+    }
+
+    void SwordHurt(float taken)
+    {
+        lastHurt = Time.time;
+        if (E("se.counter")) counterReady = true;
+    }
+
+    float SwordMove() => L("s.dance") > 0 && Time.time < danceUntil ? 1f + danceStacks * V(L("s.dance"), 0.04f, 0.02f) : 1f;
+    float SwordRate() => Time.time < rateUntil ? rateMul : 1f;
+
+    GameObject shieldGlow;
+
+    void SwordTick()
+    {
+        // 강철 의지: 회전 베기를 모으는 동안 주변 적을 끌어당김
+        int w = L("s.will");
+        CharacterKit k = Kit;
+        if (w > 0 && k != null && k.Charging)
+        {
+            Vector3 p = transform.position;
+            float r = V(w, 5f, 1f);
+            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(p, r, hits)))
+            {
+                if (c == null || !c.CompareTag("enermy")) continue;
+                if ((c.transform.position - p).sqrMagnitude < 1.4f) continue;
+                c.transform.position = Vector3.MoveTowards(c.transform.position, p, 2.5f * Time.deltaTime);
+            }
+        }
+        // 혈갑 보호막이 있으면 몸에 붉은 빛
+        bool show = shield > 0.5f;
+        if (show && shieldGlow == null && SpecialAbilities.GlowSprite != null)
+            shieldGlow = SpecialAbilities.MakeSprite("BloodGuard", SpecialAbilities.GlowSprite, transform.position, 0.3f, new Color(1f, 0.25f, 0.3f, 0.35f), "Effect", 1);
+        if (!show && shieldGlow != null) Destroy(shieldGlow);
+        if (shieldGlow != null)
+        {
+            shieldGlow.transform.position = transform.position;
+            float k2 = ShieldCap > 0f ? shield / ShieldCap : 0f;
+            shieldGlow.transform.localScale = Vector3.one * (0.2f + 0.15f * k2 + 0.02f * Mathf.Sin(Time.time * 6f));
+        }
+    }
+}

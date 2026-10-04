@@ -53,6 +53,8 @@ public class bosss : MonoBehaviour
 
     // 킹 슬라임 (bossKind 2): 쓰러질 때마다 분열 (1마리 → 2마리 → 3마리)
     [HideInInspector] public int slimeGen = 1;
+    // 분열한 슬라임마다 고정 번호 (보스바 줄 · 이름 「킹 슬라임 n」이 끝까지 이 개체를 따라감)
+    [HideInInspector] public int barSlot;
     static readonly List<bosss> slimes = new List<bosss>();
     static int gen2Deaths;
     static int gen3Spawned;
@@ -61,7 +63,6 @@ public class bosss : MonoBehaviour
     const int Gen3Hp = 280;
     // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
     static float slimeMul = 1f;
-    static int gen1Max = 2600;
     static int ScaledHp(int hp) => Mathf.RoundToInt(hp * slimeMul);
     // 난이도 배율을 이미 적용했는지 (분열 복제에는 적용된 값이 넘어감)
     [HideInInspector] public bool difficultyApplied;
@@ -88,6 +89,7 @@ public class bosss : MonoBehaviour
     {
         into.Clear();
         foreach (bosss s in slimes) if (s != null && !s.isDead) into.Add(s);
+        into.Sort((a, b) => a.barSlot.CompareTo(b.barSlot));
     }
 
     void Split()
@@ -104,6 +106,7 @@ public class bosss : MonoBehaviour
             BossSkills cloneSkills = clone.GetComponent<BossSkills>();
             if (cloneSkills != null) cloneSkills.airborne = false;
             bosss b = clone.GetComponent<bosss>();
+            b.barSlot = FreeSlot();
             // 바로 목록에 넣음: Start(다음 프레임) 전에 다른 슬라임이 쓰러지면 남은 체력이 0으로 계산돼 보스바가 꺼지던 문제
             slimes.Add(b);
             b.slimeGen = slimeGen + 1;
@@ -122,6 +125,17 @@ public class bosss : MonoBehaviour
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? Loc.T("킹 슬라임이 둘로 갈라졌다!") : Loc.T("슬라임이 또 갈라진다!"), 2f);
     }
     public bool IsDead => isDead;
+
+    // 살아 있는 슬라임이 쓰지 않는 가장 작은 번호
+    static int FreeSlot()
+    {
+        for (int n = 0; ; n++)
+        {
+            bool used = false;
+            foreach (bosss s in slimes) if (s != null && !s.isDead && s.barSlot == n) { used = true; break; }
+            if (!used) return n;
+        }
+    }
 
     void Summon(int count)
     {
@@ -145,7 +159,6 @@ public class bosss : MonoBehaviour
             // 보스는 처치 수와 상관없이 정해진 수만 나오므로 고정 배율
             expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul);
             coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul);
-            if (IsSlime && slimeGen == 1) gen1Max = setEnemyHP;
         }
         EnemyHealth = setEnemyHP;
 
@@ -183,16 +196,9 @@ public class bosss : MonoBehaviour
         if (isDead) return;
 
         bossbar.bossKind = bossKind;
-        if (IsSlime)
-        {
-            bossbar.MaxHealth = gen1Max + 2 * ScaledHp(Gen2Hp) + 3 * ScaledHp(Gen3Hp);
-            bossbar.NowHealth = SlimeRemaining();
-        }
-        else
-        {
-            bossbar.MaxHealth = setEnemyHP;
-            bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
-        }
+        // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
+        bossbar.MaxHealth = setEnemyHP;
+        bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
 
         if (player == null) return;
 
@@ -231,8 +237,11 @@ public class bosss : MonoBehaviour
         // 치명타: 보스도 모든 캐릭터의 공격 · 스킬에 치명타를 맞음 (거너 평타 총알은 쏠 때 이미 굴림)
         if (!SpecialAbilities.CritRolled && SpecialAbilities.SharedInstance != null) damage = SpecialAbilities.SharedInstance.RollCrit(damage);
 
+        damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (거인 사냥꾼 · 표식 …)
+
         // 체력 감소
         EnemyHealth -= damage;
+        SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         DamagePopup.Show(transform, damage, spriteRenderer);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 

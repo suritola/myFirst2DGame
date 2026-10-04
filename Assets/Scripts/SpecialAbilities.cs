@@ -2018,7 +2018,9 @@ public class Burn : MonoBehaviour
         if (tick >= 0.25f)
         {
             tick = 0f;
+            SignatureSkills.DotTick = true;        // 지속 피해 (맞힐 때 효과가 붙지 않게)
             Specials.Damage(gameObject, dps * 0.25f, Vector3.zero, 0f);
+            SignatureSkills.DotTick = false;
         }
     }
 

@@ -30,6 +30,11 @@ public class AbilityHUD : MonoBehaviour
 
     public Sprite GetIcon(int id)
     {
+        if (id >= 1000)
+        {
+            LevelShop.SkillEvo e = Shop != null ? Shop.EvoById(id) : null;
+            return e != null ? Resources.Load<Sprite>("Icons/ability_" + e.icon) : null;
+        }
         Sprite kit = LevelShop.KitIcon(id);
         if (kit != null) return kit;
         if (id == 5) return Resources.Load<Sprite>("Icons/ability_104");     // 코인 자석 (예전 그림이 핏방울처럼 보여서)
@@ -122,18 +127,55 @@ public class AbilityHUD : MonoBehaviour
         }
     }
 
+    LevelShop Shop => levelShop != null ? levelShop : (levelShop = FindFirstObjectByType<LevelShop>());
+
     string AbilityName(int id)
     {
-        if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
-        if (levelShop == null || id >= levelShop.ability_name.Length) return "";
-        return levelShop.ability_name[id];
+        if (Shop == null) return "";
+        if (id >= 1000) { LevelShop.SkillEvo e = Shop.EvoById(id); return e != null ? Loc.T(e.name) : ""; }
+        if (id >= Shop.ability_name.Length) return "";
+        return Shop.ability_name[id];
     }
 
     string AbilityDescription(int id)
     {
-        if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
-        if (levelShop == null) return "";
-        return levelShop.GetAbilityTooltip(id);
+        if (Shop == null) return "";
+        if (id >= 1000) { LevelShop.SkillEvo e = Shop.EvoById(id); return e != null ? LevelShop.EvoTooltip(e, CharacterData.Selected) : ""; }
+        return Shop.GetAbilityTooltip(id);
+    }
+
+    // 스킬 진화: 재료 칸들을 지우고 그 자리에 진화 칸 하나 (빛나는 테두리)
+    public void Merge(int[] parts, int evoId)
+    {
+        foreach (int p in parts)
+        {
+            if (!slots.TryGetValue(p, out Slot s)) continue;
+            Destroy(s.rect.gameObject);
+            slots.Remove(p);
+        }
+        Slot slot = CreateSlot(evoId, slots.Count);
+        slots.Add(evoId, slot);
+        slot.level = 0;
+        slot.label.text = Loc.T("진화");
+        slot.label.color = new Color(0.79f, 0.63f, 1f);
+        Image bg = slot.rect.GetComponent<Image>();
+        if (bg != null) bg.color = new Color(0.85f, 0.7f, 1f);
+        slot.rect.localScale = Vector3.one * 1.5f;
+        Relayout();
+        ApplyOpen();
+    }
+
+    void Relayout()
+    {
+        int i = 0;
+        foreach (Slot s in slots.Values)
+        {
+            int col = i % columns, row = i / columns;
+            s.rect.anchoredPosition = new Vector2(
+                ToggleWidth + spacing + slotSize.x * 0.5f + col * (slotSize.x + spacing),
+                -slotSize.y * 0.5f - row * (slotSize.y + spacing));
+            i++;
+        }
     }
 
     Slot CreateSlot(int id, int index)
@@ -157,7 +199,7 @@ public class AbilityHUD : MonoBehaviour
         bg.raycastTarget = true;   // 마우스를 올리면 설명 표시
 
         TooltipTrigger tip = slotGo.AddComponent<TooltipTrigger>();
-        tip.titleProvider = () => AbilityName(id) + "  Lv." + (slots.TryGetValue(id, out Slot s) ? s.level : 1);
+        tip.titleProvider = () => AbilityName(id) + (id >= 1000 ? "  ◆ " + Loc.T("진화") : "  Lv." + (slots.TryGetValue(id, out Slot s) ? s.level : 1));
         tip.bodyProvider = () => AbilityDescription(id);
 
         GameObject iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));

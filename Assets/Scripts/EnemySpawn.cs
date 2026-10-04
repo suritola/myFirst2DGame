@@ -85,6 +85,7 @@ public class EnemySpawner : MonoBehaviour
         {
             Destroy(coin);
             coin1.AddCoin(1 + playerC.bonusCoin);
+            SignatureSkills.CoinPicked(1 + playerC.bonusCoin);
         }
     }
 

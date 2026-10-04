@@ -287,9 +287,11 @@ public class EnermyController : MonoBehaviour
         if (isDead || !ready) return;
 
         if (DamageHook != null) damage = DamageHook(this, damage);
+        damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (위협 · 역습 · 표식 …)
 
         // 체력 감소
         EnemyHealth -= damage;
+        SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         DamagePopup.Show(transform, damage, spriteRenderer);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 

@@ -470,7 +470,7 @@ public class PlayerController : MonoBehaviour
 
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
         float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
-        if (!isSkillUsing) transform.Translate(move * speed * slowMul * kitMul * Time.fixedDeltaTime);
+        if (!isSkillUsing) transform.Translate(move * speed * slowMul * kitMul * SignatureSkills.MoveMul * Time.fixedDeltaTime);
     }
 
     // =====================================
@@ -484,6 +484,7 @@ public class PlayerController : MonoBehaviour
         isReloading = true;
         reload = 0f;
         special?.ReloadShockwave(transform.position);
+        SignatureSkills.ReloadStart();          // 탄피 지뢰 · 빈 주머니의 비
 
         if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
         else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
@@ -500,7 +501,12 @@ public class PlayerController : MonoBehaviour
         reload = 0f;
 
         isReloading = false;
+        SignatureSkills.ReloadEnd();            // 섬광 장전 · 속사 장전
     }
+
+    public bool IsReloading => isReloading;
+    // 속사 장전: 다음 발을 거의 바로 쏠 수 있게
+    public void QuickShot() => nextShootTime = Time.time + 0.05f;
 
     // =====================================
     // 일반 총알 발사
@@ -536,6 +542,7 @@ void Shoot()
         float spreadAngle = 10f;
 
         float bulletDamage = damage * damageMultiplier * MultiShotDamageRate(multiShot) * (cursed ? 3f : 1f);
+        SignatureSkills.Attacked(startPosition, direction);
 
         float shotRate = MultiShotDamageRate(multiShot);
 
@@ -914,6 +921,7 @@ void Shoot()
             if (coin != null)
             {
                 coin.AddCoin(1 + bonusCoin);
+                SignatureSkills.CoinPicked(1 + bonusCoin);      // 황금 시대 (스킬 진화)
                 // 한꺼번에 여러 개를 주우면 소리가 겹쳐 너무 커지므로: 0.07초에 한 번만, 연달아 주울수록 작게
                 float now = Time.unscaledTime;
                 coinStreak = now - lastCoinSound < 0.6f ? coinStreak + 1 : 0;
@@ -987,6 +995,8 @@ void Shoot()
         float taken = amount * GameMode.DamageMul * (1f - Mathf.Clamp(def, 0f, MaxDef));
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
         if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
+        taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
+        if (taken <= 0f) return true;
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())
@@ -1000,6 +1010,7 @@ void Shoot()
         PlayerHealth -= taken;
         ShowHurt(taken);
         special?.OnPlayerHurt();
+        SignatureSkills.Hurt(taken);
 
         if (PlayerHealth <= 0) StartCoroutine(DeathSequence());
 

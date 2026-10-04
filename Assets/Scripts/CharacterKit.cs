@@ -29,7 +29,8 @@ public partial class CharacterKit : MonoBehaviour
     bool swingAlt;
 
     public bool Busy => charging || Dashing;
-    public float AttackSpeedMul => FormRate;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
+    public bool Charging => charging;               // 우클릭을 모으는 중 (고유 스킬: 강철 의지 · 유리 비)
+    public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     public float MoveMul => 1f;
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
@@ -274,6 +275,7 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Rogue:
                 RogueThrow(start, dir, dmg, shots);          // 진화 형태 · 강화 (CharacterKit.Forms)
+                SignatureSkills.Attacked(start, dir);          // 회전 표창 · 그림자 표창
                 break;
             case CharacterId.Archer:
                 foreach (Vector2 d in Spread(dir, shots, 6f))
@@ -305,6 +307,7 @@ public partial class CharacterKit : MonoBehaviour
             comboCount++;
             if (comboCount >= (card[6] >= 2 ? 3 : 4)) { combo = true; comboCount = 0; }
         }
+        if (SignatureSkills.ForceCombo) combo = true;           // 광검무
         float reach = def.range * reachMul * (combo ? 1.4f : 1f) * SwingReachMul;
         float half = SwingHalf(Mathf.Min(180f, 50f + arcBonus + 12f * (shots - 1)));
         SwingFormBefore(dir);
@@ -313,6 +316,7 @@ public partial class CharacterKit : MonoBehaviour
         PlayerLook.Swing(swingAlt);
 
         Vector3 origin = transform.position;
+        float sig = SignatureSkills.BeforeSwing(origin, dir);      // 영혼 흡수 · 반격 검기
         int hits = 0;
         foreach (Collider2D c in Physics2D.OverlapCircleAll(origin, reach))
         {
@@ -320,13 +324,15 @@ public partial class CharacterKit : MonoBehaviour
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
-            Specials.Damage(c.gameObject, Damage * (combo ? 2f : 1f) * SwingHitMul(c, to.magnitude, reach), to.normalized, combo ? 4f : 3f);
+            Specials.Damage(c.gameObject, Damage * sig * (combo ? 2f : 1f) * SwingHitMul(c, to.magnitude, reach), to.normalized, combo ? 4f : 3f);
             OnSwingHit(c, hits == 0);
+            SignatureSkills.SwingHit(c);
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
         SwingCards(origin, dir, reach, half, hits);
         SwingFormAfter(origin, reach);
+        SignatureSkills.AfterSwing(origin, dir, reach, hits);
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f)), 24f, rot, 15);
@@ -377,6 +383,7 @@ public partial class CharacterKit : MonoBehaviour
 
         // 사냥꾼의 집중: 순식간에 가득 당김
         if (Special != null && (Special.KitFocusActive || Special.KitFreeDraws > 0)) fullTime = 0.05f;
+        else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
         // 정조준: 가만히 서서 당기면 더 빨리 가득 당김
         else if (card[5] > 0 && stillTime > 0.1f) fullTime /= 1f + 0.3f * card[5];
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
@@ -422,7 +429,9 @@ public partial class CharacterKit : MonoBehaviour
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
             if (card[2] > 0 && draw >= 1f) GustArrow(b);
+            SignatureSkills.Arrow(b, draw);
         }
+        SignatureSkills.BowRelease(start, dir, draw);
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -445,10 +454,12 @@ public partial class CharacterKit : MonoBehaviour
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
         if (depth == 0 && ForceUnstable()) unstable = true;
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
-        FlaskLob.Throw(from, land, 0.4f, unstable ? 1.05f : 0.8f, tint, (p) =>
+        // 시약 농축: 한 바퀴 던질 때마다 다음 플라스크가 더 크고 아프게 (고유 스킬)
+        float conc = depth == 0 ? SignatureSkills.FlaskThrow() : 1f;
+        FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
         {
-            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul;
-            float hit = dmg * 1.6f * (unstable ? 1.8f : 1f) * FlaskDamageMul;
+            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc;
+            float hit = dmg * 1.6f * (unstable ? 1.8f : 1f) * FlaskDamageMul * conc;
             FlaskExtras(p, r, hit, depth);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
@@ -467,6 +478,7 @@ public partial class CharacterKit : MonoBehaviour
                 Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
+                SignatureSkills.Flask(p, r, kind, true, new List<Collider2D>(caught), DeadCount(caught), conc > 1f);
                 return;
             }
             Collider2D[] inside = Physics2D.OverlapCircleAll(p, r);
@@ -493,6 +505,7 @@ public partial class CharacterKit : MonoBehaviour
                     }
                 }
             }
+            SignatureSkills.Flask(p, r, kind, false, new List<Collider2D>(inside), DeadCount(inside), conc > 1f);
             if (kind == 0) Play("ignite", 0.3f, 1.3f);
             if (kind == 1) Play("shimmer", 0.35f, 1.5f);
             if (kind == 2)
@@ -503,6 +516,19 @@ public partial class CharacterKit : MonoBehaviour
                 Play("fizz", 0.45f, 1f);
             }
         });
+    }
+
+    // 이 폭발로 쓰러진 적 수 (증폭 용액)
+    static int DeadCount(Collider2D[] cols)
+    {
+        int n = 0;
+        foreach (Collider2D c in cols)
+        {
+            if (c == null) continue;
+            EnermyController e = c.GetComponent<EnermyController>();
+            if (e != null && e.IsDead) n++;
+        }
+        return n;
     }
 
     static Vector3 ClampRange(Vector3 from, Vector3 to, float range)
@@ -676,6 +702,7 @@ public partial class CharacterKit : MonoBehaviour
             // 회전 베기: 누른 만큼 강해짐
             float dmg = Damage * (2f + 4f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
+            SignatureSkills.Spin(transform.position, radius, dmg, charge);
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Spawn("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
             Play("slash", 1f, 0.8f);
@@ -684,10 +711,11 @@ public partial class CharacterKit : MonoBehaviour
         }
         else
         {
-            float dmg = Damage * (4f + 8f * charge) * UltMul;
+            float dmg = Damage * (4f + 8f * charge) * UltMul * SignatureSkills.BigFlaskMul();     // 증폭 용액
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {
                 DamageCircle(p, radius, dmg, 3f);
+                SignatureSkills.BigFlask(p, radius);
                 Fx.Spawn("fx_alchemyblast", p, radius * 2.4f, Color.white, 16f);
                 if (Special != null) Special.SpawnZone(p, radius * 0.7f, 4f, Damage * 0.5f, new Color(0.45f, 1f, 0.35f, 0.7f));
                 Play("boom", 1f, 0.9f);
@@ -723,6 +751,7 @@ public partial class CharacterKit : MonoBehaviour
         Vector3 to = DashEnd(dir);
 
         dashUntil = Time.time + time;
+        SignatureSkills.DashStart(from);                         // 연막
         // 돌진하는 동안 + 끝난 뒤 0.4초 무적
         player.GrantInvincibility(time + (mastery >= 3 ? 0.8f : 0.4f));
         if (card[2] > 0) StartCoroutine(ShadowClone(from, 1f + card[2]));
@@ -758,6 +787,7 @@ public partial class CharacterKit : MonoBehaviour
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
         DashMastery(to, mastery, hit.Count);
+        SignatureSkills.DashEnd(from, to, hit);                  // 급습 · 궤적 칼날 · 그림자 매듭
     }
 
     // ================================================================= 도적 그림자 숙련
@@ -827,6 +857,7 @@ public partial class CharacterKit : MonoBehaviour
         Play("bowtwang", 0.8f, 0.85f);
         float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
+        SignatureSkills.Rain(center, radius);
         Play("whoosh", 0.8f, 0.9f);
         // 몸집이 큰 보스는 화살이 거의 다 맞아 피해가 너무 컸음: 한 번의 화살비에 보스 하나당 6발까지만
         Dictionary<Collider2D, int> bossHits = new Dictionary<Collider2D, int>();
@@ -978,7 +1009,7 @@ public partial class CharacterKit : MonoBehaviour
                 Destroy(hp.gameObject);
                 parried++;
             }
-            if (parried > 0) Play("ding", 0.5f, 1.8f);
+            if (parried > 0) { Play("ding", 0.5f, 1.8f); SignatureSkills.Parried(); }
         }
     }
 
@@ -1090,6 +1121,7 @@ public partial class CharacterKit : MonoBehaviour
         foreach (Vector2 d in Spread(arrow.Direction, n, 25f))
         {
             Bullet b = Projectile(c.transform.position, d, arrow.damage * 0.4f, 1, 50f, 10f, "fx_arrow", 0.35f, new Color(0.8f, 1f, 0.7f), false);
+            SignatureSkills.Arrow(b, 1f, true);
             if (b != null && e != null) b.hitOnce = new HashSet<int> { e.GetInstanceID() };
         }
     }
@@ -1136,6 +1168,7 @@ public partial class CharacterKit : MonoBehaviour
         DamageCircle(pos, 1.5f, hit * (0.2f + 0.2f * card[0]), 1f);
         Fx.Spawn("fx_alchemyblast", pos, 3.4f, new Color(1f, 0.8f, 0.4f), 20f);
         Play("shatter", 0.3f, 1.4f);
+        SignatureSkills.ChainPopped(pos, hit);
     }
 
     // 연금술사 파편 플라스크: 대폭발이 작은 플라스크 여러 개로 흩어져 다시 터짐
@@ -1176,10 +1209,11 @@ public partial class CharacterKit : MonoBehaviour
                 cd = e != null ? 3.4f - 0.7f * card[2] : 0.3f;
                 if (e != null)
                 {
-                    float dmg = Damage * 1.4f;
+                    float dmg = Damage * 1.4f * SignatureSkills.HomunculusMul;      // 조수 개조
                     FlaskLob.Throw(homunculus.transform.position, e.position, 0.45f, 0.55f, new Color(0.6f, 1f, 0.5f), (q) =>
                     {
                         DamageCircle(q, 1.4f, dmg, 1f);
+                        SignatureSkills.HomunculusLand(q, dmg);
                         Fx.Spawn("fx_alchemyblast", q, 3f, new Color(0.6f, 1f, 0.45f), 18f);
                         Play("shatter", 0.3f, 1.4f);
                     });
@@ -1253,7 +1287,9 @@ public class Bleed : MonoBehaviour
         if (tick >= 0.25f)
         {
             tick = 0f;
+            SignatureSkills.DotTick = true;        // 지속 피해 (맞힐 때 효과가 붙지 않게)
             Specials.Damage(gameObject, dps * 0.25f, Vector3.zero, 0f);
+            SignatureSkills.DotTick = false;
         }
     }
 }

@@ -75,9 +75,11 @@ public static class MenuExtras
         GameObject skins = UIKit.CloneButton(start, "SkinButton", "스킨 상점", () => SkinShopUI.Open(sr.root));
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialUI.Open(sr.root));
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
+        GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
 
-        // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 3 × 2 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
+        // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
+        // 2.1~: 스킬 진화 도감이 더해져 4 × 2
         sr.anchoredPosition = new Vector2(0f, -10f);
         sr.sizeDelta = new Vector2(560f, 110f);
         AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
@@ -86,15 +88,15 @@ public static class MenuExtras
 
         (GameObject go, string icon)[] tiles =
         {
-            (character, "menu_character"), (skins, "menu_skin"), (codex, "menu_codex"),
+            (character, "menu_character"), (skins, "menu_skin"), (codex, "menu_codex"), (evo, "menu_evolution"),
             (tutorial, "menu_tutorial"), (settings, "menu_settings"), (exit, "menu_exit"),
         };
         for (int i = 0; i < tiles.Length; i++)
         {
             if (tiles[i].go == null) continue;
             RectTransform r = (RectTransform)tiles[i].go.transform;
-            r.sizeDelta = new Vector2(232f, 122f);
-            r.anchoredPosition = new Vector2(-248f + 248f * (i % 3), -160f - 138f * (i / 3));
+            r.sizeDelta = new Vector2(176f, 122f);
+            r.anchoredPosition = new Vector2(-282f + 188f * (i % 4), -160f - 138f * (i / 4));
             Image img = tiles[i].go.GetComponent<Image>();
             if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : new Color(0.8f, 0.78f, 0.86f);
             AddIcon(tiles[i].go, tiles[i].icon, new Vector2(0f, 20f), 56f);
@@ -102,7 +104,7 @@ public static class MenuExtras
             if (t == null) continue;
             RectTransform lr = t.rectTransform;
             lr.anchorMin = lr.anchorMax = new Vector2(0.5f, 0.5f);
-            lr.sizeDelta = new Vector2(212f, 40f);
+            lr.sizeDelta = new Vector2(164f, 40f);
             lr.anchoredPosition = new Vector2(0f, -36f);
             t.enableAutoSizing = true;
             t.fontSizeMin = 14f;

@@ -1153,7 +1153,9 @@ public class Poison : MonoBehaviour
         if (tick >= 0.5f)
         {
             tick = 0f;
+            SignatureSkills.DotTick = true;        // 지속 피해 (맞힐 때 효과가 붙지 않게)
             Specials.Damage(gameObject, perStack * stacks * 0.5f, Vector3.zero, 0f);
+            SignatureSkills.DotTick = false;
         }
     }
 }

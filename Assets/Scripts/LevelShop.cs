@@ -61,6 +61,7 @@ public partial class LevelShop : MonoBehaviour
         }
         CompactLevelUp();
         CompactTitle();
+        SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
         
@@ -83,6 +84,7 @@ public partial class LevelShop : MonoBehaviour
         ability_name[SupplyId] = Loc.T("비상 보급");
         ability_content[SupplyId] = SharedCardText(SupplyId);
         KitSetAbilitys();
+        SigSetAbilitys();
     }
     void Update()
     {
@@ -91,6 +93,7 @@ public partial class LevelShop : MonoBehaviour
         UpdateSelectLock();
 
         UpdateReroll();
+        UpdateSkipButton();
         // 마지막 카드를 배워 만렙이 되면 남은 레벨업은 버림
         if (PendingLevels > 0 && !IsOpen && NothingToLearn) PendingLevels = 0;
         // 클릭으로 고른 카드를 스페이스바로 확정
@@ -114,7 +117,8 @@ public partial class LevelShop : MonoBehaviour
     int shownRerolls = -1;
 
     // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
-    const float SelectHintY = -414f, RerollHintY = -458f;
+    // 그 아래 가운데는 건너뛰기 버튼 (LevelShop.EvoUI), 다시 뽑기 안내는 그 왼쪽
+    const float SelectHintY = -410f, RerollHintY = SkipY, RerollHintX = -480f;
 
     void UpdateReroll()
     {
@@ -136,8 +140,8 @@ public partial class LevelShop : MonoBehaviour
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(LvshopPanel.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-            r.sizeDelta = new Vector2(700f, 36f);
-            r.anchoredPosition = new Vector2(0f, RerollHintY);
+            r.sizeDelta = new Vector2(380f, 36f);
+            r.anchoredPosition = new Vector2(RerollHintX, RerollHintY);
             rerollText = go.GetComponent<TextMeshProUGUI>();
             UIKit.EnsureStyle();
             if (UIKit.Font != null) rerollText.font = UIKit.Font;
@@ -362,14 +366,15 @@ public partial class LevelShop : MonoBehaviour
     {
         if (p == null) return;
         // 만렙: 더 배울 카드가 없으면 레벨이 오르지 않음 (비상 보급만 끝없이 나와 체력을 채우던 문제)
-        if (NothingToLearn)
+        // 최대 레벨 50 (무한 모드 100): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
+        if (NothingToLearn || p.level >= LevelCap)
         {
             p.nowEXP = Mathf.Min(p.nowEXP + amount, p.needEXP);
             return;
         }
         p.nowEXP += amount;
         int gained = 0;
-        while (p.nowEXP >= p.needEXP && p.needEXP > 0f)
+        while (p.nowEXP >= p.needEXP && p.needEXP > 0f && p.level < LevelCap)
         {
             p.nowEXP -= p.needEXP;
             p.level++;
@@ -419,7 +424,7 @@ public partial class LevelShop : MonoBehaviour
         {
             if (Total_abilitys <= 0 || ability_selected == null) return false;
             for (int i = 0; i < Total_abilitys && i < ability_selected.Length; i++)
-                if (!ability_selected[i] && KitFits(i)) return false;
+                if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) return false;
             return true;
         }
     }
@@ -429,6 +434,7 @@ public partial class LevelShop : MonoBehaviour
         setAbilitys();                      // 창을 열 때 최신 수치로
         
         LvshopPanel.SetActive(true);
+        EnsureSkipButton();
         LockSelection();
         UpdateLvShopContent();
         pendingSlot = -1;
@@ -447,7 +453,7 @@ public partial class LevelShop : MonoBehaviour
         // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 비상 보급)
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
         // 지금 무기에 안 맞는 카드는 빼고 (예: 영혼 저격총에 유도 탄두) — 무기가 바뀌면 다시 나옴
-        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i)) open.Add(i);
+        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) open.Add(i);
         int Draw()
         {
             if (open.Count == 0) return SupplyId;
@@ -478,6 +484,7 @@ public partial class LevelShop : MonoBehaviour
         SetCardIcon(FirstIcon, first);
         SetCardIcon(SecondIcon, second);
         SetCardIcon(ThirdIcon, third);
+        ShowEvoHints();
 
         Time.timeScale = 0f;
     }
@@ -495,7 +502,7 @@ public partial class LevelShop : MonoBehaviour
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.3f;
-    const int AbilityCount = 15;
+    const int AbilityCount = SigFirstId + SigCount;      // 공용 · 전용 15장 + 고유 스킬 10장
     // 끝없이 고를 수 있던 카드의 상한
     const int CoinMaxLevel = 4, ExpMaxLevel = 4, HeartMaxLevel = 4, GlareMaxLevel = 3;
     const float RegenStep = 0.5f;       // 생명의 샘 1회당 초당 회복량
@@ -608,6 +615,13 @@ public partial class LevelShop : MonoBehaviour
             if (c != null) c.AddCoin(10);
             return;
         }
+        ApplyPick(what);
+        CheckEvolutions();          // 재료가 모두 최대면 스킬 진화
+    }
+
+    void ApplyPick(int what)
+    {
+        if (SigApply(what)) return;
         if (KitApply(what)) return;
         if (what == 0) bul.pene++;
         if (what == 1)

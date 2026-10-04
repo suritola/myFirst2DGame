@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 // 번역표: 한국어 → { 한국어(고쳐 쓸 때만), 영어, 일본어, 중국어 }
-public static class LocTable
+public static partial class LocTable
 {
     static string[] E(string ko, string en, string ja, string zh) => new[] { ko, en, ja, zh };
     static string[] L(string en, string ja, string zh) => new[] { "", en, ja, zh };
