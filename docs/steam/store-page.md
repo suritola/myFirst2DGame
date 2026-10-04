@@ -96,7 +96,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [*]모든 우클릭 스킬은 꾹 눌러 범위를 보며 조준
 [*]적 · 보스 · 무기 · 운명 · 진화 · 스킬 진화 도감
 [*]머리 위로 튀는 피해 숫자, 화려한 도트 이펙트와 스테이지별 음악
-[*]스팀 도전 과제 32개
+[*]스팀 도전 과제 38개
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -173,7 +173,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]Hold right-click to aim every skill with a range preview
 [*]Codexes for enemies, bosses, weapons, Fate, evolutions and skill evolutions
 [*]Damage numbers, flashy pixel effects and music for every stage
-[*]32 Steam achievements
+[*]38 Steam achievements
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -250,7 +250,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]すべての右クリック技は長押しで範囲を見ながら狙える
 [*]敵・ボス・武器・運命・進化・スキル進化の図鑑
 [*]頭上に飛び出すダメージ数値、派手なドットエフェクトとステージごとのBGM
-[*]Steam実績32個
+[*]Steam実績38個
 [*]한국어・English・日本語・简体中文
 [/list]
 ```
@@ -327,7 +327,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]所有右键技能均可长按，查看范围后瞄准
 [*]敌人·首领·武器·命运·进化·技能进化图鉴
 [*]头顶弹出的伤害数字、华丽的像素特效与各关卡专属音乐
-[*]32个Steam成就
+[*]38个Steam成就
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
