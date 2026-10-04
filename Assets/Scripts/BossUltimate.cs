@@ -89,6 +89,8 @@ public class BossUltimate : MonoBehaviour
     LineRenderer ring, ring2;
     FxAnim rune;
     GameObject aura;
+    GameObject spot;
+    LineRenderer spotRing;
 
     IEnumerator Run()
     {
@@ -217,7 +219,7 @@ public class BossUltimate : MonoBehaviour
         ring2 = Hostile.NewLine("DomainRing2", Color.white, 0.25f, 41);
         ring2.loop = true;
         ring2.transform.SetParent(domainRoot.transform, true);
-        rune = Fx.Play("fx_rune", center, Radius * 2f, new Color(color.r, color.g, color.b, 0.35f), 1f, 0f, 1, true);
+        rune = Fx.Play("fx_rune", center, Radius * 2f, new Color(color.r, color.g, color.b, 0.3f), 1f, 0f, 41, true, -1f, "Background");
         if (rune != null) { rune.spin = 12f; rune.transform.SetParent(domainRoot.transform, true); }
         if (Hostile.Glow != null)
         {
@@ -225,6 +227,16 @@ public class BossUltimate : MonoBehaviour
         }
         Fx.Spawn("fx_shock", center, Radius * 2.6f, color, 14f);
         Fx.Spawn("fx_soulburst", center, 12f, Color.white, 14f);
+        // 플레이어 발밑의 밝은 빛 + 고리: 어두운 결계 안에서도 내 위치가 바로 보이게
+        if (Hostile.Glow != null)
+        {
+            spot = SpecialAbilities.MakeSprite("DomainSpot", Hostile.Glow, center, 0.55f, new Color(1f, 0.97f, 0.88f, 0.42f), "Background", 42);
+            spot.transform.SetParent(domainRoot.transform, true);
+        }
+        spotRing = Hostile.NewLine("DomainSpotRing", Color.white, 0.12f, 43);
+        spotRing.loop = true;
+        spotRing.sortingLayerName = "Background";
+        spotRing.transform.SetParent(domainRoot.transform, true);
 
         for (float t = 0f; t < 0.8f; t += Time.deltaTime)
         {
@@ -251,6 +263,21 @@ public class BossUltimate : MonoBehaviour
             ring.startColor = ring.endColor = Color.Lerp(color, Color.white, 0.25f * pulse);
         }
         if (ring2 != null) Hostile.SetArc(ring2, center, Radius - 0.4f, Time.time * 40f, Time.time * 40f + 360f);
+        PlayerController pl = Hostile.Player;
+        if (pl != null)
+        {
+            Vector3 at = pl.transform.position;
+            if (spot != null)
+            {
+                spot.transform.position = at;
+                spot.transform.localScale = Vector3.one * (0.55f + 0.05f * pulse);
+            }
+            if (spotRing != null)
+            {
+                Hostile.SetArc(spotRing, at, 1.6f + 0.1f * pulse, 0f, 360f);
+                spotRing.startColor = spotRing.endColor = Color.Lerp(Color.white, color, 0.35f);
+            }
+        }
         if (aura != null && boss != null)
         {
             aura.transform.position = boss.transform.position;
@@ -304,6 +331,11 @@ public class BossUltimate : MonoBehaviour
         LineRenderer[] warn = new LineRenderer[4];
         for (int i = 0; i < 4; i++) { warn[i] = Hostile.NewLine("LichBeamWarn", new Color(soul.r, soul.g, soul.b, 0.3f), 0.18f, 30); warn[i].transform.SetParent(domainRoot.transform, true); }
         float live = Time.time + 1.4f, beamHit = 0f;
+        for (int i = 0; i < 4; i++)
+        {
+            float a0 = (angle + i * 90f) * Mathf.Deg2Rad;
+            Warn((boss != null ? boss.transform.position : center) + new Vector3(Mathf.Cos(a0), Mathf.Sin(a0)) * 7f, 1.4f, 1.6f);
+        }
         FxAnim[] beams = new FxAnim[4];
         while (Time.time < until)
         {
@@ -416,7 +448,12 @@ public class BossUltimate : MonoBehaviour
 
     IEnumerator LavaLine(Vector3 a, Vector3 b, Color fire)
     {
-        Hostile.Line(a, b, 2.2f, 1.1f, fire);
+        Hostile.Line(a, b, 2.2f, 1.1f, Bright(fire));
+        for (float k = 0.2f; k <= 0.81f; k += 0.2f)
+        {
+            Vector3 at = Vector3.Lerp(a, b, k);
+            if ((at - center).magnitude < Radius) Warn(at, 1.1f, 1.4f);
+        }
         yield return new WaitForSeconds(1.1f);
         Vector3 d = (b - a);
         for (float k = 0f; k <= 1f; k += 0.06f)
@@ -478,7 +515,8 @@ public class BossUltimate : MonoBehaviour
             float half = Mathf.Sqrt(Mathf.Max(0f, Radius * Radius - y * y));
             Vector3 a = center + new Vector3(-half, y), b = center + new Vector3(half, y);
             rows.Add((a, b));
-            Hostile.Line(a, b, w, 1.1f, new Color(acid.r, acid.g, acid.b, 0.6f));
+            Hostile.Line(a, b, w, 1.1f, new Color(acid.r, acid.g, acid.b, 0.75f));
+            Warn((a + b) * 0.5f, 1.1f, 1.3f);
         }
         yield return new WaitForSeconds(1.1f);
         PlayerController p = Hostile.Player;
@@ -507,7 +545,9 @@ public class BossUltimate : MonoBehaviour
     IEnumerator Spike(Vector3 at, float r, float warn, Color color, float damage, string fx)
     {
         if ((at - center).magnitude > Radius - 0.5f) at = center + (at - center).normalized * (Radius - 0.5f);
-        Hostile.Circle(at, r, warn, color);
+        Hostile.Circle(at, r, warn, Bright(color));
+        Hostile.Circle(at, r * 0.55f, warn, new Color(1f, 1f, 1f, 0.75f));
+        Warn(at, warn, r);
         yield return new WaitForSeconds(warn);
         Fx.Spawn(fx, at + Vector3.up * (fx == "fx_meteor" ? 0.5f : 1.2f), r * 2.2f, Color.white, 18f, 0f, 14);
         Fx.Spawn("fx_explosion", at, r * 1.8f, color, 20f);
@@ -515,6 +555,17 @@ public class BossUltimate : MonoBehaviour
     }
 
     // ================================================================= 도우미
+    // 결계 공격 예고: 크게 흔들리는 느낌표 + 번쩍이는 원 (어두운 결계 안에서도 바로 보이게)
+    static void Warn(Vector3 at, float duration, float size)
+    {
+        FxAnim a = Fx.Play("fx_warn", at + Vector3.up * 0.3f, Mathf.Clamp(size * 0.9f, 1.3f, 2.4f), Color.white, 6f, 0f, 45, true, duration);
+        if (a != null) a.gameObject.AddComponent<WarnPop>();
+        Fx.Spawn("fx_shock", at, Mathf.Max(2f, size * 2.2f), new Color(1f, 0.3f, 0.25f, 0.85f), 22f);
+    }
+
+    // 예고 색을 더 진하고 밝게
+    static Color Bright(Color c) => new Color(Mathf.Min(1f, c.r * 1.15f + 0.1f), Mathf.Min(1f, c.g * 1.15f + 0.05f), Mathf.Min(1f, c.b * 1.15f + 0.05f), 0.95f);
+
     // 결계 밖을 덮는 어둠 (둥근 구멍이 뚫린 큰 고리 메시): 안쪽은 보스 색으로 살짝 물듦
     MeshRenderer DarkMesh(Transform parent, Color color)
     {
@@ -542,8 +593,10 @@ public class BossUltimate : MonoBehaviour
         go.GetComponent<MeshFilter>().mesh = m;
         MeshRenderer mr = go.GetComponent<MeshRenderer>();
         mr.material = new Material(Shader.Find("Sprites/Default"));
-        mr.sortingLayerName = "Effect";
-        mr.sortingOrder = -40;
+        // 바닥 층 맨 위 (바닥 타일 · 장판 위, 캐릭터 · 적 · 적 탄 아래): 맵만 어두워지고 싸우는 것들은 또렷하게
+        // (예전엔 이펙트 층이라 결계 안의 캐릭터까지 어둡게 덮어 잘 보이지 않았음)
+        mr.sortingLayerName = "Background";
+        mr.sortingOrder = 40;
         darkTint = color;
         return mr;
     }
@@ -643,5 +696,21 @@ public class DomainBall : MonoBehaviour
         if (trail > 0.12f) { trail = 0f; Fx.Spawn("fx_puddle", transform.position, 1.2f, new Color(0.55f, 1f, 0.35f, 0.6f), 14f); }
         PlayerController p = Hostile.Player;
         if (p != null && Vector2.Distance(p.transform.position, transform.position) < 1.1f) p.TryHit(damage);
+    }
+}
+
+// 결계 공격 예고 느낌표: 튀어나왔다가 두근거림
+public class WarnPop : MonoBehaviour
+{
+    Vector3 baseScale;
+    float t;
+
+    void Start() => baseScale = transform.localScale;
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        float pop = t < 0.15f ? Mathf.Lerp(1.8f, 1f, t / 0.15f) : 1f + 0.12f * Mathf.Sin(t * 18f);
+        transform.localScale = baseScale * pop;
     }
 }
