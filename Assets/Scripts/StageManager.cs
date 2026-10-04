@@ -698,7 +698,7 @@ public class StageManager : MonoBehaviour
             countdownText = go.GetComponent<TextMeshProUGUI>();
             if (specialTree != null && specialTree.font != null) countdownText.font = specialTree.font;
             if (specialTree != null && specialTree.fontMaterial != null) countdownText.fontSharedMaterial = specialTree.fontMaterial;
-            countdownText.fontSize = 42f;
+            countdownText.fontSize = 36f;
             countdownText.alignment = TextAlignmentOptions.Center;
             countdownText.raycastTarget = false;
         }
@@ -738,7 +738,7 @@ public class StageManager : MonoBehaviour
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
             r.pivot = new Vector2(0.5f, 1f);
             r.anchoredPosition = new Vector2(0f, -64f);       // 플레이 시간 바로 아래
-            r.sizeDelta = new Vector2(760f, 72f);
+            r.sizeDelta = new Vector2(640f, 72f);             // 왼쪽 위 체력 패널(x 620까지)에 닿지 않는 폭
         }
         Image bg = banner.GetComponent<Image>();
         if (bg != null) bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0.72f);

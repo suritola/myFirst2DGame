@@ -177,8 +177,8 @@ public class RunStats : MonoBehaviour
         r.SetAsLastSibling();
         r.anchorMin = r.anchorMax = new Vector2(1f, 0.5f);
         r.pivot = new Vector2(1f, 0.5f);
-        r.anchoredPosition = new Vector2(-30f, 0f);
-        r.sizeDelta = new Vector2(440f, 620f);          // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
+        r.anchoredPosition = new Vector2(-30f, -20f);    // 위쪽 영혼 트리 버튼(위에서 222 ~ 266) 아래부터
+        r.sizeDelta = new Vector2(440f, 560f);          // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
         bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
         bg.raycastTarget = false;

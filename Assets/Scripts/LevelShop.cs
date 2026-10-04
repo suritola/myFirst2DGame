@@ -60,6 +60,7 @@ public partial class LevelShop : MonoBehaviour
             ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId || i == RecycleId;
         }
         CompactLevelUp();
+        CompactTitle();
         //레벨업 능력들
         setAbilitys();
         
@@ -339,6 +340,16 @@ public partial class LevelShop : MonoBehaviour
         r.anchoredPosition = new Vector2(0f, -222f);       // 알림판 · 포털 카운트다운 아래
         r.localScale = Vector3.one * 0.4f;
         foreach (Graphic g in LvUpPanel.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+    }
+
+    // 「능력을 하나 선택하세요」 띠: 원래 크기(폭 980)면 왼쪽 위 체력 패널(오른쪽 끝 x 620)을 덮어서 줄임
+    void CompactTitle()
+    {
+        Transform t = LvshopPanel != null ? LvshopPanel.transform.Find("Title") : null;
+        if (t == null) return;
+        RectTransform r = (RectTransform)t;
+        r.localScale = Vector3.one * 0.66f;                // 폭 약 650 → 화면 가운데 637 ~ 1283
+        r.anchoredPosition = new Vector2(0f, 380f);
     }
 
     // 「레벨업!」 표시를 띄우고 있는 연출 수 (겹쳐도 마지막 연출이 끝날 때 꺼짐)
