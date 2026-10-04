@@ -112,6 +112,9 @@ public partial class LevelShop : MonoBehaviour
     TextMeshProUGUI rerollText;
     int shownRerolls = -1;
 
+    // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
+    const float SelectHintY = -414f, RerollHintY = -458f;
+
     void UpdateReroll()
     {
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
@@ -132,13 +135,13 @@ public partial class LevelShop : MonoBehaviour
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(LvshopPanel.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-            r.sizeDelta = new Vector2(700f, 40f);
-            r.anchoredPosition = new Vector2(0f, -462f);
+            r.sizeDelta = new Vector2(700f, 36f);
+            r.anchoredPosition = new Vector2(0f, RerollHintY);
             rerollText = go.GetComponent<TextMeshProUGUI>();
             UIKit.EnsureStyle();
             if (UIKit.Font != null) rerollText.font = UIKit.Font;
             if (UIKit.FontMaterial != null) rerollText.fontSharedMaterial = UIKit.FontMaterial;
-            rerollText.fontSize = 26f;
+            rerollText.fontSize = 24f;
             rerollText.alignment = TextAlignmentOptions.Center;
             rerollText.color = new Color(0.8f, 0.7f, 1f);
             rerollText.raycastTarget = false;
@@ -185,7 +188,6 @@ public partial class LevelShop : MonoBehaviour
             r.SetParent(canvas.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
-            r.anchoredPosition = new Vector2(0f, 110f);
             r.sizeDelta = new Vector2(780f, 48f);
             Image bg = pendingBadge.GetComponent<Image>();
             bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
@@ -208,6 +210,9 @@ public partial class LevelShop : MonoBehaviour
             pendingText.raycastTarget = false;
         }
         if (!pendingBadge.activeSelf) pendingBadge.SetActive(true);
+        // 경험치 바 위 「특수 강화」 버튼(96 ~ 160)이 떠 있으면 그 위로 올려 겹치지 않게
+        bool upgradeShown = StageManager.Instance != null && StageManager.Instance.UpgradeButtonAtBottom;
+        ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
@@ -256,16 +261,19 @@ public partial class LevelShop : MonoBehaviour
             GameObject go = new GameObject("SelectHint", typeof(RectTransform), typeof(TextMeshProUGUI));
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(LvshopPanel.transform, false);
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
-            r.sizeDelta = new Vector2(1000f, 50f);
-            r.anchoredPosition = new Vector2(0f, 70f);
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+            r.sizeDelta = new Vector2(1000f, 44f);
+            r.anchoredPosition = new Vector2(0f, SelectHintY);
+            // 씬에 있던 옛 안내(「카드를 눌러 선택」)는 이 줄과 같은 말이라 숨김 (같은 자리에 겹쳐 보이던 문제)
+            Transform old = LvshopPanel.transform.Find("PickHint");
+            if (old != null) old.gameObject.SetActive(false);
             selectHint = go.GetComponent<TextMeshProUGUI>();
             if (FirstTitle != null)
             {
                 selectHint.font = FirstTitle.font;
                 selectHint.fontSharedMaterial = FirstTitle.fontSharedMaterial;
             }
-            selectHint.fontSize = 30f;
+            selectHint.fontSize = 28f;
             selectHint.alignment = TextAlignmentOptions.Center;
             selectHint.raycastTarget = false;
         }
@@ -328,7 +336,7 @@ public partial class LevelShop : MonoBehaviour
         if (r == null) return;
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
         r.pivot = new Vector2(0.5f, 1f);
-        r.anchoredPosition = new Vector2(0f, -150f);
+        r.anchoredPosition = new Vector2(0f, -222f);       // 알림판 · 포털 카운트다운 아래
         r.localScale = Vector3.one * 0.4f;
         foreach (Graphic g in LvUpPanel.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
     }

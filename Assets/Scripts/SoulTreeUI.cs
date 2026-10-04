@@ -238,12 +238,14 @@ public class SoulTreeUI : MonoBehaviour
 
         TMP_Text title = UIKit.Text(root, "영혼 트리", 54f, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
         title.fontStyle = FontStyles.Bold;
+        UIKit.Pin(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -60f));
         shardBox = UIKit.Rect("Shards", root, new Vector2(-735f, 470f), new Vector2(400f, 108f));
         Image sb = shardBox.gameObject.AddComponent<Image>();
         sb.sprite = UIKit.ButtonSprite;
         sb.type = Image.Type.Sliced;
         sb.color = new Color(0.55f, 0.42f, 0.85f);
         sb.raycastTarget = false;
+        UIKit.Pin(shardBox, new Vector2(0f, 1f), new Vector2(225f, -70f));
         Img("Inner", shardBox, Vector2.zero, new Vector2(380f, 88f), null, new Color(0.08f, 0.05f, 0.14f, 0.97f));
         Img("OrbGlow", shardBox, new Vector2(-148f, 0f), new Vector2(110f, 110f), sp.glowSprite, new Color(0.75f, 0.55f, 1f, 0.7f));
         Img("Orb", shardBox, new Vector2(-148f, 0f), new Vector2(44f, 44f), sp.glowSprite, new Color(0.95f, 0.9f, 1f));
@@ -251,16 +253,23 @@ public class SoulTreeUI : MonoBehaviour
         shardText = UIKit.Text(shardBox, "", 50f, Color.white, new Vector2(20f, -6f), new Vector2(300f, 56f), TextAlignmentOptions.Left);
         shardText.fontStyle = FontStyles.Bold;
         affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
-        UIKit.MakeButton(root, "", new Vector2(790f, 480f), new Vector2(230f, 62f), Close, 24f)
-            .GetComponentInChildren<TMP_Text>().text = Loc.T("닫기") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]";
-        UIKit.MakeButton(root, "", new Vector2(540f, 480f), new Vector2(200f, 62f), Fit, 22f)
-            .GetComponentInChildren<TMP_Text>().text = Loc.T("전체 보기") + " [F]";
-        footText = UIKit.Text(root, "", 22f, Dim, new Vector2(0f, -508f), new Vector2(1800f, 36f));
+        UIKit.Pin(affordText.rectTransform, new Vector2(0f, 1f), new Vector2(225f, -140f));
+        // 위 띠 오른쪽: 화면 오른쪽 끝에 붙여서 화면 비율이 달라도 잘리지 않게
+        Button closeBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(230f, 62f), Close, 24f);
+        closeBtn.GetComponentInChildren<TMP_Text>().text = Loc.T("닫기") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]";
+        UIKit.Pin((RectTransform)closeBtn.transform, Vector2.one, new Vector2(-170f, -60f));
+        Button fitBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(200f, 62f), Fit, 22f);
+        fitBtn.GetComponentInChildren<TMP_Text>().text = Loc.T("전체 보기") + " [F]";
+        UIKit.Pin((RectTransform)fitBtn.transform, Vector2.one, new Vector2(-405f, -60f));
+        footText = UIKit.Text(root, "", 22f, Dim, Vector2.zero, new Vector2(1800f, 36f));
+        UIKit.Pin(footText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 32f));       // 아래 띠(64) 가운데
         // 가지 색 범례 (트리 위에 이름을 띄우면 칸과 겹쳐서, 위 띠에 한 줄로)
         string legend = "";
         for (int b = 0; b < SpecialAbilities.BranchCount; b++)
             legend += (b > 0 ? "   " : "") + "<color=#" + ColorUtility.ToHtmlStringRGB(BranchColor[b]) + ">" + Loc.T(SpecialAbilities.BranchNames[b]) + "</color>";
-        UIKit.Text(root, "", 22f, Parch, new Vector2(0f, 428f), new Vector2(1200f, 30f)).text = legend;
+        TMP_Text legendText = UIKit.Text(root, "", 22f, Parch, Vector2.zero, new Vector2(1000f, 30f));
+        legendText.text = legend;
+        UIKit.Pin(legendText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -112f));
 
         Rebuild();
         // 처음 열 때는 전체 보기, 그 뒤로는 보던 자리 (새 범위 안으로)

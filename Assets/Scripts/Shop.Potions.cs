@@ -168,7 +168,7 @@ public class PotionBuffs : MonoBehaviour
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(30f, 60f);
+            r.anchoredPosition = new Vector2(30f, -40f);      // 왼쪽 위 능력 칸이 세 줄로 늘어도 겹치지 않게 조금 아래
             r.sizeDelta = new Vector2(360f, 120f);
             hud = go.GetComponent<TextMeshProUGUI>();
             UIKit.EnsureStyle();

@@ -178,7 +178,7 @@ public class RunStats : MonoBehaviour
         r.anchorMin = r.anchorMax = new Vector2(1f, 0.5f);
         r.pivot = new Vector2(1f, 0.5f);
         r.anchoredPosition = new Vector2(-30f, 0f);
-        r.sizeDelta = new Vector2(520f, 620f);
+        r.sizeDelta = new Vector2(440f, 620f);          // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
         bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
         bg.raycastTarget = false;
@@ -228,7 +228,7 @@ public static class Hints
             r.SetParent(canvas.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
-            r.anchoredPosition = new Vector2(0f, 180f);
+            r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
             r.sizeDelta = new Vector2(720f, 56f);
             Image bg = box.GetComponent<Image>();
             bg.color = new Color(0.08f, 0.07f, 0.12f, 0.8f);

@@ -66,6 +66,8 @@ public class StageManager : MonoBehaviour
     bool affordable;
     int shownShards = -1;                   // 버튼 글은 조각 수가 바뀔 때만 새로 씀 (매 프레임 글자 생성 방지)
     public bool TreeAffordable => affordable;   // 레벨업 알림과 한 줄로 묶을 때 (LevelShop)
+    // 경험치 바 위 가운데에 특수 강화 버튼이 떠 있음 (레벨업 대기 배지가 그 위로 비켜 감)
+    public bool UpgradeButtonAtBottom => !Evo && upgradeButton != null && upgradeButton.activeSelf;
     TMP_Text gainText;               // 버튼 옆에 잠깐 뜨는 "+N" (조각이 들어오는 느낌)
     int gainAmount, gainFrom = -1;
     float gainUntil;
@@ -689,9 +691,10 @@ public class StageManager : MonoBehaviour
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);
             if (banner != null) r.SetSiblingIndex(banner.transform.GetSiblingIndex());
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+            // 알림판(-64 ~ -136) 바로 아래, 레벨업 표시(-222 ~)보다 위
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 1f);
             r.sizeDelta = new Vector2(1100f, 64f);
-            r.anchoredPosition = new Vector2(0f, -150f);
+            r.anchoredPosition = new Vector2(0f, -148f);
             countdownText = go.GetComponent<TextMeshProUGUI>();
             if (specialTree != null && specialTree.font != null) countdownText.font = specialTree.font;
             if (specialTree != null && specialTree.fontMaterial != null) countdownText.fontSharedMaterial = specialTree.fontMaterial;

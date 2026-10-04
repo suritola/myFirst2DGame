@@ -321,9 +321,10 @@ public class SpecialTreeUI : MonoBehaviour
         closeButton = new GameObject("Close", typeof(RectTransform), typeof(Image), typeof(Button));
         RectTransform crt = closeButton.GetComponent<RectTransform>();
         crt.SetParent(root, false);
-        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
+        // 오른쪽 위 구석에 붙임 (화면이 16:9보다 좁으면 가운데 기준 좌표로는 잘림)
+        crt.anchorMin = crt.anchorMax = Vector2.one;
         crt.sizeDelta = new Vector2(170f, 62f);
-        crt.anchoredPosition = new Vector2(840f, 470f);
+        crt.anchoredPosition = new Vector2(-120f, -70f);
         Image cimg = closeButton.GetComponent<Image>();
         cimg.sprite = headerSprite;
         cimg.type = Image.Type.Sliced;

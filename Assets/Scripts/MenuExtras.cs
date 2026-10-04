@@ -25,7 +25,7 @@ public static class MenuExtras
         if (canvas != null)
         {
             UIKit.EnsureStyle();
-            TMP_Text res = UIKit.Text(canvas.transform, "", 24f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(560f, 520f), TextAlignmentOptions.TopLeft);
+            TMP_Text res = UIKit.Text(canvas.transform, "", 24f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(480f, 520f), TextAlignmentOptions.TopLeft);
             res.enableAutoSizing = true;
             res.fontSizeMin = 14f;
             res.fontSizeMax = 24f;
@@ -58,8 +58,8 @@ public static class MenuExtras
             TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, 110f));
             t.text = text;
             RectTransform r = t.rectTransform;
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
-            r.anchoredPosition = new Vector2(0f, -120f);
+            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 메인 메뉴 버튼(-256 ~) 아래로
+            r.anchoredPosition = new Vector2(0f, -330f);
         }
         EndlessMode.LastSeconds = -1f;
     }
@@ -200,6 +200,20 @@ public static class MenuExtras
         GameObject settings = UIKit.CloneButton(lowest.gameObject, "SettingsButton", "설정", () => SettingsUI.Open(esc.escMenu.transform.root));
         RectTransform r = (RectTransform)settings.transform;
         r.anchoredPosition = lr.anchoredPosition - new Vector2(0f, lr.sizeDelta.y + 24f);
+
+        // 창(560 높이) 안에 버튼 셋을 고른 간격으로 다시 놓고, 재개 안내는 맨 아래 버튼 밑에 (설정 버튼과 겹치던 문제)
+        List<RectTransform> column = new List<RectTransform>();
+        foreach (Button b in esc.escMenu.GetComponentsInChildren<Button>(true))
+            if (b.transform.parent == esc.escMenu.transform) column.Add((RectTransform)b.transform);      // 방금 만든 설정 버튼 포함
+        column.Sort((a, b) => b.anchoredPosition.y.CompareTo(a.anchoredPosition.y));
+        const float Top = 120f, Step = 122f;
+        for (int i = 0; i < column.Count; i++)
+        {
+            column[i].sizeDelta = new Vector2(column[i].sizeDelta.x, 106f);
+            column[i].anchoredPosition = new Vector2(0f, Top - Step * i);
+        }
+        Transform hint = esc.escMenu.transform.Find("ResumeHint");
+        if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, Top - Step * (column.Count - 1) - 53f - 34f);
     }
 }
 
@@ -285,6 +299,14 @@ public static class UIKit
         r.sizeDelta = size;
         r.anchoredPosition = pos;
         return r;
+    }
+
+    // 화면 구석이나 가장자리에 붙임 (16:10 · 4:3 처럼 화면 폭이 좁아도 잘리지 않게).
+    // edge (0,1) = 왼쪽 위, (1,1) = 오른쪽 위, (0.5,1) = 위 가운데 · offset 은 그 지점에서 요소 가운데까지
+    public static void Pin(RectTransform r, Vector2 edge, Vector2 offset)
+    {
+        r.anchorMin = r.anchorMax = edge;
+        r.anchoredPosition = offset;
     }
 
     // 화면 전체를 어둡게 덮는 판 + 가운데 창
