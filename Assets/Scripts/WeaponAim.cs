@@ -17,6 +17,7 @@ public class WeaponAim
     FxAnim rune, ghost, cloud, reticle;
     int weapon;
     float age;
+    bool active;        // Begin ~ End 사이에만 그림 (끝난 뒤 들어온 그리기는 지울 사람이 없어 화면에 남음)
 
     public WeaponAim(SpecialAbilities owner) { this.owner = owner; }
 
@@ -26,6 +27,7 @@ public class WeaponAim
     // 조준한 적 위에 붙는 표식 (무기마다 모양이 다름). null이면 표식 없음
     public GameObject MarkTarget(Transform target)
     {
+        if (!active) return null;
         string sprite; float size; Color c = C; float spin = 0f;
         switch (weapon)
         {
@@ -53,6 +55,7 @@ public class WeaponAim
     public void Begin(int weaponId)
     {
         End();
+        active = true;
         weapon = weaponId;
         age = 0f;
         switch (weapon)
@@ -104,6 +107,7 @@ public class WeaponAim
     // charge: 0 → 1 (우클릭을 누른 시간)
     public void Update(List<EnermyController> targets, float charge)
     {
+        if (!active) return;
         age += Time.unscaledDeltaTime;
         foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);
         bolts.Clear();
@@ -309,6 +313,7 @@ public class WeaponAim
 
     public void End()
     {
+        active = false;
         foreach (GameObject g in keep) if (g != null) Object.Destroy(g);
         foreach (FxAnim a in frame) if (a != null) Object.Destroy(a.gameObject);
         foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);

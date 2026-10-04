@@ -392,12 +392,6 @@ public class PlayerController : MonoBehaviour
                 // 충전할수록 강해짐: 공격력 x2 (즉시) ~ x8 (최대 충전)
                 skillDamage = damage * (2f + 6f * Mathf.Clamp01(NowCharge / MaxCharge));
 
-                if (NowCharge >= MaxCharge)
-                {
-                    NowCharge = MaxCharge;
-                    EndSkill();
-                }
-
                 if (mainCamera != null && mainCamera.orthographicSize < maxZoom) mainCamera.orthographicSize += 0.05f * Time.unscaledDeltaTime * 60f;
 
                 if (Time.unscaledTime >= nextTargetTime)
@@ -406,6 +400,14 @@ public class PlayerController : MonoBehaviour
                     nextTargetTime = Time.unscaledTime + targetInterval;
                 }
                 special?.UpdateAim(targets, Mathf.Clamp01(NowCharge / MaxCharge));
+
+                // 끝까지 누르면 자동 발사. 조준 표시 · 표식을 다 그린 뒤에 끝내야 EndSkill 이 모두 지움
+                // (먼저 끝내면 같은 프레임에 다시 그린 표시가 남고, 쏘는 중인 targets 에 적이 더 들어감)
+                if (NowCharge >= MaxCharge)
+                {
+                    NowCharge = MaxCharge;
+                    EndSkill();
+                }
             }
 
             // =========================
