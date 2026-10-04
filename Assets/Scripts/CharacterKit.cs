@@ -546,15 +546,24 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAiming && (ultAimKit != kitUlt || Time.timeScale == 0f)) CancelUltAim();       // 무기를 바꿨거나 멈춤
         if (!charging && !Dashing && kitUlt)
         {
-            if (GameInput.UltDown && full) { ultAiming = true; ultAimKit = true; }
+            // 도적 그림자 숙련 4단계: 진화한 뒤(전용 무기 궁극기)에도 돌진 뒤 3초 안에는 게이지 없이 한 번 더 돌진
+            // (예전엔 이 길에 연속 돌진이 없어서 무기 진화 뒤로는 작동하지 않았음)
+            bool rogueRecast = Id == CharacterId.Rogue && Time.time < recastUntil;
+            if (GameInput.UltDown && (full || rogueRecast)) { ultAiming = true; ultAimKit = true; }
             if (!ultAiming) return;
-            DrawUltAim(Id == CharacterId.Rogue);
+            DrawUltAim(Id == CharacterId.Rogue, !rogueRecast);
             if (GameInput.UltHeld && !GameInput.UltUp) return;
             CancelUltAim();
-            if (full)
+            if (rogueRecast)
+            {
+                recastUntil = 0f;
+                StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
+            }
+            else if (full)
             {
                 Special.KitWeaponUlt();
                 Spend(gauge);
+                if (RogueMastery >= 4) recastUntil = Time.time + 3f;
             }
             return;
         }
