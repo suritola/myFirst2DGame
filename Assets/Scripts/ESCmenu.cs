@@ -47,10 +47,10 @@ public class ESCmenu : MonoBehaviour
 
     void OnDestroy() => IsOpen = false;
 
-    public void onPressRestart()
+    // 일시정지 메뉴 첫 버튼: 다시 시작 대신 계속하기 (ESC 를 다시 누른 것과 같음)
+    public void onPressResume()
     {
-        SceneManager.LoadScene("GameScene");
-        Time.timeScale = 1f;
+        if (isEscOpen) ToggleEsc();
     }
     public void onPressMainMenu()
     {

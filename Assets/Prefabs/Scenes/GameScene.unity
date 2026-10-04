@@ -2249,7 +2249,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB2E4\uC2DC \uC2DC\uC791"
+  m_text: "계속하기"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8c93cfbcb0b288c4692c7513feca2012, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: b7e1f0c2a4d34c6f9a0e5d1c2b3a4f51, type: 2}
@@ -2872,7 +2872,7 @@ GameObject:
   - component: {fileID: 925246518}
   - component: {fileID: 925246517}
   m_Layer: 5
-  m_Name: restart
+  m_Name: resume
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2944,7 +2944,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2048683936}
         m_TargetAssemblyTypeName: ESCmenu, Assembly-CSharp
-        m_MethodName: onPressRestart
+        m_MethodName: onPressResume
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
