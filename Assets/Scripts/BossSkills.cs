@@ -8,6 +8,9 @@ using UnityEngine;
 public class BossSkills : MonoBehaviour
 {
     public int kind;
+    // 킹 슬라임 대점프로 공중에 떠 있는 동안 (이때 쓰러지면 bosss.Split 이 떨어질 자리에서 갈라지게)
+    [HideInInspector] public bool airborne;
+    [HideInInspector] public Vector3 landing;
 
     // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게)
     const float Power = 1.25f;
@@ -25,6 +28,18 @@ public class BossSkills : MonoBehaviour
     bool busy;
 
     bool Alive => boss != null && !boss.IsDead;
+
+    // 스킬이 만든 오래 가는 표시 (룬 고리 · 등불 · 불의 고리 · 빔 선)
+    // 보스가 쓰러져 1초 뒤 오브젝트가 지워지면 스킬 코루틴이 중간에 끊겨 정리 코드가 돌지 않으므로, 꺼질 때 한꺼번에 지움
+    readonly List<GameObject> owned = new List<GameObject>();
+    T Own<T>(T c) where T : Component { if (c != null) owned.Add(c.gameObject); return c; }
+    GameObject Own(GameObject g) { if (g != null) owned.Add(g); return g; }
+
+    void OnDisable()
+    {
+        foreach (GameObject g in owned) if (g != null) Destroy(g);
+        owned.Clear();
+    }
 
     void Start()
     {
@@ -67,6 +82,7 @@ public class BossSkills : MonoBehaviour
         yield return StartCoroutine(routine);
         if (boss != null) boss.casting = false;
         if (sr != null && Alive) sr.color = Color.white;
+        owned.RemoveAll(g => g == null);
         busy = false;
         next = Mathf.Max(next, Time.time + 1.2f);
     }
@@ -173,9 +189,9 @@ public class BossSkills : MonoBehaviour
         Color violet = Curse;
 
         // ---------------- 1. 의식 준비 (1.4초)
-        LineRenderer runeIn = Hostile.NewLine("RuneRing", violet, 0.14f, 2);
-        LineRenderer runeOut = Hostile.NewLine("RuneRing", cyan, 0.1f, 2);
-        GameObject aura = Hostile.Glow != null ? SpecialAbilities.MakeSprite("LichAura", Hostile.Glow, home, 0.2f, new Color(0.6f, 0.35f, 1f, 0.5f), "Effect", 1) : null;
+        LineRenderer runeIn = Own(Hostile.NewLine("RuneRing", violet, 0.14f, 2));
+        LineRenderer runeOut = Own(Hostile.NewLine("RuneRing", cyan, 0.1f, 2));
+        GameObject aura = Own(Hostile.Glow != null ? SpecialAbilities.MakeSprite("LichAura", Hostile.Glow, home, 0.2f, new Color(0.6f, 0.35f, 1f, 0.5f), "Effect", 1) : null);
         Hostile.Play("shimmer", 0.9f, 0.5f);
         Hostile.Play("pulse", 0.8f, 0.6f);
         float spin = 0f;
@@ -195,7 +211,7 @@ public class BossSkills : MonoBehaviour
         Sprite lanternSprite = SpecialAbilities.SwirlSprite != null ? SpecialAbilities.SwirlSprite : Hostile.Glow;
         GameObject[] lanterns = new GameObject[4];
         for (int i = 0; i < lanterns.Length; i++)
-            lanterns[i] = SpecialAbilities.MakeSprite("SoulLantern", lanternSprite, home, 0.55f, i % 2 == 0 ? cyan : violet, "Effect", 11);
+            lanterns[i] = Own(SpecialAbilities.MakeSprite("SoulLantern", lanternSprite, home, 0.55f, i % 2 == 0 ? cyan : violet, "Effect", 11));
         Hostile.Play("chime", 0.8f, 0.7f);
 
         float orbit = Random.Range(0f, 360f);
@@ -326,6 +342,8 @@ public class BossSkills : MonoBehaviour
         Vector3 start = transform.position;
         Hostile.Play("whoosh", 0.7f, 0.6f);
         Fx.Spawn("fx_puddle", start, 3f * SlimeSize, Acid, 14f);
+        airborne = true;
+        landing = target;
         // 위로 솟구침
         for (float t = 0f; t < 0.3f; t += Time.deltaTime)
         {
@@ -340,6 +358,7 @@ public class BossSkills : MonoBehaviour
             yield return null;
         }
         transform.position = target;
+        airborne = false;
         if (!Alive) yield break;
         Hostile.HitCircle(target, r, 30f * Power);
         Fx.Spawn("fx_shock", target, r * 2.6f, Acid, 18f);
@@ -498,7 +517,7 @@ public class BossSkills : MonoBehaviour
         LineRenderer[] wave = Arcs(gapAt, gapSize, 1f, Fire, 1.2f);
         bool hit = false;
         Vector3 center = transform.position;
-        for (float radius = 1f; radius < 22f; radius += 10f * Time.deltaTime)
+        for (float radius = 1f; radius < 22f && Alive; radius += 10f * Time.deltaTime)
         {
             for (int i = 0; i < gaps; i++)
                 Hostile.SetArc(wave[i], center, radius, gapAt[i] + gapSize * 0.5f, gapAt[i] + 360f / gaps - gapSize * 0.5f);
@@ -520,7 +539,7 @@ public class BossSkills : MonoBehaviour
         LineRenderer[] arcs = new LineRenderer[gapAt.Length];
         for (int i = 0; i < gapAt.Length; i++)
         {
-            arcs[i] = Hostile.NewLine("FireArc", color, width, 17);
+            arcs[i] = Own(Hostile.NewLine("FireArc", color, width, 17));
             Hostile.SetArc(arcs[i], transform.position, radius, gapAt[i] + gapSize * 0.5f, gapAt[i] + 360f / gapAt.Length - gapSize * 0.5f);
         }
         return arcs;
@@ -540,7 +559,7 @@ public class BossSkills : MonoBehaviour
         float spin = Random.value < 0.5f ? 32f : -32f;
         const float length = 24f;
         LineRenderer[] beams = new LineRenderer[4];
-        for (int i = 0; i < 4; i++) beams[i] = Hostile.NewLine("HellBeam", new Color(1f, 0.45f, 0.12f, 0.35f), 0.2f, 17);
+        for (int i = 0; i < 4; i++) beams[i] = Own(Hostile.NewLine("HellBeam", new Color(1f, 0.45f, 0.12f, 0.35f), 0.2f, 17));
 
         // 1초 경고: 가는 선
         for (float t = 0f; t < 1.2f; t += Time.deltaTime)

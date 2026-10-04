@@ -76,6 +76,7 @@ public class bossbar : MonoBehaviour
 
     // ================================================================= 분열한 킹 슬라임: 슬라임마다 보스 체력바
     const float ExtraGap = 8f;
+    const float ExtraScale = 0.8f;      // 아래로 쌓는 체력바는 조금 작게 (화면을 덜 가리게)
     bool wasMulti;
     readonly List<bosss> liveSlimes = new List<bosss>();
     readonly List<GameObject> extraBars = new List<GameObject>();
@@ -99,7 +100,14 @@ public class bossbar : MonoBehaviour
             clone.name = backBar.name + "_" + (extraBars.Count + 1);
             RectTransform main = backBar.GetComponent<RectTransform>();
             RectTransform r = clone.GetComponent<RectTransform>();
-            r.anchoredPosition = main.anchoredPosition - new Vector2(0f, (main.sizeDelta.y + ExtraGap) * (extraBars.Count + 1));
+            // 바 위의 이름 글자 · 왼쪽 해골 아이콘까지 포함한 높이로 쌓음
+            // (예전엔 바 높이만큼만 내려서, 아래 체력바의 이름이 윗 체력바를 덮었음)
+            Bounds b = RectTransformUtility.CalculateRelativeRectTransformBounds(backBar.transform);
+            float prevBottom = extraBars.Count == 0
+                ? main.anchoredPosition.y + b.min.y
+                : ((RectTransform)extraBars[extraBars.Count - 1].transform).anchoredPosition.y + b.min.y * ExtraScale;
+            r.localScale = Vector3.one * ExtraScale;
+            r.anchoredPosition = new Vector2(main.anchoredPosition.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
             Transform fill = clone.transform.Find(bar.name);
             TMP_Text label = null;
             foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))

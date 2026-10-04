@@ -28,6 +28,16 @@ public class EnemySkill : MonoBehaviour
     float Size => enemy.survivesContact ? 1.5f : 1f;
     float Dmg => enemy.contactDamage;
 
+    // 스킬이 만든 표시 (기 모으는 빛 · 머리 위 스킬 이름). 적이 지워져 스킬이 중간에 끊겨도 남지 않게 꺼질 때 지움
+    readonly List<GameObject> owned = new List<GameObject>();
+    GameObject Own(GameObject g) { if (g != null) owned.Add(g); return g; }
+
+    void OnDisable()
+    {
+        foreach (GameObject g in owned) if (g != null) Destroy(g);
+        owned.Clear();
+    }
+
     void Start()
     {
         enemy = GetComponent<EnermyController>();
@@ -98,7 +108,7 @@ public class EnemySkill : MonoBehaviour
     {
         busy = true;
         enemy.casting = true;
-        GameObject tag = SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 0.9f);
+        GameObject tag = Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 0.9f));
         IEnumerator routine = type switch
         {
             EnemySkillType.BoneSpike => BoneSpike(p),
@@ -120,6 +130,7 @@ public class EnemySkill : MonoBehaviour
         if (tag != null) Destroy(tag);
         if (enemy != null) enemy.casting = false;
         if (sr != null && Alive) sr.color = enemy.baseColor;
+        owned.RemoveAll(g => g == null);
         busy = false;
     }
 
@@ -127,8 +138,8 @@ public class EnemySkill : MonoBehaviour
     IEnumerator Windup(Color color, float seconds, float speed = 8f)
     {
         seconds *= GameMode.WindupMul;      // 어려울수록 예고가 짧음
-        GameObject aura = Hostile.Glow != null
-            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 0) : null;
+        GameObject aura = Own(Hostile.Glow != null
+            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 0) : null);
         FxAnim mark = Fx.Play("fx_warn", transform.position + Vector3.up * 1.6f * Size, 1.1f, Color.white, 1f, 0f, 30, true, seconds);
         if (mark != null) mark.transform.SetParent(transform, true);
         for (float t = 0f; t < seconds; t += Time.deltaTime)

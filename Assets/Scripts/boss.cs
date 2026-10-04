@@ -93,12 +93,19 @@ public class bosss : MonoBehaviour
     void Split()
     {
         int count = slimeGen == 1 ? 2 : (gen2Deaths++ == 0 ? 2 : 1);
+        // 대점프로 공중에 떠 있다 쓰러지면 떨어질 자리에서 갈라짐 (구르는 중이면 기운 채로 복제되지 않게 똑바로)
+        BossSkills mySkills = GetComponent<BossSkills>();
+        Vector3 at = mySkills != null && mySkills.airborne ? mySkills.landing : transform.position;
         for (int i = 0; i < count; i++)
         {
             Vector3 offset = (Vector3)(Random.insideUnitCircle.normalized * 3f);
-            GameObject clone = Instantiate(gameObject, transform.position + offset, transform.rotation);
+            GameObject clone = Instantiate(gameObject, Hostile.ClampArena(at + offset), Quaternion.identity);
             clone.transform.localScale = transform.localScale * 0.75f;
+            BossSkills cloneSkills = clone.GetComponent<BossSkills>();
+            if (cloneSkills != null) cloneSkills.airborne = false;
             bosss b = clone.GetComponent<bosss>();
+            // 바로 목록에 넣음: Start(다음 프레임) 전에 다른 슬라임이 쓰러지면 남은 체력이 0으로 계산돼 보스바가 꺼지던 문제
+            slimes.Add(b);
             b.slimeGen = slimeGen + 1;
             b.setEnemyHP = ScaledHp(slimeGen == 1 ? Gen2Hp : Gen3Hp);
             b.EnemyHealth = b.setEnemyHP;
@@ -165,7 +172,7 @@ public class bosss : MonoBehaviour
                 gen3Spawned = 0;
                 slimeBossCleared = false;
             }
-            slimes.Add(this);
+            if (!slimes.Contains(this)) slimes.Add(this);       // 분열한 슬라임은 Split 에서 이미 넣음
         }
         ready = true;
     }
@@ -235,7 +242,7 @@ public class bosss : MonoBehaviour
         //animator.SetTrigger("hit");
 
         // 피격 색상 효과
-        StartCoroutine(HitEffect());
+        flashUntil = Time.time + 0.1f;
 
 
         hitCount++;
@@ -249,14 +256,24 @@ public class bosss : MonoBehaviour
         if (EnemyHealth <= 0) Die(1);
     }
 
-    IEnumerator HitEffect()
+    // 피격 번쩍임: 스킬 예고(BossSkills.Windup 등)가 매 프레임 몸 색을 바꿔도 덮이지 않게 맨 마지막(LateUpdate)에 칠함
+    // (예전엔 맞은 순간 한 번만 빨갛게 칠해서, 스킬을 준비하던 슬라임은 맞아도 번쩍이지 않았음)
+    float flashUntil;
+    bool flashing;
+
+    void LateUpdate()
     {
-        spriteRenderer.color = Color.red;
-
-        yield return new WaitForSeconds(0.1f);
-
-        // 죽지 않았을 때만 원래 색으로
-        if (!isDead) spriteRenderer.color = Color.white;
+        if (isDead) { flashing = false; return; }
+        if (Time.time < flashUntil)
+        {
+            spriteRenderer.color = Color.red;
+            flashing = true;
+        }
+        else if (flashing)
+        {
+            flashing = false;
+            spriteRenderer.color = Color.white;
+        }
     }
     PlayerController playerC;
 
