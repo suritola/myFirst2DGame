@@ -295,6 +295,8 @@ public partial class CharacterKit
     float FlaskDamageMul => formPower * (augment == AugGiant ? 1.2f : 1f);
 
     bool ForceUnstable() => augment == AugOverload && ++throwCount % 4 == 0;
+    // 다음 투척이 과부하로 반드시 불안정해지는지 (머리 위 시약 표시용, 횟수는 올리지 않음)
+    bool NextForcedUnstable => augment == AugOverload && (throwCount + 1) % 4 == 0;
 
     // 터지는 순간 (피해를 주기 전): 끌어모으기 · 튕기기 · 불꽃 · 두 번째 폭발
     void FlaskExtras(Vector3 p, float r, float hit, int depth)

@@ -82,6 +82,7 @@ public partial class CharacterKit : MonoBehaviour
         if (Instance == this) Instance = null;
         EnermyController.Killed -= OnKill;
         if (homunculus != null) Destroy(homunculus);
+        if (reagentTag != null) Destroy(reagentTag);
     }
 
     void Start()
@@ -126,6 +127,72 @@ public partial class CharacterKit : MonoBehaviour
             body.sprite = moving ? frames[2 + (int)(animT * 10f) % 4] : frames[(int)(animT * 2f) % 2];
         }
         lastPos = transform.position;
+        UpdateReagentTag();
+    }
+
+    // ================================================================= 연금술사: 다음 플라스크 시약 표시
+    // 머리 위에 다음에 던질 플라스크(시약 색) + 이름. 현자의 돌 · 과부하로 반드시 불안정해지면 보라색 "불안정"
+    GameObject reagentTag;
+    SpriteRenderer reagentIcon;
+    TMPro.TextMeshPro reagentText;
+    int shownReagent = -1;
+    Loc.Lang shownReagentLang;
+
+    void UpdateReagentTag()
+    {
+        if (Id != CharacterId.Alchemist || body == null) return;
+        if (reagentTag == null && !BuildReagentTag()) return;
+
+        bool unstable = (Special != null && Special.KitStoneActive) || NextForcedUnstable;
+        int show = unstable ? 3 : reagent;
+        if (show != shownReagent || shownReagentLang != Loc.Current)
+        {
+            shownReagent = show;
+            shownReagentLang = Loc.Current;
+            Color c = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[reagent];
+            reagentIcon.color = c;
+            reagentText.text = Loc.T(unstable ? "불안정 시약" : NextReagentName);
+            reagentText.color = Color.Lerp(c, Color.white, 0.35f);
+            // 글자 왼쪽에 플라스크 그림 (둘을 합쳐 가운데 정렬)
+            float w = reagentText.preferredWidth;
+            reagentText.transform.localPosition = new Vector3(0.3f, 0f, 0f);
+            reagentIcon.transform.localPosition = new Vector3(0.3f - w * 0.5f - 0.35f, 0.02f, 0f);
+        }
+        float top = body.bounds.max.y;
+        reagentTag.transform.position = new Vector3(transform.position.x, top + 0.45f + Mathf.Sin(Time.time * 4f) * 0.05f, 0f);
+    }
+
+    bool BuildReagentTag()
+    {
+        Sprite[] f = Fx.Frames("fx_flask");
+        if (f == null || f.Length == 0) return false;
+        reagentTag = new GameObject("ReagentTag");
+
+        GameObject icon = new GameObject("Icon");
+        icon.transform.SetParent(reagentTag.transform, false);
+        reagentIcon = icon.AddComponent<SpriteRenderer>();
+        reagentIcon.sprite = f[0];
+        reagentIcon.sortingLayerName = "Effect";
+        reagentIcon.sortingOrder = 40;
+        icon.transform.localScale = Vector3.one * (0.55f / f[0].bounds.size.y);
+
+        GameObject label = new GameObject("Label", typeof(TMPro.TextMeshPro));
+        label.transform.SetParent(reagentTag.transform, false);
+        reagentText = label.GetComponent<TMPro.TextMeshPro>();
+        UIKit.EnsureStyle();
+        if (UIKit.Font != null) reagentText.font = UIKit.Font;
+        if (UIKit.FontMaterial != null) reagentText.fontSharedMaterial = UIKit.FontMaterial;
+        reagentText.fontSize = 3.2f;
+        reagentText.fontStyle = TMPro.FontStyles.Bold;
+        reagentText.alignment = TMPro.TextAlignmentOptions.Center;
+        reagentText.enableWordWrapping = false;
+        reagentText.outlineWidth = 0.3f;
+        reagentText.outlineColor = new Color32(0, 0, 0, 255);
+        reagentText.rectTransform.sizeDelta = new Vector2(6f, 1f);
+        reagentText.sortingLayerID = SortingLayer.NameToID("Effect");
+        reagentText.sortingOrder = 41;
+        shownReagent = -1;
+        return true;
     }
 
     // ================================================================= 공통
@@ -1000,7 +1067,7 @@ public partial class CharacterKit : MonoBehaviour
     {
         Sprite[] f = Fx.Frames("fx_flask");
         if (f.Length == 0) yield break;
-        homunculus = SpecialAbilities.MakeSprite("Homunculus", f[0], transform.position, 0.7f / f[0].bounds.size.y, new Color(0.6f, 1f, 0.5f), "Character", 2);
+        homunculus = SpecialAbilities.MakeSprite("Homunculus", f[0], transform.position, 1.25f / f[0].bounds.size.y, new Color(0.6f, 1f, 0.5f), "Character", 2);      // 0.7 은 너무 작아 잘 안 보였음
         float cd = 1f, t = 0f;
         while (homunculus != null)
         {
@@ -1126,6 +1193,7 @@ public class FlaskLob : MonoBehaviour
     public static void Throw(Vector3 from, Vector3 to, float time, float size, Color tint, System.Action<Vector3> onLand)
     {
         Sprite[] f = Fx.Frames("fx_flask");
+        size *= 1.5f;           // 날아가는 플라스크가 너무 작아 잘 안 보였음 (모든 플라스크 공통)
         GameObject go = new GameObject("Flask");
         go.transform.position = from;
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
