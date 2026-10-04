@@ -223,7 +223,32 @@ public class EnemySpawner : MonoBehaviour
     {
         bossCleared = true;
         bossSpawned = false;
+        // 보스를 쓰러뜨리면 화면의 잡몹이 영혼이 되어 흩어지고, 이 스테이지에서는 더 나오지 않음
+        // (무한 모드는 끝없이 이어지므로 화면만 정리하고 계속 나옴 · 다음 스테이지는 StartStage 에서 다시 켬)
+        if (!GameMode.IsEndless) spawningEnabled = false;
+        StartCoroutine(PurgeAll());
         onBossDefeated?.Invoke(stageIndex);
+    }
+
+    IEnumerator PurgeAll()
+    {
+        if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
+        Vector3 center = playerC != null ? playerC.transform.position : transform.position;
+        var list = new System.Collections.Generic.List<EnermyController>();
+        foreach (GameObject g in GameObject.FindGameObjectsWithTag("enermy"))
+            if (g != null && g.TryGetComponent(out EnermyController e) && !e.IsDead) list.Add(e);
+        // 가까운 적부터 차례로 퍼져 나가듯
+        list.Sort((a, b) => (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude));
+        if (list.Count > 0) Hostile.Play("shimmer", 0.8f, 0.7f);
+        float started = Time.time;
+        foreach (EnermyController e in list)
+        {
+            if (e == null || e.IsDead) continue;
+            float wait = Mathf.Min(1.2f, Vector3.Distance(e.transform.position, center) * 0.03f) - (Time.time - started);
+            if (wait > 0f) yield return new WaitForSeconds(wait);
+            if (e == null || e.IsDead) continue;
+            e.Purge();
+        }
     }
 
     // 다음 스테이지 시작: 남은 적과 코인을 정리하고 처음 페이즈부터

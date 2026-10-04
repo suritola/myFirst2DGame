@@ -308,6 +308,15 @@ public class EnermyController : MonoBehaviour
         if (EnemyHealth <= 0) Die(1);
     }
 
+    // 보스가 쓰러질 때 화면 정리: 보상 없이 영혼이 되어 흩어짐
+    public void Purge()
+    {
+        if (isDead) return;
+        Fx.Spawn("fx_soulburst", transform.position, 2.6f * Mathf.Max(1f, transform.localScale.x / 3f), new Color(0.75f, 0.95f, 1f), 18f);
+        SoulWisp.Spawn(transform.position, transform.position + Vector3.up * 3f + (Vector3)(Random.insideUnitCircle * 1.5f), new Color(0.7f, 0.95f, 1f), true);
+        Die(0);
+    }
+
     IEnumerator HitEffect()
     {
         spriteRenderer.color = Color.red;
