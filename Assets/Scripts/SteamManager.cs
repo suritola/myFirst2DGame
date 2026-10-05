@@ -124,7 +124,15 @@ public class SteamManager : MonoBehaviour
     {
         // 무한 모드의 보스는 스테이지 업적과 상관없음
         if (!GameMode.IsEndless)
-            SteamAchievements.Unlock(stage == 0 ? SteamAchievements.BossLich : stage == 1 ? SteamAchievements.BossDemon : SteamAchievements.Clear);
+        {
+            if (stage == 0) SteamAchievements.Unlock(SteamAchievements.BossLich);
+            else if (stage == 1) SteamAchievements.Unlock(SteamAchievements.BossDemon);
+            else if (stage == AbyssStage.Index)
+            {
+                SteamAchievements.Unlock(SteamAchievements.Clear);      // 2.1.1~: 한 판 클리어는 4장 거울의 군주
+                if (!BossUltimate.UsedThisFight(AbyssStage.MirrorKind)) SteamAchievements.Unlock(SteamAchievements.MirrorQuick);
+            }
+        }
         if (bossFight && !bossHit) SteamAchievements.Unlock(SteamAchievements.NoHitBoss);
         if (player != null && player.PlayerHealth > 0f && player.PlayerHealth <= player.PlayerMaxHealth * 0.1f)
             SteamAchievements.Unlock(SteamAchievements.CloseCall);
@@ -187,6 +195,7 @@ public class SteamManager : MonoBehaviour
         }
         if (spawner != null && spawner.stageIndex >= 1) SteamAchievements.Unlock(SteamAchievements.EnterHell);
         if (spawner != null && spawner.stageIndex >= 2) SteamAchievements.Unlock(SteamAchievements.EnterMeadow);
+        if (spawner != null && spawner.stageIndex >= AbyssStage.Index) SteamAchievements.Unlock(SteamAchievements.EnterAbyss);
     }
 
     void OnDestroy()
@@ -242,6 +251,9 @@ public static class SteamAchievements
     public const string BarrierSurvive = "ACH_BARRIER_SURVIVE";
     public const string BarrierNoHit = "ACH_BARRIER_NOHIT";
     public const string BarrierBreak = "ACH_BARRIER_BREAK";
+    // 2.1.1~: 4장 영혼의 심연
+    public const string EnterAbyss = "ACH_ENTER_ABYSS";
+    public const string MirrorQuick = "ACH_MIRROR_QUICK";
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 

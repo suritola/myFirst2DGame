@@ -22,7 +22,7 @@
 		"NEW_ACHIEVEMENT_1_8_NAME"	"冷却地狱"
 		"NEW_ACHIEVEMENT_1_8_DESC"	"击败地狱领主"
 		"NEW_ACHIEVEMENT_1_9_NAME"	"Soul Saver"
-		"NEW_ACHIEVEMENT_1_9_DESC"	"击败史莱姆王，通关游戏"
+		"NEW_ACHIEVEMENT_1_9_DESC"	"击败镜之君主，通关游戏"
 		"NEW_ACHIEVEMENT_1_10_NAME"	"重新站起来"
 		"NEW_ACHIEVEMENT_1_10_DESC"	"第一次倒下"
 		"NEW_ACHIEVEMENT_1_11_NAME"	"老主顾"
@@ -79,5 +79,9 @@
 		"NEW_ACHIEVEMENT_1_36_DESC"	"在结界中一次都没被击中"
 		"NEW_ACHIEVEMENT_1_37_NAME"	"结界破坏者"
 		"NEW_ACHIEVEMENT_1_37_DESC"	"在结界展开时击败首领"
+		"NEW_ACHIEVEMENT_1_38_NAME"	"坠入深渊"
+		"NEW_ACHIEVEMENT_1_38_DESC"	"踏入灵魂深渊"
+		"NEW_ACHIEVEMENT_1_39_NAME"	"击碎镜像"
+		"NEW_ACHIEVEMENT_1_39_DESC"	"在镜之君主展开结界前将其击败"
 	}
 }

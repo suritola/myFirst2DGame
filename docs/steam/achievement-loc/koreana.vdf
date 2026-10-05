@@ -22,7 +22,7 @@
 		"NEW_ACHIEVEMENT_1_8_NAME"	"지옥을 식히다"
 		"NEW_ACHIEVEMENT_1_8_DESC"	"지옥의 군주를 쓰러뜨렸다"
 		"NEW_ACHIEVEMENT_1_9_NAME"	"Soul Saver"
-		"NEW_ACHIEVEMENT_1_9_DESC"	"킹 슬라임을 쓰러뜨리고 게임을 클리어했다"
+		"NEW_ACHIEVEMENT_1_9_DESC"	"거울의 군주를 쓰러뜨리고 게임을 클리어했다"
 		"NEW_ACHIEVEMENT_1_10_NAME"	"다시 일어나라"
 		"NEW_ACHIEVEMENT_1_10_DESC"	"처음으로 쓰러졌다"
 		"NEW_ACHIEVEMENT_1_11_NAME"	"단골 손님"
@@ -79,5 +79,9 @@
 		"NEW_ACHIEVEMENT_1_36_DESC"	"결계 안에서 한 번도 맞지 않고 버텼다"
 		"NEW_ACHIEVEMENT_1_37_NAME"	"결계 파괴자"
 		"NEW_ACHIEVEMENT_1_37_DESC"	"결계가 펼쳐진 동안 보스를 쓰러뜨렸다"
+		"NEW_ACHIEVEMENT_1_38_NAME"	"심연으로"
+		"NEW_ACHIEVEMENT_1_38_DESC"	"영혼의 심연에 발을 들였다"
+		"NEW_ACHIEVEMENT_1_39_NAME"	"거울을 깨뜨리다"
+		"NEW_ACHIEVEMENT_1_39_DESC"	"거울의 군주가 결계를 펼치기 전에 쓰러뜨렸다"
 	}
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 // 보스 스킬: 스킬 3개를 번갈아 쓰고, 체력이 절반 아래면 특수 스킬도 씀
 // 모든 공격은 경고를 먼저 보여줘서 움직이면 피할 수 있음
-// kind 0 = 리치 왕 (1장), 1 = 지옥의 군주 (2장)
+// kind 0 = 리치 왕 (1장), 1 = 지옥의 군주 (2장), 2 = 킹 슬라임 (3장), 3 = 거울의 군주 (4장 · 2.1.1)
 public class BossSkills : MonoBehaviour
 {
     public int kind;
@@ -58,6 +58,15 @@ public class BossSkills : MonoBehaviour
         if (boss.Enraged && Time.time >= nextSpecial)
         {
             nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul;
+            if (kind == AbyssStage.MirrorKind)
+            {
+                // 되비친 기억: 이번 판에 가장 많이 쓴 공격 (RunStats)
+                string top = TopSource();
+                if (StageManager.Instance != null)
+                    StageManager.Instance.ShowBanner(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", RunStats.SourceName(top)), 2.2f);
+                StartCoroutine(Run(ReflectedMemory(p, top)));
+                return;
+            }
             string name = kind == 0 ? Loc.T("리치 왕이 망자의 의식을 시작한다!") : kind == 1 ? Loc.T("지옥의 군주가 십자 불길을 내뿜는다!") : Loc.T("킹 슬라임이 미친 듯이 뛰어오른다!");
             if (StageManager.Instance != null) StageManager.Instance.ShowBanner(name, 2f);
             StartCoroutine(Run(kind == 0 ? DeathVortex() : kind == 1 ? HellCross() : SlimeFrenzy()));
@@ -67,7 +76,9 @@ public class BossSkills : MonoBehaviour
         if (Time.time < next) return;
         next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul;
         step = (step + 1) % 5;
-        IEnumerator skill = kind == 0
+        IEnumerator skill = kind == AbyssStage.MirrorKind
+            ? (step == 0 ? MirrorStrike(3) : step == 1 ? MirrorClones(p) : step == 2 ? BrandCross(p) : step == 3 ? ShardRings() : MirrorStrike(boss.Enraged ? 5 : 4))
+            : kind == 0
             ? (step == 0 ? SoulVolley() : step == 1 ? CurseMarks(p) : step == 2 ? BoneSpears(p) : step == 3 ? SoulChains(p) : GraspOfDead(p))
             : kind == 1
             ? (step == 0 ? FlameCharge(p) : step == 1 ? MeteorRain(p) : step == 2 ? FireWave() : step == 3 ? HellfirePillars(p) : LavaFissure(p))
@@ -99,6 +110,261 @@ public class BossSkills : MonoBehaviour
     }
 
     Vector2 DirTo(PlayerController p) => ((Vector2)(p.transform.position - transform.position)).normalized;
+
+    // ================================================================= 거울의 군주 (4장 · 2.1.1)
+    static readonly Color Mirror = new Color(0.78f, 0.9f, 1f, 0.95f);
+
+    static Vector2 Rotate(Vector2 v, float deg)
+    {
+        float a = deg * Mathf.Deg2Rad, c = Mathf.Cos(a), s = Mathf.Sin(a);
+        return new Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
+    }
+
+    // 거울 공격: 지금 캐릭터의 평타를 흉내 냄 (거너 연사 · 검사 돌진 베기 · 도적 표창 부채 · 궁수 관통 화살 · 연금술사 플라스크)
+    IEnumerator MirrorStrike(int rounds)
+    {
+        CharacterId who = CharacterData.Selected;
+        yield return Windup(Mirror, 0.5f);
+        for (int r = 0; r < rounds && Alive; r++)
+        {
+            PlayerController p = Hostile.Player;
+            if (p == null) yield break;
+            Vector2 d = DirTo(p);
+            Vector3 c = transform.position;
+            switch (who)
+            {
+                case CharacterId.Swordsman:
+                    {
+                        Vector3 at = Hostile.ClampArena(c + (Vector3)(d * 4.5f));
+                        if (Hostile.IsWall(at)) at = c;
+                        Hostile.Circle(at, 3.6f, 0.6f, Mirror);
+                        yield return new WaitForSeconds(0.6f);
+                        if (!Alive) yield break;
+                        transform.position = at;
+                        Fx.Spawn("fx_slash", at, 8f, new Color(0.85f, 0.95f, 1f), 30f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 14);
+                        Hostile.HitCircle(at, 3.6f, 22f * Power);
+                        Hostile.Play("whoosh", 0.7f, 0.8f);
+                        break;
+                    }
+                case CharacterId.Rogue:
+                    for (int i = -3; i <= 3; i++) Hostile.Shoot(c, Rotate(d, i * 12f), 12f, 14f * Power, 0.5f, Mirror, 1.3f, 3f);
+                    Hostile.Play("whoosh", 0.5f, 1.4f);
+                    yield return new WaitForSeconds(0.55f);
+                    break;
+                case CharacterId.Archer:
+                    {
+                        Hostile.Line(c, c + (Vector3)(d * 30f), 1.2f, 0.65f, Mirror);
+                        yield return new WaitForSeconds(0.65f);
+                        if (!Alive) yield break;
+                        Hostile.Shoot(transform.position, d, 28f, 24f * Power, 0.7f, Mirror, 2f, 2f);
+                        Hostile.Play("zap", 0.5f, 1.3f);
+                        yield return new WaitForSeconds(0.2f);
+                        break;
+                    }
+                case CharacterId.Alchemist:
+                    {
+                        Vector3 at = Hostile.ClampArena(p.transform.position + (Vector3)(Random.insideUnitCircle * 2f));
+                        Hostile.Circle(at, 2.6f, 0.8f, Mirror);
+                        yield return new WaitForSeconds(0.8f);
+                        if (!Alive) yield break;
+                        Fx.Spawn("fx_explosion", at, 5.5f, Mirror, 18f);
+                        Hostile.HitCircle(at, 2.6f, 20f * Power);
+                        HazardZone.Spawn(at, 2.2f, 3f, 6f * Power, new Color(0.7f, 0.85f, 1f, 0.7f), "fx_puddle", 0.7f);
+                        Hostile.Play("boom", 0.5f, 1.2f);
+                        break;
+                    }
+                default:    // 거너: 세 발 연사
+                    for (int i = 0; i < 3 && Alive; i++)
+                    {
+                        Hostile.Shoot(transform.position, DirTo(p), 18f, 15f * Power, 0.5f, Mirror, 1.4f, 3f);
+                        Hostile.Play("zap", 0.35f, 1.6f);
+                        yield return new WaitForSeconds(0.12f);
+                    }
+                    break;
+            }
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
+
+    // 분신술: 플레이어 둘레 세 자리에 거울상이 나타나고 그중 진짜(보스)만 맞음. 모두 거울 조각을 쏜 뒤 가짜는 깨짐
+    IEnumerator MirrorClones(PlayerController p)
+    {
+        Vector3 center = p.transform.position;
+        float start = Random.Range(0f, 360f);
+        int real = Random.Range(0, 3);
+        List<GameObject> fakes = new List<GameObject>();
+        Vector3[] spots = new Vector3[3];
+        for (int i = 0; i < 3; i++)
+        {
+            float a = (start + i * 120f) * Mathf.Deg2Rad;
+            spots[i] = Hostile.ClampArena(center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 8f);
+            if (Hostile.IsWall(spots[i])) spots[i] = Hostile.ClampArena(center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 4f);
+        }
+        Fx.Spawn("fx_soulburst", transform.position, 9f, Mirror, 16f);
+        Hostile.Play("shimmer", 0.6f, 0.8f);
+        for (int i = 0; i < 3; i++)
+        {
+            Fx.Spawn("fx_shock", spots[i], 6f, Mirror, 20f);
+            if (i == real) { transform.position = spots[i]; continue; }
+            GameObject g = Own(new GameObject("MirrorClone"));
+            g.transform.position = spots[i];
+            g.transform.localScale = transform.localScale;
+            SpriteRenderer s = g.AddComponent<SpriteRenderer>();
+            s.sprite = sr.sprite;
+            s.sortingLayerID = sr.sortingLayerID;
+            s.sortingOrder = sr.sortingOrder;
+            s.flipX = spots[i].x > center.x;
+            s.color = new Color(0.85f, 0.92f, 1f, 0.9f);
+            AbyssBody body = g.AddComponent<AbyssBody>();
+            body.frames = AbyssStage.Frames("mirrorlord");
+            fakes.Add(g);
+        }
+        yield return Windup(Mirror, 0.9f);
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 from = i == real ? transform.position : spots[i];
+            PlayerController pl = Hostile.Player;
+            if (pl == null) break;
+            Vector2 d = ((Vector2)(pl.transform.position - from)).normalized;
+            for (int k = -1; k <= 1; k++) Hostile.Shoot(from, Rotate(d, k * 14f), 11f, 15f * Power, 0.5f, Mirror, 1.4f, 3f);
+        }
+        Hostile.Play("zap", 0.5f, 1.2f);
+        yield return new WaitForSeconds(2.2f);
+        foreach (GameObject g in fakes)
+        {
+            if (g == null) continue;
+            Fx.Spawn("fx_spark", g.transform.position, 5f, Mirror, 18f);
+            Destroy(g);
+        }
+        Hostile.Play("crack", 0.5f, 1.4f);
+    }
+
+    // 낙인: 플레이어 곁으로 순간이동한 뒤 자기 자리에 십자 광선
+    IEnumerator BrandCross(PlayerController p)
+    {
+        Vector3 dest = Hostile.ClampArena(p.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f));
+        if (Hostile.IsWall(dest)) dest = transform.position;
+        Hostile.Circle(dest, 2.5f, 0.6f, Mirror);
+        Fx.Spawn("fx_soulburst", transform.position, 8f, Mirror, 16f);
+        for (float t = 0f; t < 0.6f && Alive; t += Time.deltaTime)
+        {
+            sr.color = new Color(1f, 1f, 1f, 1f - t / 0.6f);
+            yield return null;
+        }
+        if (!Alive) yield break;
+        transform.position = dest;
+        sr.color = Color.white;
+        Fx.Spawn("fx_shock", dest, 7f, Mirror, 20f);
+
+        const float half = 16f;
+        int arms = boss.Enraged ? 2 : 1;
+        for (int n = 0; n < arms && Alive; n++)
+        {
+            float tilt = n * 45f;
+            Vector3 c = transform.position;
+            Vector3[] ends = new Vector3[4];
+            for (int i = 0; i < 2; i++)
+            {
+                float a = (tilt + i * 90f) * Mathf.Deg2Rad;
+                Vector3 d = new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * half;
+                ends[i * 2] = c - d;
+                ends[i * 2 + 1] = c + d;
+                Hostile.Line(c - d, c + d, 1.8f, 0.9f, Mirror);
+            }
+            yield return Windup(Mirror, 0.9f);
+            if (!Alive) yield break;
+            for (int i = 0; i < 2; i++) Fx.Beam(ends[i * 2], ends[i * 2 + 1], 1.6f, new Color(0.8f, 0.92f, 1f), 0.35f);
+            PlayerController pl = Hostile.Player;
+            if (pl != null)
+                for (int i = 0; i < 2; i++)
+                    if (Hostile.DistanceToSegment(pl.transform.position, ends[i * 2], ends[i * 2 + 1]) < 1f) { pl.TryHit(24f * Power); break; }
+            Hostile.Play("zap", 0.7f, 0.8f);
+            Hostile.Shake(0.15f);
+        }
+    }
+
+    // 거울 조각 고리: 세 겹으로 엇갈려 퍼지는 조각 (틈으로 피함)
+    IEnumerator ShardRings()
+    {
+        yield return Windup(Mirror, 0.6f);
+        for (int w = 0; w < 3 && Alive; w++)
+        {
+            const int n = 14;
+            float off = w * (180f / n);
+            for (int i = 0; i < n; i++)
+            {
+                float a = (off + i * 360f / n) * Mathf.Deg2Rad;
+                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 7.5f, 14f * Power, 0.5f, Mirror, 1.5f, 4f);
+            }
+            Hostile.Play("shimmer", 0.4f, 1.3f + w * 0.1f);
+            yield return new WaitForSeconds(0.55f);
+        }
+    }
+
+    // 이번 판에 가장 많이 준 피해의 출처 (없으면 평타)
+    static string TopSource()
+    {
+        string top = DamageSource.Basic;
+        float best = 0f;
+        foreach (KeyValuePair<string, float> kv in RunStats.DamageDealt)
+            if (kv.Key != DamageSource.Other && kv.Value > best) { best = kv.Value; top = kv.Key; }
+        return top;
+    }
+
+    // 되비친 기억: 가장 많이 쓴 공격을 거꾸로 돌려줌
+    IEnumerator ReflectedMemory(PlayerController p, string top)
+    {
+        if (top == DamageSource.Basic) { yield return MirrorStrike(6); yield break; }
+        if (top == DamageSource.Signature) { yield return MirrorClones(p); yield return MirrorClones(Hostile.Player ?? p); yield break; }
+        if (top == DamageSource.Ult)
+        {
+            // 거대한 광선: 굵은 경고 뒤 플레이어 쪽으로 천천히 훑음
+            Vector2 d = DirTo(p);
+            float baseAngle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+            const float length = 32f;
+            Hostile.Line(transform.position, transform.position + (Vector3)(d * length), 4f, 1.4f, Mirror);
+            yield return Windup(Mirror, 1.4f);
+            bool hit = false;
+            for (float t = 0f; t < 1.4f && Alive; t += Time.deltaTime)
+            {
+                float a = (baseAngle + Mathf.Sin(t * 2.2f) * 18f) * Mathf.Deg2Rad;
+                Vector3 end = transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length;
+                Fx.Beam(transform.position, end, 3.2f, new Color(0.85f, 0.95f, 1f), 0.05f);
+                PlayerController pl = Hostile.Player;
+                if (!hit && pl != null && Hostile.DistanceToSegment(pl.transform.position, transform.position, end) < 1.7f) hit = pl.TryHit(34f * Power);
+                yield return null;
+            }
+            Hostile.Shake(0.25f);
+            yield break;
+        }
+        if (top == DamageSource.Tree)
+        {
+            // 영혼 트리: 플레이어를 끌어당기며 조각 고리
+            StartCoroutine(ShardRings());
+            for (float t = 0f; t < 2f && Alive; t += Time.deltaTime)
+            {
+                PlayerController pl = Hostile.Player;
+                if (pl == null || pl.IsDying) break;
+                Vector3 next = Hostile.ClampArena(pl.transform.position + (transform.position - pl.transform.position).normalized * 2.2f * Time.deltaTime);
+                if (!Hostile.IsWall(next)) pl.transform.position = next;
+                yield return null;
+            }
+            yield break;
+        }
+        // 특수 능력 (무기 · 스킬 이름) · 그 밖: 네 갈래 나선 조각
+        yield return Windup(Mirror, 0.6f);
+        float spin = Random.value < 0.5f ? 1f : -1f;
+        for (float t = 0f; t < 2.6f && Alive; t += 0.11f)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                float a = (t * 75f * spin + k * 90f) * Mathf.Deg2Rad;
+                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 8f, 13f * Power, 0.45f, Mirror, 1.3f, 4f);
+            }
+            if (Mathf.Repeat(t, 0.44f) < 0.11f) Hostile.Play("shimmer", 0.25f, 1.5f);
+            yield return new WaitForSeconds(0.11f);
+        }
+    }
 
     // ================================================================= 리치 왕
     // 망령의 손아귀: 보스 주변 세 겹의 고리에서 차례로 영혼의 손(가시)이 솟음 (고리 사이로 피함)

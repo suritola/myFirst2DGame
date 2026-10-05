@@ -1,6 +1,6 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 38개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개 추가)
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 40개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개, 2.1.1에 4장 영혼의 심연 2개 추가)
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
 - 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `tools/steam/make_achievement_icons.py` 로 만든 PNG를 JPG로 변환 (Steamworks는 JPG 권장)
@@ -19,7 +19,7 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_500` | **학살자** — 한 판에서 적 500마리를 처치했다 | **Slayer** — Defeat 500 enemies in one run | **殲滅者** — 1回のプレイで敵を500体倒した | **屠戮者** — 单局击败500个敌人 |
 | `ACH_BOSS_LICH` | **왕의 몰락** — 리치 왕을 쓰러뜨렸다 | **Fall of the King** — Defeat the Lich King | **王の失墜** — リッチ王を倒した | **王之陨落** — 击败巫妖王 |
 | `ACH_BOSS_DEMON` | **지옥을 식히다** — 지옥의 군주를 쓰러뜨렸다 | **Hell Freezes Over** — Defeat the Demon Lord | **地獄を鎮めて** — 地獄の君主を倒した | **冷却地狱** — 击败地狱领主 |
-| `ACH_CLEAR` | **Soul Saver** — 킹 슬라임을 쓰러뜨리고 게임을 클리어했다 | **Soul Saver** — Defeat the King Slime and clear the game | **Soul Saver** — キングスライムを倒してゲームをクリア | **Soul Saver** — 击败史莱姆王，通关游戏 |
+| `ACH_CLEAR` | **Soul Saver** — 거울의 군주를 쓰러뜨리고 게임을 클리어했다 | **Soul Saver** — Defeat the Mirror Sovereign and clear the game | **Soul Saver** — 鏡の君主を倒してゲームをクリア | **Soul Saver** — 击败镜之君主，通关游戏 |
 | `ACH_FIRST_DEATH` | **다시 일어나라** — 처음으로 쓰러졌다 | **Get Back Up** — Fall in battle for the first time | **立ち上がれ** — 初めて倒れた | **重新站起来** — 第一次倒下 |
 | `ACH_SHOPPER` | **단골 손님** — 떠돌이 상점을 처음 열었다 | **Regular Customer** — Open the wandering shop | **常連客** — さすらいのショップを初めて開いた | **老主顾** — 第一次打开流浪商店 |
 | `ACH_FULL_SKILLS` | **운명을 쥐다** — 한 판에서 운명 가지 칸 3개를 배웠다 | **Hold Your Fate** — Learn 3 Fate nodes in one run | **運命を握る** — 1回のプレイで運命の枝を3マス習得した | **执掌命运** — 单局学习3个命运节点 |
@@ -48,6 +48,8 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_BARRIER_SURVIVE` | **결계를 버티다** — 보스의 결계를 끝까지 버텨 냈다 | **Endure the Barrier** — Survive a boss barrier to the end | **結界を耐えて** — ボスの結界を最後まで耐え抜いた | **熬过结界** — 坚持到首领结界结束 |
 | `ACH_BARRIER_NOHIT` | **흠집 하나 없이** — 결계 안에서 한 번도 맞지 않고 버텼다 | **Not a Scratch** — Survive a boss barrier without being hit | **傷ひとつなく** — 結界の中で一度も被弾せずに耐え抜いた | **毫发无伤** — 在结界中一次都没被击中 |
 | `ACH_BARRIER_BREAK` | **결계 파괴자** — 결계가 펼쳐진 동안 보스를 쓰러뜨렸다 | **Barrier Breaker** — Defeat a boss while its barrier is up | **結界破り** — 結界が展開している間にボスを倒した | **结界破坏者** — 在结界展开时击败首领 |
+| `ACH_ENTER_ABYSS` | **심연으로** — 영혼의 심연에 발을 들였다 | **Into the Abyss** — Enter the Abyss of Souls | **深淵へ** — 魂の深淵に足を踏み入れた | **坠入深渊** — 踏入灵魂深渊 |
+| `ACH_MIRROR_QUICK` | **거울을 깨뜨리다** — 거울의 군주가 결계를 펼치기 전에 쓰러뜨렸다 | **Shattered Reflection** — Defeat the Mirror Sovereign before it raises its barrier | **鏡を砕く** — 鏡の君主が結界を展開する前に倒した | **击碎镜像** — 在镜之君主展开结界前将其击败 |
 
 ## 풀리는 조건 (코드 기준)
 
@@ -59,7 +61,7 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_EVOLVE` | 능력 진화 (영혼 트리의 패시브 진화, 거너 무기 2차 진화) |
 | `ACH_LEVEL_10` | 플레이어 레벨 10 |
 | `ACH_KILLS_500` | 한 판(게임 씬을 새로 시작한 뒤) 처치 수 500 |
-| `ACH_BOSS_LICH` / `ACH_BOSS_DEMON` / `ACH_CLEAR` | 스테이지 1 / 2 / 3 보스 처치 |
+| `ACH_BOSS_LICH` / `ACH_BOSS_DEMON` / `ACH_CLEAR` | 1장 / 2장 / 4장(2.1.1~, 예전엔 3장) 보스 처치 |
 | `ACH_FIRST_DEATH` | 게임 오버 화면에 처음 도달 |
 | `ACH_SHOPPER` | 떠돌이 상점 제단에서 상점을 엶 |
 | `ACH_FULL_SKILLS` / `ACH_ARSENAL` | 한 판에서 운명 가지 칸 3개 / 무기 2차 진화 (1.8.6에 조건 변경: 예전 조건인 스킬 3개 · 특수 무기 2개는 1.8.2에 스킬이 빠지며 달성할 수 없게 됨. API 이름은 그대로) |
@@ -68,7 +70,7 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_KILLS_3000_TOTAL` | 여러 판 누적 처치 수 3000 |
 | `ACH_NO_HIT_BOSS` | 스테이지 보스가 나온 뒤 쓰러질 때까지 체력이 한 번도 줄지 않음 |
 | `ACH_CLOSE_CALL` | 스테이지 보스를 쓰러뜨린 순간 체력이 최대의 10% 이하 |
-| `ACH_UNLOCK_DIFFICULTY` / `ACH_CLEAR_NORMAL` / `ACH_CLEAR_HARD` | 쉬움 / 보통 / 어려움에서 3장 보스(킹 슬라임) 처치 |
+| `ACH_UNLOCK_DIFFICULTY` / `ACH_CLEAR_NORMAL` / `ACH_CLEAR_HARD` | 쉬움 / 보통 / 어려움에서 마지막 보스(2.1.1~ 4장 거울의 군주) 처치 |
 | `ACH_ENDLESS_10` / `ACH_ENDLESS_20` | 무한 모드 한 판에서 10분 / 20분 생존 (일시정지 시간은 빼고) |
 | `ACH_ENDLESS_BOSSES` | 무한 모드 한 판에서 보스 5마리 처치 |
 | `ACH_WEAPON_EVOLVE` | 보스를 쓰러뜨리고 무기 1차 진화 |
@@ -79,6 +81,8 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_SKILL_EVOLVE_15` | 서로 다른 스킬 진화(캐릭터별) 15종, 이 PC에 누적 (PlayerPrefs `stats.skillEvos`) |
 | `ACH_BARRIER_SURVIVE` / `ACH_BARRIER_NOHIT` | 보스 결계가 끝날 때까지 버팀 / 그 동안 피해를 한 번도 받지 않음 |
 | `ACH_BARRIER_BREAK` | 결계가 펼쳐진 동안 그 보스를 쓰러뜨림 |
+| `ACH_ENTER_ABYSS` | 4장 영혼의 심연에 들어섬 (2.1.1, 무한 모드 제외) |
+| `ACH_MIRROR_QUICK` | 거울의 군주가 결계 「거울의 방」을 한 번도 펼치지 않은 채 쓰러뜨림 (2.1.1) |
 
 ## Steamworks 현지화 파일
 

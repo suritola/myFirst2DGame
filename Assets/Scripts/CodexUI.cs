@@ -33,7 +33,7 @@ public static class CodexUI
         "상점 제단(적을 처치하다 보면 나타남)에서 코인으로 강화합니다",
     };
 
-    static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원" };
+    static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };
 
     // 적 이름 · 설명 (프리팹 이름으로 찾음)
     // 프리팹 이름으로 적 이름 (번역됨, 모르면 빈 문자열)
@@ -54,6 +54,12 @@ public static class CodexUI
         { "MushroomBrute", ("버섯 거인", "주변에 버섯 지뢰를 심고 잠시 뒤 차례로 터뜨립니다.") },
         { "DireWolf", ("다이어울프", "울부짖어 주변 적을 잠시 빠르게 만듭니다.") },
         { "Treant", ("트렌트", "플레이어 쪽으로 뿌리 가시를 차례로 솟게 합니다.") },
+        // 2.1.1 4장 영혼의 심연 (AbyssStage 가 코드로 만듦)
+        { "AbyssWisp", ("떠도는 혼", "흔들리며 다가오다 가끔 빠르게 돌진합니다.") },
+        { "ChainWraith", ("사슬 망령", "경로를 보여 준 뒤 사슬을 던져, 맞으면 앞까지 끌어당깁니다.") },
+        { "VoidEye", ("공허 눈알", "부채꼴 양 끝을 보여 준 뒤 그 사이를 광선으로 훑습니다.") },
+        { "SoulReaper", ("영혼 수확자", "둘레를 두 번 베어 냅니다. 두 번째는 바깥 고리라 안쪽이 안전합니다.") },
+        { "AbyssColossus", ("심연 거상", "세 갈래로 땅을 가르며 영혼빛 가시를 솟게 합니다.") },
     };
 
     static readonly string[] BossDesc =
@@ -61,6 +67,7 @@ public static class CodexUI
         "부하를 부르며 망령의 손아귀 · 저주 표식 · 뼈 가시 격자를 씁니다.\n특수: 망자의 의식 - 영혼 등불이 돌며 나선 탄막을 쏜 뒤 대폭발",
         "화염 돌진 · 운석 낙하 · 화염 파동(틈으로 피하세요)을 씁니다.\n특수: 십자 불길 - 네 줄기 불기둥이 천천히 회전",
         "대점프 · 산성 비 · 구르기 돌진을 씁니다. 쓰러질 때마다 작고 빠르게 분열합니다 (1 → 2 → 3마리).\n특수: 슬라임 폭우 - 빠른 대점프 3연속",
+        "플레이어의 평타를 흉내 내고, 분신 셋 중 진짜만 피해를 받는 분신술 · 순간이동 십자 낙인을 씁니다.\n특수: 되비친 기억 - 이번 판에 가장 많이 쓴 공격을 거꾸로 돌려줌",
     };
 
     // 보스 필살기 「결계」 (2.1~)
@@ -69,6 +76,7 @@ public static class CodexUI
         "필살기 「망자의 묘역」 — 15초 동안 회전하는 영혼 광선 넷 · 틈이 있는 저주 고리 · 발밑에서 솟는 뼈 가시",
         "필살기 「연옥 낙화」 — 15초 동안 쏟아지는 운석 · 틈이 있는 화염 고리 · 결계를 가로지르는 용암 줄기",
         "필살기 「산성 범람」 — 15초 동안 결계 벽에 튕기는 산성 덩어리 · 산성 비 · 번갈아 솟는 간헐천. 갈라진 슬라임은 각자 체력을 가진 따로 된 몸이며, 모두 쓰러뜨려야 이깁니다",
+        "필살기 「거울의 방」 — 15초 동안 둘레의 거울들이 차례로 플레이어를 노려 광선을 되쏘고, 깨진 거울 조각이 쏟아집니다",
     };
 
     // 필살기 설명 (무기 ID 순서) · 즉발 여부
@@ -205,6 +213,12 @@ public static class CodexUI
             if (e != null) tag += "  ·  " + Stats(e.setEnemyHP, e.speed, e.contactDamage);
             Card(SpriteOf(p), Color.white, Loc.T(txt.name ?? p.name), tag, Loc.T(txt.desc ?? ""));
         }
+        // 4장 적은 프리팹이 없어 도트와 AbyssStage 수치로
+        foreach (var a in AbyssStage.CodexEnemies())
+        {
+            EnemyText.TryGetValue(a.name, out var txt);
+            Card(AbyssStage.Frames(a.art)[0], Color.white, Loc.T(txt.name ?? a.name), Loc.T(StageNames[3]) + "  ·  " + Stats(a.hp, a.speed, a.contact), Loc.T(txt.desc ?? ""));
+        }
     }
 
     static void Bosses(CodexData data)
@@ -222,6 +236,9 @@ public static class CodexUI
             if (b != null) tag += "  ·  " + Stats(b.setEnemyHP, b.speed, b.contactDamage);
             Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, Loc.T(BossDesc[Mathf.Clamp(kind, 0, 2)]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
         }
+        int mk = AbyssStage.MirrorKind;
+        Card(AbyssStage.Frames("mirrorlord")[0], Color.white, bossbar.BossName(mk), Loc.T(StageNames[3]) + "  ·  " + Stats(AbyssStage.MirrorHp, 7.5f, 48f),
+             Loc.T(BossDesc[mk]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[mk])));
     }
 
     static void Specials(CodexData data, SpecialKind kind)

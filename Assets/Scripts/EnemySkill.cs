@@ -7,6 +7,7 @@ public enum EnemySkillType
 {
     None, BoneSpike, Leap, Blink, XLaser, SelfDestruct, Pounce, GroundSlam, Whirlwind,
     AcidPool, PollenCloud, MushroomMines, Howl, RootLine,
+    ChainPull, GazeBeam, ReapSweep, Fissure,        // 2.1.1 4장 심연 (AbyssStage)
 }
 
 // 적이 하나씩 쓰는 스킬. 투사체 없이 점프 · 레이저 · 장판 등으로 공격하고,
@@ -62,6 +63,10 @@ public class EnemySkill : MonoBehaviour
         EnemySkillType.MushroomMines => 6.5f,
         EnemySkillType.Howl => 8f,
         EnemySkillType.RootLine => 5.5f,
+        EnemySkillType.ChainPull => 6f,
+        EnemySkillType.GazeBeam => 6.5f,
+        EnemySkillType.ReapSweep => 4.5f,
+        EnemySkillType.Fissure => 6.5f,
         _ => 5f,
     };
 
@@ -80,6 +85,10 @@ public class EnemySkill : MonoBehaviour
         EnemySkillType.MushroomMines => d < 9f,
         EnemySkillType.Howl => d < 18f,
         EnemySkillType.RootLine => d > 3f && d < 14f,
+        EnemySkillType.ChainPull => d > 4f && d < 11f,
+        EnemySkillType.GazeBeam => d < 13f,
+        EnemySkillType.ReapSweep => d < 4.5f * Size,
+        EnemySkillType.Fissure => d < 13f,
         _ => false,
     };
 
@@ -101,7 +110,8 @@ public class EnemySkill : MonoBehaviour
         EnemySkillType.XLaser => "십자 광선", EnemySkillType.SelfDestruct => "자폭", EnemySkillType.Pounce => "덮치기",
         EnemySkillType.GroundSlam => "지면 강타", EnemySkillType.Whirlwind => "회전 칼날", EnemySkillType.AcidPool => "산성 웅덩이",
         EnemySkillType.PollenCloud => "꽃가루", EnemySkillType.MushroomMines => "버섯 지뢰", EnemySkillType.Howl => "울부짖음",
-        EnemySkillType.RootLine => "뿌리 가시", _ => "",
+        EnemySkillType.RootLine => "뿌리 가시", EnemySkillType.ChainPull => "사슬 던지기", EnemySkillType.GazeBeam => "공허의 시선",
+        EnemySkillType.ReapSweep => "영혼 베기", EnemySkillType.Fissure => "심연 균열", _ => "",
     };
 
     IEnumerator Run(PlayerController p)
@@ -124,6 +134,10 @@ public class EnemySkill : MonoBehaviour
             EnemySkillType.MushroomMines => MushroomMines(),
             EnemySkillType.Howl => Howl(),
             EnemySkillType.RootLine => RootLine(p),
+            EnemySkillType.ChainPull => ChainPull(p),
+            EnemySkillType.GazeBeam => GazeBeam(p),
+            EnemySkillType.ReapSweep => ReapSweep(),
+            EnemySkillType.Fissure => Fissure(p),
             _ => null,
         };
         if (routine != null) yield return StartCoroutine(routine);
@@ -461,6 +475,135 @@ public class EnemySkill : MonoBehaviour
             Hostile.HitCircle(at, 1.1f, Dmg);
             Hostile.Play("crack", 0.25f, 1.2f + i * 0.05f);
             yield return new WaitForSeconds(0.09f);
+        }
+    }
+
+    // ================================================================= 4장 심연 (2.1.1)
+    static readonly Color Soul = new Color(0.55f, 0.92f, 1f, 0.9f);
+    static readonly Color Void = new Color(0.72f, 0.4f, 1f, 0.9f);
+
+    // 사슬 망령: 경로를 보여 준 뒤 사슬을 던져, 맞으면 끌어당김 (적 앞 2.5칸까지만 · 끌린 뒤 피할 틈이 있게)
+    IEnumerator ChainPull(PlayerController p)
+    {
+        Vector2 dir = DirTo(p);
+        const float length = 11f;
+        Vector3 start = transform.position;
+        Vector3 end = start + (Vector3)(dir * length);
+        Hostile.Line(start, end, 1.3f, 0.7f, Void);
+        yield return Windup(Void, 0.7f);
+        if (!Alive) yield break;
+
+        Hostile.Play("clank", 0.5f, 0.8f);
+        bool caught = false;
+        for (float t = 0f; t < 0.22f && !caught; t += Time.deltaTime)
+        {
+            Vector3 tip = Vector3.Lerp(start, end, t / 0.22f);
+            Fx.Beam(start, tip, 0.45f, new Color(0.8f, 0.82f, 0.95f), 0.05f);
+            PlayerController pl = Hostile.Player;
+            if (pl != null && Hostile.DistanceToSegment(pl.transform.position, start, tip) < 0.75f) caught = pl.TryHit(Dmg * 0.7f);
+            yield return null;
+        }
+        if (!caught || !Alive) yield break;
+
+        PlayerController target = Hostile.Player;
+        if (target == null || target.IsDying) yield break;
+        Vector3 from = target.transform.position;
+        Vector3 to = transform.position + (Vector3)(((Vector2)(from - transform.position)).normalized * 2.5f);
+        Hostile.Play("whoosh", 0.5f, 0.7f);
+        for (float t = 0f; t < 0.25f; t += Time.deltaTime)
+        {
+            if (target == null) yield break;
+            Vector3 next = Hostile.ClampArena(Vector3.Lerp(from, to, t / 0.25f));
+            if (Hostile.IsWall(next)) break;
+            target.transform.position = next;
+            Fx.Beam(transform.position, target.transform.position, 0.4f, new Color(0.8f, 0.82f, 0.95f), 0.05f);
+            yield return null;
+        }
+    }
+
+    // 공허 눈알: 플레이어 쪽 부채꼴 양 끝을 보여 준 뒤 그 사이를 훑는 광선 (한 번만 맞음)
+    IEnumerator GazeBeam(PlayerController p)
+    {
+        Vector2 dir = DirTo(p);
+        const float length = 13f;
+        float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        float sweep = Random.value < 0.5f ? 40f : -40f;
+        for (int i = -1; i <= 1; i += 2)
+        {
+            float a = (baseAngle + sweep * 0.5f * i) * Mathf.Deg2Rad;
+            Hostile.Line(transform.position, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length, 0.8f, 0.85f, Void);
+        }
+        yield return Windup(Void, 0.85f, 10f);
+        if (!Alive) yield break;
+
+        Hostile.Play("zap", 0.6f, 0.5f);
+        bool hit = false;
+        for (float t = 0f; t < 1.1f && Alive; t += Time.deltaTime)
+        {
+            float a = (baseAngle - sweep * 0.5f + sweep * t / 1.1f) * Mathf.Deg2Rad;
+            Vector3 end = transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length;
+            Fx.Beam(transform.position, end, 0.9f, new Color(0.8f, 0.45f, 1f), 0.05f);
+            PlayerController pl = Hostile.Player;
+            if (!hit && pl != null && Hostile.DistanceToSegment(pl.transform.position, transform.position, end) < 0.7f) hit = pl.TryHit(Dmg);
+            yield return null;
+        }
+    }
+
+    // 영혼 수확자: 둘레를 두 번 베어 냄 (처음은 가까이, 다음은 그 바깥 고리 · 두 번째 때는 안쪽이 안전)
+    IEnumerator ReapSweep()
+    {
+        float r1 = 3.2f * Size, r2 = 5f * Size;
+        Vector3 c = transform.position;
+        Hostile.Circle(c, r1, 0.6f, Soul);
+        yield return Windup(Soul, 0.6f);
+        if (!Alive) yield break;
+        Fx.Spawn("fx_slash", c, r1 * 2.2f, new Color(0.7f, 0.95f, 1f), 30f, Random.Range(0f, 360f), 14);
+        Hostile.HitCircle(c, r1, Dmg);
+        Hostile.Play("whoosh", 0.6f, 0.8f);
+
+        Hostile.Circle(c, r2, 0.45f, Soul);
+        yield return new WaitForSeconds(0.45f);
+        if (!Alive) yield break;
+        Fx.Spawn("fx_slash", c, r2 * 2.2f, new Color(0.7f, 0.95f, 1f), 30f, Random.Range(0f, 360f), 14);
+        Fx.Spawn("fx_shock", c, r2 * 2.2f, Soul, 20f);
+        PlayerController pl = Hostile.Player;
+        if (pl != null)
+        {
+            float d = Vector2.Distance(pl.transform.position, c);
+            if (d <= r2 + 0.4f && d >= r1 - 0.4f) pl.TryHit(Dmg);
+        }
+        Hostile.Play("whoosh", 0.6f, 0.6f);
+    }
+
+    // 심연 거상: 플레이어 쪽 세 갈래로 땅이 갈라지며 영혼빛 가시가 차례로 솟음 (한 번만 맞음)
+    IEnumerator Fissure(PlayerController p)
+    {
+        Vector2 dir = DirTo(p);
+        const int count = 7;
+        const float spacing = 1.8f;
+        float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        Vector3 c = transform.position;
+        Vector2[] dirs = new Vector2[3];
+        for (int k = 0; k < 3; k++)
+        {
+            float a = (baseAngle + (k - 1) * 22f) * Mathf.Deg2Rad;
+            dirs[k] = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+            Hostile.Line(c + (Vector3)(dirs[k] * 1.5f), c + (Vector3)(dirs[k] * (1.5f + spacing * count)), 1.4f, 0.8f, Soul);
+        }
+        yield return Windup(Soul, 0.8f, 5f);
+        if (!Alive) yield break;
+        Hostile.Shake(0.15f);
+        bool hit = false;
+        for (int i = 0; i < count && Alive; i++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                Vector3 at = c + (Vector3)(dirs[k] * (1.5f + spacing * i));
+                Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.3f, new Color(0.6f, 0.9f, 1f), 18f);
+                if (!hit) hit = Hostile.HitCircle(at, 1f, Dmg);
+            }
+            Hostile.Play("crack", 0.3f, 0.9f + i * 0.05f);
+            yield return new WaitForSeconds(0.08f);
         }
     }
 }

@@ -22,7 +22,7 @@
 		"NEW_ACHIEVEMENT_1_8_NAME"	"地獄を鎮めて"
 		"NEW_ACHIEVEMENT_1_8_DESC"	"地獄の君主を倒した"
 		"NEW_ACHIEVEMENT_1_9_NAME"	"Soul Saver"
-		"NEW_ACHIEVEMENT_1_9_DESC"	"キングスライムを倒してゲームをクリア"
+		"NEW_ACHIEVEMENT_1_9_DESC"	"鏡の君主を倒してゲームをクリア"
 		"NEW_ACHIEVEMENT_1_10_NAME"	"立ち上がれ"
 		"NEW_ACHIEVEMENT_1_10_DESC"	"初めて倒れた"
 		"NEW_ACHIEVEMENT_1_11_NAME"	"常連客"
@@ -79,5 +79,9 @@
 		"NEW_ACHIEVEMENT_1_36_DESC"	"結界の中で一度も被弾せずに耐え抜いた"
 		"NEW_ACHIEVEMENT_1_37_NAME"	"結界破り"
 		"NEW_ACHIEVEMENT_1_37_DESC"	"結界が展開している間にボスを倒した"
+		"NEW_ACHIEVEMENT_1_38_NAME"	"深淵へ"
+		"NEW_ACHIEVEMENT_1_38_DESC"	"魂の深淵に足を踏み入れた"
+		"NEW_ACHIEVEMENT_1_39_NAME"	"鏡を砕く"
+		"NEW_ACHIEVEMENT_1_39_DESC"	"鏡の君主が結界を展開する前に倒した"
 	}
 }

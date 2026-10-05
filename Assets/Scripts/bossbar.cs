@@ -18,7 +18,7 @@ public class bossbar : MonoBehaviour
     public float BarY = 119.2869f;
 
     public bool bossSpawn = false;
-    public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임 (보스가 매 프레임 알려줌)
+    public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
 
     TMP_Text nameText;
     RectTransform barRect;
@@ -30,6 +30,7 @@ public class bossbar : MonoBehaviour
     {
         1 => Loc.T("지옥의 군주"),
         2 => Loc.T("킹 슬라임"),
+        3 => Loc.T("거울의 군주"),
         _ => Loc.T("리치 왕"),
     };
     void Start()

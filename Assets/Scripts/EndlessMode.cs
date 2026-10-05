@@ -166,13 +166,13 @@ public class EndlessMode : MonoBehaviour
     }
 
     // ================================================================= 스테이지 구성
-    // 1 · 2 · 3장의 적을 모두 모은 4번째 스테이지 (보스는 EndlessMode가 따로 부름)
+    // 1 · 2 · 3 · 4장의 적을 모두 모은 마지막 스테이지 (보스는 EndlessMode가 따로 부름)
     public static StageConfig[] WithEndlessStage(StageConfig[] stages, out GameObject[] bosses)
     {
         List<GameObject> enemies = new List<GameObject>();
         List<float> tiers = new List<float>();
         List<GameObject> bossList = new List<GameObject>();
-        for (int s = 0; s < stages.Length && s < 3; s++)
+        for (int s = 0; s < stages.Length && s < 4; s++)
         {
             StageConfig st = stages[s];
             if (st.bossPrefab != null) bossList.Add(st.bossPrefab);
@@ -215,7 +215,7 @@ public class EndlessMode : MonoBehaviour
             minionWeights = minions,
         };
         List<StageConfig> list = new List<StageConfig>(stages);
-        while (list.Count > 3) list.RemoveAt(list.Count - 1);
+        while (list.Count > 4) list.RemoveAt(list.Count - 1);
         list.Add(endless);
         return list.ToArray();
     }
@@ -224,15 +224,27 @@ public class EndlessMode : MonoBehaviour
     // 지옥 맵 배치를 복제하고 타일 그림만 사막 도트(Resources/Desert)로 바꾼 뒤 소품 · 불티를 뿌림
     public static GameObject BuildDesertMap(GameObject hellMap, Vector2 areaMin, Vector2 areaMax, Vector3 keepClear)
     {
+        GameObject map = ReskinHellMap(hellMap, "DesertMap", "Desert", "_desert", out Dictionary<string, Sprite> desert, out int sorting, out int order);
+        if (map == null) return null;
+        ScatterProps(map.transform, desert, areaMin, areaMax, keepClear, sorting, order + 1);
+        map.AddComponent<DesertAmbience>();
+        return map;
+    }
+
+    // 지옥 맵 배치를 복제하고 타일 그림만 Resources/<folder> 의 같은 이름(_hell → suffix) 그림으로 (무한 모드 사막 · 4장 심연)
+    // sprites: 그 폴더의 그림 (소품을 뿌릴 때), sorting · order: 가장 위 타일 층 (소품은 그 위에)
+    public static GameObject ReskinHellMap(GameObject hellMap, string name, string folder, string suffix, out Dictionary<string, Sprite> sprites, out int sorting, out int order)
+    {
+        sprites = new Dictionary<string, Sprite>();
+        sorting = order = 0;
         if (hellMap == null) return null;
         GameObject map = Instantiate(hellMap, hellMap.transform.parent);
-        map.name = "DesertMap";
+        map.name = name;
         map.SetActive(true);
 
-        Dictionary<string, Sprite> desert = new Dictionary<string, Sprite>();
-        foreach (Sprite s in Resources.LoadAll<Sprite>("Desert")) desert[s.name] = s;
+        Dictionary<string, Sprite> desert = sprites;
+        foreach (Sprite s in Resources.LoadAll<Sprite>(folder)) desert[s.name] = s;
         Dictionary<Sprite, Tile> tiles = new Dictionary<Sprite, Tile>();
-        int sorting = 0, order = 0;
 
         foreach (Tilemap tm in map.GetComponentsInChildren<Tilemap>(true))
         {
@@ -242,7 +254,7 @@ public class EndlessMode : MonoBehaviour
             foreach (Vector3Int pos in b.allPositionsWithin)
             {
                 Sprite s = tm.GetSprite(pos);
-                if (s == null || !desert.TryGetValue(s.name.Replace("_hell", "_desert"), out Sprite d)) continue;
+                if (s == null || !desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d)) continue;
                 if (!tiles.TryGetValue(d, out Tile tile))
                 {
                     tile = ScriptableObject.CreateInstance<Tile>();
@@ -258,8 +270,6 @@ public class EndlessMode : MonoBehaviour
             }
         }
 
-        ScatterProps(map.transform, desert, areaMin, areaMax, keepClear, sorting, order + 1);
-        map.AddComponent<DesertAmbience>();
         return map;
     }
 

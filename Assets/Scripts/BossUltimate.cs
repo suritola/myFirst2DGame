@@ -14,13 +14,15 @@ public class BossUltimate : MonoBehaviour
     public static bool Active { get; private set; }
 
     // 보스 종류마다 게이지 (0 ~ 1)
-    static readonly float[] gauge = new float[3];
-    static readonly float[] refHp = new float[3];
+    static readonly float[] gauge = new float[4];
+    static readonly float[] refHp = new float[4];
     // 마지막으로 맞은 때 (3초 동안 안 맞으면 게이지가 아주 서서히 줄어듦) · 이번 보스전에 결계를 펼쳤는지
-    static readonly float[] lastHit = new float[3];
-    static readonly bool[] usedThisFight = new bool[3];
+    static readonly float[] lastHit = new float[4];
+    static readonly bool[] usedThisFight = new bool[4];
     static int decayFrame = -1;
     public static float Gauge(int kind) => kind >= 0 && kind < gauge.Length ? gauge[kind] : 0f;
+    // 이번 보스전에 결계를 펼쳤는지 (업적: 거울의 군주를 결계 전에)
+    public static bool UsedThisFight(int kind) => kind >= 0 && kind < usedThisFight.Length && usedThisFight[kind];
 
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
     const float Duration = 15f;
@@ -31,6 +33,7 @@ public class BossUltimate : MonoBehaviour
         ("망자의 묘역", "이 안에서는, 죽은 자만이 걷는다.", new Color(0.55f, 0.95f, 1f)),
         ("연옥 낙화", "이곳의 불은 꺼지지 않는다.", new Color(1f, 0.45f, 0.12f)),
         ("산성 범람", "전부, 녹아내려라.", new Color(0.55f, 1f, 0.35f)),
+        ("거울의 방", "네가 쌓아 온 모든 것을, 그대로 돌려주마.", new Color(0.78f, 0.9f, 1f)),
     };
 
     bosss boss;
@@ -41,7 +44,7 @@ public class BossUltimate : MonoBehaviour
     void Start()
     {
         boss = GetComponent<bosss>();
-        kind = boss != null ? Mathf.Clamp(boss.bossKind, 0, 2) : 0;
+        kind = boss != null ? Mathf.Clamp(boss.bossKind, 0, 3) : 0;
         spawnedAt = Time.time;
         // 새 보스 (킹 슬라임은 첫 덩어리)가 나오면 게이지를 비우고 기준 체력을 정함
         if (boss != null && (kind != 2 || boss.slimeGen == 1))
@@ -63,7 +66,7 @@ public class BossUltimate : MonoBehaviour
     public static void OnBossHit(bosss b, float damage)
     {
         if (b == null || Active || b.IsDead || damage <= 0f) return;
-        int k = Mathf.Clamp(b.bossKind, 0, 2);
+        int k = Mathf.Clamp(b.bossKind, 0, 3);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         // 약한 공격도 피해 비율의 3.5배는 채움 (1.2제곱만이면 평타가 거의 안 차서 · 보스 체력 3% 이상의 센 한 방은 그대로)
         float gain = Mathf.Max(7f * Mathf.Pow(f, 1.2f), 3.5f * f);
@@ -132,7 +135,7 @@ public class BossUltimate : MonoBehaviour
         yield return Expand(info.color);
         float until = Time.time + Duration;
         int hurtBefore = PlayerController.HurtCount;
-        IEnumerator attack = kind == 0 ? LichBarrage(until) : kind == 1 ? HellBarrage(until) : SlimeBarrage(until);
+        IEnumerator attack = kind == 0 ? LichBarrage(until) : kind == 1 ? HellBarrage(until) : kind == 2 ? SlimeBarrage(until) : MirrorBarrage(until);
         StartCoroutine(attack);
         while (Time.time < until && boss != null && !boss.IsDead && player != null && !player.IsDying)
         {
@@ -205,7 +208,7 @@ public class BossUltimate : MonoBehaviour
 
         // 쾅! 이름이 내려꽂히며 흔들림 + 외침
         PlaySfx("domain_shout", 1f);
-        Hostile.Play("roar", 1f, kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
+        Hostile.Play("roar", 1f, kind == 3 ? 0.5f : kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
         fx?.Shake(0.9f, 0.6f);
         for (float t = 0f; t < 2.3f; t += Time.unscaledDeltaTime)
         {
@@ -532,6 +535,68 @@ public class BossUltimate : MonoBehaviour
         if (p != null && Hostile.DistanceToSegment(p.transform.position, a, b) < 1.1f) p.TryHit(24f * Power);
         Hostile.Play("boom", 0.6f, 0.8f);
         Hostile.Shake(0.15f);
+    }
+
+    // 거울의 방 (거울의 군주 · 2.1.1): 결계 둘레의 거울 여덟 개가 차례로 플레이어를 노려 광선을 되쏘고,
+    // 깨진 거울 조각이 발밑에 쏟아지며, 가끔 보스에게서 반사 조각 고리가 퍼짐
+    IEnumerator MirrorBarrage(float until)
+    {
+        Color glass = Info[3].color;
+        const int count = 8;
+        Vector3[] mirrors = new Vector3[count];
+        for (int i = 0; i < count; i++)
+        {
+            float a = (i * 360f / count + 22.5f) * Mathf.Deg2Rad;
+            mirrors[i] = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (Radius - 2f);
+            FxAnim m = Fx.Play("fx_rune", mirrors[i], 4f, new Color(glass.r, glass.g, glass.b, 0.85f), 1f, 0f, 20, true, until - Time.time);
+            if (m != null) { m.spin = 60f; m.transform.SetParent(domainRoot.transform, true); }
+        }
+        float nextBeam = Time.time + 0.6f, nextShard = Time.time, nextRing = Time.time + 2.5f;
+        int turn = 0;
+        while (Time.time < until)
+        {
+            PlayerController p = Hostile.Player;
+            if (Time.time >= nextBeam && p != null)
+            {
+                nextBeam = Time.time + 1.25f;
+                // 마주 보는 거울 둘이 동시에 (사이로 빠져나갈 수 있게 한 쌍씩)
+                StartCoroutine(MirrorBeam(mirrors[turn % count], p.transform.position, glass));
+                StartCoroutine(MirrorBeam(mirrors[(turn + count / 2 + 1) % count], p.transform.position, glass));
+                turn += 3;
+            }
+            if (Time.time >= nextShard && p != null)
+            {
+                nextShard = Time.time + 0.45f;
+                Vector3 at = Random.value < 0.6f ? p.transform.position + (Vector3)(Random.insideUnitCircle * 3f) : center + (Vector3)(Random.insideUnitCircle * (Radius - 1f));
+                StartCoroutine(Spike(at, 1.8f, 1f, glass, 18f * Power, "fx_spike"));
+            }
+            if (Time.time >= nextRing && boss != null)
+            {
+                nextRing = Time.time + 3.6f;
+                const int n = 18;
+                float off = Random.Range(0f, 360f);
+                for (int i = 0; i < n; i++)
+                {
+                    float a = (off + i * 360f / n) * Mathf.Deg2Rad;
+                    Hostile.Shoot(boss.transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 6.5f, 14f * Power, 0.5f, glass, 1.6f, 5f);
+                }
+                Hostile.Play("shimmer", 0.5f, 1.2f);
+            }
+            yield return null;
+        }
+    }
+
+    IEnumerator MirrorBeam(Vector3 from, Vector3 aim, Color glass)
+    {
+        Vector3 dir = (aim - from).normalized;
+        Vector3 to = from + dir * Radius * 2.1f;
+        Hostile.Line(from, to, 2f, 1.15f, Bright(glass));
+        Warn(Vector3.Lerp(from, aim, 0.5f), 1.15f, 1.6f);
+        yield return new WaitForSeconds(1.15f);
+        Fx.Beam(from, to, 1.8f, new Color(0.85f, 0.95f, 1f), 0.35f);
+        PlayerController p = Hostile.Player;
+        if (p != null && Hostile.DistanceToSegment(p.transform.position, from, to) < 1.1f) p.TryHit(22f * Power);
+        Hostile.Play("zap", 0.6f, 0.9f);
     }
 
     // 산성 범람 (킹 슬라임): 결계 벽에 튕기는 슬라임 덩어리 + 쏟아지는 산성 비 + 번갈아 솟는 줄무늬 간헐천

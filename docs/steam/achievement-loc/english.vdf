@@ -22,7 +22,7 @@
 		"NEW_ACHIEVEMENT_1_8_NAME"	"Hell Freezes Over"
 		"NEW_ACHIEVEMENT_1_8_DESC"	"Defeat the Demon Lord"
 		"NEW_ACHIEVEMENT_1_9_NAME"	"Soul Saver"
-		"NEW_ACHIEVEMENT_1_9_DESC"	"Defeat the King Slime and clear the game"
+		"NEW_ACHIEVEMENT_1_9_DESC"	"Defeat the Mirror Sovereign and clear the game"
 		"NEW_ACHIEVEMENT_1_10_NAME"	"Get Back Up"
 		"NEW_ACHIEVEMENT_1_10_DESC"	"Fall in battle for the first time"
 		"NEW_ACHIEVEMENT_1_11_NAME"	"Regular Customer"
@@ -79,5 +79,9 @@
 		"NEW_ACHIEVEMENT_1_36_DESC"	"Survive a boss barrier without being hit"
 		"NEW_ACHIEVEMENT_1_37_NAME"	"Barrier Breaker"
 		"NEW_ACHIEVEMENT_1_37_DESC"	"Defeat a boss while its barrier is up"
+		"NEW_ACHIEVEMENT_1_38_NAME"	"Into the Abyss"
+		"NEW_ACHIEVEMENT_1_38_DESC"	"Enter the Abyss of Souls"
+		"NEW_ACHIEVEMENT_1_39_NAME"	"Shattered Reflection"
+		"NEW_ACHIEVEMENT_1_39_DESC"	"Defeat the Mirror Sovereign before it raises its barrier"
 	}
 }

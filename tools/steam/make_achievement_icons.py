@@ -66,7 +66,12 @@ ICONS = [
     ('ACH_BARRIER_SURVIVE', frame('FX/fx_rune.png', 0), (0.10, 0.08, 0.20)),
     ('ACH_BARRIER_NOHIT', frame('FX/fx_warn.png', 0), (0.12, 0.26, 0.30)),
     ('ACH_BARRIER_BREAK', frame('FX/fx_markskull.png', 0), (0.40, 0.08, 0.10)),
+    # 2.1.1 4장 영혼의 심연
+    ('ACH_ENTER_ABYSS', frame('Abyss/wisp_0.png'), (0.10, 0.08, 0.26)),
+    ('ACH_MIRROR_QUICK', frame('Abyss/mirrorlord_0.png'), (0.16, 0.22, 0.36)),
 ]
+# ONLY=ACH_A,ACH_B 로 일부만 다시 만듦 (나머지 JPG 를 건드리지 않게)
+ONLY = [a for a in os.environ.get('ONLY', '').split(',') if a]
 
 
 def icon(sprite, bg):
@@ -97,6 +102,8 @@ def gray(img):
 
 
 for api, sprite, bg in ICONS:
+    if ONLY and api not in ONLY:
+        continue
     done = icon(sprite, bg)
     write(done, OUT + api + '.png')
     write(gray(done), OUT + api + '_locked.png')

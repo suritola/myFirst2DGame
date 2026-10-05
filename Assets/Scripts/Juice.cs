@@ -5,12 +5,12 @@ public static class Juice
 {
     static float lastPop;
 
-    // 스테이지마다 영혼 색이 다름 (1장 청록 · 2장 불꽃 · 3장 풀빛 · 무한 금빛)
+    // 스테이지마다 영혼 색이 다름 (1장 청록 · 2장 불꽃 · 3장 풀빛 · 4장 보랏빛 · 무한 금빛)
     static Color StageColor()
     {
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
         return stage == 0 ? new Color(0.6f, 0.95f, 1f) : stage == 1 ? new Color(1f, 0.58f, 0.28f)
-             : stage == 2 ? new Color(0.65f, 1f, 0.5f) : new Color(1f, 0.82f, 0.42f);
+             : stage == 2 ? new Color(0.65f, 1f, 0.5f) : GameMode.IsEndless ? new Color(1f, 0.82f, 0.42f) : new Color(0.78f, 0.62f, 1f);
     }
 
     public static void EnemyDied(Vector3 pos, float size)

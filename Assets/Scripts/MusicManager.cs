@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// 배경음악: 메뉴 / 1장 / 2장 / 3장 / 보스전 곡을 상황에 맞게 부드럽게 바꿔 틀어줌
+// 배경음악: 메뉴 / 1장 / 2장 / 3장 / 4장 / 보스전 곡을 상황에 맞게 부드럽게 바꿔 틀어줌
 // 게임이 시작되면 스스로 만들어지고 씬이 바뀌어도 유지됨 (Resources/Music/bgm_*.wav)
 public class MusicManager : MonoBehaviour
 {
@@ -57,7 +57,8 @@ public class MusicManager : MonoBehaviour
         if (BossUltimate.Active) return "bgm_domain";          // 보스 필살기 결계
         if (spawner != null && spawner.bossSpawned && !spawner.bossCleared) return "bgm_boss";
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
-        return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_desert";
+        if (GameMode.IsEndless) return "bgm_desert";
+        return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_abyss";
     }
 
     void Update()
