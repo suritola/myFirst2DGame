@@ -32,9 +32,12 @@ public class EndlessMode : MonoBehaviour
     TextMeshProUGUI hud;
     int shownSec = -1, shownBosses = -1;
 
+    bool daily;      // 일일 도전 판 (메인 메뉴로 나갈 때 DailyChallenge 가 먼저 풀려도 기록이 섞이지 않게 시작할 때 기억)
+
     public void Init(StageManager sm, GameObject[] bosses)
     {
         Instance = this;
+        daily = DailyChallenge.Active;
         stages = sm;
         spawner = sm.spawner;
         bossPrefabs = bosses;
@@ -66,8 +69,9 @@ public class EndlessMode : MonoBehaviour
         {
             shownSec = sec;
             shownBosses = BossesDefeated;
-            hud.text = Loc.T("무한 모드") + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
-                     + (BestSeconds > 0f ? "   " + Loc.T("최고 ") + Clock(BestSeconds) : "");
+            float best = daily ? DailyChallenge.RunBest : BestSeconds;
+            hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
+                     + (best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
 
         if (!spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
@@ -126,11 +130,13 @@ public class EndlessMode : MonoBehaviour
         LastSeconds = GameMode.EndlessSeconds;
         LastBosses = BossesDefeated;
         Instance = null;
-        if (LastSeconds > BestSeconds && !GameInput.Auto)
+        // 일일 도전은 그날 기록 · 순위표에만 (규칙이 달라 무한 모드 최고 기록과 섞지 않음)
+        if (!daily && LastSeconds > BestSeconds && !GameInput.Auto)
         {
             PlayerPrefs.SetFloat(BestKey, LastSeconds);
             PlayerPrefs.Save();
         }
+        DailyChallenge.Submit(daily, LastSeconds, LastBosses);
     }
 
     public static string Clock(float seconds)

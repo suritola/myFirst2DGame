@@ -54,19 +54,27 @@ public static class MenuExtras
         if (canvas != null)
         {
             UIKit.EnsureStyle();
-            string text = Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
-                        + "\n" + Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds);
-            TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, 110f));
+            bool daily = DailyChallenge.Active;
+            string text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
+                        + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
+                        + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
+            TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 140f : 110f));
             t.text = text;
             RectTransform r = t.rectTransform;
-            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 메인 메뉴 버튼(-256 ~) 아래로
-            r.anchoredPosition = new Vector2(0f, -330f);
+            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 메인 메뉴 버튼(-256 ~) 아래로, 아래 획득 포인트(-475 ~ -425)와도 안 겹치게
+            r.anchoredPosition = new Vector2(0f, daily ? -345f : -330f);
+            // 스팀 순위: 올린 결과가 오면 마지막 줄 끝에 붙임
+            DailyChallenge.RankLine line = t.gameObject.AddComponent<DailyChallenge.RankLine>();
+            line.text = t;
+            line.baseText = text;
+            line.daily = daily;
         }
         EndlessMode.LastSeconds = -1f;
     }
 
     static void InstallMainMenu()
     {
+        DailyChallenge.End();
         GameObject start = GameObject.Find("GameStartButton");
         GameObject exit = GameObject.Find("ExitButton");
         if (start == null || GameObject.Find("TutorialButton") != null) return;
@@ -78,9 +86,10 @@ public static class MenuExtras
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
+        GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
 
         // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
-        // 2.1~: 스킬 진화 도감이 더해져 4 × 2
+        // 2.1~: 스킬 진화 도감이 더해져 4 × 2, 2.1.1~: 일일 도전으로 8칸이 다 참
         sr.anchoredPosition = new Vector2(0f, -10f);
         sr.sizeDelta = new Vector2(560f, 110f);
         AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
@@ -90,7 +99,7 @@ public static class MenuExtras
         (GameObject go, string icon)[] tiles =
         {
             (character, "menu_character"), (skins, "menu_skin"), (codex, "menu_codex"), (evo, "menu_evolution"),
-            (tutorial, "menu_tutorial"), (settings, "menu_settings"), (exit, "menu_exit"),
+            (daily, "menu_daily"), (tutorial, "menu_tutorial"), (settings, "menu_settings"), (exit, "menu_exit"),
         };
         for (int i = 0; i < tiles.Length; i++)
         {

@@ -2,6 +2,7 @@
 #define STEAM
 #endif
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 #if STEAM
@@ -256,4 +257,119 @@ public static class SteamAchievements
         SteamUserStats.StoreStats();
 #endif
     }
+}
+
+// 스팀 순위표 (2.1.1~): 무한 모드 최고 생존 시간 · 일일 도전(그날마다 따로)
+// 순위표는 처음 쓸 때 FindOrCreateLeaderboard 로 만들어짐 (파트너 사이트에 미리 만들지 않아도 됨)
+// 스팀이 없으면(GitHub 빌드 · 체험판 · 스팀 꺼짐) 아무것도 안 하고 콜백도 부르지 않음
+public static class SteamLeaderboards
+{
+    public const string Endless = "ENDLESS_BEST";
+    public static string Daily(string day) => "DAILY_" + day;
+
+    public struct Entry
+    {
+        public int rank, score, character;
+        public ulong user;
+        public bool me;
+    }
+
+    public static bool Available => SteamManager.Initialized && !Demo.On && !GameInput.Auto && !Application.isBatchMode;
+
+    // 이름 (스팀이 아직 모르는 사람은 정보를 요청해 두고 빈 문자열 · 화면이 다시 물어봄)
+    public static string NameOf(ulong user)
+    {
+#if STEAM
+        if (!SteamManager.Initialized) return "";
+        CSteamID id = new CSteamID(user);
+        if (SteamFriends.RequestUserInformation(id, true)) return "";
+        return SteamFriends.GetFriendPersonaName(id);
+#else
+        return "";
+#endif
+    }
+
+    // 점수 올리기 (더 좋을 때만 바뀜) → 지금 순위 · 전체 인원
+    public static void Upload(string board, int score, int[] details, System.Action<int, int> done)
+    {
+#if STEAM
+        if (!Available) return;
+        Find(board, h =>
+        {
+            CallResult<LeaderboardScoreUploaded_t> cr = null;
+            cr = CallResult<LeaderboardScoreUploaded_t>.Create((r, io) =>
+            {
+                alive.Remove(cr);
+                if (io || r.m_bSuccess == 0) return;
+                done?.Invoke(r.m_nGlobalRankNew, SteamUserStats.GetLeaderboardEntryCount(h));
+            });
+            alive.Add(cr);
+            cr.Set(SteamUserStats.UploadLeaderboardScore(h, ELeaderboardUploadScoreMethod.k_ELeaderboardUploadScoreMethodKeepBest, score, details, details != null ? details.Length : 0));
+        });
+#endif
+    }
+
+    // 위에서 count 명 + 내 기록(순위 밖이면 맨 아래에 붙임) → 목록 · 전체 인원
+    public static void Top(string board, int count, System.Action<List<Entry>, int> done)
+    {
+#if STEAM
+        if (!Available) return;
+        Find(board, h => Download(h, ELeaderboardDataRequest.k_ELeaderboardDataRequestGlobal, 1, count, top =>
+            Download(h, ELeaderboardDataRequest.k_ELeaderboardDataRequestGlobalAroundUser, 0, 0, mine =>
+            {
+                if (mine.Count > 0 && !top.Exists(e => e.me)) top.Add(mine[0]);
+                done?.Invoke(top, SteamUserStats.GetLeaderboardEntryCount(h));
+            })));
+#endif
+    }
+
+#if STEAM
+    static readonly Dictionary<string, SteamLeaderboard_t> boards = new Dictionary<string, SteamLeaderboard_t>();
+    static readonly List<object> alive = new List<object>();     // 콜백이 올 때까지 CallResult 를 붙잡아 둠
+
+    static void Find(string board, System.Action<SteamLeaderboard_t> then)
+    {
+        if (boards.TryGetValue(board, out SteamLeaderboard_t known)) { then(known); return; }
+        CallResult<LeaderboardFindResult_t> cr = null;
+        cr = CallResult<LeaderboardFindResult_t>.Create((r, io) =>
+        {
+            alive.Remove(cr);
+            if (io || r.m_bLeaderboardFound == 0) return;
+            boards[board] = r.m_hSteamLeaderboard;
+            then(r.m_hSteamLeaderboard);
+        });
+        alive.Add(cr);
+        cr.Set(SteamUserStats.FindOrCreateLeaderboard(board, ELeaderboardSortMethod.k_ELeaderboardSortMethodDescending, ELeaderboardDisplayType.k_ELeaderboardDisplayTypeTimeSeconds));
+    }
+
+    static void Download(SteamLeaderboard_t h, ELeaderboardDataRequest req, int from, int to, System.Action<List<Entry>> then)
+    {
+        CallResult<LeaderboardScoresDownloaded_t> cr = null;
+        cr = CallResult<LeaderboardScoresDownloaded_t>.Create((r, io) =>
+        {
+            alive.Remove(cr);
+            List<Entry> list = new List<Entry>();
+            if (!io)
+            {
+                ulong me = SteamUser.GetSteamID().m_SteamID;
+                int[] details = new int[4];
+                for (int i = 0; i < r.m_cEntryCount; i++)
+                {
+                    if (!SteamUserStats.GetDownloadedLeaderboardEntry(r.m_hSteamLeaderboardEntries, i, out LeaderboardEntry_t e, details, details.Length)) continue;
+                    list.Add(new Entry
+                    {
+                        rank = e.m_nGlobalRank,
+                        score = e.m_nScore,
+                        character = e.m_cDetails > 0 ? details[0] : -1,
+                        user = e.m_steamIDUser.m_SteamID,
+                        me = e.m_steamIDUser.m_SteamID == me,
+                    });
+                }
+            }
+            then(list);
+        });
+        alive.Add(cr);
+        cr.Set(SteamUserStats.DownloadLeaderboardEntries(h, req, from, to));
+    }
+#endif
 }

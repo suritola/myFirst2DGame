@@ -129,24 +129,26 @@ public static class GameMode
     const float Harder = 1.3f;
 
     static int I => (int)Current;
-    public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder;
-    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f) * Harder;
-    public static float EnemySpeedMul => EnemySpeed[I];
+    // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
+    static float D(DailyStat s) => DailyChallenge.Mul(s);
+    public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder * D(DailyStat.EnemyHp);
+    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
+    public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];
     public static float ProjectileSpeedMul => ProjectileSpeed[I];
-    public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, Ramp, 0.3f);
-    public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, Ramp, 0.4f);
+    public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, Ramp, 0.3f) * D(DailyStat.EnemySkill);
+    public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, Ramp, 0.4f) * D(DailyStat.Spawn);
     // 보스 · 페이즈까지 필요한 처치 수 배율
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
     // 무한 모드는 강도가 오를수록 한 번에 나오는 적도 늘어남
     public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, Ramp - 1f) * 4f) : 0);
-    public static float BossHpMul => BossHp[I] * Ramp * Harder;
-    public static float GaugeMul => Gauge[I];
+    public static float BossHpMul => BossHp[I] * Ramp * Harder * D(DailyStat.BossHp);
+    public static float GaugeMul => Gauge[I] * D(DailyStat.Gauge);
     // 일반 적 한 마리 보상 (처치 수가 늘어난 만큼 줄여 한 판 총량을 맞춤)
-    public static float RewardMul => Reward[I] / Kills[I];
+    public static float RewardMul => Reward[I] / Kills[I] * D(DailyStat.Reward);
     // 보스 · 중간 보스 보상 (처치 수와 상관없이 나오는 수가 정해져 있음)
-    public static float FixedRewardMul => Reward[I] / RewardBasis[I];
+    public static float FixedRewardMul => Reward[I] / RewardBasis[I] * D(DailyStat.Reward);
     // 처치 수가 예전보다 몇 배인지 (떠돌이 상점 간격 등 처치 수로 세는 것을 맞출 때)
     public static float KillStretch => Kills[I] / RewardBasis[I];
     // 일반 적 영혼 조각 배율 (예전 한 마리 몫 기준, 무한 모드는 그대로)

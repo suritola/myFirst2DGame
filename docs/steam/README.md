@@ -8,6 +8,7 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 |---|---|
 | Steamworks.NET 연동 (초기화 · 콜백 · 스팀 밖 실행 시 스팀으로 재실행) | `Assets/Scripts/SteamManager.cs`, `Packages/manifest.json` |
 | 업적 32개 (코드 연결 + 4개 언어 이름 · 설명 + 아이콘) | [achievements.md](achievements.md), `art/achievements/` |
+| 순위표: 무한 모드 최고 생존 `ENDLESS_BEST` · 일일 도전 `DAILY_<UTC 날짜 yyyyMMdd>` (게임이 처음 올릴 때 `FindOrCreateLeaderboard` 로 만듦, 내림차순 · 시간(초) 표시) | `SteamLeaderboards` (`Assets/Scripts/SteamManager.cs`), `Assets/Scripts/DailyChallenge.cs` |
 | 스팀용 빌드와 GitHub용 빌드 분리 (`-steam`일 때만 연동, 아니면 `DISABLESTEAMWORKS`) | `Assets/Editor/BuildScript.cs` |
 | 게임 아이콘 (실행 파일 · 작업 표시줄) | `Assets/Art/Icon/GunSaverIcon.png` |
 | SteamPipe 업로드 스크립트 | `tools/steam-upload.ps1`, `tools/steam/steam-config.json` |
@@ -30,6 +31,7 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 - [ ] **SteamPipe → 디포**: 디포 1개 (Windows, 모든 언어)
 - [ ] **설치 → 일반**: 실행 옵션 — 실행 파일 `Soul Saver.exe` (1.7.3 전에는 `Gun Saver.exe`), OS Windows, 64비트
 - [ ] **스탯 및 업적**: [achievements.md](achievements.md) 대로 32개 만들고 **게시**
+- [ ] **순위표** (선택): 게임이 알아서 만들지만, 커뮤니티 허브에 보이게 하려면 **스탯 및 업적 → 순위표**에서 `ENDLESS_BEST` 의 표시 이름 · "커뮤니티에 표시"를 켜고 게시
 - [ ] **상점 페이지**: [store-page.md](store-page.md) 글, `art/` 이미지 올리기
 - [ ] **가격** 정하기 · **출시일** 정하기
 - [ ] **콘텐츠 설문 / 연령 등급** (폭력성: 판타지 몬스터와의 전투, 피 표현 약함)

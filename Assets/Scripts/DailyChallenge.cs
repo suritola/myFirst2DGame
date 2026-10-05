@@ -1,0 +1,255 @@
+using System;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+// 일일 도전이 바꾸는 배율 (GameMode 의 같은 이름 배율에 곱함)
+public enum DailyStat { EnemyHp, EnemyDamage, EnemySpeed, Spawn, Reward, Gauge, BossHp, EnemySkill }
+
+// 일일 도전 (2.1.1~): 하루(UTC)마다 정해진 캐릭터 · 규칙 하나로 무한 모드를 버팀
+// 모두가 같은 조건이라 그날의 스팀 순위표로 겨룸 (SteamLeaderboards). 무한 모드가 열려야 할 수 있음
+// 시작할 때 GameMode · CharacterData 의 Override 로 무한 모드 · 그날 캐릭터를 쓰고, 메인 메뉴로 돌아오면 원래대로
+public static class DailyChallenge
+{
+    public struct Rule
+    {
+        public string name, desc;
+        public (DailyStat stat, float mul)[] muls;
+    }
+
+    static readonly Rule[] Rules =
+    {
+        new Rule { name = "몰려드는 무리", desc = "적이 더 자주 몰려옵니다 (생성 간격 -30%). 대신 경험치 · 코인 +30%",
+                   muls = new[] { (DailyStat.Spawn, 0.7f), (DailyStat.Reward, 1.3f) } },
+        new Rule { name = "강철 피부", desc = "적 체력 +40%. 대신 적이 주는 피해 -20%",
+                   muls = new[] { (DailyStat.EnemyHp, 1.4f), (DailyStat.EnemyDamage, 0.8f) } },
+        new Rule { name = "질풍", desc = "적 이동 속도 +20%. 대신 필살기 충전 +40%",
+                   muls = new[] { (DailyStat.EnemySpeed, 1.2f), (DailyStat.Gauge, 1.4f) } },
+        new Rule { name = "거인의 시간", desc = "보스 체력 +50%. 대신 경험치 · 코인 +25%",
+                   muls = new[] { (DailyStat.BossHp, 1.5f), (DailyStat.Reward, 1.25f) } },
+        new Rule { name = "유리 몸", desc = "받는 피해 +50%. 대신 필살기 충전 +60%",
+                   muls = new[] { (DailyStat.EnemyDamage, 1.5f), (DailyStat.Gauge, 1.6f) } },
+        new Rule { name = "분노한 주문", desc = "적이 스킬을 훨씬 자주 씁니다 (+40%). 대신 적 체력 -15%",
+                   muls = new[] { (DailyStat.EnemySkill, 0.71f), (DailyStat.EnemyHp, 0.85f) } },
+        new Rule { name = "풍요", desc = "경험치 · 코인 +50%. 대신 적 체력 +25%",
+                   muls = new[] { (DailyStat.Reward, 1.5f), (DailyStat.EnemyHp, 1.25f) } },
+    };
+
+    public static bool Active { get; private set; }
+    static DateTime runDay;
+    static Rule runRule;
+
+    public static DateTime Today => DateTime.UtcNow.Date;
+    public static string Key(DateTime day) => day.ToString("yyyyMMdd");
+    static int Seed(DateTime day) => day.Year * 10000 + day.Month * 100 + day.Day;
+
+    // 그날의 캐릭터 (만들어진 캐릭터 중에서, 아직 사지 않은 캐릭터도 이날은 빌려 씀)
+    public static CharacterId CharacterOf(DateTime day)
+    {
+        List<CharacterId> ids = new List<CharacterId>();
+        for (int i = 0; i < CharacterData.All.Length; i++)
+            if (CharacterData.IsDeveloped((CharacterId)i)) ids.Add((CharacterId)i);
+        return ids[new System.Random(Seed(day)).Next(ids.Count)];
+    }
+
+    public static Rule RuleOf(DateTime day)
+    {
+        System.Random rng = new System.Random(Seed(day) * 31 + 7);
+        rng.Next();
+        return Rules[rng.Next(Rules.Length)];
+    }
+
+    // GameMode 배율에 곱하는 값 (일일 도전 중이 아니면 1)
+    public static float Mul(DailyStat stat)
+    {
+        if (!Active || runRule.muls == null) return 1f;
+        float m = 1f;
+        foreach ((DailyStat s, float mul) in runRule.muls) if (s == stat) m *= mul;
+        return m;
+    }
+
+    public static bool Unlocked => !Demo.On && GameMode.IsUnlocked(Difficulty.Endless);
+    public static string RunBoard => SteamLeaderboards.Daily(Key(runDay));
+    public static string RunRuleName => runRule.name ?? "";
+
+    public static void Begin()
+    {
+        if (!Unlocked) return;
+        runDay = Today;
+        runRule = RuleOf(runDay);
+        Active = true;
+        GameMode.Override = Difficulty.Endless;
+        CharacterData.Override = CharacterOf(runDay);
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("GameScene");
+    }
+
+    // 메인 메뉴로 돌아오면 원래 난이도 · 캐릭터로 (메뉴가 난이도 버튼을 그리기 전에도 부름)
+    public static void End()
+    {
+        if (!Active) return;
+        Active = false;
+        GameMode.Override = null;
+        CharacterData.Override = null;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Boot()
+    {
+        SceneManager.sceneLoaded += (s, m) =>
+        {
+            if (s.name == "MainMenu") End();
+            // 같은 날은 처음 나오는 것들이 비슷하게 (시간이 흐르면 갈라짐)
+            else if (s.name == "GameScene" && Active) UnityEngine.Random.InitState(Seed(runDay));
+        };
+    }
+
+    // ================================================================= 기록 · 순위
+    const string BestKey = "daily.best.";
+    public static float Best(DateTime day) => PlayerPrefs.GetFloat(BestKey + Key(day), 0f);
+    public static float RunBest => Best(runDay);       // 지금 하는 판의 날 (자정을 넘겨도 시작한 날)
+
+    // 결과 화면에 보여 줄 마지막 순위 (올린 순위표 · 순위 · 전체, 받기 전에는 0)
+    public static string LastBoard = "";
+    public static int LastRank, LastTotal;
+
+    // 무한 모드 판이 끝날 때 (EndlessMode): 일일 도전이면 그날 기록 · 순위표, 아니면 무한 모드 순위표
+    public static void Submit(bool daily, float seconds, int bosses)
+    {
+        if (GameInput.Auto || Application.isBatchMode || seconds < 1f) return;
+        if (daily)
+        {
+            string key = BestKey + Key(runDay);
+            if (seconds > PlayerPrefs.GetFloat(key, 0f)) { PlayerPrefs.SetFloat(key, seconds); PlayerPrefs.Save(); }
+        }
+        string board = daily ? RunBoard : SteamLeaderboards.Endless;
+        LastBoard = board;
+        LastRank = LastTotal = 0;
+        // 자세한 값: 캐릭터 · 보스 처치 · 레벨 · 처치 수
+        int[] details = { (int)CharacterData.Selected, bosses, RunStats.Level, RunStats.Kills };
+        SteamLeaderboards.Upload(board, Mathf.FloorToInt(seconds), details, (rank, total) =>
+        {
+            if (LastBoard != board) return;
+            LastRank = rank;
+            LastTotal = total;
+        });
+    }
+
+    // 결과 화면: 올린 순위가 오면 기록 글 끝에 붙임 (스팀이 없으면 그대로)
+    public class RankLine : MonoBehaviour
+    {
+        public TMP_Text text;
+        public string baseText;
+        public bool daily;
+
+        void Update()
+        {
+            if (text == null || LastRank <= 0) return;
+            text.text = baseText + "   " + Loc.T(daily ? "오늘의 순위" : "무한 모드 순위") + " #" + LastRank + " <color=#A89C86>/ " + LastTotal + "</color>";
+            enabled = false;
+        }
+    }
+
+    // ================================================================= 메인 메뉴 창
+    static GameObject open;
+    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
+    static readonly Color Dim = new Color(0.66f, 0.61f, 0.53f);
+
+    public static void Open(Transform root)
+    {
+        if (open != null) return;
+        DateTime day = Today;
+        CharacterId who = CharacterOf(day);
+        Rule rule = RuleOf(day);
+
+        RectTransform win = UIKit.Modal(root, "DailyChallenge", new Vector2(1240f, 820f), out open);
+        TMP_Text title = UIKit.Text(win, "", 46f, Gold, new Vector2(0f, 355f), new Vector2(900f, 64f));
+        title.text = Loc.T("일일 도전") + "  <size=60%><color=#A89C86>" + day.ToString("yyyy-MM-dd") + " (UTC)</color></size>";
+        UIKit.MakeButton(win, "닫기", new Vector2(510f, 355f), new Vector2(150f, 58f), Close, 22f);
+
+        // 왼쪽: 오늘의 조건 · 내 기록 · 시작
+        TMP_Text info = UIKit.Text(win, "", 28f, Parch, new Vector2(-300f, 60f), new Vector2(560f, 480f), TextAlignmentOptions.TopLeft);
+        info.enableAutoSizing = true;
+        info.fontSizeMin = 16f;
+        info.fontSizeMax = 28f;
+        float best = Best(day);
+        info.text = "<color=#F5D478>" + Loc.T("오늘의 영웅") + "</color>\n<size=130%>" + Loc.T(CharacterData.Def(who).name) + "</size>\n\n"
+                  + "<color=#F5D478>" + Loc.T("오늘의 규칙") + "</color>\n<size=115%>" + Loc.T(rule.name) + "</size>\n" + Loc.T(rule.desc) + "\n\n"
+                  + "<color=#A89C86>" + Loc.T("무한 모드 규칙으로 오래 버틸수록 높은 순위입니다. 몇 번이든 다시 도전할 수 있고 가장 좋은 기록만 남습니다.") + "</color>\n\n"
+                  + "<color=#F5D478>" + Loc.T("오늘 내 최고 기록") + "</color>  " + (best > 0f ? EndlessMode.Clock(best) : "-");
+
+        Button start = UIKit.MakeButton(win, "도전 시작", new Vector2(-300f, -265f), new Vector2(360f, 84f), () => { Close(); Begin(); }, 32f);
+        start.interactable = Unlocked;
+        if (!Unlocked)
+        {
+            start.GetComponent<Image>().color = new Color(0.25f, 0.24f, 0.28f, 0.8f);
+            UIKit.Text(win, Demo.On ? "정식판에서 만날 수 있습니다" : "어려움을 클리어하면 일일 도전이 열립니다", 20f, Dim, new Vector2(-300f, -330f), new Vector2(560f, 30f));
+        }
+
+        // 오른쪽: 오늘의 순위표
+        RectTransform board = UIKit.Rect("Board", win, new Vector2(300f, -20f), new Vector2(560f, 620f));
+        Image bg = board.gameObject.AddComponent<Image>();
+        bg.color = new Color(0f, 0f, 0f, 0.18f);
+        bg.raycastTarget = false;
+        UIKit.Text(board, "오늘의 순위", 28f, Gold, new Vector2(0f, 280f), new Vector2(520f, 40f));
+        TMP_Text list = UIKit.Text(board, "", 22f, Parch, new Vector2(0f, -30f), new Vector2(520f, 540f), TextAlignmentOptions.TopLeft);
+        list.enableAutoSizing = false;
+        list.fontSize = 22f;
+        list.lineSpacing = 6f;
+        BoardView view = open.AddComponent<BoardView>();
+        view.list = list;
+        view.countdown = UIKit.Text(win, "", 20f, Dim, new Vector2(0f, 300f), new Vector2(900f, 30f));
+        view.Load(SteamLeaderboards.Daily(Key(day)));
+    }
+
+    public static void Close()
+    {
+        if (open != null) UnityEngine.Object.Destroy(open);
+        open = null;
+    }
+
+    // 순위표 글자 (이름은 스팀이 늦게 알려 줄 수 있어 1초마다 다시 씀) · 다음 도전까지 남은 시간 · ESC 로 닫기
+    class BoardView : MonoBehaviour
+    {
+        public TMP_Text list, countdown;
+        List<SteamLeaderboards.Entry> entries;
+        int total;
+        float next;
+
+        public void Load(string boardName)
+        {
+            if (!SteamLeaderboards.Available)
+            {
+                list.text = "<color=#A89C86>" + Loc.T("스팀에 연결되어 있지 않아 순위를 볼 수 없습니다.") + "</color>";
+                return;
+            }
+            list.text = "<color=#A89C86>" + Loc.T("불러오는 중…") + "</color>";
+            SteamLeaderboards.Top(boardName, 10, (e, t) => { entries = e; total = t; next = 0f; });
+        }
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape)) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+            if (Time.unscaledTime < next) return;
+            next = Time.unscaledTime + 1f;
+            TimeSpan left = Today.AddDays(1) - DateTime.UtcNow;
+            countdown.text = Loc.T("다음 도전까지") + " " + ((int)left.TotalHours).ToString("00") + ":" + left.Minutes.ToString("00");
+            if (entries == null) return;
+            if (entries.Count == 0) { list.text = "<color=#A89C86>" + Loc.T("아직 기록이 없습니다. 첫 번째 도전자가 되어 보세요!") + "</color>"; return; }
+            System.Text.StringBuilder b = new System.Text.StringBuilder();
+            foreach (SteamLeaderboards.Entry e in entries)
+            {
+                string name = SteamLeaderboards.NameOf(e.user);
+                if (string.IsNullOrEmpty(name)) name = "…";
+                if (name.Length > 14) name = name.Substring(0, 14) + "…";
+                string line = "#" + e.rank + "  " + name + "  <color=#A89C86>" + EndlessMode.Clock(e.score) + "</color>";
+                b.Append(e.me ? "<color=#F5D478>" + line + "</color>" : line).Append('\n');
+            }
+            b.Append("\n<color=#A89C86>").Append(Loc.T("참가자 ")).Append(total).Append("</color>");
+            list.text = b.ToString();
+        }
+    }
+}

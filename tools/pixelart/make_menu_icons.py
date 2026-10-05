@@ -87,8 +87,18 @@ def coin(img):
     line(img, 16, 11, 16, 21, GD, 2)
 
 
+def daily(img):
+    # 달력 (위 붉은 띠 · 고리 둘) + 가운데 금빛 별 = 오늘의 도전 (2.1.1~)
+    img.rect(6, 8, 21, 19, (240, 230, 205, 255))
+    img.rect(6, 8, 21, 6, R)
+    for x in (11, 21): line(img, x, 5, x, 10, S, 1.6)
+    from make_ability_icons import star
+    star(img, 16, 20, 5.5, G, 5, 0.45)
+    disc(img, 16, 20, 1.6, (255, 240, 190, 255))
+
+
 ICONS = {'play': play, 'character': character, 'skin': skin, 'codex': codex, 'tutorial': tutorial,
-         'settings': settings, 'exit': exit_, 'coin': coin}
+         'settings': settings, 'exit': exit_, 'coin': coin, 'daily': daily}
 
 
 def retry(fn):
