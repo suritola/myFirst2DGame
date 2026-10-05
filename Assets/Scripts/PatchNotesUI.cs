@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
@@ -6,6 +7,7 @@ using UnityEngine.UI;
 
 // 게임을 켤 때마다 메인 메뉴에 이번 버전의 패치노트를 띄움
 // 내용은 Resources/PatchNotes.txt (docs/patch-notes/v<버전>.md 를 그대로 복사 · 빌드 스크립트가 빌드할 때 덮어씀)
+// 2.1.3~: 메인 메뉴 「패치노트」 버튼 → 지난 버전까지 왼쪽 목록에서 골라 봄 (Resources/PatchNotesAll.txt · tools/patchnotes-all.ps1)
 public static class PatchNotesUI
 {
     static GameObject open;
@@ -59,6 +61,101 @@ public static class PatchNotesUI
         scroll.movementType = ScrollRect.MovementType.Clamped;
         scroll.scrollSensitivity = 45f;
 
+        open.AddComponent<EscCloser>();
+    }
+
+    // ================================================================= 지난 버전까지 (메인 메뉴 버튼)
+    static List<(string version, string text)> All()
+    {
+        List<(string, string)> list = new List<(string, string)>();
+        TextAsset src = Resources.Load<TextAsset>("PatchNotesAll");
+        if (src == null) return list;
+        string version = null;
+        StringBuilder body = new StringBuilder();
+        foreach (string raw in src.text.Replace("\r", "").Split('\n'))
+        {
+            if (raw.StartsWith("@@@ "))
+            {
+                if (version != null) list.Add((version, body.ToString()));
+                version = raw.Substring(4).Trim();
+                body.Clear();
+                continue;
+            }
+            body.Append(raw).Append('\n');
+        }
+        if (version != null) list.Add((version, body.ToString()));
+        return list;
+    }
+
+    public static void OpenHistory(Transform root)
+    {
+        if (open != null) return;
+        List<(string version, string text)> notes = All();
+        if (notes.Count == 0) { Open(root); return; }
+
+        RectTransform win = UIKit.Modal(root, "PatchNotesHistory", new Vector2(1500f, 900f), out open);
+        TMP_Text title = UIKit.Text(win, "", 46f, Gold, new Vector2(0f, 395f), new Vector2(900f, 64f));
+        title.text = Loc.T("패치노트");
+        UIKit.MakeButton(win, "닫기", new Vector2(640f, 395f), new Vector2(150f, 58f), Close, 22f);
+
+        // 왼쪽: 버전 목록 (최신이 위)
+        RectTransform listView = UIKit.Rect("Versions", win, new Vector2(-600f, -40f), new Vector2(240f, 780f));
+        listView.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.15f);
+        listView.gameObject.AddComponent<RectMask2D>();
+        RectTransform listContent = UIKit.Rect("Content", listView, Vector2.zero, new Vector2(220f, notes.Count * 62f + 10f));
+        listContent.anchorMin = listContent.anchorMax = listContent.pivot = new Vector2(0.5f, 1f);
+        listContent.anchoredPosition = Vector2.zero;
+        ScrollRect listScroll = listView.gameObject.AddComponent<ScrollRect>();
+        listScroll.content = listContent;
+        listScroll.viewport = listView;
+        listScroll.horizontal = false;
+        listScroll.movementType = ScrollRect.MovementType.Clamped;
+        listScroll.scrollSensitivity = 45f;
+
+        // 오른쪽: 고른 버전의 내용
+        RectTransform view = UIKit.Rect("Viewport", win, new Vector2(125f, -40f), new Vector2(1170f, 780f));
+        view.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.15f);
+        view.gameObject.AddComponent<RectMask2D>();
+        RectTransform content = UIKit.Rect("Content", view, Vector2.zero, new Vector2(1120f, 0f));
+        content.anchorMin = content.anchorMax = content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = new Vector2(0f, -16f);
+        TMP_Text body = UIKit.Text(content, "", 25f, Parch, Vector2.zero, new Vector2(1120f, 0f), TextAlignmentOptions.TopLeft);
+        body.enableAutoSizing = false;
+        body.fontSize = 25f;
+        body.enableWordWrapping = true;
+        body.lineSpacing = 8f;
+        RectTransform br = body.rectTransform;
+        br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 1f);
+        br.anchoredPosition = Vector2.zero;
+        content.gameObject.AddComponent<VerticalLayoutGroup>().childControlHeight = true;
+        content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        ScrollRect scroll = view.gameObject.AddComponent<ScrollRect>();
+        scroll.content = content;
+        scroll.viewport = view;
+        scroll.horizontal = false;
+        scroll.movementType = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = 45f;
+
+        List<Image> tabs = new List<Image>();
+        void Show(int i)
+        {
+            body.text = Format(notes[i].text);
+            for (int k = 0; k < tabs.Count; k++) tabs[k].color = k == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
+            scroll.verticalNormalizedPosition = 1f;
+            content.anchoredPosition = new Vector2(0f, -16f);
+        }
+        for (int i = 0; i < notes.Count; i++)
+        {
+            int idx = i;
+            Button b = UIKit.MakeButton(listContent, "", Vector2.zero, new Vector2(210f, 54f), () => Show(idx), 24f);
+            RectTransform r = (RectTransform)b.transform;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 1f);
+            r.anchoredPosition = new Vector2(0f, -8f - i * 62f);
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            label.text = notes[i].version + (notes[i].version == "v" + Application.version ? "  <size=70%>" + Loc.T("지금") + "</size>" : "");
+            tabs.Add(b.GetComponent<Image>());
+        }
+        Show(0);
         open.AddComponent<EscCloser>();
     }
 

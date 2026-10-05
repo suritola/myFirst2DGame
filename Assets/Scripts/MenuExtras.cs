@@ -123,6 +123,12 @@ public static class MenuExtras
 
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
+        // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~)
+        Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(220f, 56f), () => PatchNotesUI.OpenHistory(sr.root), 24f);
+        RectTransform nr = (RectTransform)notes.transform;
+        nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
+        nr.anchoredPosition = new Vector2(-30f, -102f);
+        notes.name = "PatchNotesButton";
         PatchNotesUI.OpenOnLaunch(sr.root);
     }
 

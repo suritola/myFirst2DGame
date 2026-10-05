@@ -822,6 +822,9 @@ public static partial class LocTable
         { "필살기 「거울의 방」 — 15초 동안 둘레의 거울들이 차례로 플레이어를 노려 광선을 되쏘고, 깨진 거울 조각이 쏟아집니다", L("Ultimate “Hall of Mirrors” — for 15s, mirrors around the barrier take turns firing beams at you while broken shards rain down", "必殺技「鏡の間」— 15秒間、周りの鏡が次々とプレイヤーを狙って光線を撃ち返し、割れた鏡の破片が降り注ぎます", "必杀技「镜之间」— 15秒内，周围的镜子轮流瞄准玩家反射光束，破碎的镜片倾泻而下") },
         { "거울의 군주가 산산이 부서지자, 심연에 갇혀 있던 영혼들이 빛이 되어 떠올랐다.", L("As the Mirror Sovereign shattered, the souls trapped in the abyss rose up as light.", "鏡の君主が粉々に砕けると、深淵に囚われていた魂たちが光となって昇っていった。", "镜之君主粉碎之时，被困深渊的灵魂化作光芒升起。") },
         { "리치 왕의 저주도, 지옥 군주의 불길도, 킹 슬라임의 산성도 모두 사라졌다.", L("The Lich King's curse, the Demon Lord's flames, the Slime King's acid — all were gone.", "リッチ王の呪いも、地獄の君主の炎も、キングスライムの酸も、すべて消え去った。", "巫妖王的诅咒、地狱领主的火焰、史莱姆王的酸液，全都消失了。") },
+        // 2.1.3 메인 메뉴 패치노트 버튼 (PatchNotesUI)
+        { "패치노트", L("Patch Notes", "パッチノート", "更新日志") },
+        { "지금", L("Current", "現在", "当前") },
         // 2.1.1 일일 도전 · 스팀 순위표 (DailyChallenge)
         { "일일 도전", L("Daily Challenge", "デイリーチャレンジ", "每日挑战") },
         { "오늘의 영웅", L("Today's hero", "今日の英雄", "今日英雄") },

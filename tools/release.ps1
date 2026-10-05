@@ -54,6 +54,8 @@ foreach ($d in "Assets", "Packages", "ProjectSettings") {
 # 게임 안 패치노트 (메인 메뉴에서 켤 때마다 띄움): 이 버전의 패치노트를 넣음
 $patchNotes = Join-Path $Project "docs/patch-notes/$Version.md"
 if (Test-Path $patchNotes) { Copy-Item $patchNotes (Join-Path $CopyDir "Assets/Resources/PatchNotes.txt") -Force }
+# 메인 메뉴 「패치노트」 버튼: 지난 버전까지 모두 (tools/patchnotes-all.ps1)
+& (Join-Path $PSScriptRoot "patchnotes-all.ps1") -Out (Join-Path $CopyDir "Assets/Resources/PatchNotesAll.txt")
 
 # ---------------------------------------------------------------- 빌드
 if (Test-Path $OutDir) { Remove-Item -Recurse -Force $OutDir }
