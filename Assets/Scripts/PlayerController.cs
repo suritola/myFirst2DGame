@@ -233,11 +233,11 @@ public class PlayerController : MonoBehaviour
         PlayerLook.Attach(this);
         // 거너가 아닌 캐릭터: 스탯 · 몸 그림 · 평타 · 우클릭 스킬 (CharacterData)
         CharacterKit.Attach(this);
-        // 거너: 공격력 배율 · 장전 1.8 → 1.3초 (1대 상대 피해가 가장 낮았음)
+        // 거너: 공격력 배율 · 장전 1.8 → 1.3초(2.1.0, 1대 상대 피해가 가장 낮았음) → 1.5초(2.1.1)
         if (CharacterData.IsGunner)
         {
             damage *= CharacterData.Current.damage;
-            reloadTime = Mathf.Min(reloadTime, 1.3f);
+            reloadTime = Mathf.Min(reloadTime, 1.5f);         // 2.1.1: 1.3 → 1.5초 (1 · 2장에서 너무 셌음)
         }
 
         mainCamera = Camera.main;
