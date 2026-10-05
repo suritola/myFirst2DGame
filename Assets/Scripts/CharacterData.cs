@@ -41,7 +41,7 @@ public static class CharacterData
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
-            hp = 0.8f, damage = 0.9f, attackSpeed = 1.4f, gauge = 1.35f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
+            hp = 0.85f, damage = 1f, attackSpeed = 1.4f, gauge = 1.2f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",

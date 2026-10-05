@@ -896,8 +896,8 @@ public partial class CharacterKit : MonoBehaviour
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
-            Specials.Damage(c.gameObject, Damage * 1.8f * UltMul, dir, 1f);      // 2.1.1: 2.2 → 1.8 (1 · 2장에서 너무 셌음)
-            Bleed.Apply(c.gameObject, Damage * 1.3f * UltMul, 4f);
+            Specials.Damage(c.gameObject, Damage * 2.2f * UltMul, dir, 1f);
+            Bleed.Apply(c.gameObject, Damage * 1.5f * UltMul, 4f);
             Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
