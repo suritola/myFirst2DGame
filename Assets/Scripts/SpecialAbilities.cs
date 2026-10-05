@@ -893,6 +893,19 @@ public partial class SpecialAbilities : MonoBehaviour
     // ================================================================= update
     void Update()
     {
+        DamageSource.Current = DamageSource.Special;     // 오라 · 패시브 · 캐릭터 능력 (무기 · 스킬은 아래에서 그 능력 이름)
+        try { UpdateAbilities(); }
+        finally { DamageSource.Current = null; }
+    }
+
+    // 코루틴 · 소환물도 시작할 때의 피해 출처를 이어 감 (RunStats)
+    public new Coroutine StartCoroutine(IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
+
+    // 이번 판 피해 기록에 쓰는 능력 이름 (번역 전 한국어)
+    string SourceOf(int id) => abilities != null && id >= 0 && id < abilities.Length && abilities[id] != null ? abilities[id].name : DamageSource.Special;
+
+    void UpdateAbilities()
+    {
         if (player != null) TreeTick();
         if (player == null || equipped.Count == 0 || Time.timeScale == 0f)
         {
@@ -924,13 +937,13 @@ public partial class SpecialAbilities : MonoBehaviour
             // 무기를 들고 있으면 그 무기의 탄창을 표시 (R: 들고 있는 무기 장전)
             player.ammoTextOverride = WeaponActive ? (AmmoText(CurrentWeapon) ?? (IsKit(CurrentWeapon) ? Loc.T(abilities[CurrentWeapon].name) : null)) : CharacterKit.Instance != null ? CharacterKit.Instance.WeaponName : null;
             if (WeaponActive && KeyBindings.Down(GameAction.Reload)) StartWeaponReload(CurrentWeapon);
-            if (WeaponActive) UpdateWeapon();
+            if (WeaponActive) using (DamageSource.As(SourceOf(CurrentWeapon))) UpdateWeapon();
         }
 
         for (int i = 0; i < skills.Count && i < SkillKeys.Length; i++) HandleSkillKey(skills[i], SkillKeys[i]);
         if (aimingSkill >= 0) ShowSkillPreview(aimingSkill);
 
-        if (Has(OrbsId)) UpdateOrbs();
+        if (Has(OrbsId)) using (DamageSource.As(SourceOf(OrbsId))) UpdateOrbs();
         KitTick();
         if (CurrentWeapon != FlameId) heat = Mathf.Max(0f, heat - Time.deltaTime * 0.35f);
 
@@ -1425,6 +1438,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
     void UseSkill(int id)
     {
+        using var source = DamageSource.As(SourceOf(id));
         bool evo = IsEvolved(id);
         switch (id)
         {
@@ -1766,6 +1780,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 플레이어가 맞았을 때 (복수의 가시)
     public void OnPlayerHurt()
     {
+        using var source = DamageSource.As(DamageSource.Special);     // 복수의 가시 · 캐릭터 능력 (적이 때린 순간이라 출처가 비어 있음)
         if (player != null) KitOnHurt();
         if (!Has(ThornsId) || player == null) return;
         fx.Play("boom", 0.6f, 1.4f);
@@ -1973,6 +1988,7 @@ public static class Specials
 // 불타는 적: 초당 피해
 public class Burn : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public static Sprite FireSprite;
 
     public float dps;
@@ -1999,6 +2015,7 @@ public class Burn : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         if (Time.time > until) { Destroy(this); return; }
 
         if (flame != null)
@@ -2164,6 +2181,7 @@ public class Homing : MonoBehaviour
 // 부메랑 낫: 날아갔다가 주인에게 돌아옴
 public class Scythe : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public Transform owner;
     public Vector2 direction;
     public float distance = 12f;
@@ -2191,6 +2209,7 @@ public class Scythe : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         transform.Rotate(0f, 0f, -900f * Time.deltaTime);
         if (owner == null) { Destroy(gameObject); return; }
 
@@ -2218,6 +2237,7 @@ public class Scythe : MonoBehaviour
 // 용암 유탄: 불꼬리를 끌며 포물선으로 날아가 폭발하고 끓는 용암 웅덩이를 남김
 public class Grenade : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public SpecialAbilities owner;
     public Vector3 target;
     public float damage;
@@ -2251,6 +2271,7 @@ public class Grenade : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / flightTime);
         Vector3 p = Vector3.Lerp(start, target, k);
@@ -2333,6 +2354,7 @@ public class Grenade : MonoBehaviour
 
     void OnDestroy()
     {
+        using var source = DamageSource.As(dmgSource);
         if (shadow != null) Destroy(shadow);
         if (marker != null) Destroy(marker.gameObject);
     }
@@ -2341,6 +2363,7 @@ public class Grenade : MonoBehaviour
 // 일정 시간 동안 안에 있는 적에게 0.5초마다 피해
 public class DamageZone : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public float radius = 3f;
     public float duration = 4f;
     public float tickDamage = 1f;
@@ -2359,6 +2382,7 @@ public class DamageZone : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         t += Time.deltaTime;
         tick += Time.deltaTime;
         sr.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * (0.75f + Mathf.Sin(t * 8f) * 0.25f) * Mathf.Clamp01((duration - t) * 2f));
@@ -2386,6 +2410,7 @@ public class DamageZone : MonoBehaviour
 // 아군 해골: 가까운 적에게 달려가 자폭
 public class AllySkeleton : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public SpecialAbilities owner;
     public float damage;
     public float speed = 16f;
@@ -2397,6 +2422,7 @@ public class AllySkeleton : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         t += Time.deltaTime;
         Transform target = Specials.NearestEnemy(transform.position, 30f);
         if (target != null)
@@ -2543,6 +2569,7 @@ public class LineFade : MonoBehaviour
 // 화염 회오리: 가까운 적에게 천천히 다가가며 주변 적을 빨아들이고 태움 (4초)
 public class FireTornado : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     static readonly List<Collider2D> pullHits = new List<Collider2D>(32);
     public SpecialAbilities owner;
     public float damage;
@@ -2560,6 +2587,7 @@ public class FireTornado : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         age += Time.deltaTime;
         Transform target = Specials.NearestEnemy(transform.position, 14f);
         if (target != null) transform.position = Vector3.MoveTowards(transform.position, target.position, 5f * Time.deltaTime);
@@ -2597,6 +2625,7 @@ public class FireTornado : MonoBehaviour
 // 영혼 떼: 구슬들이 주인 주위를 돌다가 번갈아 표적에게 달려들고 돌아옴 (4초)
 public class SoulSwarm : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public Transform owner;
     public List<EnermyController> targets;
     public float damage;
@@ -2629,6 +2658,7 @@ public class SoulSwarm : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         if (owner == null) { Destroy(gameObject); return; }
         age += Time.deltaTime;
 

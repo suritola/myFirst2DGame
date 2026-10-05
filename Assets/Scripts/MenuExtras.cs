@@ -33,6 +33,7 @@ public static class MenuExtras
             RectTransform rr = res.rectTransform;
             rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
             rr.anchoredPosition = new Vector2(60f, 0f);
+            RunStats.BuildDamagePanel(canvas.transform);      // 오른쪽: 준 피해 · 받은 피해 · 쓰러진 곳
             TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[R] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
             RectTransform ar = again.rectTransform;
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);

@@ -270,6 +270,16 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        DamageSource.Current = DamageSource.Basic;      // 재장전 · 평타 (아래 우클릭 부분은 필살기)
+        try { UpdateInput(); }
+        finally { DamageSource.Current = null; }
+    }
+
+    // 코루틴도 시작할 때의 피해 출처(평타 · 필살기)를 이어 감 (RunStats)
+    public new Coroutine StartCoroutine(IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
+
+    void UpdateInput()
+    {
 
         needEXP = NeedExp(level);
 
@@ -374,6 +384,7 @@ public class PlayerController : MonoBehaviour
         // 우클릭 스킬 시작
         // =========================
 
+        DamageSource.Current = DamageSource.Ult;
         if (kit != null) kit.UpdateUlt(skillGauge);
         else
         {
@@ -438,6 +449,7 @@ public class PlayerController : MonoBehaviour
         // 자동 재장전
         // =========================
 
+        DamageSource.Current = DamageSource.Basic;
         if (NowBullet <= 0 && !isReloading && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) StartCoroutine(Reload());
 
         // =========================
@@ -988,7 +1000,8 @@ void Shoot()
     public static int HurtCount;
 
     // 피해를 받았으면 true, 무적이라 무시됐으면 false
-    public bool TryHit(float amount)
+    // from: 때린 코드의 파일 (컴파일러가 채움) → 이번 판 받은 피해 출처
+    public bool TryHit(float amount, [System.Runtime.CompilerServices.CallerFilePath] string from = "")
     {
         if (IsInvincible) return false;
         // 영혼 트리 보호막: 공격 한 번을 막음
@@ -1016,6 +1029,7 @@ void Shoot()
             return true;
         }
 
+        RunStats.Hurt(Mathf.Min(taken, Mathf.Max(0f, PlayerHealth)), from);
         PlayerHealth -= taken;
         HurtCount++;
         ShowHurt(taken);

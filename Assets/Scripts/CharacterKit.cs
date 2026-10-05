@@ -121,6 +121,9 @@ public partial class CharacterKit : MonoBehaviour
         return i >= 0 && int.TryParse(n.Substring(i + 1), out int v) ? v : 0;
     }
 
+    // 코루틴도 시작할 때의 피해 출처(평타 · 필살기)를 이어 감 (RunStats)
+    public new Coroutine StartCoroutine(IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
+
     void LateUpdate()
     {
         // 대기 2장 (느리게) · 달리기 4장
@@ -1312,6 +1315,7 @@ public class HuntMark : MonoBehaviour
 // 출혈: 몇 초 동안 0.25초마다 피해, 핏방울이 떨어짐 (다시 걸리면 시간 갱신)
 public class Bleed : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public float dps;
     public float until;
     float tick, drip;
@@ -1327,6 +1331,7 @@ public class Bleed : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         if (Time.time > until) { Destroy(this); return; }
         drip += Time.deltaTime;
         if (drip >= 0.25f)
@@ -1368,6 +1373,7 @@ public class FrameLoop : MonoBehaviour
 // 포물선으로 날아가 떨어진 자리에서 터지는 플라스크
 public class FlaskLob : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     Vector3 from, to;
     float time, t;
     System.Action<Vector3> onLand;
@@ -1399,6 +1405,7 @@ public class FlaskLob : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / time);
         Vector3 p = Vector3.Lerp(from, to, k);

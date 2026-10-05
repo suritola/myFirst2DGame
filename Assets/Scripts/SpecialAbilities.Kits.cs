@@ -1126,6 +1126,7 @@ public partial class SpecialAbilities
 // 중독: 쌓일수록 강해지는 초록 도트 피해 (4초 동안 새로 안 맞으면 사라짐)
 public class Poison : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public float perStack;
     public int stacks;
     float until, tick, drip;
@@ -1142,6 +1143,7 @@ public class Poison : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         if (Time.time > until) { Destroy(this); return; }
         drip += Time.deltaTime;
         if (drip >= 0.35f)
@@ -1163,6 +1165,7 @@ public class Poison : MonoBehaviour
 // 마름쇠: 밟은 적에게 피해 + 느리게, 세 번 밟히거나 8초가 지나면 사라짐
 public class Caltrop : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     static readonly List<Collider2D> hits = new List<Collider2D>(8);
     float damage, life = 8f, cooldown;
     int uses = 3;
@@ -1176,6 +1179,7 @@ public class Caltrop : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         life -= Time.deltaTime;
         cooldown -= Time.deltaTime;
         if (life <= 0f || uses <= 0) { Destroy(gameObject); return; }

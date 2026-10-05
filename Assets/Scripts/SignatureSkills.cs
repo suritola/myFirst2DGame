@@ -277,6 +277,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (g == null) return;
         bool was = Dealing;
         Dealing = true;
+        using var source = DamageSource.As(DamageSource.Signature);
         try { Specials.Damage(g, dmg, dir, knock); }
         finally { Dealing = was; }
     }
@@ -322,6 +323,7 @@ public partial class SignatureSkills : MonoBehaviour
     public Bullet Shot(Vector3 start, Vector2 dir, float dmg, int pene, float speed, float range, string fx, float size, Color tint, bool spin = false)
     {
         if (player == null) return null;
+        using var source = DamageSource.As(DamageSource.Signature);     // 총알이 이 출처를 기억함
         Bullet b = player.CreateBullet(start, dir, dmg, pene, 0f, true);
         if (b == null) return null;
         b.speed = speed;
@@ -440,6 +442,7 @@ public partial class SignatureSkills : MonoBehaviour
 // 스킬이 남기는 장판 (원 또는 선분)
 public class SigZone : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public float radius, life, tick;
     public bool segment;
     public Vector3 a, b;
@@ -450,6 +453,7 @@ public class SigZone : MonoBehaviour
 
     void Update()
     {
+        using var source = DamageSource.As(dmgSource);
         age += Time.deltaTime;
         if (age >= life)
         {

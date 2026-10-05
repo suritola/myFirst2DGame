@@ -241,6 +241,7 @@ public class bosss : MonoBehaviour
         damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (거인 사냥꾼 · 표식 …)
 
         // 체력 감소
+        RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)
         EnemyHealth -= damage;
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         if (EnemyHealth > 0) BossUltimate.OnBossHit(this, damage);       // 필살기 게이지 (센 한 방일수록 많이)

@@ -2,6 +2,7 @@
 
 public class Bullet : MonoBehaviour
 {
+    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     public float speed = 10f;
 
     // 일반 총알은 1
@@ -72,6 +73,7 @@ public class Bullet : MonoBehaviour
         Collider2D collision
     )
     {
+        using var source = DamageSource.As(dmgSource);
         // =========================
         // 벽에 맞으면 삭제
         // =========================

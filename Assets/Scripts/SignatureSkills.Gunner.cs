@@ -60,6 +60,7 @@ public partial class SignatureSkills
 
     void OnReloadEnd()
     {
+        using var source = DamageSource.As(DamageSource.Signature);
         if (who != CharacterId.Gunner) return;
         Vector3 p = transform.position;
         int f = L("g.flash");
@@ -162,6 +163,7 @@ public partial class SignatureSkills
 
     void GunnerHurt(float taken)
     {
+        using var source = DamageSource.As(DamageSource.Signature);
         int c = L("g.counter");
         Vector3 p = transform.position;
         if (c > 0)

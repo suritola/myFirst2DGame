@@ -89,6 +89,7 @@ public partial class SpecialAbilities
     // 레벨이 오를 때: 다시 뽑기 채우기 · 각성의 파동
     void FateOnLevelUp(int levels)
     {
+        using var source = DamageSource.As(DamageSource.Tree);
         if (rerollMax > 0) rerolls = Mathf.Min(rerollMax, rerolls + levels);
         if (novaRadius > 0f && player != null)
         {
@@ -100,6 +101,7 @@ public partial class SpecialAbilities
     // 처치할 때: 연쇄 광풍 · 영혼 메아리
     void FateOnKill(Vector3 pos)
     {
+        using var source = DamageSource.As(DamageSource.Tree);
         if (stormNeed > 0 && player != null)
         {
             stormKills.Enqueue(Time.time);
@@ -177,7 +179,7 @@ public partial class SpecialAbilities
         {
             wellNextAt = Time.time + wellEvery;
             Vector3? at = DensestEnemies();
-            if (at.HasValue) StartCoroutine(GravityWell(at.Value));
+            if (at.HasValue) using (DamageSource.As(DamageSource.Tree)) StartCoroutine(GravityWell(at.Value));
             else wellNextAt = Time.time + 3f;       // 몰린 곳이 없으면 곧 다시
         }
     }
