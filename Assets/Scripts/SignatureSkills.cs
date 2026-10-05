@@ -196,7 +196,17 @@ public partial class SignatureSkills : MonoBehaviour
 
     float RateMultiplier() => who == CharacterId.Swordsman ? SwordRate() : 1f;
 
+    // 2.1.3: 고유 스킬이 그리는 이펙트 · 코루틴도 출처를 이어 감 (Fx 가 스킬 이펙트를 눈에 띄게)
+    public new Coroutine StartCoroutine(System.Collections.IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
+
     void Update()
+    {
+        DamageSource.Current = DamageSource.Signature;
+        try { SignatureTick(); }
+        finally { DamageSource.Current = null; }
+    }
+
+    void SignatureTick()
     {
         if (!Alive || Time.timeScale == 0f) return;
         switch (who)

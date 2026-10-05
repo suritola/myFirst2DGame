@@ -35,6 +35,30 @@ public static class Fx
     };
     static float Visible(string name, float size) => AreaFx.Contains(name) ? size : size * DecorScale;
 
+    // 2.1.3: 플레이어 스킬(필살기 · 특수 능력 · 고유 스킬 · 영혼 트리 · 진화) 이펙트를 확 눈에 띄게
+    // 지금 스킬이 쓰는 중인지는 DamageSource 로 앎 (평타 · 적 · 맞은 불꽃 · 처치 연출은 그대로)
+    //   더 크게(장식만, 범위가 곧 판정인 이펙트는 그대로) · 더 밝고 진하게 · 적 이펙트 위에 · 밑에 빛 번짐
+    const float SkillDecor = 1.25f;
+    const int SkillOrder = 40;
+    static readonly HashSet<string> NoBoost = new HashSet<string>
+    {
+        "fx_spark", "fx_smoke", "fx_bleed", "fx_deathburst", "fx_warn", "fx_reticle", "fx_target_rune",
+    };
+    static bool SkillFx(string name)
+    {
+        string s = DamageSource.Current;
+        return s != null && s != DamageSource.Basic && s != DamageSource.Other && !NoBoost.Contains(name);
+    }
+
+    static Color Brighten(Color c) => new Color(Mathf.Lerp(c.r, 1f, 0.25f), Mathf.Lerp(c.g, 1f, 0.25f), Mathf.Lerp(c.b, 1f, 0.25f), Mathf.Max(c.a, 0.95f));
+
+    // 이펙트 밑에 잠깐 번지는 빛 (Glow 스프라이트는 지름 약 8칸 = 크기 1)
+    static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
+    {
+        if (Hostile.Glow == null || size < 1.2f) return;
+        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.4f / 8f, new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.55f), layer, order - 1, 0.3f);
+    }
+
     static void Style(SpriteRenderer sr)
     {
         Material m = SpriteOutline.EffectMaterial;
@@ -55,13 +79,20 @@ public static class Fx
         if (frames == null || frames.Length == 0) return null;
 
         size = Visible(name, size);
+        bool skill = SkillFx(name);
+        if (skill)
+        {
+            if (!AreaFx.Contains(name)) size *= SkillDecor;
+            order += SkillOrder;
+            if (!loop) SkillGlow(pos, size, color ?? Color.white, order, layer);
+        }
         GameObject go = new GameObject(name);
         go.transform.position = new Vector3(pos.x, pos.y, 0f);
         go.transform.rotation = Quaternion.Euler(0f, 0f, rotation);
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         Style(sr);
         sr.sprite = frames[0];
-        sr.color = color ?? Color.white;
+        sr.color = skill ? Brighten(color ?? Color.white) : color ?? Color.white;
         sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
         float h = frames[0].bounds.size.y;
@@ -96,6 +127,14 @@ public static class Fx
             a = fresh.AddComponent<FxAnim>();
             a.sr = fsr;
             a.pooled = true;
+        }
+        bool skill = SkillFx(name);
+        if (skill)
+        {
+            if (!AreaFx.Contains(name)) size *= SkillDecor;
+            order += SkillOrder;
+            if (!loop) SkillGlow(pos, Visible(name, size), color ?? Color.white, order, layer);
+            color = Brighten(color ?? Color.white);
         }
         Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
         a.gameObject.SetActive(true);
