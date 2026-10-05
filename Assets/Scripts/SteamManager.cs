@@ -193,9 +193,10 @@ public class SteamManager : MonoBehaviour
             if (EndlessMode.Instance != null && EndlessMode.Instance.BossesDefeated >= 5) SteamAchievements.Unlock(SteamAchievements.EndlessBosses);
             return;
         }
-        if (spawner != null && spawner.stageIndex >= 1) SteamAchievements.Unlock(SteamAchievements.EnterHell);
-        if (spawner != null && spawner.stageIndex >= 2) SteamAchievements.Unlock(SteamAchievements.EnterMeadow);
-        if (spawner != null && spawner.stageIndex >= AbyssStage.Index) SteamAchievements.Unlock(SteamAchievements.EnterAbyss);
+        // 그 맵에 들어섰을 때 (2.1.1~ 장 순서가 바뀌어 번호 크기로 비교하지 않음)
+        if (spawner != null && spawner.stageIndex == 1) SteamAchievements.Unlock(SteamAchievements.EnterHell);
+        if (spawner != null && spawner.stageIndex == 2) SteamAchievements.Unlock(SteamAchievements.EnterMeadow);
+        if (spawner != null && spawner.stageIndex == AbyssStage.Index) SteamAchievements.Unlock(SteamAchievements.EnterAbyss);
     }
 
     void OnDestroy()

@@ -27,6 +27,9 @@ public class StageManager : MonoBehaviour
     GameObject desertMap;
     // 4장 영혼의 심연 (2.1.1~): 지옥 맵을 복제해 처음 들어갈 때 만듦 (AbyssStage)
     GameObject abyssMap;
+    // 지하 묘역의 시작 자리 · 배경색 (2.1.1~ 묘역이 2장이 되어 나중에 다시 켤 때)
+    Vector3 caveStart;
+    Color caveBackground;
     GameObject[] endlessBosses;
 
     [Header("UI")]
@@ -117,6 +120,8 @@ public class StageManager : MonoBehaviour
             spawner.onMidBossDefeated += OnMidBossDefeated;
         }
 
+        if (player != null) caveStart = player.position;
+        if (Camera.main != null) caveBackground = Camera.main.backgroundColor;
         if (hellMap != null) hellMap.SetActive(false);
         if (meadowMap != null) meadowMap.SetActive(false);
         DimMeadow();
@@ -146,6 +151,7 @@ public class StageManager : MonoBehaviour
 
         bool endless = GameMode.IsEndless;
         if (endless) PrepareEndless();
+        else if (Chapters.First != 0) PrepareFirstChapter();
         yield return StoryDirector.Intro(endless);
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
         if (endless && !Evo) yield return PickEndlessSpecials();
@@ -157,7 +163,11 @@ public class StageManager : MonoBehaviour
             gameObject.AddComponent<EndlessMode>().Init(this, endlessBosses);
             ShowBanner(Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?"), 3f);
         }
-        else RunClock.Create();
+        else
+        {
+            RunClock.Create();
+            ShowBanner(Chapters.Title(CurrentStage), 2.5f);
+        }
         Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
     }
 
@@ -172,6 +182,18 @@ public class StageManager : MonoBehaviour
         spawner.StartStage(CurrentStage);
         spawner.spawningEnabled = false;
         if (player != null) player.position = stage2PlayerStart;
+    }
+
+    // 2.1.1~: 1장이 지하 묘역이 아니면 (초원) 그 맵에서 시작
+    void PrepareFirstChapter()
+    {
+        if (spawner == null) return;
+        int s = Chapters.First;
+        ShowStageMap(s);
+        CurrentStage = s;
+        spawner.StartStage(s);
+        spawner.spawningEnabled = false;
+        if (player != null) player.position = s == 0 ? caveStart : (Vector3)stage2PlayerStart;
     }
 
     // 무한 모드는 처음부터 특수 능력 3개를 고르고 시작
@@ -195,7 +217,7 @@ public class StageManager : MonoBehaviour
     void Update()
     {
         if (Evo) { UpdateSoulTreeButton(); return; }
-        bool show = specialPoints > 0 && CurrentStage >= 1 && !transitioning && !upgradeOpen;
+        bool show = specialPoints > 0 && Chapters.SlotOf(CurrentStage) >= 1 && !transitioning && !upgradeOpen;      // 2장부터 (2.1.1~ 장 순서)
         if (upgradeButton != null)
         {
             if (upgradeButton.activeSelf != show) upgradeButton.SetActive(show);
@@ -396,14 +418,9 @@ public class StageManager : MonoBehaviour
     // 트레일러 촬영용: 연출 없이 바로 해당 스테이지 맵으로 (0 동굴, 1 지옥, 2 초원, 3 심연)
     public void JumpToStage(int stage, Vector3 caveStart)
     {
-        if (stage == AbyssStage.Index) EnsureAbyssMap();
-        foreach (Renderer r in caveRenderers) if (r != null) r.enabled = stage == 0;
-        if (hellMap != null) hellMap.SetActive(stage == 1);
-        if (meadowMap != null) meadowMap.SetActive(stage == 2);
-        if (abyssMap != null) abyssMap.SetActive(stage == AbyssStage.Index);
+        ShowStageMap(stage);
         if (portal != null) portal.SetActive(false);
         if (bossBar != null) bossBar.bossSpawn = false;
-        if (Camera.main != null && stage > 0) Camera.main.backgroundColor = stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background;
         CurrentStage = stage;
         spawner.StartStage(stage);
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
@@ -512,34 +529,16 @@ public class StageManager : MonoBehaviour
             StartCoroutine(DemoFinish());
             return;
         }
-        if (stage == 0)
+        int next = Chapters.Next(stage);
+        if (next >= 0)
         {
+            // 다음 장으로 가는 문 (2.1.1~ 장 순서는 Chapters: 초원 → 지하 묘역 → 불타는 지옥 → 영혼의 심연)
+            string text = Loc.T(Defeated[Mathf.Clamp(stage, 0, 3)]) + "\n" + Loc.T(Gate[Mathf.Clamp(next, 0, 3)]);
             if (portal != null) portal.SetActive(true);
-            if (Evo) StartCoroutine(EvolutionThenPortal(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f));
+            if (Evo) StartCoroutine(EvolutionThenPortal(text, 3.5f));
             else
             {
-                ShowBanner(Loc.T("신전 문이 열렸다!\n문으로 들어가세요"), 3f);
-                StartCoroutine(PortalCountdown(stage));
-            }
-        }
-        else if (stage == 1)
-        {
-            if (portal != null) portal.SetActive(true);
-            if (Evo) StartCoroutine(EvolutionThenPortal(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f));
-            else
-            {
-                ShowBanner(Loc.T("지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다"), 3.5f);
-                StartCoroutine(PortalCountdown(stage));
-            }
-        }
-        else if (stage == 2)
-        {
-            // 2.1.1~: 킹 슬라임 뒤로 4장 영혼의 심연
-            if (portal != null) portal.SetActive(true);
-            if (Evo) StartCoroutine(EvolutionThenPortal(Loc.T("킹 슬라임을 쓰러뜨렸다!\n갈라진 땅 아래로 심연의 문이 열렸다"), 3.5f));
-            else
-            {
-                ShowBanner(Loc.T("킹 슬라임을 쓰러뜨렸다!\n갈라진 땅 아래로 심연의 문이 열렸다"), 3.5f);
+                ShowBanner(text, 3.5f);
                 StartCoroutine(PortalCountdown(stage));
             }
         }
@@ -553,6 +552,16 @@ public class StageManager : MonoBehaviour
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }
+
+    // 보스를 쓰러뜨렸을 때 · 그 장으로 가는 문이 열릴 때 (스테이지 번호 순서: 묘역 · 지옥 · 초원 · 심연)
+    static readonly string[] Defeated = { "리치 왕을 쓰러뜨렸다!", "지옥의 군주를 쓰러뜨렸다!", "킹 슬라임을 쓰러뜨렸다!", "거울의 군주를 쓰러뜨렸다!" };
+    static readonly string[] Gate =
+    {
+        "갈라진 땅 아래로 무너진 신전이 드러났다",
+        "묘역 깊은 곳에서 지옥의 문이 열렸다",
+        "성문 너머로 초원이 보인다",
+        "꺼져 가는 불길 아래로 심연의 문이 열렸다",
+    };
 
     // 체험판: 리치 왕을 쓰러뜨리면 (거너는 무기 진화까지 맛본 뒤) 끝 화면 (Demo.cs)
     IEnumerator DemoFinish()
@@ -579,9 +588,8 @@ public class StageManager : MonoBehaviour
     public void EnterPortal()
     {
         if (transitioning) return;
-        if (CurrentStage == 0) StartCoroutine(EnterHell());
-        else if (CurrentStage == 1) StartCoroutine(EnterMeadow());
-        else if (CurrentStage == 2) StartCoroutine(EnterAbyss());
+        int next = Chapters.Next(CurrentStage);
+        if (next >= 0) StartCoroutine(EnterStage(next));
     }
 
     void EnsureAbyssMap()
@@ -590,67 +598,29 @@ public class StageManager : MonoBehaviour
             abyssMap = AbyssStage.BuildMap(hellMap, spawner.spawnAreaMin, spawner.spawnAreaMax, stage2PlayerStart);
     }
 
-    // 초원 → 심연 (2.1.1~): 특수 능력 포인트 2개를 받고 맵 교체
-    IEnumerator EnterAbyss()
+    // 그 스테이지의 맵만 켜고 배경색을 맞춤 (0 묘역 · 1 지옥 · 2 초원 · 3 심연)
+    void ShowStageMap(int stage)
+    {
+        if (stage == AbyssStage.Index) EnsureAbyssMap();
+        foreach (Renderer r in caveRenderers) if (r != null) r.enabled = stage == 0;
+        if (hellMap != null) hellMap.SetActive(stage == 1);
+        if (meadowMap != null) meadowMap.SetActive(stage == 2);
+        if (abyssMap != null) abyssMap.SetActive(stage == AbyssStage.Index);
+        if (Camera.main != null)
+            Camera.main.backgroundColor = stage == 0 ? caveBackground : stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background;
+    }
+
+    // 다음 장으로 맵 교체: 첫 장을 끝내고 처음 넘어갈 때는 특수 능력 선택 (거너는 보스 처치 때 무기 진화로 대신),
+    // 그 뒤로는 특수 능력 포인트 +2
+    IEnumerator EnterStage(int stage)
     {
         transitioning = true;
         spawner.spawningEnabled = false;
         Time.timeScale = 0f;
         yield return Fade(0f, 1f, 0.8f);
 
-        EnsureAbyssMap();
-        if (meadowMap != null) meadowMap.SetActive(false);
-        if (abyssMap != null) abyssMap.SetActive(true);
-        if (portal != null) portal.SetActive(false);
-        if (Camera.main != null) Camera.main.backgroundColor = AbyssStage.Background;
-        if (bossBar != null) bossBar.bossSpawn = false;
-
-        CurrentStage = AbyssStage.Index;
-        spawner.StartStage(AbyssStage.Index);
-        if (player != null) player.position = stage2PlayerStart;
-        if (!Evo) specialPoints += 2;
-
-        Time.timeScale = 1f;
-        yield return Fade(1f, 0f, 0.8f);
-        ShowBanner(Evo ? Loc.T("4장 · 영혼의 심연") : Loc.T("4장 · 영혼의 심연\n특수 능력 포인트 +2"), 3f);
-        transitioning = false;
-    }
-
-    // 지옥 → 초원: 특수 능력 포인트 2개를 받고 맵 교체
-    IEnumerator EnterMeadow()
-    {
-        transitioning = true;
-        spawner.spawningEnabled = false;
-        Time.timeScale = 0f;
-        yield return Fade(0f, 1f, 0.8f);
-
-        if (hellMap != null) hellMap.SetActive(false);
-        if (meadowMap != null) meadowMap.SetActive(true);
-        if (portal != null) portal.SetActive(false);
-        if (Camera.main != null) Camera.main.backgroundColor = meadowBackground;
-        if (bossBar != null) bossBar.bossSpawn = false;
-
-        CurrentStage = 2;
-        spawner.StartStage(2);
-        if (player != null) player.position = stage2PlayerStart;
-        if (!Evo) specialPoints += 2;
-
-        Time.timeScale = 1f;
-        yield return Fade(1f, 0f, 0.8f);
-        ShowBanner(Evo ? Loc.T("3장 · 초원") : Loc.T("3장 · 초원\n특수 능력 포인트 +2"), 3f);
-        transitioning = false;
-    }
-
-    IEnumerator EnterHell()
-    {
-        transitioning = true;
-        spawner.spawningEnabled = false;
-        Time.timeScale = 0f;
-
-        yield return Fade(0f, 1f, 0.7f);
-
-        // 특수 능력 선택 (전체 화면 스킬 트리) - 거너는 보스 처치 때 무기 진화로 대신함
-        if (!Evo)
+        bool firstGate = Chapters.SlotOf(stage) == 1;
+        if (firstGate && !Evo)
         {
             pendingPicks = null;
             specialPanel.SetActive(true);
@@ -663,20 +633,19 @@ public class StageManager : MonoBehaviour
             specialPanel.SetActive(false);
         }
 
-        // 지옥 맵으로 교체
-        foreach (Renderer r in caveRenderers) if (r != null) r.enabled = false;
-        if (hellMap != null) hellMap.SetActive(true);
+        ShowStageMap(stage);
         if (portal != null) portal.SetActive(false);
-        if (Camera.main != null) Camera.main.backgroundColor = hellBackground;
         if (bossBar != null) bossBar.bossSpawn = false;
 
-        CurrentStage = 1;
-        spawner.StartStage(1);
-        if (player != null) player.position = stage2PlayerStart;
+        CurrentStage = stage;
+        spawner.StartStage(stage);
+        if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
+        bool points = !Evo && !firstGate;
+        if (points) specialPoints += 2;
 
         Time.timeScale = 1f;
         yield return Fade(1f, 0f, 0.8f);
-        ShowBanner(Loc.T("2장 · 불타는 지옥"), 2.5f);
+        ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
     }
 

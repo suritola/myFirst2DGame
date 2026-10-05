@@ -154,11 +154,14 @@ public class bosss : MonoBehaviour
         if (!difficultyApplied)
         {
             difficultyApplied = true;
-            if (IsSlime && slimeGen == 1) slimeMul = GameMode.BossHpMul;
-            setEnemyHP = Mathf.RoundToInt(setEnemyHP * GameMode.BossHpMul);
+            // 2.1.1~: 장 순서가 바뀌어도 그 자리(몇 번째 장)의 원래 세기로 (Chapters)
+            int chapter = Chapters.CurrentStage;
+            float hpMul = GameMode.BossHpMul * Chapters.BossHpMul(chapter), rw = Chapters.RewardMul(chapter);
+            if (IsSlime && slimeGen == 1) slimeMul = hpMul;
+            setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * hpMul));
             // 보스는 처치 수와 상관없이 정해진 수만 나오므로 고정 배율
-            expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul);
-            coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul);
+            expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul * rw);
+            coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul * rw);
         }
         EnemyHealth = setEnemyHP;
 

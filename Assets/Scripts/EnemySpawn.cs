@@ -117,7 +117,7 @@ public class EnemySpawner : MonoBehaviour
 
         UpdatePhase();
 
-        if (killedEnemy >= GameMode.ScaleKills(Stage.bossKills) && !bossSpawned && !bossCleared && Stage.bossPrefab != null)
+        if (killedEnemy >= GameMode.ScaleKills(Chapters.BossKills(stageIndex, Stage.bossKills)) && !bossSpawned && !bossCleared && Stage.bossPrefab != null)
         {
             if (bossbar == null) bossbar = FindFirstObjectByType<bossbar>();
             if (bossbar != null) bossbar.bossSpawn = true;
@@ -138,7 +138,7 @@ public class EnemySpawner : MonoBehaviour
         }
         paze = phase;
 
-        if (stageIndex >= midBossFromStage && phase > midBossPhase)
+        if (Chapters.SlotOf(stageIndex) >= midBossFromStage && phase > midBossPhase)      // 몇 번째 장인지로 (2.1.1~ 장 순서)
         {
             midBossPhase = phase;
             SpawnMidBoss();

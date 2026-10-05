@@ -42,6 +42,48 @@ public class StoryDirector : MonoBehaviour
     };
 
 
+    // 2.1.1~ 장 순서 (1장 초원 · 킹 슬라임) 의 시작 이야기. 체험판처럼 예전 순서(1장 묘역)면 아래 IntroFor
+    static readonly string[] MeadowIntroLines =
+    {
+        "킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 것들까지 꿈틀대기 시작했다.",
+        "마을에 남은 마지막 총잡이는 홀로 녹아내린 초원으로 걸어 나갔다.",
+        "킹 슬라임을 쓰러뜨리면, 땅 밑의 진짜 적이 모습을 드러낼 것이다.",
+        "탄창은 가득하다. 이제 세상을 구할 차례다.",
+    };
+
+    static string[] MeadowIntroFor(CharacterId id) => id switch
+    {
+        CharacterId.Swordsman => new[]
+        {
+            "킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 것들까지 꿈틀대기 시작했다.",
+            "떠돌이 기사는 녹슨 장검 한 자루를 등에 메고 산성 늪 앞에 섰다.",
+            "총알은 떨어져도, 칼날은 떨어지지 않는다.",
+            "기사는 망설임 없이 늪을 건너기 시작했다.",
+        },
+        CharacterId.Rogue => new[]
+        {
+            "킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 것들까지 꿈틀대기 시작했다.",
+            "그림자 칼날이라 불리는 도적은 초원 아래 잠든 보물 이야기를 들었다.",
+            "망자든 악마든, 등을 보인 놈부터 쓰러진다.",
+            "도적은 소리 없이 풀숲 속으로 몸을 숨겼다.",
+        },
+        CharacterId.Archer => new[]
+        {
+            "킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 것들까지 꿈틀대기 시작했다.",
+            "숲의 사냥꾼은 짐승들이 녹아내린 초원을 피해 달아나는 것을 보았다.",
+            "흔적을 거슬러 오르자, 거대한 슬라임이 초원 한가운데 버티고 있었다.",
+            "화살통은 가득하다. 이번 사냥감은 킹 슬라임이다.",
+        },
+        CharacterId.Alchemist => new[]
+        {
+            "킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 것들까지 꿈틀대기 시작했다.",
+            "미친 학자는 오히려 기뻤다. 초원만 한 슬라임이라니, 이렇게 좋은 재료가 또 있을까.",
+            "플라스크를 허리춤에 가득 채우고, 학자는 산성 늪으로 성큼 걸어 들어갔다.",
+            "“자, 실험을 시작하지.”",
+        },
+        _ => MeadowIntroLines,
+    };
+
     // 캐릭터마다 다른 시작 · 엔딩 이야기 (거너는 위의 기본 이야기)
     static string[] IntroFor(CharacterId id) => id switch
     {
@@ -205,7 +247,7 @@ public class StoryDirector : MonoBehaviour
             float before = Time.timeScale;
             Time.timeScale = 0f;
             yield return Fade(shade, 0f, 0.78f, 0.4f);
-            yield return Lines(endless ? EndlessLines : IntroFor(CharacterData.Selected));
+            yield return Lines(endless ? EndlessLines : Chapters.IsClassic ? IntroFor(CharacterData.Selected) : MeadowIntroFor(CharacterData.Selected));
             yield return Fade(shade, GetAlpha(shade), 0f, 0.4f);
             Time.timeScale = before;         // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
         }

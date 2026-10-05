@@ -110,7 +110,11 @@ public class EnermyController : MonoBehaviour
         if (!difficultyApplied)
         {
             difficultyApplied = true;
-            setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * GameMode.EnemyHpMul));
+            // 2.1.1~: 장 순서가 바뀌어도 그 자리(몇 번째 장)의 원래 세기로 (Chapters)
+            int chapter = Chapters.CurrentStage;
+            float rw = Chapters.RewardMul(chapter);
+            if (rw != 1f) { expReward = Mathf.Max(1, Mathf.RoundToInt(expReward * rw)); coinDrop = Mathf.Max(1, Mathf.RoundToInt(coinDrop * rw)); }
+            setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * GameMode.EnemyHpMul * Chapters.EnemyHpMul(chapter)));
             speed *= GameMode.EnemySpeedMul;
             // 보스까지 세는 적은 늘어난 처치 수만큼 보상을 나눔 (한 판 총량은 그대로)
             // 보스전 중 부하 · 중간 보스 · 소환된 적은 시간에 따라 나오므로 예전 배율 그대로

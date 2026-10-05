@@ -79,7 +79,7 @@ public class RunStats : MonoBehaviour
         DamageTaken.TryGetValue(key, out float v);
         DamageTaken[key] = v + amount;
         LastHurtBy = key;
-        LastHurtStage = StageManager.Instance != null ? StageManager.Instance.CurrentStage + 1 : 0;
+        LastHurtStage = StageManager.Instance != null ? Chapters.Number(StageManager.Instance.CurrentStage) : 0;
     }
 
     // 많은 순서로 (이름, 양), 남는 것은 "기타"로 묶음
@@ -131,7 +131,7 @@ public class RunStats : MonoBehaviour
         Difficulty = GameMode.Name(GameMode.Current);
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
-        if (StageManager.Instance != null) Stage = StageManager.Instance.CurrentStage + 1;
+        if (StageManager.Instance != null) Stage = Chapters.Number(StageManager.Instance.CurrentStage);
 
         // 0.5초마다 씬을 뒤지지 않게 한 번 찾아 두고 씀
         if (sp == null) sp = FindFirstObjectByType<SpecialAbilities>();

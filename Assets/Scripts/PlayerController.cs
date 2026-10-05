@@ -1014,7 +1014,7 @@ void Shoot()
         if (!SkinAudio.PlayHurt() && audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);      // 캐릭터 스킨 피격 소리
 
         // 피해 감소는 합쳐도 최대 70% (단단한 신체 + 강철 갑옷 + 거대화 물약이 겹쳐 무적이 되지 않게)
-        float taken = amount * GameMode.DamageMul * (1f - Mathf.Clamp(def, 0f, MaxDef));
+        float taken = amount * GameMode.DamageMul * Chapters.HurtMul * (1f - Mathf.Clamp(def, 0f, MaxDef));     // HurtMul: 장 자리에 맞춘 세기 (2.1.1)
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
         if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
         taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
