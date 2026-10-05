@@ -55,7 +55,7 @@ public static class CharacterData
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
-            hp = 1f, damage = 0.8f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
+            hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
         Coming(), Coming(), Coming(), Coming(), Coming(),
     };

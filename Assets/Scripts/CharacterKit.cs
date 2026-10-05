@@ -463,8 +463,9 @@ public partial class CharacterKit : MonoBehaviour
         float conc = depth == 0 ? SignatureSkills.FlaskThrow() : 1f;
         FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
         {
-            float r = 1.8f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc;
-            float hit = dmg * 1.45f * (unstable ? 1.8f : 1f) * FlaskDamageMul * conc;
+            // 2.1.3: 너무 셌음 — 반지름 1.8 → 1.65, 피해 1.45 → 1.2배, 불안정 1.8 → 1.6배
+            float r = 1.65f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc;
+            float hit = dmg * 1.2f * (unstable ? 1.6f : 1f) * FlaskDamageMul * conc;
             FlaskExtras(p, r, hit, depth);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
@@ -494,7 +495,7 @@ public partial class CharacterKit : MonoBehaviour
                 if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null && e.IsDead) { ChainPop(c.transform.position, hit); continue; }
-                if (kind == 0) Burn.Apply(c.gameObject, hit * 0.35f, 2f);
+                if (kind == 0) Burn.Apply(c.gameObject, hit * 0.3f, 2f);
                 // 급속 냉동: 빙결 시약이 느리게 하는 대신 꽁꽁 얼림
                 if (kind == 1 && e != null) e.Slow(card[1] > 0 ? 0f : 0.5f, card[1] > 0 ? 0.5f + 0.3f * card[1] : 1.5f);
                 // 원소 융합: 불타는 적에게 빙결 시약이 닿으면 증기 폭발
