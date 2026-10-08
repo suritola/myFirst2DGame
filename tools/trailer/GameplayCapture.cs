@@ -16,7 +16,7 @@ using UnityEngine.UI;
 // 실제 게임 플레이 트레일러 + 스팀 스크린샷 (1.8.6~, tools/trailer/record.ps1 로 프로젝트 복사본에서 배치 실행)
 // 게임 씬을 자동 조종으로 플레이하며 매 프레임 카메라를 MP4로 인코딩하고, 중요한 순간은 PNG 스크린샷으로 저장
 // 흐름: 거너 전투 · 레벨업 카드 → 무기 진화 → 영혼 트리 → 스킬 진화 (2.1~) → 전설 스킨 영웅 3명 · 보스 3종
-//       → 보스 필살기 결계 (2.1~) → 스킨 상점 → 로고
+//       → 4장 심연 · 거울의 군주가 필살기를 흉내 (2.1.4~) → 보스 필살기 결계 (2.1~) → 스킨 상점 → 로고
 public class GameplayCapture
 {
     static readonly string Out = Environment.GetEnvironmentVariable("CAPTURE_OUT") ?? "C:/Temp/SoulSaverCapture";
@@ -27,14 +27,14 @@ public class GameplayCapture
     // 트레일러 자막 (언어별)
     static readonly Dictionary<string, string[]> Captions = new Dictionary<string, string[]>
     {
-        ["en"] = new[] { "THE DEAD HAVE RISEN.", "BUILD YOUR RUN.", "DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", "GROW A SOUL TREE OF 100+ NODES.", "FIVE HEROES.  THREE WORLDS.  THREE KINGS.", "20 CHARACTER SKINS.  10 WEAPON SKINS.", "WISHLIST NOW ON STEAM",
-                         "MAX OUT SKILLS.  FUSE 37 EVOLUTIONS.", "SURVIVE THE BOSS'S BARRIER." },
-        ["ko"] = new[] { "망자들이 깨어났다.", "나만의 빌드를 만들어라.", "보스를 쓰러뜨리고, 무기를 진화시켜라.", "100칸이 넘는 영혼 트리.", "다섯 영웅.  세 개의 세계.  세 명의 왕.", "캐릭터 스킨 20종 · 무기 스킨 10종", "지금 스팀에서 찜하세요",
-                         "스킬을 모아 합쳐라.  37가지 스킬 진화.", "보스의 결계를 버텨라." },
-        ["ja"] = new[] { "死者が目覚めた。", "自分だけのビルドを。", "ボスを倒し、武器を進化させろ。", "100マスを超える魂のツリー。", "五人の英雄。三つの世界。三人の王。", "キャラクタースキン20種・武器スキン10種", "Steamでウィッシュリストに追加",
-                         "スキルを極め、合わせろ。37のスキル進化。", "ボスの結界を耐え抜け。" },
-        ["zh"] = new[] { "亡者已苏醒。", "打造你的流派。", "击败首领，进化武器。", "超过100个节点的灵魂树。", "五位英雄。三个世界。三位王者。", "20款角色皮肤 · 10款武器皮肤", "立即在Steam上添加愿望单",
-                         "练满技能，融合进化。37种技能进化。", "撑过首领的结界。" },
+        ["en"] = new[] { "THE DEAD HAVE RISEN.", "BUILD YOUR RUN.", "DEFEAT A BOSS.  EVOLVE YOUR WEAPON.", "GROW A SOUL TREE OF 100+ NODES.", "FIVE HEROES.  FOUR WORLDS.  FOUR KINGS.", "20 CHARACTER SKINS.  10 WEAPON SKINS.", "WISHLIST NOW ON STEAM",
+                         "MAX OUT SKILLS.  FUSE 37 EVOLUTIONS.", "SURVIVE THE BOSS'S BARRIER.", "THE FINAL ABYSS.  A MIRROR THAT COPIES YOUR EVERY SKILL." },
+        ["ko"] = new[] { "망자들이 깨어났다.", "나만의 빌드를 만들어라.", "보스를 쓰러뜨리고, 무기를 진화시켜라.", "100칸이 넘는 영혼 트리.", "다섯 영웅.  네 개의 세계.  네 명의 왕.", "캐릭터 스킨 20종 · 무기 스킨 10종", "지금 스팀에서 찜하세요",
+                         "스킬을 모아 합쳐라.  37가지 스킬 진화.", "보스의 결계를 버텨라.", "마지막 심연.  너의 모든 기술을 흉내 내는 거울." },
+        ["ja"] = new[] { "死者が目覚めた。", "自分だけのビルドを。", "ボスを倒し、武器を進化させろ。", "100マスを超える魂のツリー。", "五人の英雄。四つの世界。四人の王。", "キャラクタースキン20種・武器スキン10種", "Steamでウィッシュリストに追加",
+                         "スキルを極め、合わせろ。37のスキル進化。", "ボスの結界を耐え抜け。", "最後の深淵。お前の技をすべて真似る鏡。" },
+        ["zh"] = new[] { "亡者已苏醒。", "打造你的流派。", "击败首领，进化武器。", "超过100个节点的灵魂树。", "五位英雄。四个世界。四位王者。", "20款角色皮肤 · 10款武器皮肤", "立即在Steam上添加愿望单",
+                         "练满技能，融合进化。37种技能进化。", "撑过首领的结界。", "最后的深渊。模仿你每一招的镜子。" },
     };
     static string C(int i) => (Captions.TryGetValue(Lang, out string[] c) ? c : Captions["en"])[i];
 
@@ -303,10 +303,7 @@ public class GameplayCapture
     static void GoStage(int stage)
     {
         object sm = Find("StageManager");
-        foreach (Renderer r in (Renderer[])Get(sm, "caveRenderers")) if (r != null) r.enabled = stage == 0;
-        ((GameObject)Get(sm, "hellMap"))?.SetActive(stage == 1);
-        ((GameObject)Get(sm, "meadowMap"))?.SetActive(stage == 2);
-        Camera.main.backgroundColor = (Color)Get(sm, stage == 1 ? "hellBackground" : "meadowBackground");
+        Call(sm, "ShowStageMap", stage);            // 0 묘역 · 1 지옥 · 2 초원 · 3 심연 (맵 켜기 · 배경색)
         sm.GetType().GetProperty("CurrentStage", Any).SetValue(sm, stage);
         object sp = Get(sm, "spawner");
         sp.GetType().GetMethod("StartStage").Invoke(sp, new object[] { stage });
@@ -323,12 +320,21 @@ public class GameplayCapture
         var stages = (int[])Get(data, "enemyStage");
         var pool = new List<GameObject>();
         for (int i = 0; i < enemies.Length; i++) if (stages[i] == stage) pool.Add(enemies[i]);
+        if (pool.Count == 0 && StageConfig(stage) is object cfg) pool.AddRange((GameObject[])Get(cfg, "enemies"));     // 4장 심연: 도감 대신 스폰러의 견본
         Vector3 me = ((Component)Find("PlayerController")).transform.position;
         for (int i = 0; i < count && pool.Count > 0; i++)
         {
             float a = i / (float)count * Mathf.PI * 2f + UnityEngine.Random.Range(-0.2f, 0.2f);
             UnityEngine.Object.Instantiate(pool[i % pool.Count], me + new Vector3(Mathf.Cos(a) * 1.4f, Mathf.Sin(a)) * UnityEngine.Random.Range(5.5f, 8.5f), Quaternion.identity);
         }
+    }
+
+    // 스폰러의 그 장 설정 (StageConfig)
+    static object StageConfig(int stage)
+    {
+        object sp = Get(Find("StageManager"), "spawner");
+        Array stages = sp != null ? (Array)Get(sp, "stages") : null;
+        return stages != null && stage < stages.Length ? stages.GetValue(stage) : null;
     }
 
     static IEnumerator Ult(float hold)
@@ -347,7 +353,8 @@ public class GameplayCapture
     static object SpawnBoss(int stage, float hp)
     {
         object data = Resources.Load("CodexData");
-        GameObject prefab = ((GameObject[])Get(data, "bosses"))[stage];
+        GameObject[] bosses = (GameObject[])Get(data, "bosses");
+        GameObject prefab = stage < bosses.Length ? bosses[stage] : (GameObject)Get(StageConfig(stage), "bossPrefab");     // 4장 거울의 군주는 스폰러에만 있음
         Vector3 me = ((Component)Find("PlayerController")).transform.position;
         GameObject go = UnityEngine.Object.Instantiate(prefab, me + new Vector3(8.5f, 3.5f, 0f), Quaternion.identity);
         object bar = Find("bossbar");
@@ -521,6 +528,33 @@ public class GameplayCapture
         yield return Fade(0f, 1f, 0.2f);
     }
 
+    // ---------------- 4장 영혼의 심연 (2.1.1~): 거울의 군주가 지금 영웅의 필살기를 흉내 냄 (2.1.4~)
+    static IEnumerator Mirror(string hero, int who)
+    {
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, 3);
+        Component b = (Component)SpawnBoss(3, 0.8f);
+        yield return null;
+        Component skills = b != null ? b.GetComponent(T("BossSkills")) : null;
+        if (skills != null) Set(skills, "next", Time.time + 999f);     // 흉내를 쓰기 전에 다른 기술을 꺼내지 않게
+        rec.autopilot = true;
+        yield return F(1.2f);
+        rec.recording = true;
+        yield return Fade(1f, 0f, 0.2f);
+        Say(C(9), 4.6f);
+        yield return F(1.6f);
+        Shot("13_abyss_mirror_sovereign");
+        if (skills != null) ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+        yield return F(2.4f);
+        Shot("14_mirror_mimics_ult");
+        yield return F(2.2f);
+        yield return Ult(0.6f);
+        yield return F(0.9f);
+        yield return Fade(0f, 1f, 0.2f);
+    }
+
     [UnityTest]
     public IEnumerator Capture()
     {
@@ -617,12 +651,14 @@ public class GameplayCapture
         yield return SkillEvolution();
         yield return Fade(0f, 1f, 0.25f);
 
-        // ---------------- 4) 전설 스킨을 입은 영웅들 · 세 세계의 왕
+        // ---------------- 4) 전설 스킨을 입은 영웅들 · 네 세계의 왕
         rec.caption.alpha = 0f;
         rec.StartCoroutine(Delayed(0.4f, () => Say(C(4), 4.5f)));
         yield return Hero("Swordsman", 1, 1, 1, 3.2f, 1.0f, "05_swordsman_demon_lord");
         yield return Hero("Archer", 3, 0, 0, 3.0f, 0.9f, "06_archer_lich_king");
         yield return Hero("Rogue", 2, 2, 2, 3.0f, 0.05f, "07_rogue_king_slime");
+        // 4장 심연 · 거울의 군주 (2.1.1~): 검사의 회전 베기를 되비춤
+        yield return Mirror("Swordsman", 1);
         // 보스 필살기 결계 (2.1~): 연금술사가 지옥의 군주의 「연옥 낙화」에 갇힘
         yield return Barrier("Alchemist", 4, 1);
 
