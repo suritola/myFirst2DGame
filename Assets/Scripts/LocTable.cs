@@ -802,6 +802,7 @@ public static partial class LocTable
         { "...나는 네가 쓰러뜨린 모든 것의 메아리.", L("...I am the echo of everything you have slain.", "……我は、お前が倒したすべての残響。", "……我是你所击败的一切的回响。") },
         { "네가 쌓아 온 그 힘으로, 너를 부숴 주마.", L("With the very power you gathered, I will break you.", "お前が積み上げたその力で、お前を砕いてやろう。", "我将用你积累的力量，将你粉碎。") },
         { "거울의 군주가 「{0}」을(를) 되비춘다!", L("The Mirror Sovereign reflects your “{0}”!", "鏡の君主が「{0}」を映し返す！", "镜之君主映照出你的「{0}」！") },
+        { "거울의 군주가 필살기를 흉내 낸다!", L("The Mirror Sovereign mimics your ultimate!", "鏡の君主が必殺技を真似る！", "镜之君主模仿了你的必杀技！") },
         { "거울의 방", L("Hall of Mirrors", "鏡の間", "镜之间") },
         { "네가 쌓아 온 모든 것을, 그대로 돌려주마.", L("Everything you built, I return to you.", "お前が積み上げたすべてを、そのまま返してやろう。", "你积累的一切，原样奉还。") },
         { "사슬 던지기", L("Chain Throw", "鎖投げ", "锁链投掷") },

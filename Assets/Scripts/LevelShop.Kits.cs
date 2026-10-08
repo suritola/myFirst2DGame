@@ -11,7 +11,7 @@ public partial class LevelShop
     public const int HungerId = 11;
     // 캐릭터 카드 두 장 더 · 고를 카드가 모자랄 때만 나오는 비상 보급
     public const int ExtraAId = 12, ExtraBId = 13, SupplyId = 14;
-    static readonly int[] KitIds = { PierceId, MultiId, KnockId, GlareId, HungerId, ExtraAId, ExtraBId };
+    public static readonly int[] KitIds = { PierceId, MultiId, KnockId, GlareId, HungerId, ExtraAId, ExtraBId };
 
     class KitCard
     {
