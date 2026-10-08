@@ -548,7 +548,8 @@ public partial class CharacterKit : MonoBehaviour
     {
         bool full = gauge != null && gauge.IsFull();
         // 전용 특수 무기를 들고 있으면 우클릭은 그 무기의 궁극기: 누르고 있는 동안 범위를 보여 주고 떼면 발동
-        bool kitUlt = Special != null && Special.KitWeaponUltActive;
+        // 연금술사는 무기 진화 뒤에도 우클릭은 대폭발 플라스크 그대로 (진화 무기 궁극기는 던질 때 덧붙는 효과, UpdateCharged)
+        bool kitUlt = Special != null && Special.KitWeaponUltActive && Id != CharacterId.Alchemist;
         if (ultAiming && (ultAimKit != kitUlt || Time.timeScale == 0f)) CancelUltAim();       // 무기를 바꿨거나 멈춤
         if (!charging && !Dashing && kitUlt)
         {
@@ -627,20 +628,7 @@ public partial class CharacterKit : MonoBehaviour
                     SignatureSkills.Rain(at, radius);                                             // 높은 자리 · 유성 화살
                     break;
                 }
-            case CharacterId.Alchemist:
-                {
-                    Vector3 at = ClampRange(me, Mouse, 14f);
-                    float radius = (2f + 4f) * UltMul;
-                    if (card[3] > 0) Shards(at, radius, 2 + 2 * card[3]);                          // 파편 플라스크
-                    float amp = SignatureSkills.BigFlaskMul();                                     // 증폭 용액: 모아 둔 만큼 증폭 폭발
-                    if (amp > 1f)
-                    {
-                        DamageCircle(at, radius * 0.8f, Damage * 4f * UltMul * (amp - 1f) * 2f, 2f);
-                        Fx.Spawn("fx_alchemyblast", at, radius * 2.2f, new Color(1f, 0.85f, 0.5f), 16f);
-                    }
-                    SignatureSkills.BigFlask(at, radius);                                          // 유리 폭풍
-                    break;
-                }
+            // 연금술사: 무기 진화 뒤에도 대폭발 플라스크를 그대로 던지므로 이 길을 타지 않음 (UpdateCharged)
         }
     }
 
@@ -726,6 +714,9 @@ public partial class CharacterKit : MonoBehaviour
         player.RaiseUltUsed();
     }
 
+    // 연금술사 무기 진화 뒤 대폭발 플라스크에 덧붙는 진화 무기 궁극기 세기 (둘이 다 터지므로 궁극기는 절반)
+    const float KitUltAddMul = 0.5f;
+
     void UpdateCharged(SkillGauge gauge, bool full)
     {
         if (!charging && GameInput.UltDown && full)
@@ -778,6 +769,8 @@ public partial class CharacterKit : MonoBehaviour
                 Play("fizz", 0.7f, 0.8f);
                 if (card[3] > 0) Shards(p, radius, 2 + 2 * card[3]);
             });
+            // 무기 진화 뒤: 대폭발 플라스크는 그대로 던지고, 진화 무기의 궁극기가 절반 세기로 덧붙음
+            if (Special != null && Special.KitWeaponUltActive) Special.KitWeaponUlt(KitUltAddMul);
         }
         Spend(gauge);
     }

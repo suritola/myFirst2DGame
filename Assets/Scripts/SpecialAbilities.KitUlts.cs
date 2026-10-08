@@ -68,13 +68,14 @@ public partial class SpecialAbilities
         }
     }
 
-    public void KitWeaponUlt()
+    // mul: 궁극기 세기 배율 (연금술사는 대폭발 플라스크에 덧붙는 효과라 절반)
+    public void KitWeaponUlt(float mul = 1f)
     {
         int id = UltId;
         fx.Play("levelup", 0.5f, 1.3f);
         Hostile.Shake(0.15f);
         // 캐릭터 우클릭 강화(영혼 트리 · 상점)도 진화한 궁극기에 그대로
-        float D = Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f);
+        float D = Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f) * mul;
         // 도적: 출혈 돌진으로 파고든 뒤 궁극기 (그림자 숙련이 계속 쓸모 있게)
         if (CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
         else StartCoroutine(KitUltRoutine(id, D));
