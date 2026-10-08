@@ -57,7 +57,7 @@ public class BossSkills : MonoBehaviour
         // 체력 절반 아래: 특수 스킬 (처음 한 번은 바로)
         if (boss.Enraged && Time.time >= nextSpecial)
         {
-            nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul;
+            nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul * Chapters.SkillCooldownMul;
             if (kind == AbyssStage.MirrorKind)
             {
                 // 되비친 기억: 이번 판에 가장 많이 쓴 공격 (RunStats)
@@ -74,7 +74,7 @@ public class BossSkills : MonoBehaviour
         }
 
         if (Time.time < next) return;
-        next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul;
+        next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul * Chapters.SkillCooldownMul;     // 앞쪽 장 보스는 드물게 (2.1.5)
         step = (step + 1) % (kind == AbyssStage.MirrorKind ? 8 : 5);     // 거울의 군주는 배운 스킬 흉내 두 번 · 필살기 흉내 한 번이 더 섞임
         IEnumerator skill = kind == AbyssStage.MirrorKind
             ? (step == 0 ? MirrorStrike(3) : step == 1 ? MirrorSkill(true, true, false, true) : step == 2 ? MirrorClones(p) : step == 3 ? BrandCross(p)

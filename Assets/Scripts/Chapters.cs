@@ -49,12 +49,30 @@ public static class Chapters
         return t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)] / t[stage];
     }
 
-    public static float EnemyHpMul(int stage) => Ratio(Hp, stage);
-    public static float RewardMul(int stage) => Ratio(Reward, stage);
-    public static float BossHpMul(int stage) => Ratio(Boss, stage);
+    // ---------------------------------------------------------------- 앞쪽 장 완화 (2.1.5)
+    // 초원이 1장으로 온 뒤 체력 · 피해만 맞춰서는 너무 어려웠음 (적이 나오는 간격 · 한 화면 최대 수 · 속도 · 스킬은 원래 3장 그대로였음)
+    // → 1장은 확 낮추고 2장은 조금, 3장부터 원래 세기 (자리 순서: 1장 · 2장 · 3장 · 4장)
+    static readonly float[] EaseHp = { 0.6f, 0.9f, 1f, 1f };
+    static readonly float[] EaseHurt = { 0.6f, 0.9f, 1f, 1f };
+    static readonly float[] EaseBoss = { 0.75f, 0.95f, 1f, 1f };
+    static readonly float[] EaseReward = { 1.15f, 1.05f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
+    static readonly float[] EaseSpawn = { 1.5f, 1.1f, 1f, 1f };     // 적이 나오는 간격 배율 (클수록 드묾)
+    static readonly float[] EaseAlive = { 0.65f, 0.9f, 1f, 1f };     // 한 화면 최대 적 수 배율
+    static readonly float[] EaseSpeed = { 0.85f, 0.95f, 1f, 1f };
+    static readonly float[] EaseSkill = { 1.4f, 1.1f, 1f, 1f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
+
+    static float Ease(float[] t, int stage) => IsClassic || stage < 0 || stage >= t.Length ? 1f : t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)];
+
+    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage);
+    public static float RewardMul(int stage) => Ratio(Reward, stage) * Ease(EaseReward, stage);
+    public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage);
     // 플레이어가 받는 모든 피해 (몸통 · 적 스킬 · 보스 스킬 · 결계): 지금 장 기준
-    public static float HurtMul => StageManager.Instance != null ? Ratio(Hurt, StageManager.Instance.CurrentStage) : 1f;
-    public static float HurtMulOf(int stage) => Ratio(Hurt, stage);
+    public static float HurtMul => StageManager.Instance != null ? HurtMulOf(StageManager.Instance.CurrentStage) : 1f;
+    public static float HurtMulOf(int stage) => Ratio(Hurt, stage) * Ease(EaseHurt, stage);
+    public static float SpawnIntervalMul(int stage) => Ease(EaseSpawn, stage);
+    public static int MaxAlive(int stage, int count) => Mathf.Max(3, Mathf.RoundToInt(count * Ease(EaseAlive, stage)));
+    public static float EnemySpeedMul(int stage) => Ease(EaseSpeed, stage);
+    public static float SkillCooldownMul => Ease(EaseSkill, CurrentStage);
     public static int BossKills(int stage, int original) => IsClassic || stage < 0 || stage >= Kills.Length ? original : Kills[Mathf.Clamp(SlotOf(stage), 0, Kills.Length - 1)];
     public static int CurrentStage => StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
 }

@@ -52,7 +52,8 @@ public class EnemySpawner : MonoBehaviour
     SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
     // 보스를 뺀 적은 (소환 포함) 최대 20마리
     public const int AliveLimit = 20;
-    int MaxAlive => Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Phase.maxAlive + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+    // 앞쪽 장은 한 화면 최대 수를 줄임 (Chapters · 2.1.5)
+    int MaxAlive => Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
 
     void Start()
     {
@@ -93,7 +94,7 @@ public class EnemySpawner : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(Phase.spawnInterval * GameMode.SpawnIntervalMul);
+            yield return new WaitForSeconds(Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex));     // 앞쪽 장은 드물게 (2.1.5)
             if (spawningEnabled) SpawnEnemy(false, transform.position);
         }
     }
