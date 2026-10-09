@@ -23,7 +23,7 @@
 
 ## Description (short, 50 words)
 
-Soul Saver is a pixel-art top-down survival shooter where every boss you slay evolves your weapon. Mow down screen-filling hordes of the dead across three worlds, shape your build in a 100+ node Soul Tree, and see how long you last in the Endless Mode.
+Soul Saver is a pixel-art top-down survival shooter where every boss you slay evolves your weapon. Mow down screen-filling hordes of the dead across four worlds, shape your build in a 100+ node Soul Tree, and see how long you last in the Endless Mode.
 
 ## Description (long)
 
@@ -31,14 +31,14 @@ When the Lich King woke the catacombs, the dead crawled up to the surface. Pick 
 
 Hundreds of enemies close in from every side. Shoot, slash and blow them apart, level up, and pick from cards that shape your run. Defeat a boss and your weapon shatters — then evolves into something completely new: a revolver becomes a Soul Sniper, then a Soul Railgun. Every hero has their own evolution paths, their own right-click ultimate and their own branches in the Soul Tree.
 
-Fight through the Catacombs, the Burning Hell and the Meadow, take down three kings with cinematic entrances and enraged phases, then unlock the Burning Desert Endless Mode where every monster and boss keeps coming.
+Fight through the Meadow, the Catacombs, the Burning Hell and the Abyss of Souls, take down four kings with cinematic entrances and enraged phases — including the Mirror Sovereign, who copies your own skills — then unlock the Burning Desert Endless Mode where every monster and boss keeps coming.
 
 ## Key Features
 
 - **Weapon evolution on every boss** — two irreversible choices per run, different paths for every hero
 - **100+ node Soul Tree** — Weapon, Ultimate, Fate, Survival, Soul and Wealth branches
 - **Unique heroes** — Gunner, Swordsman, Rogue, Archer, Alchemist, each with their own attack and ultimate
-- **Three worlds, three kings** — the Lich King, the Demon Lord and the splitting King Slime
+- **Four worlds, four kings** — the splitting King Slime, the Lich King, the Demon Lord and the Mirror Sovereign who copies your skills
 - **Endless Mode** — every monster and boss, faster and faster
 - **Skin Shop** — 20 character skins, 10 weapon skins, 4 effect skins and cursor skins
 - **4 languages, 32 Steam achievements**, all pixel effects and music made for the game
@@ -68,7 +68,7 @@ Soul Saver is made by one developer in South Korea — code, pixel art, effects 
 
 ## 한국어 요약 (국내 매체 · 스트리머용)
 
-**소울 세이버**는 보스를 쓰러뜨릴 때마다 무기가 진화하는 도트 그래픽 탑다운 서바이벌 슈터입니다. 화면을 가득 메운 망자들을 쓸어버리며 세 개의 세계를 지나고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하세요. 어려움을 클리어하면 모든 괴물과 보스가 끝없이 몰려오는 무한 모드가 열립니다.
+**소울 세이버**는 보스를 쓰러뜨릴 때마다 무기가 진화하는 도트 그래픽 탑다운 서바이벌 슈터입니다. 화면을 가득 메운 망자들을 쓸어버리며 네 개의 세계를 지나고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하세요. 어려움을 클리어하면 모든 괴물과 보스가 끝없이 몰려오는 무한 모드가 열립니다.
 
 - 출시: 2026년 11월 `[날짜]` · 스팀 (Windows) · 한국어 / 영어 / 일본어 / 중국어 간체
 - 무료 체험판: 1장 지하 묘역 + 리치 왕

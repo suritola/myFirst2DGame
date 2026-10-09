@@ -82,8 +82,8 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [*]킹 슬라임 「산성 범람」 — 결계 벽에 튕기는 산성 덩어리와 번갈아 솟는 간헐천
 [/list]
 
-[h2]세 개의 세계, 세 명의 왕[/h2]
-지하 묘역의 리치 왕, 불타는 지옥의 군주, 초원의 킹 슬라임. 보스마다 등장 연출과 대사, 체력이 줄면 시작되는 특수 패턴이 기다립니다.
+[h2]네 개의 세계, 네 명의 왕[/h2]
+초원의 킹 슬라임, 지하 묘역의 리치 왕, 불타는 지옥의 군주, 그리고 마지막 [b]영혼의 심연[/b]에서 기다리는 [b]거울의 군주[/b]. 거울의 군주는 내 평타 · 필살기 · 레벨업 스킬 · 특수 능력을 그대로 흉내 내 돌려줍니다. 보스마다 등장 연출과 대사, 체력이 줄면 시작되는 특수 패턴, 필살기 결계가 기다립니다.
 
 [h2]난이도와 무한 모드[/h2]
 쉬움 · 보통 · 어려움 세 난이도. 어려움을 클리어하면 모든 괴물과 보스가 끝없이 몰려오는 [b]불타는 사막 무한 모드[/b]가 열립니다.
@@ -159,8 +159,8 @@ Every hit you land fills the boss's ultimate gauge. When it's full, the boss cal
 [*]King Slime "Acid Deluge" — acid blobs bouncing off the barrier walls and alternating geysers
 [/list]
 
-[h2]Three worlds, three kings[/h2]
-The Lich King of the Catacombs, the Demon Lord of the Burning Hell and the King Slime of the Meadow. Every boss has a cinematic entrance, lines of their own and special patterns once their health runs low.
+[h2]Four worlds, four kings[/h2]
+The King Slime of the Meadow, the Lich King of the Catacombs, the Demon Lord of the Burning Hell — and in the final [b]Abyss of Souls[/b], the [b]Mirror Sovereign[/b], who copies your basic attack, ultimate, level-up skills and special abilities and turns them back on you. Every boss has a cinematic entrance, lines of their own, special patterns once their health runs low and an ultimate barrier.
 
 [h2]Difficulties and Endless Mode[/h2]
 Easy, Normal and Hard. Clear Hard to unlock the [b]Burning Desert Endless Mode[/b], where every monster and boss keeps coming.
@@ -236,8 +236,8 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]キングスライム「酸の氾濫」 — 結界の壁で跳ね返る酸の塊と交互に噴き出す間欠泉
 [/list]
 
-[h2]三つの世界、三人の王[/h2]
-地下墓所のリッチ王、燃える地獄の君主、草原のキングスライム。ボスごとの登場演出と台詞、体力が減ると始まる特殊パターンが待ち受ける。
+[h2]四つの世界、四人の王[/h2]
+草原のキングスライム、地下墓所のリッチ王、燃える地獄の君主、そして最後の[b]魂の深淵[/b]で待つ[b]鏡の君主[/b]。鏡の君主はお前の通常攻撃・必殺技・レベルアップスキル・特殊能力をそのまま真似て返してくる。ボスごとの登場演出と台詞、体力が減ると始まる特殊パターン、必殺技の結界が待ち受ける。
 
 [h2]難易度とエンドレスモード[/h2]
 イージー・ノーマル・ハードの三つの難易度。ハードをクリアすると、すべての怪物とボスが押し寄せる[b]燃える砂漠のエンドレスモード[/b]が解放される。
@@ -313,8 +313,8 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]史莱姆王「酸性泛滥」 — 在结界壁上反弹的酸液团与交替喷发的间歇泉
 [/list]
 
-[h2]三个世界，三位王者[/h2]
-地下墓穴的巫妖王、燃烧地狱的领主、草原的史莱姆王。每位首领都有登场演出与台词，血量降低后还会施展特殊攻击模式。
+[h2]四个世界，四位王者[/h2]
+草原的史莱姆王、地下墓穴的巫妖王、燃烧地狱的领主，以及在最后的[b]灵魂深渊[/b]等待的[b]镜之君主[/b]——它会模仿你的普通攻击、必杀技、升级技能与特殊能力并原样奉还。每位首领都有登场演出与台词，血量降低后会施展特殊攻击模式，还会展开必杀结界。
 
 [h2]难度与无尽模式[/h2]
 简单、普通、困难三种难度。通关困难后将解锁所有怪物与首领源源不断涌来的[b]燃烧沙漠无尽模式[/b]。

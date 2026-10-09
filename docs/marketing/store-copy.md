@@ -17,22 +17,22 @@
 
 **한국어**
 ```
-보스를 쓰러뜨릴 때마다 무기가 진화한다! 화면을 가득 메운 망자들을 쓸어버리고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 탑다운 서바이벌 슈터. 개성 다른 영웅들, 세 명의 왕, 그리고 끝없는 무한 모드.
+보스를 쓰러뜨릴 때마다 무기가 진화한다! 화면을 가득 메운 망자들을 쓸어버리고, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 탑다운 서바이벌 슈터. 개성 다른 영웅들, 네 명의 왕, 그리고 끝없는 무한 모드.
 ```
 
 **English**
 ```
-Every boss you slay evolves your weapon! Mow down screen-filling hordes of the dead and shape your build across a 100+ node Soul Tree in this pixel-art top-down survival shooter. Unique heroes, three kings to dethrone and an Endless Mode that never stops.
+Every boss you slay evolves your weapon! Mow down screen-filling hordes of the dead and shape your build across a 100+ node Soul Tree in this pixel-art top-down survival shooter. Unique heroes, four kings to dethrone and an Endless Mode that never stops.
 ```
 
 **日本語**
 ```
-ボスを倒すたびに武器が進化する！画面を埋め尽くす亡者の群れをなぎ払い、100マス超の魂のツリーで自分だけのビルドを完成させるドット絵トップダウン・サバイバルシューター。個性豊かな英雄たち、三人の王、そして終わりなき無限モード。
+ボスを倒すたびに武器が進化する！画面を埋め尽くす亡者の群れをなぎ払い、100マス超の魂のツリーで自分だけのビルドを完成させるドット絵トップダウン・サバイバルシューター。個性豊かな英雄たち、四人の王、そして終わりなき無限モード。
 ```
 
 **简体中文**
 ```
-每击败一位首领，武器就会进化！横扫铺满屏幕的亡者大军，在100多个节点的灵魂树中打造专属流派——像素风俯视角生存射击游戏。个性迥异的英雄、三位强大的王，以及永无止境的无尽模式。
+每击败一位首领，武器就会进化！横扫铺满屏幕的亡者大军，在100多个节点的灵魂树中打造专属流派——像素风俯视角生存射击游戏。个性迥异的英雄、四位强大的王，以及永无止境的无尽模式。
 ```
 
 ---
