@@ -652,6 +652,7 @@ public partial class LevelShop : MonoBehaviour
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
+        RunSave.Record((freePick ? "f" : "c") + what);         // 판 중간 저장 (2.1.9): 고른 카드를 순서대로
         // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외)
         if (freePick) freePick = false;
         else if (bul != null) bul.level++;
@@ -671,6 +672,51 @@ public partial class LevelShop : MonoBehaviour
         }
         ApplyPick(what);
         CheckEvolutions();          // 재료가 모두 최대면 스킬 진화
+    }
+
+    // ================================================================= 판 중간 저장 (RunSave, 2.1.9~)
+    // 기록한 카드를 연출 없이 다시 고름 (free: 판을 시작할 때 준 카드라 레벨이 오르지 않음)
+    public void ReplayPick(int what, bool free)
+    {
+        if (what < 0 || what >= ability_level.Length) return;
+        skill = FindFirstObjectByType<SkillGauge>();
+        bul = FindFirstObjectByType<PlayerController>();
+        if (lv == null) lv = FindFirstObjectByType<Level>();
+        if (bul == null) return;
+        if (!free) bul.level++;
+        ability_level[what]++;
+        if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
+        if (what == SupplyId) return;
+        ApplyPick(what);
+        CheckEvolutions();
+    }
+
+    // 판을 시작할 때 뜨는 첫 카드 창을 닫음 (이어하기는 기록한 첫 카드로 대신)
+    public void CancelOpening()
+    {
+        if (IsOpen) closeLevelShop();
+        freePick = false;
+        pendingSlot = -1;
+        Time.timeScale = 1f;
+    }
+
+    // 저장: 경험치로 얻은 레벨업 횟수 · 아직 고르지 않은 레벨업 (창이 열려 있거나 연출 중인 것도 포함)
+    public void SaveLevels(out int earnedLevels, out int pending)
+    {
+        earnedLevels = earned;
+        pending = PendingLevels + levelUpQueued + (IsOpen && !freePick ? 1 : 0);
+    }
+
+    public void RestoreLevels(int earnedLevels, int pending, float nowExp, float needExp)
+    {
+        if (bul == null) bul = FindFirstObjectByType<PlayerController>();
+        earned = Mathf.Max(0, earnedLevels);
+        PendingLevels = Mathf.Max(0, pending);      // AddPending 은 영혼 트리 '깨달음'을 한 번 더 발동시키므로 바로 넣음
+        if (bul != null)
+        {
+            bul.needEXP = needExp > 0f ? needExp : PlayerController.NeedExp(1 + earned);
+            bul.nowEXP = Mathf.Clamp(nowExp, 0f, bul.needEXP);
+        }
     }
 
     void ApplyPick(int what)

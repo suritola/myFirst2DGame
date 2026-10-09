@@ -830,6 +830,12 @@ public static partial class LocTable
         { "카드 다시 뽑기", L("Reroll cards", "カードを引き直す", "重抽卡牌") },
         { "레벨업 바로 열기", L("Open level-ups instantly", "レベルアップをすぐ開く", "立即打开升级") },
         { "바로 진화!", L("Evolves now!", "今すぐ進化！", "立即进化！") },
+        // 2.1.9 판 중간 저장 (RunSave)
+        { "이어하기", L("Continue", "つづきから", "继续游戏") },
+        { "지금 판은 저장되어 메인 메뉴의 「이어하기」로 계속할 수 있습니다.", L("This run will be saved — pick it up with “Continue” on the main menu.", "このプレイは保存され、メインメニューの「つづきから」で再開できます。", "本局将被保存，可在主菜单点击「继续游戏」接着玩。") },
+        { "새 게임을 시작할까요?", L("Start a new game?", "新しいゲームを始めますか？", "开始新游戏吗？") },
+        { "저장된 판(이어하기)은 지워집니다.", L("Your saved run (Continue) will be deleted.", "保存したプレイ（つづきから）は消えます。", "已保存的进度（继续游戏）将被删除。") },
+        { "새 게임", L("New Game", "新しいゲーム", "新游戏") },
         { "{0}단계 남음", L("{0} ranks left", "あと{0}段階", "还差{0}级") },
         { "더블클릭 · 숫자 1 2 3 으로 바로", L("Double-click or press 1 2 3 to pick instantly", "ダブルクリック・数字1 2 3ですぐ選択", "双击或按数字1 2 3直接选择") },
         // 2.1.1 일일 도전 · 스팀 순위표 (DailyChallenge)

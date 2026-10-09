@@ -66,6 +66,7 @@ public class StageManager : MonoBehaviour
     static bool Evo => SpecialAbilities.UsesEvolution;
     bool evolving;
     bool started;                       // 인트로가 끝나 버튼을 보여도 되는지
+    public bool Started => started;     // 판 중간 저장 (RunSave): 시작 이야기 · 첫 카드 전에는 저장하지 않음
     int treeClosedFrame = -1;
     float affordCheckAt;
     bool affordable;
@@ -150,6 +151,25 @@ public class StageManager : MonoBehaviour
         }
 
         bool endless = GameMode.IsEndless;
+        // 2.1.9: 플레이 튜토리얼 — 시작 이야기 없이 1장 맵에서 단계별 안내 (TutorialRun, 적은 따로 나오지 않음)
+        if (TutorialRun.Active)
+        {
+            if (Chapters.First != 0) PrepareFirstChapter();
+            if (spawner != null) spawner.spawningEnabled = false;
+            started = true;
+            yield return TutorialRun.Run(this);
+            yield break;
+        }
+        // 2.1.9: 메인 메뉴 「이어하기」면 시작 이야기 · 첫 카드 대신 저장한 판을 되살림 (RunSave)
+        if (!endless && RunSave.Pending != null)
+        {
+            yield return RunSave.Restore(this);
+            if (spawner != null) spawner.spawningEnabled = true;
+            started = true;
+            RunClock.Create();
+            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage), 2.5f);
+            yield break;
+        }
         if (endless) PrepareEndless();
         else if (Chapters.First != 0) PrepareFirstChapter();
         yield return StoryDirector.Intro(endless);
@@ -345,6 +365,7 @@ public class StageManager : MonoBehaviour
         yield return WeaponEvolutionUI.Run(specials, options, id => picked = id);
         bool first = specials.EvolutionTier == 0;
         specials.EvolveWeapon(picked);
+        RunSave.Record("e" + picked);                        // 판 중간 저장 (이어할 때 같은 진화를 다시 적용)
         if (first) specials.OnEvolvedTier1();
         Time.timeScale = before > 0f ? before : 1f;
         evolving = false;
@@ -396,6 +417,7 @@ public class StageManager : MonoBehaviour
     // 고른 능력: 가진 것은 진화, 새것은 장착
     void ApplyPicks(int[] ids)
     {
+        RunSave.Record("s" + string.Join(",", ids));
         if (specials == null) { chosenSpecials = ids; return; }
         List<int> fresh = new List<int>();
         int evolvedCount = 0;
@@ -414,6 +436,12 @@ public class StageManager : MonoBehaviour
         specialPoints = Mathf.Max(0, specialPoints - ids.Length);
         CloseUpgrade();
     }
+
+    // 판 중간 저장 (RunSave): 기록한 특수 능력 선택을 다시 적용
+    public void ReplayPicks(int[] ids) => ApplyPicks(ids);
+
+    // 이어하기 (RunSave): 연출 없이 그 장의 맵에서 시작
+    public void JumpToStage(int stage) => JumpToStage(stage, caveStart);
 
     // 트레일러 촬영용: 연출 없이 바로 해당 스테이지 맵으로 (0 동굴, 1 지옥, 2 초원, 3 심연)
     public void JumpToStage(int stage, Vector3 caveStart)
@@ -532,6 +560,8 @@ public class StageManager : MonoBehaviour
         int next = Chapters.Next(stage);
         if (next >= 0)
         {
+            // 판 중간 저장: 무기 진화를 고르기 전에 나가면 이어할 때 고르게
+            RunSave.NeedEvolution = Evo && specials != null && specials.NextEvolutionOptions() != null;
             // 다음 장으로 가는 문 (2.1.1~ 장 순서는 Chapters: 초원 → 지하 묘역 → 불타는 지옥 → 영혼의 심연)
             string text = Loc.T(Defeated[Mathf.Clamp(stage, 0, 3)]) + "\n" + Loc.T(Gate[Mathf.Clamp(next, 0, 3)]);
             if (portal != null) portal.SetActive(true);
@@ -547,6 +577,7 @@ public class StageManager : MonoBehaviour
             ShowBanner(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f);
             // 클리어 기록 · 난이도 잠금 해제는 바로 저장하고, 잠시 뒤 엔딩
             Difficulty cleared = GameMode.Current;
+            RunSave.Delete();           // 판이 끝났으므로 이어할 판은 지움 (2.1.9)
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);
             StartCoroutine(EndingAfter(cleared, opened));
@@ -647,6 +678,7 @@ public class StageManager : MonoBehaviour
         yield return Fade(1f, 0f, 0.8f);
         ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
+        RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9)
     }
 
     // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장

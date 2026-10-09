@@ -64,7 +64,9 @@ public class ESCmenu : MonoBehaviour
         RectTransform win = UIKit.Modal(root, "ConfirmMainMenu", new Vector2(780f, 340f), out confirm);
         SoulTreeUI.OnTop(confirm, 620);
         UIKit.Text(win, "정말로 메인 메뉴로 가시겠습니까?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
-        UIKit.Text(win, "지금 진행 중인 판이 끝납니다.", 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
+        // 2.1.9: 판이 저장되어 메인 메뉴 「이어하기」로 계속할 수 있음 (저장하지 않는 판은 예전 안내)
+        UIKit.Text(win, RunSave.CanSaveNow ? "지금 판은 저장되어 메인 메뉴의 「이어하기」로 계속할 수 있습니다." : "지금 진행 중인 판이 끝납니다.",
+                   26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
         UIKit.MakeButton(win, "메인 메뉴로", new Vector2(-150f, -90f), new Vector2(260f, 76f), GoMainMenu, 28f);
         UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
     }
@@ -78,6 +80,7 @@ public class ESCmenu : MonoBehaviour
     void GoMainMenu()
     {
         CloseConfirm();
+        RunSave.Save();             // 판 중간 저장 (2.1.9)
         SceneManager.LoadScene("MainMenu");
         Time.timeScale = 1f;
     }

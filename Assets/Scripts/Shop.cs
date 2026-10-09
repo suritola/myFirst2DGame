@@ -179,6 +179,7 @@ public partial class Shop : MonoBehaviour
 
     public void OnPressB1()
     {
+        using var log = new BuyLog(this, 1);     // 판 중간 저장: 코인이 줄면 기록
         if (!TryPay(damagePrice)) return;
 
         // 캐릭터 공격력 배율을 지키도록 플레이어 값에 바로 더함 (검사 150% · 도적 70% …)
@@ -194,6 +195,7 @@ public partial class Shop : MonoBehaviour
 
     public void OnPressB2()
     {
+        using var log = new BuyLog(this, 2);     // 판 중간 저장: 코인이 줄면 기록
         if (KitPress(2)) return;
         if (ShootSpeedMaxed || !TryPay(ShootSpeedPrice)) return;
 
@@ -209,6 +211,7 @@ public partial class Shop : MonoBehaviour
 
     public void OnPressB3()
     {
+        using var log = new BuyLog(this, 3);     // 판 중간 저장: 코인이 줄면 기록
         if (KitPress(3)) return;
         if (ReloadMaxed || !TryPay(ReloadSpeedPrice)) return;
 
@@ -224,6 +227,7 @@ public partial class Shop : MonoBehaviour
 
     public void OnPressB4()
     {
+        using var log = new BuyLog(this, 4);     // 판 중간 저장: 코인이 줄면 기록
         if (KitPress(4)) return;
         if (MaxBulletMaxed || !TryPay(MaxBulletPrice)) return;
 
@@ -239,12 +243,43 @@ public partial class Shop : MonoBehaviour
 
     public void OnPressB5()
     {
+        using var log = new BuyLog(this, 5);     // 판 중간 저장: 코인이 줄면 기록
         if (MoveSpeedMaxed || !TryPay(moveSpeedPrice)) return;
 
         moveSpeedBuys++;
         playerControllerd.speed *= moveSpeedMultiplier;
         moveSpeedPrice = Mathf.CeilToInt(moveSpeedPrice * moveSpeedPriceGrowth);
         UpdateShopText();
+    }
+
+    // ================================================================= 판 중간 저장 (RunSave, 2.1.9~)
+    // 상점 버튼을 눌러 코인이 줄었으면 (실제로 샀으면) 그 버튼 번호를 기록
+    readonly struct BuyLog : IDisposable
+    {
+        readonly Shop shop;
+        readonly int button, before;
+        public BuyLog(Shop s, int b) { shop = s; button = b; before = s.coind != null ? s.coind.coins : 0; }
+        public void Dispose() { if (shop.coind != null && shop.coind.coins < before) RunSave.Record("b" + button); }
+    }
+
+    // 기록한 구매를 다시 함 (값은 치르지 않음: 코인을 잠깐 넉넉히 채웠다가 되돌림)
+    public void ReplayBuy(int button)
+    {
+        if (coind == null) coind = FindFirstObjectByType<Coin>();
+        if (playerControllerd == null) playerControllerd = FindFirstObjectByType<PlayerController>();
+        if (coind == null || playerControllerd == null) return;
+        int keep = coind.coins;
+        coind.coins = 1 << 28;
+        switch (button)
+        {
+            case 1: OnPressB1(); break;
+            case 2: OnPressB2(); break;
+            case 3: OnPressB3(); break;
+            case 4: OnPressB4(); break;
+            case 5: OnPressB5(); break;
+        }
+        coind.coins = keep;
+        coins = keep;
     }
 
     public bool isPause = false;

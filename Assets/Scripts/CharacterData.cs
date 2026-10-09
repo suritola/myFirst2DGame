@@ -137,7 +137,7 @@ public static class CharacterData
 
     public static void AddPoints(int n)
     {
-        if (n <= 0 || GameInput.Auto || (Application.isBatchMode && !Override.HasValue)) return;
+        if (n <= 0 || GameInput.Auto || TutorialRun.Active || (Application.isBatchMode && !Override.HasValue)) return;     // 튜토리얼은 포인트를 주지 않음
         RunPoints += n;
         PlayerPrefs.SetInt(PointsKey, Points + n);
     }

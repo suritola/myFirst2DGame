@@ -24,7 +24,7 @@ public class SkillEvolutionUI : MonoBehaviour
 
     public static void Queue(LevelShop.SkillEvo evo, CharacterId who)
     {
-        if (evo == null) return;
+        if (evo == null || RunSave.Replaying) return;      // 이어하기로 다시 적용할 때는 연출 없이
         queue.Enqueue((evo, who));
         if (runner == null)
         {

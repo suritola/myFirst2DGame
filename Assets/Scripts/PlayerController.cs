@@ -1050,6 +1050,7 @@ void Shoot()
     {
         if (IsDying) yield break;
         IsDying = true;
+        RunSave.Delete();           // 죽으면 이어할 판은 지움 (2.1.9)
         invincibleUntil = float.MaxValue;
         CancelSkill();
         move = Vector3.zero;

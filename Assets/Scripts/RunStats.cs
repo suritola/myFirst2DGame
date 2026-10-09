@@ -378,7 +378,7 @@ public static class Hints
 
     public static void Show(string key, string ko)
     {
-        if (!GameSettings.Hints || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) return;
+        if (!GameSettings.Hints || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning || TutorialRun.Active) return;     // 튜토리얼은 자기 안내를 씀
         string pref = "hint." + key;
         if (PlayerPrefs.GetInt(pref, 0) == 1) return;
         PlayerPrefs.SetInt(pref, 1);

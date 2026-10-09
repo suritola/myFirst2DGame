@@ -29,6 +29,29 @@ public static partial class LocTable
         A("화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.", "Arrow Rain leaves thornbushes that slow and prick enemies.", "矢の雨が落ちた場所に茨が残り、敵を遅くして刺します。", "箭雨落下处留下荆棘丛，减速并刺伤敌人。");
         A("대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.", "The Grand Flask bursts into small flasks that scatter and explode again.", "大爆発フラスコが爆発すると小さなフラスコが散らばって再び爆発します。", "大爆炸烧瓶爆炸时小烧瓶四散并再次爆炸。");
 
+        // ---------------- 플레이 튜토리얼 (2.1.9~, TutorialRun · 이미 있는 키는 그대로)
+        A("이동", "Move", "移動", "移动");
+        A("조준 · 공격", "Aim · Attack", "照準・攻撃", "瞄准 · 攻击");
+        A("재장전", "Reload", "リロード", "装填");
+        A("필살기", "Ultimate", "必殺技", "必杀技");
+        A("레벨업", "Level Up", "レベルアップ", "升级");
+        A("영혼 트리", "Soul Tree", "魂のツリー", "灵魂树");
+        A("무기 진화", "Weapon Evolution", "武器進化", "武器进化");
+        A("마무리", "Finale", "仕上げ", "收尾");
+        A("{MOVE}로 이리저리 움직여 보세요.", "Move around with {MOVE}.", "{MOVE}であちこち動いてみよう。", "用{MOVE}四处移动看看。");
+        A("마우스로 조준하고 좌클릭으로 공격합니다. 누르고 있으면 계속 쏩니다. 다가오는 적을 모두 쓰러뜨리세요.", "Aim with the mouse and left-click to attack. Hold it to keep firing. Defeat every approaching enemy.", "マウスで狙い、左クリックで攻撃。押し続けると撃ち続けます。近づく敵をすべて倒そう。", "用鼠标瞄准，左键攻击。按住即可连续射击。击倒所有靠近的敌人。");
+        A("총알은 탄창만큼만 쏠 수 있습니다. [{RELOAD}]를 눌러 재장전하세요. (다 쏘면 저절로 재장전)", "You can only fire as many shots as your magazine holds. Press [{RELOAD}] to reload. (It reloads automatically when empty)", "弾は弾倉の分しか撃てません。[{RELOAD}]でリロードしよう。（撃ち切ると自動でリロード）", "子弹只能打完一个弹匣。按[{RELOAD}]装填。（打空后会自动装填）");
+        A("필살기 게이지가 가득 찼습니다! 우클릭을 누르고 있으면 시간이 느려지며 적을 조준하고, 떼면 조준한 적 모두에게 쏩니다.", "Your ultimate gauge is full! Hold right-click to slow time and lock onto enemies, then release to fire at every target.", "必殺技ゲージが満タン！右クリックを押し続けると時間が遅くなって敵を狙い、離すと狙った敵すべてに撃ちます。", "必杀槽已满！按住右键时间会变慢并锁定敌人，松开即可向所有锁定的敌人射击。");
+        A("경험치가 차면 레벨업 포인트가 쌓입니다. [{INTERACT}]를 눌러 창을 열고 카드를 고르세요. (클릭 → [{INTERACT}], 더블클릭, 숫자 1 · 2 · 3)", "When your XP fills up you earn a level-up point. Press [{INTERACT}] to open the window and pick a card. (click → [{INTERACT}], double-click, or 1 · 2 · 3)", "経験値がたまるとレベルアップポイントがたまります。[{INTERACT}]でウィンドウを開いてカードを選ぼう。（クリック → [{INTERACT}]、ダブルクリック、数字1・2・3）", "经验值满后会累积升级点数。按[{INTERACT}]打开窗口并选择卡牌。（点击 → [{INTERACT}]、双击或数字1 · 2 · 3）");
+        A("적이 떨어뜨린 영혼 조각으로 영혼 트리의 칸을 배웁니다. [{UPGRADE}]로 트리를 열고 빛나는 칸을 하나 배운 뒤 닫으세요.", "Soul shards dropped by enemies teach you Soul Tree nodes. Open the tree with [{UPGRADE}], learn one glowing node, then close it.", "敵が落とす魂のかけらで魂のツリーのマスを習得します。[{UPGRADE}]でツリーを開き、光るマスを1つ習得して閉じよう。", "用敌人掉落的灵魂碎片学习灵魂树的节点。按[{UPGRADE}]打开灵魂树，学习一个发光的节点后关闭。");
+        A("보스를 쓰러뜨리면 무기가 진화합니다. 세 갈래 중 하나를 고르세요. (한 판에 두 번, 되돌릴 수 없음)", "Defeating a boss evolves your weapon. Choose one of three paths. (Twice per run, and there's no going back)", "ボスを倒すと武器が進化します。3つの道から1つを選ぼう。（1回のプレイで2回、やり直し不可）", "击败首领后武器会进化。从三条路线中选择一条。（每局两次，无法反悔）");
+        A("진화한 무기로 남은 적을 모두 쓰러뜨리세요!", "Defeat the remaining enemies with your evolved weapon!", "進化した武器で残りの敵をすべて倒そう！", "用进化后的武器击倒剩下的敌人！");
+        A("튜토리얼 완료!", "Tutorial complete!", "チュートリアル完了！", "教程完成！");
+        A("기본 조작을 모두 익혔습니다. 곧 메인 메뉴로 돌아갑니다.", "You've learned all the basics. Returning to the main menu shortly.", "基本操作をすべて覚えました。まもなくメインメニューに戻ります。", "你已掌握所有基本操作。即将返回主菜单。");
+        A("완료!", "Done!", "完了！", "完成！");
+        A("튜토리얼 그만두기", "Quit Tutorial", "チュートリアルをやめる", "退出教程");
+        A("튜토리얼", "Tutorial", "チュートリアル", "教程");
+
         // ---------------- 도감 (2.1~)
         A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀槽满时展开结界");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화", "Pick one of three cards or skip on each level-up · Max level 50 · Max all ingredients to evolve a skill", "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・素材をすべて上げるとスキル進化", "每次升级从三张中选一张或跳过 · 等级上限50 · 素材全部升满即可技能进化");

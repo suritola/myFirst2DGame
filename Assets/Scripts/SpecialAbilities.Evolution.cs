@@ -653,9 +653,23 @@ public partial class SpecialAbilities
     {
         if (!CanBuy(n) || !SoulShards.Spend(n.cost)) return false;
         ownedNodes.Add(n.key);
+        RunSave.Record("t" + n.key);           // 판 중간 저장 (2.1.9)
         n.apply?.Invoke();
         if (fx != null) { fx.Play("chime", 0.6f, 1.3f); fx.Play("pulse", 0.4f, 1.6f); }
         return true;
+    }
+
+    // 판 중간 저장 (RunSave): 기록한 칸을 조각 없이 다시 배움 (배운 순서대로 부르므로 그때와 같은 트리)
+    public void ReplayNode(string key)
+    {
+        if (string.IsNullOrEmpty(key) || ownedNodes.Contains(key)) return;
+        foreach (SoulNode n in BuildSoulTree())
+        {
+            if (n.key != key) continue;
+            ownedNodes.Add(n.key);
+            n.apply?.Invoke();
+            return;
+        }
     }
 
     // 예전 방식 호환 (무기 가지가 공통이 되어 이제 지울 칸이 없음)
@@ -705,6 +719,15 @@ public static class SoulShards
             if (SpecialAbilities.SharedFx != null)
                 SpecialAbilities.SharedFx.FloatText(at, Loc.T("영혼 조각 +") + n, new Color(0.75f, 0.6f, 1f), 5f, 0f);
         }
+    }
+
+    // 판 중간 저장 (RunSave): 저장할 때의 조각 수
+    public static void Restore(int amount, int total, int spent)
+    {
+        Amount = Mathf.Max(0, amount);
+        Total = Mathf.Max(0, total);
+        Spent = Mathf.Max(0, spent);
+        Changed?.Invoke();
     }
 
     public static bool Spend(int n)

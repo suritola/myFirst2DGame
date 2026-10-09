@@ -129,6 +129,19 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    // 판 중간 저장 (RunSave, 2.1.9~): 보스가 나오는 처치 수 · 저장할 때의 처치 수로 되돌림 (지난 페이즈의 중간 보스는 다시 나오지 않게)
+    public int BossKillTarget => GameMode.ScaleKills(Chapters.BossKills(stageIndex, Stage.bossKills));
+
+    public void RestoreKills(int kills)
+    {
+        killedEnemy = Mathf.Clamp(kills, 0, BossKillTarget);
+        int phase = 1;
+        for (int i = 1; i < Stage.phases.Length; i++)
+            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter)) phase = i + 1;
+        paze = phase;
+        midBossPhase = phase;
+    }
+
     // 처치 수에 맞는 페이즈로 올림
     void UpdatePhase()
     {

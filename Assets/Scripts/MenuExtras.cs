@@ -82,7 +82,9 @@ public static class MenuExtras
         RectTransform sr = (RectTransform)start.transform;
         GameObject character = UIKit.CloneButton(start, "CharacterButton", "캐릭터", () => CharacterUI.Open(sr.root));
         GameObject skins = UIKit.CloneButton(start, "SkinButton", "스킨 상점", () => SkinShopUI.Open(sr.root));
-        GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialUI.Open(sr.root));
+        // 2.1.9: 글 튜토리얼 대신 직접 해 보는 플레이 튜토리얼 (TutorialRun), 한 번도 안 해 봤으면 반짝임
+        GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialRun.Begin());
+        if (!TutorialRun.Seen) tutorial.AddComponent<NewGlow>();
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
@@ -95,6 +97,7 @@ public static class MenuExtras
         AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
         TMP_Text st = start.GetComponentInChildren<TMP_Text>(true);
         if (st != null) { RectTransform tr = st.rectTransform; tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f); tr.sizeDelta = new Vector2(380f, 90f); tr.anchoredPosition = new Vector2(30f, 0f); }
+        InstallContinue(start, st);
 
         (GameObject go, string icon)[] tiles =
         {
@@ -130,6 +133,39 @@ public static class MenuExtras
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
         PatchNotesUI.OpenOnLaunch(sr.root);
+    }
+
+    // 2.1.9: 저장된 판이 있으면 게임 시작 오른쪽에 「이어하기」 (둘이 합쳐 폭 740 안, 왼쪽 캐릭터 그림과 안 겹치게)
+    static void InstallContinue(GameObject start, TMP_Text startLabel)
+    {
+        RunSave.Data saved = RunSave.Peek();
+        if (saved == null) return;
+        GameObject cont = UIKit.CloneButton(start, "ContinueButton", "이어하기", () => RunSave.Continue());
+        RectTransform sr = (RectTransform)start.transform, cr = (RectTransform)cont.transform;
+        sr.sizeDelta = cr.sizeDelta = new Vector2(360f, 110f);
+        sr.anchoredPosition = new Vector2(-190f, -10f);
+        cr.anchoredPosition = new Vector2(190f, -10f);
+        foreach (GameObject b in new[] { start, cont })
+        {
+            Transform icon = b.transform.Find("Icon");
+            if (icon != null) ((RectTransform)icon).anchoredPosition = new Vector2(-130f, 0f);
+            TMP_Text t = b == start ? startLabel : b.GetComponentInChildren<TMP_Text>(true);
+            if (t == null) continue;
+            t.rectTransform.sizeDelta = new Vector2(250f, 96f);
+            t.rectTransform.anchoredPosition = new Vector2(38f, 0f);
+            t.enableAutoSizing = true;
+            t.fontSizeMin = 16f;
+            t.fontSizeMax = 40f;
+        }
+        TMP_Text ct = cont.GetComponentInChildren<TMP_Text>(true);
+        if (ct != null)
+        {
+            UIKit.Forget(ct);           // 언어를 바꿔도 아래 줄(캐릭터 · 장 · 레벨)이 지워지지 않게
+            ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
+                      + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
+        }
+        Image img = cont.GetComponent<Image>();
+        if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
     }
 
     // 버튼 안에 도트 아이콘 (Resources/Icons/menu_*.png)
@@ -280,6 +316,7 @@ public static class UIKit
     // 언어가 바뀌면 다시 번역할 글자 (한국어 원문)
     static readonly Dictionary<TMP_Text, string> labels = new Dictionary<TMP_Text, string>();
     static bool hooked;
+    public static void Forget(TMP_Text t) => labels.Remove(t);
     public static void Remember(TMP_Text t, string ko)
     {
         labels[t] = ko;
