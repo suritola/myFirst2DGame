@@ -19,6 +19,8 @@ public static class GameSettings
     const string KeyIconKey = "settings.keyIcons";
     const string CursorKey = "settings.gameCursor";
     const string AutoLevelKey = "settings.autoLevelUp";
+    const string MuteKey = "settings.muteUnfocused";
+    const string UiScaleKey = "settings.uiScale";
     const string MouseSensKey = "settings.mouseSensitivity";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
@@ -28,7 +30,8 @@ public static class GameSettings
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
     static bool shake = true, flash = true, vsync = true;
-    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp;
+    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp, muteUnfocused = true;
+    static int uiScale = 2;
     static int damageNumbers;
 
     public static Loc.Lang Language
@@ -39,8 +42,8 @@ public static class GameSettings
             Load();
             if (language == value) return;
             language = value;
-            PlayerPrefs.SetInt(LangKey, (int)value);
-            PlayerPrefs.Save();
+            Prefs.SetInt(LangKey, (int)value);
+            Prefs.Save();
             Loc.ApplyFonts();
             SceneLocalizer.RefreshAll();
             Loc.RaiseChanged();
@@ -56,7 +59,7 @@ public static class GameSettings
             Load();
             volume = Mathf.Clamp01(value);
             AudioListener.volume = volume;
-            PlayerPrefs.SetFloat(VolumeKey, volume);
+            Prefs.SetFloat(VolumeKey, volume);
         }
     }
 
@@ -64,61 +67,63 @@ public static class GameSettings
     {
         if (loaded) return;
         loaded = true;
-        language = (Loc.Lang)Mathf.Clamp(PlayerPrefs.GetInt(LangKey, 0), 0, 3);
-        volume = PlayerPrefs.GetFloat(VolumeKey, 0.5f);
-        music = PlayerPrefs.GetFloat(MusicKey, 1f);
-        sfx = PlayerPrefs.GetFloat(SfxKey, 1f);
-        shake = PlayerPrefs.GetInt(ShakeKey, 1) == 1;
-        flash = PlayerPrefs.GetInt(FlashKey, 1) == 1;
-        vsync = PlayerPrefs.GetInt(VSyncKey, 1) == 1;
-        hints = PlayerPrefs.GetInt(HintsKey, 1) == 1;
-        damageNumbers = Mathf.Clamp(PlayerPrefs.GetInt(DamageNumKey, 0), 0, 2);
-        colorBlind = PlayerPrefs.GetInt(ColorBlindKey, 0) == 1;
-        keyIcons = PlayerPrefs.GetInt(KeyIconKey, 1) == 1;
-        gameCursor = PlayerPrefs.GetInt(CursorKey, 1) == 1;
-        autoLevelUp = PlayerPrefs.GetInt(AutoLevelKey, 0) == 1;
-        mouseSens = Mathf.Clamp(PlayerPrefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
+        language = (Loc.Lang)Mathf.Clamp(Prefs.GetInt(LangKey, 0), 0, 3);
+        volume = Prefs.GetFloat(VolumeKey, 0.5f);
+        music = Prefs.GetFloat(MusicKey, 1f);
+        sfx = Prefs.GetFloat(SfxKey, 1f);
+        shake = Prefs.GetInt(ShakeKey, 1) == 1;
+        flash = Prefs.GetInt(FlashKey, 1) == 1;
+        vsync = Prefs.GetInt(VSyncKey, 1) == 1;
+        hints = Prefs.GetInt(HintsKey, 1) == 1;
+        damageNumbers = Mathf.Clamp(Prefs.GetInt(DamageNumKey, 0), 0, 2);
+        colorBlind = Prefs.GetInt(ColorBlindKey, 0) == 1;
+        keyIcons = Prefs.GetInt(KeyIconKey, 1) == 1;
+        gameCursor = Prefs.GetInt(CursorKey, 1) == 1;
+        autoLevelUp = Prefs.GetInt(AutoLevelKey, 0) == 1;
+        muteUnfocused = Prefs.GetInt(MuteKey, 1) == 1;
+        uiScale = Mathf.Clamp(Prefs.GetInt(UiScaleKey, 2), 0, UiScales.Length - 1);
+        mouseSens = Mathf.Clamp(Prefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
     }
 
     // 전투 중 마우스 감도 (1 = 윈도우 커서 그대로, 0.25 ~ 3) · 1.8.9~ (MouseSensitivity)
     public static float MouseSensitivity
     {
         get { Load(); return mouseSens; }
-        set { Load(); mouseSens = Mathf.Clamp(value, MouseSensMin, MouseSensMax); PlayerPrefs.SetFloat(MouseSensKey, mouseSens); }
+        set { Load(); mouseSens = Mathf.Clamp(value, MouseSensMin, MouseSensMax); Prefs.SetFloat(MouseSensKey, mouseSens); }
     }
 
     // 음악 · 효과음 볼륨 (0 ~ 1, 전체 볼륨에 곱해짐)
     public static float MusicVolume
     {
         get { Load(); return music; }
-        set { Load(); music = Mathf.Clamp01(value); PlayerPrefs.SetFloat(MusicKey, music); }
+        set { Load(); music = Mathf.Clamp01(value); Prefs.SetFloat(MusicKey, music); }
     }
 
     public static float SfxVolume
     {
         get { Load(); return sfx; }
-        set { Load(); sfx = Mathf.Clamp01(value); PlayerPrefs.SetFloat(SfxKey, sfx); }
+        set { Load(); sfx = Mathf.Clamp01(value); Prefs.SetFloat(SfxKey, sfx); }
     }
 
     // 화면 흔들림 (트레일러 촬영 중에는 항상 켬)
     public static bool ScreenShake
     {
         get { Load(); return shake || GameInput.Auto; }
-        set { Load(); shake = value; PlayerPrefs.SetInt(ShakeKey, value ? 1 : 0); }
+        set { Load(); shake = value; Prefs.SetInt(ShakeKey, value ? 1 : 0); }
     }
 
     // 피격 시 붉은 번쩍임 · 저체력 깜빡임 · 폭발 섬광 (끄면 약하게, 깜빡이지 않게)
     public static bool Flashes
     {
         get { Load(); return flash || GameInput.Auto; }
-        set { Load(); flash = value; PlayerPrefs.SetInt(FlashKey, value ? 1 : 0); }
+        set { Load(); flash = value; Prefs.SetInt(FlashKey, value ? 1 : 0); }
     }
 
     // 처음 한 번씩 뜨는 도움말
     public static bool Hints
     {
         get { Load(); return hints; }
-        set { Load(); hints = value; PlayerPrefs.SetInt(HintsKey, value ? 1 : 0); }
+        set { Load(); hints = value; Prefs.SetInt(HintsKey, value ? 1 : 0); }
     }
 
     // 피해 숫자: 0 보통 · 1 크게 · 2 끄기
@@ -126,41 +131,58 @@ public static class GameSettings
     public static int DamageNumbers
     {
         get { Load(); return damageNumbers; }
-        set { Load(); damageNumbers = Mathf.Clamp(value, 0, 2); PlayerPrefs.SetInt(DamageNumKey, damageNumbers); }
+        set { Load(); damageNumbers = Mathf.Clamp(value, 0, 2); Prefs.SetInt(DamageNumKey, damageNumbers); }
     }
 
     // 색각 이상 모드: 경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로
     public static bool ColorBlind
     {
         get { Load(); return colorBlind; }
-        set { Load(); colorBlind = value; PlayerPrefs.SetInt(ColorBlindKey, value ? 1 : 0); }
+        set { Load(); colorBlind = value; Prefs.SetInt(ColorBlindKey, value ? 1 : 0); }
     }
 
     // HUD 스킬 칸의 키를 키보드 모양 아이콘으로
     public static bool KeyIcons
     {
         get { Load(); return keyIcons; }
-        set { Load(); keyIcons = value; PlayerPrefs.SetInt(KeyIconKey, value ? 1 : 0); }
+        set { Load(); keyIcons = value; Prefs.SetInt(KeyIconKey, value ? 1 : 0); }
     }
 
     // 게임 전용 마우스 커서 (끄면 윈도우 기본 포인터) · 1.8.7~
     public static bool GameCursor
     {
         get { Load(); return gameCursor; }
-        set { Load(); gameCursor = value; PlayerPrefs.SetInt(CursorKey, value ? 1 : 0); CursorSkin.Refresh(); }
+        set { Load(); gameCursor = value; Prefs.SetInt(CursorKey, value ? 1 : 0); CursorSkin.Refresh(); }
     }
 
     // 레벨이 오르면 카드 창을 바로 엶 (끄면 [상호작용] 키로 하나씩 · 2.1.8~)
     public static bool AutoLevelUp
     {
         get { Load(); return autoLevelUp; }
-        set { Load(); autoLevelUp = value; PlayerPrefs.SetInt(AutoLevelKey, value ? 1 : 0); }
+        set { Load(); autoLevelUp = value; Prefs.SetInt(AutoLevelKey, value ? 1 : 0); }
+    }
+
+    // 창이 비활성이면 (Alt+Tab · 다른 창 클릭) 소리를 멈춤 · 2.1.9~ (UiScaler 가 적용)
+    public static bool MuteUnfocused
+    {
+        get { Load(); return muteUnfocused; }
+        set { Load(); muteUnfocused = value; Prefs.SetInt(MuteKey, value ? 1 : 0); }
+    }
+
+    // UI 크기: 모든 화면의 글자 · 버튼 · HUD (CanvasScaler 기준 해상도를 나눔) · 2.1.9~
+    public static readonly float[] UiScales = { 0.8f, 0.9f, 1f, 1.1f, 1.2f };
+    public static readonly string[] UiScaleNames = { "80%", "90%", "100%", "110%", "120%" };
+    public static float UiScale => UiScales[UiScaleIndex];
+    public static int UiScaleIndex
+    {
+        get { Load(); return uiScale; }
+        set { Load(); uiScale = Mathf.Clamp(value, 0, UiScales.Length - 1); Prefs.SetInt(UiScaleKey, uiScale); UiScaler.ApplyAll(); }
     }
 
     public static bool VSync
     {
         get { Load(); return vsync; }
-        set { Load(); vsync = value; PlayerPrefs.SetInt(VSyncKey, value ? 1 : 0); ApplyVSync(); }
+        set { Load(); vsync = value; Prefs.SetInt(VSyncKey, value ? 1 : 0); ApplyVSync(); }
     }
 
     static void ApplyVSync()
@@ -170,7 +192,7 @@ public static class GameSettings
     }
 
     // 설정 창을 닫을 때 디스크에 바로 기록 (비정상 종료에도 남도록)
-    public static void Save() => PlayerPrefs.Save();
+    public static void Save() => Prefs.Save();
 
     // 게임이 켜질 때 볼륨 · 폰트 적용, 씬마다 글자 번역
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

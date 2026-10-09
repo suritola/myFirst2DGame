@@ -441,6 +441,7 @@ public class StoryDirector : MonoBehaviour
         CanvasScaler cs = go.GetComponent<CanvasScaler>();
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920f, 1080f);
+        UiScaler.Fit(cs);               // 설정 「UI 크기」 (2.1.9)
         cs.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;     // 16:10 · 21:9 에서도 1920×1080 영역이 다 보이게
         UIKit.EnsureStyle();
 

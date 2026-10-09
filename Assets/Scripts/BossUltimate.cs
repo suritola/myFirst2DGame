@@ -778,6 +778,7 @@ public class BossUltimate : MonoBehaviour
         CanvasScaler cs = go.GetComponent<CanvasScaler>();
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920f, 1080f);
+        UiScaler.Fit(cs);               // 설정 「UI 크기」 (2.1.9)
         cs.matchWidthOrHeight = 0.5f;
         return c;
     }
