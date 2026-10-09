@@ -26,10 +26,9 @@ public partial class SpecialAbilities
         bool curves = !(WeaponActive && (CurrentWeapon == ScytheId || CurrentWeapon == SeekerId));
         if (!light && curves && gunCard[GunHoming] > 0 && b.GetComponent<Homing>() == null)
         {
-            // 2.1.9: 노린 적으로 향하는 조준 보정 (단계마다 꺾는 힘만 조금씩: 초당 120 · 170 · 220°)
+            // 2.2.3: 스치면 보정 — 곧게 날아가다 적 옆을 스치면 그 적에게 꺾여 맞음 (보정 범위 0.9 · 1.3 · 1.7칸)
             Homing h = b.gameObject.AddComponent<Homing>();
-            h.aimAssist = true;
-            h.turnSpeed = 70f + 50f * gunCard[GunHoming];
+            h.nearMiss = 0.5f + 0.4f * gunCard[GunHoming];
         }
         if (boom && b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(1f, 0.6f, 0.2f);
         if (gunCard[GunRicochet] == 0 && gunCard[GunIncendiary] == 0 && gunCard[GunShock] == 0 && !boom) return;

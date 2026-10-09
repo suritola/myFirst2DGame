@@ -219,53 +219,18 @@ public class FlameParticle : MonoBehaviour
 public class Homing : MonoBehaviour
 {
     public float turnSpeed = 360f;
-    // 조준 보정 (2.1.9, 거너 카드 「유도 탄두」): 쏠 때 마우스로 노린 쪽의 적을 목표로 고정하고 앞쪽(±70°)으로만 꺾음
-    // 예전엔 날아가는 동안 총알에서 가장 가까운 적으로 꺾어서, 멀리 노린 적 대신 옆의 적에게 끌려가거나
-    // 레벨이 오를수록(꺾는 힘이 세질수록) 가까운 적 둘레를 빙글 돌며 빗나갔음
-    public bool aimAssist;
-    const float LockCone = 35f, SteerCone = 70f;
+    // 스치면 보정 (2.2.3, 거너 카드 「유도 탄두」): 총알은 조준한 대로 곧게 날아가다가,
+    // 앞쪽 가까이(5칸 안)에서 날아가는 길과 적 사이가 nearMiss 칸 안이면 그 적에게만 빠르게 꺾여 맞음
+    //   멀리서부터 미리 꺾지 않아 노린 적을 놓치거나 옆의 적에게 끌려가지 않음 · 지나치면(60° 넘게) 다시 곧게
+    // nearMiss 가 0이면 예전 방식(날아가며 가장 가까운 적으로 꺾음 · 추적탄 무기 · 영혼 추적자 등)
+    public float nearMiss;
+    const float LookAhead = 5f, LockLost = 60f, SnapTurn = 900f;
     Bullet bullet;
     Transform target;
 
     float trail;
 
-    void Start()
-    {
-        bullet = GetComponent<Bullet>();
-        if (aimAssist && bullet != null) target = PickAimed();
-    }
-
-    // 마우스로 노린 쪽: 쏜 방향 ±35° 안에서 마우스 자리에 가장 가까운 적
-    Transform PickAimed()
-    {
-        Vector3 aim = Camera.main != null ? Camera.main.ScreenToWorldPoint(GameInput.MousePosition) : transform.position + (Vector3)bullet.Direction * 10f;
-        aim.z = 0f;
-        Transform best = null;
-        float bestD = float.MaxValue;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, 30f))
-        {
-            if (!Alive(c)) continue;
-            Vector2 to = c.transform.position - transform.position;
-            if (Vector2.Angle(bullet.Direction, to) > LockCone) continue;
-            float d = Vector2.Distance(c.transform.position, aim);
-            if (d < bestD) { bestD = d; best = c.transform; }
-        }
-        return best;
-    }
-
-    // 목표가 쓰러지면: 앞쪽에서 가장 덜 꺾어도 되는 적
-    Transform PickAhead()
-    {
-        Transform best = null;
-        float bestA = SteerCone;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, 20f))
-        {
-            if (!Alive(c)) continue;
-            float a = Vector2.Angle(bullet.Direction, c.transform.position - transform.position);
-            if (a < bestA) { bestA = a; best = c.transform; }
-        }
-        return best;
-    }
+    void Start() => bullet = GetComponent<Bullet>();
 
     static bool Alive(Collider2D c)
     {
@@ -274,33 +239,54 @@ public class Homing : MonoBehaviour
         return e == null || !e.IsDead;
     }
 
-    void AimAssist()
+    // 날아가는 길 바로 옆에 있는 적 (앞쪽 · 길에서 가장 가까운)
+    Transform FindGrazed()
     {
-        if (target == null || !target.gameObject.activeInHierarchy || (target.TryGetComponent(out EnermyController e) && e.IsDead)) target = PickAhead();
+        Vector2 pos = transform.position, dir = bullet.Direction;
+        Transform best = null;
+        float bestSide = float.MaxValue;
+        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, LookAhead))
+        {
+            if (!Alive(c)) continue;
+            Vector2 to = (Vector2)c.transform.position - pos;
+            float along = Vector2.Dot(to, dir);
+            if (along <= 0.2f) continue;                                   // 뒤 · 바로 옆은 아님
+            float side = Mathf.Abs(dir.x * to.y - dir.y * to.x);           // 길에서 떨어진 거리
+            if (side > nearMiss || side >= bestSide) continue;
+            bestSide = side;
+            best = c.transform;
+        }
+        return best;
+    }
+
+    void NearMiss()
+    {
+        if (target != null && (!target.gameObject.activeInHierarchy || (target.TryGetComponent(out EnermyController e) && e.IsDead))) target = null;
+        if (target == null) target = FindGrazed();
         if (target == null) return;
         Vector2 want = ((Vector2)(target.position - transform.position)).normalized;
         float angle = Vector2.SignedAngle(bullet.Direction, want);
-        if (Mathf.Abs(angle) > SteerCone) { target = null; return; }       // 지나쳤으면 뒤로 꺾지 않음 (빙글 도는 것 방지)
-        float step = Mathf.Clamp(angle, -turnSpeed * Time.deltaTime, turnSpeed * Time.deltaTime);
-        bullet.Dir = Quaternion.Euler(0, 0, step) * bullet.Direction;
+        if (Mathf.Abs(angle) > LockLost) { target = null; return; }        // 지나쳤으면 다시 곧게 (뒤로 꺾지 않음)
+        float turn = Mathf.Max(turnSpeed, SnapTurn) * Time.deltaTime;
+        bullet.Dir = Quaternion.Euler(0, 0, Mathf.Clamp(angle, -turn, turn)) * bullet.Direction;
     }
 
     void Update()
     {
         if (bullet == null) return;
-        // 보랏빛 꼬리
+        // 보랏빛 꼬리 (스치면 보정은 꺾일 때만)
         trail += Time.deltaTime;
-        if (trail >= 0.03f && SpecialAbilities.GlowSprite != null)
+        if (trail >= 0.03f && SpecialAbilities.GlowSprite != null && (nearMiss <= 0f || target != null))
         {
             trail = 0f;
             FadeSprite.Spawn("SeekerTrail", SpecialAbilities.GlowSprite, transform.position, 0.06f, new Color(0.75f, 0.5f, 1f, 0.55f), "Effect", 4, 0.3f);
         }
-        if (aimAssist) { AimAssist(); return; }
-        Transform target = Specials.NearestEnemy(transform.position, 20f);
-        if (target == null) return;
-        Vector2 want = ((Vector2)(target.position - transform.position)).normalized;
-        float angle = Vector2.SignedAngle(bullet.Direction, want);
-        float step = Mathf.Clamp(angle, -turnSpeed * Time.deltaTime, turnSpeed * Time.deltaTime);
+        if (nearMiss > 0f) { NearMiss(); return; }
+        Transform nearest = Specials.NearestEnemy(transform.position, 20f);
+        if (nearest == null) return;
+        Vector2 dirTo = ((Vector2)(nearest.position - transform.position)).normalized;
+        float a = Vector2.SignedAngle(bullet.Direction, dirTo);
+        float step = Mathf.Clamp(a, -turnSpeed * Time.deltaTime, turnSpeed * Time.deltaTime);
         bullet.Dir = Quaternion.Euler(0, 0, step) * bullet.Direction;
     }
 }
