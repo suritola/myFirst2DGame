@@ -18,6 +18,7 @@ public static class GameSettings
     const string ColorBlindKey = "settings.colorBlind";
     const string KeyIconKey = "settings.keyIcons";
     const string CursorKey = "settings.gameCursor";
+    const string AutoLevelKey = "settings.autoLevelUp";
     const string MouseSensKey = "settings.mouseSensitivity";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
@@ -27,7 +28,7 @@ public static class GameSettings
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
     static bool shake = true, flash = true, vsync = true;
-    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true;
+    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp;
     static int damageNumbers;
 
     public static Loc.Lang Language
@@ -75,6 +76,7 @@ public static class GameSettings
         colorBlind = PlayerPrefs.GetInt(ColorBlindKey, 0) == 1;
         keyIcons = PlayerPrefs.GetInt(KeyIconKey, 1) == 1;
         gameCursor = PlayerPrefs.GetInt(CursorKey, 1) == 1;
+        autoLevelUp = PlayerPrefs.GetInt(AutoLevelKey, 0) == 1;
         mouseSens = Mathf.Clamp(PlayerPrefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
     }
 
@@ -146,6 +148,13 @@ public static class GameSettings
     {
         get { Load(); return gameCursor; }
         set { Load(); gameCursor = value; PlayerPrefs.SetInt(CursorKey, value ? 1 : 0); CursorSkin.Refresh(); }
+    }
+
+    // 레벨이 오르면 카드 창을 바로 엶 (끄면 [상호작용] 키로 하나씩 · 2.1.8~)
+    public static bool AutoLevelUp
+    {
+        get { Load(); return autoLevelUp; }
+        set { Load(); autoLevelUp = value; PlayerPrefs.SetInt(AutoLevelKey, value ? 1 : 0); }
     }
 
     public static bool VSync

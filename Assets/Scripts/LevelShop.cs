@@ -97,15 +97,15 @@ public partial class LevelShop : MonoBehaviour
         UpdateSkipButton();
         // 마지막 카드를 배워 만렙이 되면 남은 레벨업은 버림
         if (PendingLevels > 0 && !IsOpen && NothingToLearn) PendingLevels = 0;
+        // 숫자 1 · 2 · 3: 그 카드를 바로 고름 (2.1.8, 클릭 → 확정 두 번을 한 번에)
+        int quick = QuickPickKey();
+        if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy) ConfirmSlot(quick);
         // 클릭으로 고른 카드를 스페이스바로 확정
-        if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
-        {
-            int what = pendingSlot == 0 ? first : pendingSlot == 1 ? second : third;
-            pendingSlot = -1;
-            onSelect(what);
-        }
-        // 쌓인 레벨업: [Space]로 하나씩 고름 (상점 가판대 옆이면 상점이 먼저)
-        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopStall.PlayerNear && !ShopOpen && KeyBindings.Down(GameAction.Interact))
+        else if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
+            ConfirmSlot(pendingSlot);
+        // 쌓인 레벨업: [Space]로 하나씩 고름 (상점 가판대 옆이면 상점이 먼저) · 설정 「레벨업 바로 열기」면 바로 엶 (2.1.8)
+        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopStall.PlayerNear && !ShopOpen
+                 && (KeyBindings.Down(GameAction.Interact) || (GameSettings.AutoLevelUp && !GameInput.Auto && !ESCmenu.IsOpen)))
         {
             PendingLevels--;
             openLevelShop();
@@ -113,7 +113,7 @@ public partial class LevelShop : MonoBehaviour
         UpdatePendingBadge();
     }
 
-    // ================================================================= 운명의 실: [R] 다시 뽑기
+    // ================================================================= 운명의 실: [다시 뽑기 키] 다시 뽑기
     TextMeshProUGUI rerollText;
     int shownRerolls = -1;
 
@@ -126,7 +126,7 @@ public partial class LevelShop : MonoBehaviour
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         int n = sp != null ? sp.Rerolls : 0;
         bool open = IsOpen && n > 0;
-        if (open && Input.GetKeyDown(KeyCode.R) && sp.TryReroll())
+        if (open && KeyBindings.Down(GameAction.Reroll) && sp.TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
         {
             UpdateLvShopContent();
             pendingSlot = -1;
@@ -156,7 +156,7 @@ public partial class LevelShop : MonoBehaviour
         if (open && shownRerolls != n)
         {
             shownRerolls = n;
-            rerollText.text = Loc.T("[R] 카드 다시 뽑기") + "  (" + n + ")";
+            rerollText.text = "[" + KeyBindings.Name(GameAction.Reroll) + "] " + Loc.T("카드 다시 뽑기") + "  (" + n + ")";
         }
     }
 
@@ -246,8 +246,28 @@ public partial class LevelShop : MonoBehaviour
     void PickCard(int slot)
     {
         if (!selectReady) return;
+        // 같은 카드를 0.4초 안에 두 번 누르면 바로 확정 (더블클릭, 2.1.8)
+        if (slot == pendingSlot && Time.unscaledTime - lastPickAt < 0.4f) { ConfirmSlot(slot); return; }
+        lastPickAt = Time.unscaledTime;
         pendingSlot = slot;
         RefreshCards();
+    }
+
+    float lastPickAt = -9f;
+
+    void ConfirmSlot(int slot)
+    {
+        int what = slot == 0 ? first : slot == 1 ? second : third;
+        pendingSlot = -1;
+        onSelect(what);
+    }
+
+    // 숫자 키 1 · 2 · 3 (키패드 포함) → 카드 칸 0 · 1 · 2, 안 눌렀으면 -1
+    static int QuickPickKey()
+    {
+        for (int i = 0; i < 3; i++)
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i)) return i;
+        return -1;
     }
 
     // 고른 카드는 커지고 금빛, 아래 안내 글자도 바뀜
@@ -280,6 +300,10 @@ public partial class LevelShop : MonoBehaviour
                 selectHint.fontSharedMaterial = FirstTitle.fontSharedMaterial;
             }
             selectHint.fontSize = 28f;
+            selectHint.enableAutoSizing = true;         // 안내가 길어져도 한 줄 (2.1.8 더블클릭 · 숫자 키 안내)
+            selectHint.fontSizeMin = 18f;
+            selectHint.fontSizeMax = 28f;
+            selectHint.enableWordWrapping = false;
             selectHint.alignment = TextAlignmentOptions.Center;
             selectHint.raycastTarget = false;
         }
@@ -287,7 +311,8 @@ public partial class LevelShop : MonoBehaviour
         {
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
             selectHint.color = picked != null ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.92f, 0.88f, 0.8f);
-            selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정");
+            selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked
+                                             : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#A89C86>" + Loc.T("더블클릭 · 숫자 1 2 3 으로 바로") + "</color>";
         }
     }
 

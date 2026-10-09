@@ -67,7 +67,7 @@ public static partial class LocTable
         { "숲의 사냥꾼", L("Hunter of the Woods", "森の狩人", "森林猎手") },
         { "미친 학자", L("Mad Scholar", "狂った学者", "疯狂学者") },
         { "준비 중", L("Coming Soon", "準備中", "敬请期待") },
-        { "리볼버와 여러 특수 총기를 다루는 총잡이. 모든 캐릭터의 기준.", L("A gunslinger who handles a revolver and many special guns. The baseline for every character.", "リボルバーと様々な特殊銃を扱うガンマン。全キャラクターの基準。", "使用左轮手枪和各种特殊枪械的枪手。所有角色的基准。") },
+        { "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.", L("A gunslinger who handles a revolver and many special guns. The easiest character to start with.", "リボルバーと様々な特殊銃を扱うガンマン。扱いやすい基本キャラクター。", "使用左轮手枪和各种特殊枪械的枪手。易于上手的基础角色。") },
         { "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.", L("A longsword master—heavy and slow, but cuts through many at once.", "重く遅いが、一度に多くを斬り伏せる長剣の達人。", "沉重缓慢，却能一次斩倒众敌的长剑大师。") },
         { "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.", L("A marksman of piercing arrows and sky-darkening arrow rain.", "敵を貫く矢と空を覆う矢の雨の名手。", "擅长穿透之箭与遮天箭雨的神射手。") },
         { "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.", L("An eccentric scholar who melts whole crowds with exploding flasks.", "爆発するフラスコで敵の群れをまとめて溶かす変わり者の学者。", "用爆炸烧瓶一口气融化敌群的怪胎学者。") },
@@ -231,8 +231,6 @@ public static partial class LocTable
         { "신전 문이 열렸다!\n문으로 들어가세요", L("The temple gate is open!\nEnter the gate", "神殿の扉が開いた！\n扉に入ってください", "神殿之门开启了！\n请进入大门") },
         { "지옥의 군주를 쓰러뜨렸다!\n성문 너머로 초원이 보인다", L("The Demon Lord has fallen!\nA meadow lies beyond the gate", "地獄の君主を倒した！\n城門の向こうに草原が見える", "击败了地狱领主！\n城门外是一片草原") },
         { "킹 슬라임을 쓰러뜨렸다!\n모든 스테이지 클리어!", L("The King Slime has fallen!\nAll stages cleared!", "キングスライムを倒した！\n全ステージクリア！", "击败了史莱姆王！\n全部关卡通关！") },
-        { "3장 · 초원\n특수 능력 포인트 +2", L("Chapter 3 · Meadow\nSpecial points +2", "第3章・草原\n特殊能力ポイント+2", "第3章 · 草原\n特殊能力点数+2") },
-        { "2장 · 불타는 지옥", L("Chapter 2 · Burning Hell", "第2章・燃える地獄", "第2章 · 燃烧地狱") },
         { "지옥의 문이 당신을 끌어당긴다!  ", L("The gate is pulling you in!  ", "門があなたを引き寄せる！  ", "大门正在将你吸入！  ") },
         { "신전 문으로 들어가세요  ", L("Enter the gate  ", "門に入ってください  ", "请进入大门  ") },
         { "초", L("s", "秒", "秒") },
@@ -792,8 +790,6 @@ public static partial class LocTable
         { "묘역 깊은 곳에서 지옥의 문이 열렸다", L("Deep in the tomb, the Gate of Hell has opened", "墓所の奥深くで地獄の門が開いた", "墓地深处，地狱之门开启了") },
         { "꺼져 가는 불길 아래로 심연의 문이 열렸다", L("Beneath the dying flames, the gate to the abyss has opened", "消えゆく炎の下に深淵の門が開いた", "渐熄的火焰之下，深渊之门开启了") },
         // 2.1.1 4장 영혼의 심연 (AbyssStage · 거울의 군주)
-        { "4장 · 영혼의 심연", L("Chapter 4 · Abyss of Souls", "第4章 · 魂の深淵", "第4章 · 灵魂深渊") },
-        { "4장 · 영혼의 심연\n특수 능력 포인트 +2", L("Chapter 4 · Abyss of Souls\nSpecial points +2", "第4章 · 魂の深淵\n特殊能力ポイント+2", "第4章 · 灵魂深渊\n特殊能力点 +2") },
         { "영혼의 심연", L("Abyss of Souls", "魂の深淵", "灵魂深渊") },
         { "킹 슬라임을 쓰러뜨렸다!\n갈라진 땅 아래로 심연의 문이 열렸다", L("The Slime King has fallen!\nA gate to the abyss opens in the cracked earth", "キングスライムを倒した！\n裂けた大地の下に深淵の門が開いた", "史莱姆王倒下了！\n裂开的大地下方，深渊之门开启了") },
         { "거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!", L("The Mirror Sovereign is shattered!\nAll stages cleared!", "鏡の君主を倒した！\n全ステージクリア！", "镜之君主破碎了！\n全部关卡通关！") },
@@ -829,6 +825,13 @@ public static partial class LocTable
         // 2.1.6 레벨업 추천 카드 (RecommendGlow)
         { "추천", L("Recommended", "おすすめ", "推荐") },
         { "추천 · 바로 진화!", L("Recommended · Evolves now!", "おすすめ・今すぐ進化！", "推荐 · 立即进化！") },
+        // 2.1.8 진화 무기 궁극기가 원래 필살기에 덧붙음 · 레벨업 편의 · 설정
+        { "필살기에 덧붙음", L("Added to your ultimate", "必殺技に上乗せ", "附加于必杀技") },
+        { "카드 다시 뽑기", L("Reroll cards", "カードを引き直す", "重抽卡牌") },
+        { "레벨업 바로 열기", L("Open level-ups instantly", "レベルアップをすぐ開く", "立即打开升级") },
+        { "바로 진화!", L("Evolves now!", "今すぐ進化！", "立即进化！") },
+        { "{0}단계 남음", L("{0} ranks left", "あと{0}段階", "还差{0}级") },
+        { "더블클릭 · 숫자 1 2 3 으로 바로", L("Double-click or press 1 2 3 to pick instantly", "ダブルクリック・数字1 2 3ですぐ選択", "双击或按数字1 2 3直接选择") },
         // 2.1.1 일일 도전 · 스팀 순위표 (DailyChallenge)
         { "일일 도전", L("Daily Challenge", "デイリーチャレンジ", "每日挑战") },
         { "오늘의 영웅", L("Today's hero", "今日の英雄", "今日英雄") },
@@ -1160,7 +1163,6 @@ public static partial class LocTable
         { "1차 진화", L("First Evolution", "第一進化", "第一次进化") },
         { "최종 진화", L("Final Evolution", "最終進化", "最终进化") },
         { "진화 전", L("Not evolved", "進化前", "未进化") },
-        { "3장 · 초원", L("Chapter 3 · Meadow", "第3章 · 草原", "第3章 · 草原") },
         { "]   영혼 조각 ", L("]   Soul Shards ", "]   魂のかけら ", "]   灵魂碎片 ") },
         { "] 영혼 트리", L("] Soul Tree", "] 魂のツリー", "] 灵魂树") },
         { "영혼 트리 [", L("Soul Tree [", "魂のツリー [", "灵魂树 [") },

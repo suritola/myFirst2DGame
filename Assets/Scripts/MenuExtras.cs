@@ -594,11 +594,13 @@ public static class SettingsUI
     // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘 · 게임 커서
     static void BuildGameplay()
     {
+        // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
-        CycleRow("피해 숫자", 90f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
-        ToggleRow("색각 이상 모드", -20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
-        ToggleRow("키 아이콘", -130f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
-        ToggleRow("게임 커서", -240f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
+        CycleRow("피해 숫자", 110f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
+        ToggleRow("색각 이상 모드", 20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
+        ToggleRow("키 아이콘", -70f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
+        ToggleRow("게임 커서", -160f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
+        ToggleRow("레벨업 바로 열기", -250f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v);
     }
 
     // 누를 때마다 다음 값으로
@@ -651,10 +653,10 @@ public static class SettingsUI
     static readonly string[] ActionNames =
     {
         "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
-        "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리",
+        "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리", "카드 다시 뽑기",
     };
     // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음)
-    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 9, 10 };
+    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 9, 10, 11 };
 
     static void BuildControls()
     {

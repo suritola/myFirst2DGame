@@ -2,7 +2,7 @@ using System.Text;
 using UnityEngine;
 
 // 바꿀 수 있는 키 (설정 → 조작)
-public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade }
+public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade, Reroll }     // Reroll: 레벨업 카드 다시 뽑기 (2.1.8~, 저장 번호가 밀리지 않게 맨 뒤)
 
 // 키 설정: PlayerPrefs에 저장. 이동은 방향키도 항상 같이 됨
 // 화면 글자의 {SKILL1} 같은 표시는 Loc.T가 지금 키 이름으로 바꿔 줌
@@ -17,6 +17,7 @@ public static class KeyBindings
         KeyCode.R, KeyCode.Q,
         KeyCode.E, KeyCode.F, KeyCode.C,
         KeyCode.Space, KeyCode.T,
+        KeyCode.R,          // 다시 뽑기는 레벨업 창(멈춘 동안)에서만 써서 재장전과 같은 R 이어도 겹치지 않음
     };
 
     static readonly KeyCode[] Arrows = { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
@@ -39,11 +40,14 @@ public static class KeyBindings
         Load();
         KeyCode old = keys[(int)a];
         for (int i = 0; i < keys.Length; i++)
-            if (i != (int)a && keys[i] == key) { keys[i] = old; PlayerPrefs.SetInt("keys." + (GameAction)i, (int)old); }
+            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i)) { keys[i] = old; PlayerPrefs.SetInt("keys." + (GameAction)i, (int)old); }
         keys[(int)a] = key;
         PlayerPrefs.SetInt("keys." + a, (int)key);
         Loc.RaiseChanged();
     }
+
+    // 다시 뽑기(레벨업 창)와 전투 키는 같은 키를 써도 됨 (서로 다른 화면에서만 쓰임)
+    static bool Separate(GameAction a, GameAction b) => (a == GameAction.Reroll) != (b == GameAction.Reroll) && a != GameAction.Interact && b != GameAction.Interact;
 
     public static void ResetAll()
     {

@@ -27,8 +27,27 @@ public class SkillGauge : MonoBehaviour
     // 영혼 트리 '빠른 충전'
     static float TreeMul => SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.TreeGaugeMul : 1f;
 
+    // 2.1.8: 가득 차는 순간 소리 + 가득 찬 동안 게이지가 금빛으로 숨 쉬듯 반짝임 (처음 한 번 뜨는 도움말 말고는 알림이 없었음)
+    bool wasFull;
+    Color baseColor = Color.white;
+    static readonly Color ReadyGold = new Color(1f, 0.85f, 0.35f);
+
+    void ReadyFeedback()
+    {
+        bool full = IsFull();
+        if (full && !wasFull && Time.timeScale > 0f && !GameInput.Auto)
+        {
+            Hostile.Play("chime", 0.55f, 1.4f);
+            Hostile.Play("pulse", 0.35f, 1.6f);
+        }
+        wasFull = full;
+        if (gaugeImage != null)
+            gaugeImage.color = full ? Color.Lerp(baseColor, ReadyGold, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f)) : baseColor;
+    }
+
     void Update()
     {
+        ReadyFeedback();
         PlayerController p = Hostile.Player;
         // 멈췄을 때나 스킬을 쓰는 중에는 차지 않음
         if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;
@@ -45,6 +64,7 @@ public class SkillGauge : MonoBehaviour
         {
             gaugeImage = GetComponent<Image>();
         }
+        if (gaugeImage != null) baseColor = gaugeImage.color;
 
         UpdateGauge();
     }

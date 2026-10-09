@@ -54,7 +54,15 @@ public partial class LevelShop
             }
             row.evo = e;
             row.evoIcon.sprite = Resources.Load<Sprite>("Icons/ability_" + e.icon);
-            row.name.text = "<size=70%>" + Loc.T("진화") + "</size>\n" + Loc.T(e.name);
+            // 2.1.8: 이 카드를 고른 뒤 진화까지 남은 단계 (0이면 바로 진화)
+            int left = 0;
+            foreach (int p in e.parts)
+            {
+                int max = MaxLevelOf(CharacterData.Selected, p);
+                left += Mathf.Max(0, max - LevelOf(p) - (p == ids[slot] ? 1 : 0));
+            }
+            string tag = left <= 0 ? "<color=#FFD966>" + Loc.T("바로 진화!") + "</color>" : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
+            row.name.text = "<size=70%>" + Loc.T("진화") + " · " + tag + "</size>\n" + Loc.T(e.name);
         }
         ShowRecommend(ids);
     }
