@@ -122,12 +122,14 @@ public partial class SignatureSkills : MonoBehaviour
     static float V(int level, float a, float step) => level <= 0 ? 0f : a + step * (level - 1);
 
     CharacterKit Kit => kit != null ? kit : (kit = CharacterKit.Instance);
+    // 특수 능력 (들고 있는 특수 무기의 탄창 · 장전, 2.1.8~)
+    static SpecialAbilities Sp => SpecialAbilities.SharedInstance;
     // 기준 공격력 (캐릭터 평타와 같은 값)
     // 고유 스킬은 공격 속도와 상관없이 터지므로 캐릭터 공격력 배율(느린 평타 보상) 대신 공통 기준을 씀
     //   지금 공격력 ÷ 캐릭터 배율 × 고유 스킬 배율 (레벨업 · 영혼 트리 강화는 그대로 반영)
-    //   검사는 크게 강한 캐릭터로 두어 3, 도적은 후반 하향으로 0.85, 나머지는 1
+    //   검사는 2 (2.1.8: 3 → 2, 체력 · 공격력 · 충전 · 생존기를 다 가져 너무 셌음), 도적은 후반 하향으로 0.85, 나머지는 1
     float Atk => player != null ? player.damage * player.damageMultiplier / Mathf.Max(0.1f, CharacterData.Current.damage) * SigPower : 1f;
-    float SigPower => who == CharacterId.Swordsman ? 3f : who == CharacterId.Rogue ? 0.85f : 1f;
+    float SigPower => who == CharacterId.Swordsman ? 2f : who == CharacterId.Rogue ? 0.85f : 1f;
     bool Alive => player != null && !player.IsDying;
 
     // ================================================================= 훅 (게임 코드가 부름 · 없으면 아무것도 안 함)

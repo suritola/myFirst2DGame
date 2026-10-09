@@ -173,6 +173,7 @@ public partial class SpecialAbilities
         cursed = IsLastBulletCursed(mag.ammo);
         mag.ammo = Mathf.Max(0, mag.ammo - ammoCost);
         if (mag.ammo <= 0) StartWeaponReload(CurrentWeapon);
+        if (!kitWeapon && Gunner) SignatureSkills.Attacked(start, aimDir);     // 2.1.8: 총열 과열 · 속사 장전도 특수 총기로 (예전엔 권총만)
         if (kitWeapon) KitShotSound(CurrentWeapon);
         else if (!SkinAudio.PlayPistol() && player.shotSound != null && player.TryGetComponent(out AudioSource a)) a.PlayOneShot(player.shotSound, GameSettings.SfxVolume);
         return ((Vector2)(target - start)).normalized;

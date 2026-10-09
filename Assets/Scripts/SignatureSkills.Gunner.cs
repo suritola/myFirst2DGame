@@ -49,7 +49,7 @@ public partial class SignatureSkills
         {
             if (Inside(zone).Count == 0) return;
             Vector3 p = zone.transform.position;
-            Circle(p, 2f * Fs("g.mine"), Atk * 0.8f, 1f);
+            Circle(p, 2f * (Big("g.mine") ? 1.7f : 1f), Atk * 0.8f, 1f);      // 판정 범위는 이펙트 배율(Fs)과 따로 (2.1.8)
             Fx.Spawn("fx_explosion", p, 3.6f * Fs("g.mine"), Color.white, 20f);
             Flair("g.mine", p, 3f, Brass);
             Hostile.Play("pop", 0.4f, 1.2f);
@@ -158,7 +158,8 @@ public partial class SignatureSkills
     float GunnerMove()
     {
         int r = L("g.runreload");
-        return r > 0 && player.IsReloading ? 1f + V(r, 0.15f, 0.1f) : 1f;
+        bool reloading = player.IsReloading || (Sp != null && Sp.HeldReloading);       // 특수 총기 장전도 (2.1.8)
+        return r > 0 && reloading ? 1f + V(r, 0.15f, 0.1f) : 1f;
     }
 
     void GunnerHurt(float taken)
@@ -226,13 +227,13 @@ public partial class SignatureSkills
             }
         }
         int sc = L("g.scavenge");
-        if (sc > 0 && player.NowBullet < player.MaxBullet && Random.value < V(sc, 0.15f, 0.1f)) player.NowBullet++;
+        if (sc > 0 && Random.value < V(sc, 0.15f, 0.1f) && (Sp == null || !Sp.RefundHeldAmmo(1)) && player.NowBullet < player.MaxBullet) player.NowBullet++;     // 들고 있는 무기의 탄창에 (2.1.8)
     }
 
     void GunnerHit(GameObject target, float dmg, bool killed, bool proc)
     {
         if (!killed || !E("ge.outlaw") || !Marked(target)) return;
-        player.NowBullet = player.MaxBullet;
+        if (Sp == null || !Sp.RefillHeldAmmo()) player.NowBullet = player.MaxBullet;     // 들고 있는 무기의 탄창을 (2.1.8)
         foreach (Transform t in Nearest(target.transform.position, 6f, 3, target))
         {
             Mark(t.gameObject, 4f, MarkMul(target));

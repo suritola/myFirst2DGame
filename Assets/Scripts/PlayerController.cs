@@ -107,6 +107,7 @@ public class PlayerController : MonoBehaviour
 
     // 코인 자석 (레벨업 능력): 이 거리 안의 코인을 끌어옴
     [HideInInspector] public float coinMagnetRange = 0f;
+    const float BaseCoinPull = 2.5f;        // 카드 없이도 끌어오는 코인 범위 (2.1.8)
 
     public float targetInterval = 0.2f;
 
@@ -287,8 +288,9 @@ public class PlayerController : MonoBehaviour
         if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)
             PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + regenPerSecond * Time.deltaTime);
 
-        // 코인 자석: 주변 코인이 날아옴
-        if (coinMagnetRange > 0f && Time.timeScale > 0f)
+        // 코인 자석: 주변 코인이 날아옴 (2.1.8: 카드가 없어도 기본으로 2.5칸은 끌어옴, 카드는 거기에 더함)
+        float pull = coinMagnetRange + BaseCoinPull;
+        if (pull > 0f && Time.timeScale > 0f)
         {
             // 떨어진 코인 목록 (매 프레임 씬 전체를 태그로 뒤지던 것을 대신함)
             var coins = CoinTag.All;
@@ -297,7 +299,7 @@ public class PlayerController : MonoBehaviour
                 Transform c = coins[i];
                 if (c == null) { coins.RemoveAt(i); continue; }
                 float d = Vector2.Distance(c.position, transform.position);
-                if (d < coinMagnetRange) c.position = Vector3.MoveTowards(c.position, transform.position, (10f + (coinMagnetRange - d) * 3f) * Time.deltaTime);
+                if (d < pull) c.position = Vector3.MoveTowards(c.position, transform.position, (10f + (pull - d) * 3f) * Time.deltaTime);
             }
         }
 
@@ -524,7 +526,7 @@ public class PlayerController : MonoBehaviour
 
     public bool IsReloading => isReloading;
     // 속사 장전: 다음 발을 거의 바로 쏠 수 있게
-    public void QuickShot() => nextShootTime = Time.time + 0.05f;
+    public void QuickShot() { nextShootTime = Time.time + 0.05f; special?.QuickFire(); }      // 특수 총기도 (2.1.8)
 
     // =====================================
     // 일반 총알 발사

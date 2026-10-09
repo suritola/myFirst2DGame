@@ -123,7 +123,7 @@ public partial class SignatureSkills
         if (E("re.return"))
         {
             yield return new WaitForSeconds(RogueRange * 0.8f / 26f);
-            if (player != null && player.NowBullet < player.MaxBullet) player.NowBullet++;
+            if (player != null && (Sp == null || !Sp.RefundHeldAmmo(1)) && player.NowBullet < player.MaxBullet) player.NowBullet++;     // 들고 있는 무기의 탄창에 (2.1.8)
         }
     }
 

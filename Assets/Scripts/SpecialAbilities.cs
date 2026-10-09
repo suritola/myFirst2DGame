@@ -232,7 +232,35 @@ public partial class SpecialAbilities : MonoBehaviour
         a.reloadEnd = Time.time + BaseReload(id) * TreeReloadMul;
         fx.Play(ReloadSound(id), 0.8f, Random.Range(0.96f, 1.04f));
         ReloadShockwave(player.transform.position);
+        // 2.1.8: 특수 무기 장전에도 장전 고유 스킬이 터짐 (탄피 지뢰 · 빈 주머니의 비 …, 예전엔 권총 장전에만)
+        if (id == CurrentWeapon) SignatureSkills.ReloadStart();
     }
+
+    // ---------------- 고유 스킬이 쓰는 "지금 들고 있는 무기"의 탄창 (2.1.8~, 특수 무기를 들었으면 그 무기, 아니면 기본 무기)
+    // 들고 있는 특수 무기가 장전 중인지 (달리며 장전)
+    public bool HeldReloading => WeaponActive && UsesAmmo(CurrentWeapon) && Ammo(CurrentWeapon).Reloading;
+
+    // 탄을 돌려줌 (전리품 탄약 · 귀환하는 칼날): 특수 무기를 들었으면 그 탄창에, 아니면 false
+    public bool RefundHeldAmmo(int n)
+    {
+        if (!WeaponActive || !UsesAmmo(CurrentWeapon)) return false;
+        WeaponAmmo a = Ammo(CurrentWeapon);
+        if (!a.Reloading) a.ammo = Mathf.Min(MagSize(CurrentWeapon), a.ammo + n);
+        return true;
+    }
+
+    // 탄창을 가득 (무법자)
+    public bool RefillHeldAmmo()
+    {
+        if (!WeaponActive || !UsesAmmo(CurrentWeapon)) return false;
+        WeaponAmmo a = Ammo(CurrentWeapon);
+        a.reloadEnd = -1f;
+        a.ammo = MagSize(CurrentWeapon);
+        return true;
+    }
+
+    // 속사 장전: 다음 발을 바로 쏨
+    public void QuickFire() => nextFire = Time.time + 0.05f;
 
     // 무기마다 다른 장전 소리 (SpecialFeedback 이 만든 소리 이름, -1 = 캐릭터 기본 무기)
     public static string ReloadSound(int id) => id switch
@@ -255,7 +283,7 @@ public partial class SpecialAbilities : MonoBehaviour
             {
                 a.reloadEnd = -1f;
                 a.ammo = MagSize(id);
-                if (id == CurrentWeapon) fx.Play("clank", 0.4f, 1.3f);
+                if (id == CurrentWeapon) { fx.Play("clank", 0.4f, 1.3f); SignatureSkills.ReloadEnd(); }     // 섬광 장전 · 속사 장전 · 천둥 장전 (2.1.8)
             }
         }
     }
