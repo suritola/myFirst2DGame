@@ -826,6 +826,9 @@ public static partial class LocTable
         // 2.1.3 메인 메뉴 패치노트 버튼 (PatchNotesUI)
         { "패치노트", L("Patch Notes", "パッチノート", "更新日志") },
         { "지금", L("Current", "現在", "当前") },
+        // 2.1.6 레벨업 추천 카드 (RecommendGlow)
+        { "추천", L("Recommended", "おすすめ", "推荐") },
+        { "추천 · 바로 진화!", L("Recommended · Evolves now!", "おすすめ・今すぐ進化！", "推荐 · 立即进化！") },
         // 2.1.1 일일 도전 · 스팀 순위표 (DailyChallenge)
         { "일일 도전", L("Daily Challenge", "デイリーチャレンジ", "每日挑战") },
         { "오늘의 영웅", L("Today's hero", "今日の英雄", "今日英雄") },

@@ -56,6 +56,25 @@ public partial class LevelShop
             row.evoIcon.sprite = Resources.Load<Sprite>("Icons/ability_" + e.icon);
             row.name.text = "<size=70%>" + Loc.T("진화") + "</size>\n" + Loc.T(e.name);
         }
+        ShowRecommend(ids);
+    }
+
+    // ================================================================= 추천 카드 (2.1.6~)
+    // 세 장 중 진화에 가장 가까워지는 카드 (고르면 바로 진화하는 카드 먼저) 하나가 반짝반짝 빛남 (RecommendGlow)
+    RecommendGlow recommend;
+
+    void ShowRecommend(int[] ids)
+    {
+        int best = -1;
+        float bestScore = 0f;
+        for (int slot = 0; slot < 3; slot++)
+        {
+            if (ids[slot] == SupplyId) continue;
+            float s = EvoProgressAfter(ids[slot]);
+            if (s > bestScore) { bestScore = s; best = slot; }
+        }
+        if (recommend == null) recommend = gameObject.AddComponent<RecommendGlow>();
+        recommend.Show(best >= 0 ? CardOf(best) as RectTransform : null, bestScore >= 1f);
     }
 
     EvoRow BuildEvoRow(Transform card)

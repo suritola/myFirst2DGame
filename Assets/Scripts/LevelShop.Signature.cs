@@ -319,8 +319,9 @@ public partial class LevelShop
         }
     }
 
-    // 레벨업 카드 뽑기 가중치: 이 카드가 재료인 진화가 가까울수록 소폭 올라감
+    // 레벨업 카드 뽑기 가중치: 이 카드가 재료인 진화가 가까울수록 올라감
     // 진행도 = 재료 단계 합 / 최대 단계 합 (아직 시작하지 않은 조합은 0), 가중치 1 + 0.8 × 진행도 (최대 1.8배)
+    // 2.1.6: 진행 중인 진화의 재료는 거기에 1.4배 더 (진화에 가까운 스킬이 40% 더 자주 나옴, 최대 2.52배)
     float DrawWeight(int id)
     {
         float best = 0f;
@@ -336,7 +337,29 @@ public partial class LevelShop
             }
             if (need > 0) best = Mathf.Max(best, have / (float)need);
         }
-        return 1f + 0.8f * best;
+        return best > 0f ? (1f + 0.8f * best) * EvoDrawBoost : 1f;
+    }
+
+    const float EvoDrawBoost = 1.4f;
+
+    // 이 카드를 고른 뒤의 진화 진행도 (가장 가까운 진화 기준, 고르면 바로 진화하면 1을 더함 · 진화 재료가 아니면 0)
+    float EvoProgressAfter(int id)
+    {
+        float best = 0f;
+        foreach (SkillEvo e in MyEvos)
+        {
+            if (evolved.Contains(e.key) || System.Array.IndexOf(e.parts, id) < 0) continue;
+            int have = 0, need = 0;
+            foreach (int p in e.parts)
+            {
+                int max = MaxLevelOf(CharacterData.Selected, p);
+                need += max;
+                have += Mathf.Min(LevelOf(p) + (p == id ? 1 : 0), max);
+            }
+            if (need <= 0) continue;
+            best = Mathf.Max(best, have / (float)need + (have >= need ? 1f : 0f));
+        }
+        return best;
     }
 
     // 업적: 첫 스킬 진화 · 한 판에 3번 · 서로 다른 진화 15종 (캐릭터별 진화를 이 PC에 누적)

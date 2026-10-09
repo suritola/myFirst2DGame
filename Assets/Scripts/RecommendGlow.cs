@@ -1,0 +1,190 @@
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+// 레벨업 창의 추천 카드 (2.1.6~, LevelShop.ShowRecommend): 진화에 가장 가까워지는 카드 하나를 반짝반짝 빛나게
+//   카드 뒤: 숨 쉬듯 커졌다 작아지는 금빛 후광 + 색이 금 → 흰 → 보라로 도는 굵은 테두리
+//   카드 위: 테두리를 따라 튀는 별빛 · 「★ 추천」 (고르면 바로 진화하면 「추천 · 바로 진화!」)
+// 레벨업 창은 시간이 멈춘 채라 unscaledTime 으로 움직임 · 판정이나 클릭은 막지 않음 (raycastTarget 끔)
+public class RecommendGlow : MonoBehaviour
+{
+    static readonly Color Gold = new Color(1f, 0.84f, 0.35f);
+    static readonly Color Violet = new Color(0.82f, 0.55f, 1f);
+    const int SparkCount = 10;
+    const float Pad = 14f;          // 테두리가 카드 밖으로 나오는 두께
+
+    RectTransform target;
+    RectTransform halo, rim, sparkRoot;
+    Image haloImg, rimImg;
+    TextMeshProUGUI badge;
+    Image pill;
+    readonly Image[] sparks = new Image[SparkCount];
+    readonly float[] sparkStart = new float[SparkCount];
+    readonly float[] sparkLife = new float[SparkCount];
+
+    public void Show(RectTransform card, bool evolvesNow)
+    {
+        target = card;
+        bool on = card != null && card.parent != null;
+        if (!on) { SetActive(false); return; }
+        Build(card);
+        badge.text = "★ " + Loc.T(evolvesNow ? "추천 · 바로 진화!" : "추천");
+        // 카드 뒤에 그리려고 버튼(카드)들 가운데 가장 앞 형제 자리로 (옆 카드를 덮지 않게 · 배치는 ignoreLayout 으로 그대로)
+        halo.SetAsLastSibling();
+        rim.SetAsLastSibling();
+        int at = card.GetSiblingIndex();
+        foreach (Transform c in card.parent)
+            if (c != halo && c != rim && c.GetComponent<Button>() != null) at = Mathf.Min(at, c.GetSiblingIndex());
+        halo.SetSiblingIndex(at);
+        rim.SetSiblingIndex(at + 1);
+        sparkRoot.SetAsLastSibling();
+        pill.transform.SetAsLastSibling();
+        for (int i = 0; i < SparkCount; i++) sparkStart[i] = Time.unscaledTime - Random.value * 0.8f;
+        SetActive(true);
+        Follow();
+    }
+
+    void OnDisable() => SetActive(false);
+
+    void SetActive(bool on)
+    {
+        if (halo != null) halo.gameObject.SetActive(on);
+        if (rim != null) rim.gameObject.SetActive(on);
+        if (sparkRoot != null) sparkRoot.gameObject.SetActive(on);
+    }
+
+    void Build(RectTransform card)
+    {
+        Transform parent = card.parent;
+        if (halo == null || halo.parent != parent)
+        {
+            if (halo != null) Destroy(halo.gameObject);
+            if (rim != null) Destroy(rim.gameObject);
+            haloImg = MakeImage("RecommendHalo", parent, SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : UIKit.ButtonSprite, false);
+            halo = haloImg.rectTransform;
+            UIKit.EnsureStyle();
+            rimImg = MakeImage("RecommendRim", parent, UIKit.ButtonSprite, true);
+            rim = rimImg.rectTransform;
+        }
+        if (sparkRoot == null || sparkRoot.parent != card)
+        {
+            if (sparkRoot != null) Destroy(sparkRoot.gameObject);
+            GameObject go = new GameObject("RecommendSparks", typeof(RectTransform));
+            sparkRoot = go.GetComponent<RectTransform>();
+            sparkRoot.SetParent(card, false);
+            sparkRoot.anchorMin = Vector2.zero;
+            sparkRoot.anchorMax = Vector2.one;
+            sparkRoot.offsetMin = sparkRoot.offsetMax = Vector2.zero;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            Sprite star = SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : UIKit.ButtonSprite;
+            for (int i = 0; i < SparkCount; i++)
+            {
+                sparks[i] = MakeImage("Spark", sparkRoot, star, false);
+                sparks[i].rectTransform.anchorMin = sparks[i].rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            }
+            // 「★ 추천」: 카드 아래 테두리에 걸친 알약 (카드 아래의 안내 문구 · 건너뛰기 버튼과 겹치지 않게)
+            pill = MakeImage("RecommendPill", sparkRoot, UIKit.ButtonSprite, true);
+            RectTransform pr = pill.rectTransform;
+            pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
+            pr.pivot = new Vector2(0.5f, 0.5f);
+            pr.anchoredPosition = Vector2.zero;
+            pr.sizeDelta = new Vector2(300f, 44f);
+            badge = new GameObject("RecommendBadge", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+            RectTransform br = badge.rectTransform;
+            br.SetParent(pr, false);
+            br.anchorMin = Vector2.zero;
+            br.anchorMax = Vector2.one;
+            br.offsetMin = new Vector2(8f, 2f);
+            br.offsetMax = new Vector2(-8f, -2f);
+            badge.enableAutoSizing = true;
+            badge.fontSizeMin = 16f;
+            badge.fontSizeMax = 26f;
+            if (UIKit.Font != null) badge.font = UIKit.Font;
+            if (UIKit.FontMaterial != null) badge.fontSharedMaterial = UIKit.FontMaterial;
+            badge.alignment = TextAlignmentOptions.Center;
+            badge.enableWordWrapping = false;
+            badge.outlineWidth = 0.3f;
+            badge.outlineColor = new Color32(40, 20, 0, 255);
+            badge.raycastTarget = false;
+        }
+    }
+
+    static Image MakeImage(string name, Transform parent, Sprite sprite, bool sliced)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        go.GetComponent<LayoutElement>().ignoreLayout = true;
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(parent, false);
+        Image img = go.GetComponent<Image>();
+        img.sprite = sprite;
+        img.type = sliced ? Image.Type.Sliced : Image.Type.Simple;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    void LateUpdate()
+    {
+        if (target == null || halo == null || !halo.gameObject.activeSelf) return;
+        if (!target.gameObject.activeInHierarchy) { SetActive(false); return; }
+        Follow();
+    }
+
+    // 카드 자리 · 크기 · 확대(마우스 올림)를 따라가며 빛남
+    void Follow()
+    {
+        float t = Time.unscaledTime;
+        Vector2 size = Vector2.Scale(target.rect.size, (Vector2)target.localScale);
+        Vector3 center = target.TransformPoint(target.rect.center);
+        float breathe = 0.5f + 0.5f * Mathf.Sin(t * 4.2f);
+
+        halo.anchorMin = halo.anchorMax = target.anchorMin == target.anchorMax ? target.anchorMin : new Vector2(0.5f, 0.5f);
+        halo.position = center;
+        halo.sizeDelta = size * (1.35f + 0.1f * breathe);
+        haloImg.color = new Color(Gold.r, Gold.g, Gold.b, 0.45f + 0.35f * breathe);
+
+        rim.anchorMin = rim.anchorMax = halo.anchorMin;
+        rim.position = center;
+        rim.sizeDelta = size + Vector2.one * (Pad * 2f + 4f * breathe);
+        float k = Mathf.Repeat(t * 0.6f, 1f) * 3f;      // 금 → 흰 → 보라 → 금
+        Color c = k < 1f ? Color.Lerp(Gold, Color.white, k) : k < 2f ? Color.Lerp(Color.white, Violet, k - 1f) : Color.Lerp(Violet, Gold, k - 2f);
+        rimImg.color = new Color(c.r, c.g, c.b, 0.9f);
+
+        badge.color = Color.Lerp(Gold, Color.white, breathe * 0.6f);
+        pill.color = new Color(0.22f, 0.12f, 0.32f, 0.95f);
+        pill.rectTransform.localScale = Vector3.one * (1f + 0.06f * breathe);
+
+        // 별빛: 테두리 위 아무 데서나 솟았다 사라짐
+        Vector2 half = target.rect.size * 0.5f;
+        for (int i = 0; i < SparkCount; i++)
+        {
+            float age = t - sparkStart[i];
+            if (sparkLife[i] <= 0f || age > sparkLife[i])
+            {
+                sparkStart[i] = t;
+                sparkLife[i] = Random.Range(0.45f, 0.9f);
+                age = 0f;
+                sparks[i].rectTransform.anchoredPosition = EdgePoint(half) + target.rect.center;
+                sparks[i].rectTransform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 90f));
+            }
+            float u = age / sparkLife[i];
+            float pop = Mathf.Sin(u * Mathf.PI);
+            float s = Mathf.Lerp(10f, 46f, pop);
+            sparks[i].rectTransform.sizeDelta = new Vector2(s, s);
+            Color sc = i % 3 == 0 ? Violet : i % 3 == 1 ? Gold : Color.white;
+            sparks[i].color = new Color(sc.r, sc.g, sc.b, pop);
+        }
+    }
+
+    static Vector2 EdgePoint(Vector2 half)
+    {
+        float perim = 4f * (half.x + half.y);
+        float d = Random.value * perim;
+        if (d < 2f * half.x) return new Vector2(-half.x + d, half.y);
+        d -= 2f * half.x;
+        if (d < 2f * half.y) return new Vector2(half.x, half.y - d);
+        d -= 2f * half.y;
+        if (d < 2f * half.x) return new Vector2(half.x - d, -half.y);
+        d -= 2f * half.x;
+        return new Vector2(-half.x, -half.y + d);
+    }
+}

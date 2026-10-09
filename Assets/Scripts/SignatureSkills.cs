@@ -82,23 +82,40 @@ public partial class SignatureSkills : MonoBehaviour
     {
         Color.RGBToHSV(c, out float h, out float s, out float v);
         if (s < 0.12f) return new Color(1f, 1f, 1f, a);
-        Color o = Color.HSVToRGB(h, Mathf.Min(1f, s * 1.35f + 0.15f), 1f);
+        Color o = Color.HSVToRGB(h, Mathf.Min(1f, s * 1.6f + 0.25f), 1f);     // 2.1.6: 더 진하게
         o.a = a;
         return o;
     }
     // 진화했으면 제 색을 진하게, 아니면 원래 색
     Color Tint(string key, Color c) => Big(key) ? Vivid(c, Mathf.Max(c.a, 0.8f)) : c;
 
-    // 진화한 스킬이 터질 때 덧붙이는 장식: 그 스킬 색의 충격파 · 반짝임 · 퍼지는 고리 (진화가 아니면 아무것도 안 함)
+    // 반대편 색 (대비색): 같은 밝기로 색상환 반대쪽 · 흰색 계열이면 금색
+    static Color Complement(Color c, float a = 1f)
+    {
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if (s < 0.12f) return new Color(EvoGold.r, EvoGold.g, EvoGold.b, a);
+        Color o = Color.HSVToRGB(Mathf.Repeat(h + 0.5f, 1f), Mathf.Min(1f, s + 0.2f), 1f);
+        o.a = a;
+        return o;
+    }
+
+    // 진화한 스킬이 터질 때 덧붙이는 장식 (진화가 아니면 아무것도 안 함 · 판정은 그대로, 보이기만 함)
+    // 2.1.6: 누가 봐도 진화로 보이게 — 크게(1.4배) · 그 스킬 색 + 대비색 + 금색 세 겹 고리, 가운데 흰 섬광, 사방으로 튀는 별빛
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
-        Color v = Vivid(c, 0.9f);
-        Fx.Spawn("fx_shock", p, size * 1.8f, v, 20f);
-        Fx.Spawn("fx_sparkle", p, size * 0.9f, Color.Lerp(Color.white, v, 0.45f), 22f);
-        Fx.Spawn("fx_soulburst", p, size * 0.8f, new Color(c.r, c.g, c.b, 0.85f), 20f);
-        ShockRing.Spawn(p, 0.2f, size * 1.2f, 0.35f, v, 0.22f);
-        ShockRing.Spawn(p, 0.1f, size * 0.7f, 0.25f, Color.Lerp(Color.white, v, 0.3f), 0.12f);
+        Color v = Vivid(c, 0.95f), comp = Complement(v, 0.9f);
+        Color gold = new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.95f);
+        Fx.Spawn("fx_shock", p, size * 2.6f, v, 20f);
+        Fx.Spawn("fx_shock", p, size * 1.6f, comp, 24f);
+        Fx.Spawn("fx_soulburst", p, size * 1.2f, new Color(v.r, v.g, v.b, 0.9f), 20f);
+        Fx.Spawn("fx_sparkle", p, size * 1.4f, Color.Lerp(Color.white, v, 0.3f), 22f);
+        for (int i = 0; i < 3; i++)
+            Fx.Spawn("fx_sparkle", p + (Vector3)(Random.insideUnitCircle * size * 0.9f), size * 0.55f, i == 1 ? comp : gold, 24f);
+        ShockRing.Spawn(p, 0.2f, size * 1.75f, 0.45f, v, 0.32f);
+        ShockRing.Spawn(p, 0.15f, size * 1.25f, 0.35f, comp, 0.24f);
+        ShockRing.Spawn(p, 0.05f, size * 0.85f, 0.25f, gold, 0.16f);
+        if (Hostile.Glow != null) FadeSprite.Spawn("EvoFlash", Hostile.Glow, p, size * 0.9f / 8f, new Color(1f, 1f, 1f, 0.9f), "Effect", 30, 0.14f);
     }
     bool E(string key) => shop != null && shop.IsEvolved(key);
     // 단계별 값: 1단계 a, 단계마다 + step (0단계면 0)
