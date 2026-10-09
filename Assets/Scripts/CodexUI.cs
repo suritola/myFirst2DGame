@@ -306,7 +306,7 @@ public static class CodexUI
             {
                 if (!SpecialAbilities.IsKit(id) || !SpecialAbilities.KitIsWeapon(id)) continue;
                 Card(Resources.Load<Sprite>("Icons/ability_" + id), tint, Loc.T(CharacterKit.FormAugName(id)), who + " \u00B7 " + Loc.T("1차 진화"),
-                     Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기") + " \u00B7 " + Loc.T(SpecialAbilities.KitUltName(id))));
+                     Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기에 덧붙음") + " \u00B7 " + Loc.T(SpecialAbilities.KitUltName(id))));
             }
             foreach (int a in CharacterKit.AugmentsFor(c))
                 Card(Resources.Load<Sprite>("Icons/ability_" + (a - CharacterKit.AugFirst + 92)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
@@ -401,7 +401,7 @@ public static class CodexUI
                          + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + " " + Loc.T("전용");
             string body = Loc.T(SpecialAbilities.KitDesc(id)).Replace("\n", " ");
             if (kind == SpecialKind.Weapon)
-                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + Loc.T(SpecialAbilities.KitUltName(id)) + " (" + Loc.T("꾹 눌러 조준") + ")") + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
+                body += "\n" + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + Loc.T(SpecialAbilities.KitUltName(id))) + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
             Card(Resources.Load<Sprite>("Icons/ability_" + id), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
         }
     }

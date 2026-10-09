@@ -135,7 +135,8 @@ public partial class SpecialAbilities
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
         // 기본 공격에 붙는 능력 + 바뀌는 필살기
         string ult = "\n<color=#9fd8ff>" + Loc.T("필살기") + " · " + UltName(id) + "</color>  ";
-        if (!Gunner) return Loc.T(CharacterKit.FormDesc(id)) + ult + Loc.T(KitUltDesc(id));
+        // 2.1.8~ 거너가 아니면 우클릭은 원래 필살기 그대로, 진화 무기의 궁극기는 거기에 덧붙음 (세기 50%)
+        if (!Gunner) return Loc.T(CharacterKit.FormDesc(id)) + "\n<color=#9fd8ff>" + Loc.T("필살기에 덧붙음") + " · " + UltName(id) + "</color>  " + Loc.T(KitUltDesc(id));
         bool maxed = tier >= 2 && id == gunEvo1;
         string keep = tier >= 2 && !maxed && gunEvo1 >= 0 ? "\n<color=#A89C86>" + Loc.T(GunAugName(gunEvo1, false)) + Loc.T(" 능력도 그대로") + "</color>" : "";
         return Loc.T(GunAugDesc(id, maxed)) + keep + ult + Loc.T(VolleyDesc(id));

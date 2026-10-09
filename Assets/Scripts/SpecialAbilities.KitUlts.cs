@@ -40,7 +40,7 @@ public partial class SpecialAbilities
         return "";
     }
 
-    // 전용 무기를 들고 있거나 그 무기로 진화했으면 우클릭이 그 무기의 궁극기
+    // 전용 무기를 들고 있거나 그 무기로 진화했으면 원래 필살기를 쓸 때 그 무기의 궁극기가 덧붙음 (CharacterKit.KitUltAdd)
     public bool KitWeaponUltActive => UltActive && IsKitWeapon(UltId);
 
     // 우클릭을 누르고 있는 동안 보여 줄 궁극기 범위 (떼면 발동). CharacterKit 이 그림
@@ -68,8 +68,8 @@ public partial class SpecialAbilities
         }
     }
 
-    // mul: 궁극기 세기 배율 (연금술사는 대폭발 플라스크에 덧붙는 효과라 절반)
-    public void KitWeaponUlt(float mul = 1f)
+    // mul: 궁극기 세기 배율 (2.1.8~ 원래 필살기에 덧붙는 효과라 절반) · dash: 도적은 출혈 돌진으로 파고든 뒤 (덧붙일 때는 이미 돌진했으므로 끔)
+    public void KitWeaponUlt(float mul = 1f, bool dash = true)
     {
         int id = UltId;
         fx.Play("levelup", 0.5f, 1.3f);
@@ -77,7 +77,7 @@ public partial class SpecialAbilities
         // 캐릭터 우클릭 강화(영혼 트리 · 상점)도 진화한 궁극기에 그대로
         float D = Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f) * mul;
         // 도적: 출혈 돌진으로 파고든 뒤 궁극기 (그림자 숙련이 계속 쓸모 있게)
-        if (CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
+        if (dash && CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
         else StartCoroutine(KitUltRoutine(id, D));
     }
 

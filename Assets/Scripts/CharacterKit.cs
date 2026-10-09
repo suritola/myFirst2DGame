@@ -31,7 +31,7 @@ public partial class CharacterKit : MonoBehaviour
     public bool Busy => charging || Dashing;
     // 우클릭을 모으는 중 (고유 스킬: 강철 의지 · 유리 비 · 굳건한 자세)
     // 무기 진화 뒤에는 진화 무기 필살기를 꾹 눌러 조준하는 동안도 같게 셈 (회전 베기 · 대폭발이 없어져도 카드가 쓸모 있게)
-    public bool Charging => charging || (ultAiming && ultAimKit);
+    public bool Charging => charging;
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     public float MoveMul => 1f;
     public string WeaponName => Loc.T(def.weapon);
@@ -547,34 +547,10 @@ public partial class CharacterKit : MonoBehaviour
     public void UpdateUlt(SkillGauge gauge)
     {
         bool full = gauge != null && gauge.IsFull();
-        // 전용 특수 무기를 들고 있으면 우클릭은 그 무기의 궁극기: 누르고 있는 동안 범위를 보여 주고 떼면 발동
-        // 연금술사는 무기 진화 뒤에도 우클릭은 대폭발 플라스크 그대로 (진화 무기 궁극기는 던질 때 덧붙는 효과, UpdateCharged)
-        bool kitUlt = Special != null && Special.KitWeaponUltActive && Id != CharacterId.Alchemist;
-        if (ultAiming && (ultAimKit != kitUlt || Time.timeScale == 0f)) CancelUltAim();       // 무기를 바꿨거나 멈춤
-        if (!charging && !Dashing && kitUlt)
-        {
-            // 도적 그림자 숙련 4단계: 진화한 뒤(전용 무기 궁극기)에도 돌진 뒤 3초 안에는 게이지 없이 한 번 더 돌진
-            // (예전엔 이 길에 연속 돌진이 없어서 무기 진화 뒤로는 작동하지 않았음)
-            bool rogueRecast = Id == CharacterId.Rogue && Time.time < recastUntil;
-            if (GameInput.UltDown && (full || rogueRecast)) { ultAiming = true; ultAimKit = true; }
-            if (!ultAiming) return;
-            DrawUltAim(Id == CharacterId.Rogue, !rogueRecast);
-            if (GameInput.UltHeld && !GameInput.UltUp) return;
-            CancelUltAim();
-            if (rogueRecast)
-            {
-                recastUntil = 0f;
-                StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
-            }
-            else if (full)
-            {
-                Special.KitWeaponUlt();
-                Spend(gauge);
-                KitUltFollowUp();
-                if (RogueMastery >= 4) recastUntil = Time.time + 3f;
-            }
-            return;
-        }
+        // 2.1.8: 무기를 진화해도 모든 캐릭터의 우클릭은 원래 필살기 그대로 (회전 베기 · 출혈 돌진 · 화살비 · 대폭발)
+        // 진화 무기의 궁극기는 필살기를 쓸 때 덧붙는 효과 (KitUltAdd, 세기 KitUltAddMul) → 원래 우클릭에 붙는 카드 · 고유 스킬이 모두 그대로 터짐
+        // (예전엔 검사 · 도적 · 궁수는 우클릭이 진화 무기 궁극기로 바뀌어, 회전 베기 · 화살비에만 붙는 스킬 일부가 빠졌음)
+        if (ultAiming && Time.timeScale == 0f) CancelUltAim();       // 멈춤
         switch (Id)
         {
             case CharacterId.Swordsman:
@@ -584,7 +560,7 @@ public partial class CharacterKit : MonoBehaviour
             case CharacterId.Rogue:
                 // 출혈 돌진: 누르고 있는 동안 돌진 경로를 보여 주고 떼면 돌진
                 bool recast = Time.time < recastUntil;
-                if (GameInput.UltDown && !Dashing && (full || recast)) { ultAiming = true; ultAimKit = false; }
+                if (GameInput.UltDown && !Dashing && (full || recast)) ultAiming = true;
                 if (!ultAiming) break;
                 DrawUltAim(true, false);
                 if (GameInput.UltHeld && !GameInput.UltUp) break;
@@ -596,6 +572,7 @@ public partial class CharacterKit : MonoBehaviour
                     recastUntil = 0f;
                     StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
                     if (recast) break;
+                    KitUltAdd(0.25f);           // 게이지로 돌진할 때만 (공짜 연속 돌진에는 안 붙음) · 돌진 끝 무렵에 터지게
                     Spend(gauge);
                     if (RogueMastery >= 4) recastUntil = Time.time + 3f;
                 }
@@ -606,34 +583,22 @@ public partial class CharacterKit : MonoBehaviour
         }
     }
 
-    // 진화 무기의 우클릭 필살기를 쓸 때도 원래 우클릭(회전 베기 · 화살비 · 대폭발)에 붙는 카드 · 고유 스킬이 함께 터짐
-    // (예전엔 무기 진화 뒤 칼바람 · 잔향 베기 · 가시 덤불 · 유성 화살 · 파편 플라스크 등이 아무 일도 안 했음)
-    void KitUltFollowUp()
+    // 진화 무기의 궁극기를 원래 필살기에 덧붙임 (2.1.8~ 모든 캐릭터) · delay: 필살기가 닿을 무렵 터지게 (도적은 돌진 끝 무렵)
+    void KitUltAdd(float delay)
     {
-        Vector3 me = transform.position;
-        switch (Id)
-        {
-            case CharacterId.Swordsman:
-                {
-                    float radius = 5f * UltMul;
-                    if (card[3] > 0) StartCoroutine(BladeStorm(1f + card[3], radius * 0.7f));       // 칼바람
-                    SignatureSkills.Spin(me, radius, Damage * 4f * UltMul, 1f);                    // 회전 가속 · 잔향 베기 · 폭풍의 눈
-                    break;
-                }
-            case CharacterId.Archer:
-                {
-                    Vector3 at = ClampRange(me, Mouse, 14f);
-                    float radius = 4f * UltMul;
-                    if (card[3] > 0) StartCoroutine(Thorns(at, radius, 2f + card[3]));            // 가시 덤불
-                    SignatureSkills.Rain(at, radius);                                             // 높은 자리 · 유성 화살
-                    break;
-                }
-            // 연금술사: 무기 진화 뒤에도 대폭발 플라스크를 그대로 던지므로 이 길을 타지 않음 (UpdateCharged)
-        }
+        if (Special == null || !Special.KitWeaponUltActive) return;
+        if (delay <= 0f) { Special.KitWeaponUlt(KitUltAddMul, false); return; }
+        StartCoroutine(KitUltLater(delay));
+    }
+
+    IEnumerator KitUltLater(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (Special != null && Special.KitWeaponUltActive) Special.KitWeaponUlt(KitUltAddMul, false);
     }
 
     // 우클릭 조준 (전용 무기 궁극기 · 도적 출혈 돌진): 누르고 있는 동안 범위 · 경로를 보여 주고 떼면 발동
-    bool ultAiming, ultAimKit;
+    bool ultAiming;
     LineRenderer ultAimLine, ultAimRing;
 
     void CancelUltAim()
@@ -714,7 +679,7 @@ public partial class CharacterKit : MonoBehaviour
         player.RaiseUltUsed();
     }
 
-    // 연금술사 무기 진화 뒤 대폭발 플라스크에 덧붙는 진화 무기 궁극기 세기 (둘이 다 터지므로 궁극기는 절반)
+    // 무기 진화 뒤 원래 필살기에 덧붙는 진화 무기 궁극기 세기 (둘이 다 터지므로 궁극기는 절반)
     const float KitUltAddMul = 0.5f;
 
     void UpdateCharged(SkillGauge gauge, bool full)
@@ -754,6 +719,7 @@ public partial class CharacterKit : MonoBehaviour
             Play("slash", 1f, 0.8f);
             Play("whoosh", 0.8f, 0.6f);
             if (card[3] > 0) StartCoroutine(BladeStorm(1f + card[3], radius * 0.7f));
+            KitUltAdd(0f);
         }
         else
         {
@@ -769,8 +735,7 @@ public partial class CharacterKit : MonoBehaviour
                 Play("fizz", 0.7f, 0.8f);
                 if (card[3] > 0) Shards(p, radius, 2 + 2 * card[3]);
             });
-            // 무기 진화 뒤: 대폭발 플라스크는 그대로 던지고, 진화 무기의 궁극기가 절반 세기로 덧붙음
-            if (Special != null && Special.KitWeaponUltActive) Special.KitWeaponUlt(KitUltAddMul);
+            KitUltAdd(0f);          // 무기 진화 뒤: 진화 무기의 궁극기가 절반 세기로 덧붙음
         }
         Spend(gauge);
     }
@@ -909,7 +874,8 @@ public partial class CharacterKit : MonoBehaviour
         Play("whoosh", 0.8f, 0.9f);
         // 몸집이 큰 보스는 화살이 거의 다 맞아 피해가 너무 컸음: 한 번의 화살비에 보스 하나당 6발까지만
         Dictionary<Collider2D, int> bossHits = new Dictionary<Collider2D, int>();
-        for (int i = 0; i < Mathf.RoundToInt(20 * UltMul); i++)
+        // 2.1.8: 필살기 강화(UltMul)가 화살 수 대신 한 발 피해에 붙음 (보스는 6발 제한이라 화살 수가 늘어도 보스 피해는 그대로였음)
+        for (int i = 0; i < 20; i++)
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Spawn("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
@@ -923,7 +889,7 @@ public partial class CharacterKit : MonoBehaviour
                     if (n >= RainBossHits) continue;
                     bossHits[c] = n + 1;
                 }
-                Specials.Damage(c.gameObject, Damage * 2.5f, (c.transform.position - at).normalized, 0.5f);
+                Specials.Damage(c.gameObject, Damage * 2.5f * UltMul, (c.transform.position - at).normalized, 0.5f);
             }
             if (i % 4 == 0) Play("arrowfly", 0.35f, Random.Range(0.8f, 1.2f));
             yield return new WaitForSeconds(0.06f);
@@ -955,6 +921,7 @@ public partial class CharacterKit : MonoBehaviour
         aiming = false;
         aimRing.enabled = false;
         StartCoroutine(ArrowRain(at));
+        KitUltAdd(0f);
         Spend(gauge);
     }
 
