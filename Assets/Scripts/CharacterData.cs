@@ -25,7 +25,7 @@ public static class CharacterData
     {
         new CharacterDef {
             name = "거너", title = "마지막 총잡이", body = null, held = "pistol",
-            description = "리볼버와 여러 특수 총기를 다루는 총잡이. 모든 캐릭터의 기준.",
+            description = "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "타겟팅 필살기", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
             damage = 1.05f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },

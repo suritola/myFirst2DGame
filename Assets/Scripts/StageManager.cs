@@ -20,7 +20,7 @@ public class StageManager : MonoBehaviour
     public GameObject portal;               // 보스를 잡으면 켜지는 신전 문
     public Color hellBackground = new Color(0.12f, 0.03f, 0.03f);
     public Vector2 stage2PlayerStart = new Vector2(0.5f, 0f);
-    public GameObject meadowMap;            // 3장 초원
+    public GameObject meadowMap;            // 초원 (스테이지 2, 2.1.2~ 1장)
     public Color meadowBackground = new Color(0.18f, 0.32f, 0.16f);
     // 무한 모드 불타는 사막 (지옥 맵을 복제해 만듦)
     public Color desertBackground = new Color(0.24f, 0.13f, 0.06f);

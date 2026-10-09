@@ -56,7 +56,7 @@ public static class Chapters
     static readonly float[] EaseHp = { 0.5f, 0.9f, 1f, 1f };
     static readonly float[] EaseHurt = { 0.5f, 0.9f, 1f, 1f };
     static readonly float[] EaseBoss = { 0.65f, 0.95f, 1f, 1f };
-    static readonly float[] EaseReward = { 1.2f, 1.05f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
+    static readonly float[] EaseReward = { 1.1f, 1.05f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
     static readonly float[] EaseSpawn = { 1.7f, 1.1f, 1f, 1f };     // 적이 나오는 간격 배율 (클수록 드묾)
     static readonly float[] EaseAlive = { 0.55f, 0.9f, 1f, 1f };     // 한 화면 최대 적 수 배율
     static readonly float[] EaseSpeed = { 0.8f, 0.95f, 1f, 1f };

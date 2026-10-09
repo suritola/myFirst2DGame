@@ -4,7 +4,7 @@ using UnityEngine;
 
 // 보스 스킬: 스킬 3개를 번갈아 쓰고, 체력이 절반 아래면 특수 스킬도 씀
 // 모든 공격은 경고를 먼저 보여줘서 움직이면 피할 수 있음
-// kind 0 = 리치 왕 (1장), 1 = 지옥의 군주 (2장), 2 = 킹 슬라임 (3장), 3 = 거울의 군주 (4장 · 2.1.1)
+// kind 0 = 리치 왕 (2장 지하 묘역), 1 = 지옥의 군주 (3장 불타는 지옥), 2 = 킹 슬라임 (1장 초원), 3 = 거울의 군주 (4장 · 2.1.1) — 2.1.2~ 장 순서 (Chapters)
 public class BossSkills : MonoBehaviour
 {
     public int kind;
@@ -115,6 +115,15 @@ public class BossSkills : MonoBehaviour
     // ================================================================= 거울의 군주 (4장 · 2.1.1)
     static readonly Color Mirror = new Color(0.78f, 0.9f, 1f, 0.95f);
 
+    // 거울의 군주의 모든 공격 한 대는 최대 체력의 MaxHitShare 를 넘지 않음 (2.1.8, 흉내 공격과 같은 규칙 · 즉사 없음)
+    float Capped(float raw)
+    {
+        PlayerController pl = Hostile.Player;
+        if (pl == null) return raw;
+        float scale = Mathf.Max(0.01f, GameMode.DamageMul * Chapters.HurtMul);     // TryHit 이 곱하는 배율
+        return Mathf.Min(raw, pl.PlayerMaxHealth * MaxHitShare / scale);
+    }
+
     static Vector2 Rotate(Vector2 v, float deg)
     {
         float a = deg * Mathf.Deg2Rad, c = Mathf.Cos(a), s = Mathf.Sin(a);
@@ -143,12 +152,12 @@ public class BossSkills : MonoBehaviour
                         if (!Alive) yield break;
                         transform.position = at;
                         Fx.Spawn("fx_slash", at, 8f, new Color(0.85f, 0.95f, 1f), 30f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 14);
-                        Hostile.HitCircle(at, 3.6f, 22f * Power);
+                        Hostile.HitCircle(at, 3.6f, Capped(22f * Power));
                         Hostile.Play("whoosh", 0.7f, 0.8f);
                         break;
                     }
                 case CharacterId.Rogue:
-                    for (int i = -3; i <= 3; i++) Hostile.Shoot(c, Rotate(d, i * 12f), 12f, 14f * Power, 0.5f, Mirror, 1.3f, 3f);
+                    for (int i = -3; i <= 3; i++) Hostile.Shoot(c, Rotate(d, i * 12f), 12f, Capped(14f * Power), 0.5f, Mirror, 1.3f, 3f);
                     Hostile.Play("whoosh", 0.5f, 1.4f);
                     yield return new WaitForSeconds(0.55f);
                     break;
@@ -157,7 +166,7 @@ public class BossSkills : MonoBehaviour
                         Hostile.Line(c, c + (Vector3)(d * 30f), 1.2f, 0.65f, Mirror);
                         yield return new WaitForSeconds(0.65f);
                         if (!Alive) yield break;
-                        Hostile.Shoot(transform.position, d, 28f, 24f * Power, 0.7f, Mirror, 2f, 2f);
+                        Hostile.Shoot(transform.position, d, 28f, Capped(24f * Power), 0.7f, Mirror, 2f, 2f);
                         Hostile.Play("zap", 0.5f, 1.3f);
                         yield return new WaitForSeconds(0.2f);
                         break;
@@ -169,15 +178,15 @@ public class BossSkills : MonoBehaviour
                         yield return new WaitForSeconds(0.8f);
                         if (!Alive) yield break;
                         Fx.Spawn("fx_explosion", at, 5.5f, Mirror, 18f);
-                        Hostile.HitCircle(at, 2.6f, 20f * Power);
-                        HazardZone.Spawn(at, 2.2f, 3f, 6f * Power, new Color(0.7f, 0.85f, 1f, 0.7f), "fx_puddle", 0.7f);
+                        Hostile.HitCircle(at, 2.6f, Capped(20f * Power));
+                        HazardZone.Spawn(at, 2.2f, 3f, Capped(6f * Power), new Color(0.7f, 0.85f, 1f, 0.7f), "fx_puddle", 0.7f);
                         Hostile.Play("boom", 0.5f, 1.2f);
                         break;
                     }
                 default:    // 거너: 세 발 연사
                     for (int i = 0; i < 3 && Alive; i++)
                     {
-                        Hostile.Shoot(transform.position, DirTo(p), 18f, 15f * Power, 0.5f, Mirror, 1.4f, 3f);
+                        Hostile.Shoot(transform.position, DirTo(p), 18f, Capped(15f * Power), 0.5f, Mirror, 1.4f, 3f);
                         Hostile.Play("zap", 0.35f, 1.6f);
                         yield return new WaitForSeconds(0.12f);
                     }
@@ -227,7 +236,7 @@ public class BossSkills : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl == null) break;
             Vector2 d = ((Vector2)(pl.transform.position - from)).normalized;
-            for (int k = -1; k <= 1; k++) Hostile.Shoot(from, Rotate(d, k * 14f), 11f, 15f * Power, 0.5f, Mirror, 1.4f, 3f);
+            for (int k = -1; k <= 1; k++) Hostile.Shoot(from, Rotate(d, k * 14f), 11f, Capped(15f * Power), 0.5f, Mirror, 1.4f, 3f);
         }
         Hostile.Play("zap", 0.5f, 1.2f);
         yield return new WaitForSeconds(2.2f);
@@ -278,7 +287,7 @@ public class BossSkills : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl != null)
                 for (int i = 0; i < 2; i++)
-                    if (Hostile.DistanceToSegment(pl.transform.position, ends[i * 2], ends[i * 2 + 1]) < 1f) { pl.TryHit(24f * Power); break; }
+                    if (Hostile.DistanceToSegment(pl.transform.position, ends[i * 2], ends[i * 2 + 1]) < 1f) { pl.TryHit(Capped(24f * Power)); break; }
             Hostile.Play("zap", 0.7f, 0.8f);
             Hostile.Shake(0.15f);
         }
@@ -295,7 +304,7 @@ public class BossSkills : MonoBehaviour
             for (int i = 0; i < n; i++)
             {
                 float a = (off + i * 360f / n) * Mathf.Deg2Rad;
-                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 7.5f, 14f * Power, 0.5f, Mirror, 1.5f, 4f);
+                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 7.5f, Capped(14f * Power), 0.5f, Mirror, 1.5f, 4f);
             }
             Hostile.Play("shimmer", 0.4f, 1.3f + w * 0.1f);
             yield return new WaitForSeconds(0.55f);
@@ -819,7 +828,7 @@ public class BossSkills : MonoBehaviour
             for (int k = 0; k < 4; k++)
             {
                 float a = (t * 75f * spin + k * 90f) * Mathf.Deg2Rad;
-                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 8f, 13f * Power, 0.45f, Mirror, 1.3f, 4f);
+                Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 8f, Capped(13f * Power), 0.45f, Mirror, 1.3f, 4f);
             }
             if (Mathf.Repeat(t, 0.44f) < 0.11f) Hostile.Play("shimmer", 0.25f, 1.5f);
             yield return new WaitForSeconds(0.11f);
