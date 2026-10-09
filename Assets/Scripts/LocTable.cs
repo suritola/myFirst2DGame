@@ -1239,7 +1239,7 @@ public static partial class LocTable
         { "총알에 맞은 적이 2초 동안 불탑니다.", L("Enemies hit by bullets burn for 2 seconds.", "弾が当たった敵は2秒間燃えます。", "被子弹击中的敌人会燃烧2秒。") },
         { "화상 (초당)", L("Burn (per second)", "火傷 (毎秒)", "灼烧 (每秒)") },
         { "유도 탄두", L("Homing Rounds", "誘導弾頭", "追踪弹头") },
-        { "총알이 날아가며 가까운 적 쪽으로 휩니다.", L("Bullets curve toward nearby enemies in flight.", "弾が飛びながら近くの敵へ曲がります。", "子弹飞行时会弯向附近的敌人。") },
+        { "총알이 마우스로 노린 적 쪽으로 휘어 날아갑니다.", L("Bullets curve toward the enemy you aim at with the mouse.", "弾がマウスで狙った敵の方へ曲がって飛びます。", "子弹会弯向你用鼠标瞄准的敌人。") },
         { "휘는 힘", L("Curve strength", "曲がる強さ", "弯曲力度") },
         { "전기탄", L("Shock Rounds", "電撃弾", "电击弹") },
         { "총알이 적을 맞히면 확률로 번개가 주변 적 둘에게 튑니다.", L("Hits have a chance to arc lightning to two nearby enemies.", "弾が当たると確率で雷が周囲の敵2体に飛びます。", "命中时有几率让闪电跳向附近两个敌人。") },

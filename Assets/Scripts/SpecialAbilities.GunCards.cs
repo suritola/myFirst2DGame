@@ -25,7 +25,12 @@ public partial class SpecialAbilities
         // 유도: 부메랑 낫 · 이미 유도되는 추적탄에는 붙이지 않음
         bool curves = !(WeaponActive && (CurrentWeapon == ScytheId || CurrentWeapon == SeekerId));
         if (!light && curves && gunCard[GunHoming] > 0 && b.GetComponent<Homing>() == null)
-            b.gameObject.AddComponent<Homing>().turnSpeed = 60f + 80f * gunCard[GunHoming];
+        {
+            // 2.1.9: 노린 적으로 향하는 조준 보정 (단계마다 꺾는 힘만 조금씩: 초당 120 · 170 · 220°)
+            Homing h = b.gameObject.AddComponent<Homing>();
+            h.aimAssist = true;
+            h.turnSpeed = 70f + 50f * gunCard[GunHoming];
+        }
         if (boom && b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(1f, 0.6f, 0.2f);
         if (gunCard[GunRicochet] == 0 && gunCard[GunIncendiary] == 0 && gunCard[GunShock] == 0 && !boom) return;
 
