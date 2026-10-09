@@ -412,6 +412,7 @@ public partial class SpecialAbilities : MonoBehaviour
     {
         int id = UltId;            // 진화한 무기의 필살기 (권총을 들고 있어도)
         float dmg = baseDamage * WeaponDamageMul(id) * UltPower(id);
+        if (id != DualId) dmg *= SignatureSkills.SoulUltMul;      // 총알 폭풍은 총알마다 영혼탄이 붙음 (ApplyGunCards)
         Color c = WeaponColor(id);
         fx.FloatText(player.transform.position, VolleyName(id) + "!", c, 6f, 0f);
         fx.Play("pulse", 0.6f, 1.4f);
@@ -508,6 +509,10 @@ public partial class SpecialAbilities : MonoBehaviour
                             b.pene = 9999;
                             b.hitOnce = new HashSet<int>();
                             if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
+                            // 2.2.1: 총알 폭풍에도 총알 카드 · 고유 스킬 (영혼 탄환이면 푸른 영혼탄으로), 덤 총알 · 유도 · 폭발탄은 빼고
+                            SignatureSkills.UltShots = true;
+                            ApplyGunCards(b, true, false);
+                            SignatureSkills.UltShots = false;
                             Fx.Spawn("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }
                         angle += 22f;

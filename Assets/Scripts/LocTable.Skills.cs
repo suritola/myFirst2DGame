@@ -121,7 +121,7 @@ public static partial class LocTable
         A("쉬지 않고 쏠수록 총열이 달아올라 총알이 아파집니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
         A("최대 피해", "Max damage", "最大ダメージ", "最大伤害");
         A("영혼 탄환", "Soul Rounds", "魂の弾丸", "灵魂弹");
-        A("필살기 게이지가 가득 찬 동안 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다.", "While your ultimate gauge is full, bullets become soul rounds that hit harder and pierce one more enemy.", "必殺技ゲージが満タンの間、弾が魂弾になり、より痛く敵をもう1体貫きます。", "必杀槽满时子弹变为灵魂弹，伤害更高并多穿透一名敌人。");
+        A("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "While your ultimate gauge is full, and for shots fired by your ultimate, bullets become soul rounds that hit harder and pierce one more enemy. (Non-bullet ultimates just deal more damage)", "必殺技ゲージが満タンの間と必殺技で撃った弾が魂弾になり、より痛く敵をもう1体貫きます。（弾でない必殺技はダメージのみ増加）", "必杀槽满时以及必杀技射出的子弹会变为灵魂弹，伤害更高并多穿透一名敌人。（非子弹类必杀技仅提升伤害）");
         A("영혼탄 피해", "Soul round damage", "魂弾ダメージ", "灵魂弹伤害");
         A("섬광 장전", "Flash Reload", "閃光リロード", "闪光装填");
         A("장전을 마치는 순간 섬광이 터져 주변 적을 기절시킵니다.", "Finishing a reload sets off a flash that stuns nearby enemies.", "リロードを終えた瞬間に閃光が走り、周りの敵を気絶させます。", "装填完成的瞬间爆出闪光，击晕周围敌人。");

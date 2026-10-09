@@ -861,7 +861,11 @@ void Shoot()
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
-                CreateBullet(startPosition, direction, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
+                Bullet shot = CreateBullet(startPosition, direction, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
+                // 2.2.1: 필살기 총알에도 총알 카드 · 고유 스킬(영혼 탄환 · 총열 과열 · 소각탄 · 전기탄 …), 덤 총알 · 유도 · 폭발탄은 빼고(light)
+                SignatureSkills.UltShots = true;
+                special?.ApplyGunCards(shot, true, false);
+                SignatureSkills.UltShots = false;
 
                 yield return new WaitForSeconds(shootDelay);
             }

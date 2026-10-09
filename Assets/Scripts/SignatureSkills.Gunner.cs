@@ -14,6 +14,10 @@ public partial class SignatureSkills
     int heat;
     float lastShot;
     int quickShots;
+    // 필살기 총알을 만드는 동안 (PlayerController 일제 사격 · 총알 폭풍): 게이지가 가득 찼던 것으로 셈
+    public static bool UltShots;
+    // 총알이 아닌 필살기 (지옥불 포격 · 관통 레일건 · 화염 회오리 …): 영혼 탄환의 피해 증가만 (2.2.1)
+    public static float SoulUltMul => Instance != null && Instance.who == CharacterId.Gunner && Instance.L("g.soul") > 0 ? 1f + V(Instance.L("g.soul"), 0.25f, 0.15f) : 1f;
     float fragBudgetAt;
     int fragBudget;
     readonly List<SigZone> mines = new List<SigZone>();
@@ -116,10 +120,10 @@ public partial class SignatureSkills
                 Fx.Spawn("fx_firepillar", p + Vector3.up * 1f, 3f, Color.white, 22f);
             };
         }
-        // 영혼 탄환: 필살기 게이지가 가득 찬 동안
+        // 영혼 탄환: 필살기 게이지가 가득 찬 동안 · 필살기로 쏜 총알 (2.2.1: 쏘는 순간 게이지가 비어 필살기 총알에는 붙지 않았음)
         int s = L("g.soul");
         SkillGauge g = Cache<SkillGauge>.Get;
-        if (s > 0 && g != null && g.IsFull())
+        if (s > 0 && (UltShots || (g != null && g.IsFull())))
         {
             b.damage *= 1f + V(s, 0.25f, 0.15f);
             b.pene += 1;
