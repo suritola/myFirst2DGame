@@ -307,7 +307,7 @@ public static partial class LocTable
         A("칼날 곡예", "Blade Acrobatics", "刃の曲芸", "刀刃杂技");
         A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (150% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力150%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力150%）");
         A("사냥의 절정", "Peak of the Hunt", "狩りの絶頂", "狩猎巅峰");
-        A("스킬 게이지가 가득 찬 동안 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your skill gauge is full, kills bring a rain of shuriken down on the spot.", "スキルゲージが満タンの間に敵を倒すと、その場に手裏剣の雨が降ります。", "技能槽满时击杀敌人，原地降下飞镖雨。");
+        A("스킬 게이지가 가득 찬 동안이나 출혈 돌진 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your skill gauge is full or during a Bleeding Dash, kills bring a rain of shuriken down on the spot.", "スキルゲージが満タンの間か出血突進中に敵を倒すと、その場に手裏剣の雨が降ります。", "技能槽满时或出血突进中击杀敌人，原地降下飞镖雨。");
         A("폭풍의 길", "Storm Road", "嵐の道", "风暴之路");
         A("바람길 위에서는 시위를 순식간에 가득 당기고, 물러난 자리에 돌풍이 터져 적을 밀어냅니다.", "On a wind lane you draw instantly to full, and a gust erupts where you hop back from, pushing enemies away.", "風の道の上では一瞬で弦を引き絞り、下がった場所で突風が弾けて敵を押し出します。", "在风道上瞬间拉满弓弦，后撤的原位爆发狂风击退敌人。");
         A("명궁의 호흡", "Master Archer's Breath", "名弓の呼吸", "名弓之息");

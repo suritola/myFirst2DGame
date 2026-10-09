@@ -95,7 +95,8 @@ public partial class SignatureSkills
             {
                 Vector2 d = ((Vector2)(t.position - player.MuzzlePosition)).normalized;
                 Bullet b = player.CreateBullet(player.MuzzlePosition, d, Atk, player.pene, 0f, true);
-                if (b != null) b.critRolled = true;
+                // 2.2.1: 자동으로 쏘는 총알에도 총알 카드 · 영혼 탄환 (덤 총알 · 유도 · 폭발탄은 빼고)
+                if (b != null) { if (Sp != null) Sp.ApplyGunCards(b, true, false); b.critRolled = true; }
             }
             Hostile.Play("gunshot", 0.5f, 1.3f);
         }
@@ -182,7 +183,8 @@ public partial class SignatureSkills
                 Vector2 d = ((Vector2)(t.position - player.MuzzlePosition)).normalized;
                 d = Quaternion.Euler(0f, 0f, Random.Range(-6f, 6f)) * d;
                 Bullet b = player.CreateBullet(player.MuzzlePosition, d, Atk, player.pene, 0f, true);
-                if (b != null) b.critRolled = true;
+                // 2.2.1: 자동으로 쏘는 총알에도 총알 카드 · 영혼 탄환 (덤 총알 · 유도 · 폭발탄은 빼고)
+                if (b != null) { if (Sp != null) Sp.ApplyGunCards(b, true, false); b.critRolled = true; }
             }
             Hostile.Play("gunshot", 0.6f, 1.1f);
         }

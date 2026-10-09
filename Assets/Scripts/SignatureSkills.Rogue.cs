@@ -213,10 +213,11 @@ public partial class SignatureSkills
             Flair(null, p, 3.5f, Shade);
         }
         // 사냥의 절정: 게이지가 가득 찬 동안 처치하면 표창 비
+        // 2.2.1: 필살기 출혈 돌진으로 잡은 적도 (돌진을 시작하며 게이지가 비어 예전엔 돌진 처치에는 안 터졌음)
         if (killed && E("re.peak") && Time.time >= peakAt)
         {
             SkillGauge g = Cache<SkillGauge>.Get;
-            if (g != null && g.IsFull())
+            if ((g != null && g.IsFull()) || (Kit != null && Kit.Dashing))
             {
                 peakAt = Time.time + 0.3f;
                 Vector3 p = target.transform.position;

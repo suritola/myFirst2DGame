@@ -438,7 +438,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         SignatureSkills.BowRelease(start, dir, draw);
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
-        if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw));
+        if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
         Play("bowtwang", 0.55f + 0.35f * draw, 1.15f - 0.25f * draw);
         Play("arrowfly", 0.3f + 0.4f * draw, 1f + 0.4f * draw);
@@ -1090,7 +1090,8 @@ public partial class CharacterKit : MonoBehaviour
                 {
                     Vector2 d = ((Vector2)(e.position - at)).normalized;
                     sr.flipX = d.x < 0f;
-                    Projectile(at, d, Damage * 0.7f, 1, 40f, 0f, "fx_shuriken", 1f, new Color(0.8f, 0.6f, 1f), true);
+                    // 2.2.1: 분신 표창도 내 표창과 같게 (갈고리 표창 출혈 · 도탄 표창 · 진화 형태의 독 · 도박 카드 · 와이어)
+                    ThrowOne(at, d, Damage * 0.7f, 0.75f);
                     Play("whoosh", 0.2f, 2f);
                 }
             }
@@ -1142,11 +1143,16 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 궁수 메아리 화살: 쏜 화살을 0.25초 뒤 푸른 유령 화살이 따라 쏨 (그때의 활 위치에서)
-    IEnumerator EchoArrow(Vector2 dir, float dmg, float speed, float size)
+    // 2.2.1: 유령 화살도 진화 형태(그물 · 투창 · 연사)와 고유 스킬 화살 효과를 받음 (예전엔 맨 화살)
+    IEnumerator EchoArrow(Vector2 dir, float dmg, float speed, float size, float draw)
     {
         yield return new WaitForSeconds(0.25f);
-        Bullet b = Projectile(player.MuzzlePosition, dir, dmg, player.pene + 1, speed, 0f, "fx_arrow", size, new Color(0.55f, 0.85f, 1f, 0.7f), false);
-        if (b != null) Play("arrowfly", 0.25f, 1.6f);
+        Vector3 start = player.MuzzlePosition;
+        Bullet b = Projectile(start, dir, dmg, player.pene + 1, speed, 0f, "fx_arrow", size, new Color(0.55f, 0.85f, 1f, 0.7f), false);
+        if (b == null) yield break;
+        ArrowForm(b, draw, start);
+        SignatureSkills.Arrow(b, draw);         // 원래 화살과 같은 효과 (집중 호흡 · 꿰뚫는 시선 · 가시 씨앗 · 울림 · 표식 전염)
+        Play("arrowfly", 0.25f, 1.6f);
     }
 
     // 궁수 강풍 화살: 가득 당긴 화살에 맞은 적이 크게 밀려나고 잠깐 기절 (0.4 · 0.6 · 0.8초)
