@@ -52,6 +52,10 @@ public static partial class LocTable
         A("튜토리얼 그만두기", "Quit Tutorial", "チュートリアルをやめる", "退出教程");
         A("튜토리얼", "Tutorial", "チュートリアル", "教程");
 
+        // ---------------- 설정 (2.2.0~)
+        A("UI 크기", "UI Size", "UIサイズ", "界面大小");
+        A("창이 비활성일 때 소리 끄기", "Mute when the window is inactive", "ウィンドウが非アクティブ時に消音", "窗口未激活时静音");
+
         // ---------------- 도감 (2.1~)
         A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀槽满时展开结界");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화", "Pick one of three cards or skip on each level-up · Max level 50 · Max all ingredients to evolve a skill", "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・素材をすべて上げるとスキル進化", "每次升级从三张中选一张或跳过 · 等级上限50 · 素材全部升满即可技能进化");
