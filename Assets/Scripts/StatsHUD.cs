@@ -53,7 +53,7 @@ public class StatsHUD : MonoBehaviour
         panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x, padding * 2f + Labels.Length * rowHeight);
         BuildTab();
 
-        open = PlayerPrefs.GetInt(PrefKey, startOpen ? 1 : 0) == 1;
+        open = Prefs.GetInt(PrefKey, startOpen ? 1 : 0) == 1;
         openAmount = open ? 1f : 0f;
         ApplyOpenAmount();
 
@@ -102,7 +102,7 @@ public class StatsHUD : MonoBehaviour
     public void Toggle()
     {
         open = !open;
-        PlayerPrefs.SetInt(PrefKey, open ? 1 : 0);
+        Prefs.SetInt(PrefKey, open ? 1 : 0);
         // 버튼이 선택된 채로 남아 색이 고정되지 않도록
         if (UnityEngine.EventSystems.EventSystem.current != null)
             UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);

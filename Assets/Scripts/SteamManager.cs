@@ -144,8 +144,8 @@ public class SteamManager : MonoBehaviour
         runKills++;
         if (runKills >= 500) SteamAchievements.Unlock(SteamAchievements.Kills500);
         if (GameInput.Auto) return;
-        int total = PlayerPrefs.GetInt(TotalKillsKey, 0) + 1;
-        PlayerPrefs.SetInt(TotalKillsKey, total);
+        int total = Prefs.GetInt(TotalKillsKey, 0) + 1;
+        Prefs.SetInt(TotalKillsKey, total);
         if (total >= TotalKillsGoal) SteamAchievements.Unlock(SteamAchievements.Kills3000Total);
     }
 

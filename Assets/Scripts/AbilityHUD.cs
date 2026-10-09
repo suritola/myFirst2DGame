@@ -53,7 +53,7 @@ public class AbilityHUD : MonoBehaviour
 
     void Start()
     {
-        open = PlayerPrefs.GetInt(OpenKey, 1) == 1;
+        open = Prefs.GetInt(OpenKey, 1) == 1;
         BuildToggle();
     }
 
@@ -94,7 +94,7 @@ public class AbilityHUD : MonoBehaviour
     void Toggle()
     {
         open = !open;
-        PlayerPrefs.SetInt(OpenKey, open ? 1 : 0);
+        Prefs.SetInt(OpenKey, open ? 1 : 0);
         if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         ApplyOpen();
     }

@@ -53,8 +53,8 @@ public static class GameMode
     {
         if (loaded) return;
         loaded = true;
-        unlocked = Mathf.Clamp(PlayerPrefs.GetInt(UnlockKey, 0), 0, 2);
-        current = (Difficulty)Mathf.Clamp(PlayerPrefs.GetInt(CurrentKey, 0), 0, 3);
+        unlocked = Mathf.Clamp(Prefs.GetInt(UnlockKey, 0), 0, 2);
+        current = (Difficulty)Mathf.Clamp(Prefs.GetInt(CurrentKey, 0), 0, 3);
         if (!IsUnlocked(current)) current = Difficulty.Easy;
     }
 
@@ -76,8 +76,8 @@ public static class GameMode
             Load();
             if (!IsUnlocked(value)) return;
             current = value;
-            PlayerPrefs.SetInt(CurrentKey, (int)value);
-            PlayerPrefs.Save();
+            Prefs.SetInt(CurrentKey, (int)value);
+            Prefs.Save();
         }
     }
 
@@ -90,19 +90,19 @@ public static class GameMode
         return d == Difficulty.Easy || (d <= Difficulty.Hard && unlocked >= 1) || (d == Difficulty.Endless && unlocked >= 2);
     }
 
-    public static bool HasCleared(Difficulty d) => PlayerPrefs.GetInt(ClearedKey + (int)d, 0) == 1;
+    public static bool HasCleared(Difficulty d) => Prefs.GetInt(ClearedKey + (int)d, 0) == 1;
 
     // 3장 보스를 쓰러뜨렸을 때. 새로 열린 난이도가 있으면 그 이름 (없으면 null)
     public static string OnCleared(Difficulty d)
     {
         Load();
         if (GameInput.Auto || (Application.isBatchMode && !Override.HasValue)) return null;
-        PlayerPrefs.SetInt(ClearedKey + (int)d, 1);
+        Prefs.SetInt(ClearedKey + (int)d, 1);
         string opened = null;
         if (d == Difficulty.Easy && unlocked < 1) { unlocked = 1; opened = "보통 · 어려움"; }
         if (d == Difficulty.Hard && unlocked < 2) { unlocked = 2; opened = "무한"; }
-        PlayerPrefs.SetInt(UnlockKey, unlocked);
-        PlayerPrefs.Save();
+        Prefs.SetInt(UnlockKey, unlocked);
+        Prefs.Save();
         return opened;
     }
 

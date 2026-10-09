@@ -110,25 +110,25 @@ public static class SkinData
     }
 
     // ================================================================= 저장 (PlayerPrefs)
-    public static bool Owns(string id) => PlayerPrefs.GetInt("skin.own." + id, 0) == 1;
+    public static bool Owns(string id) => Prefs.GetInt("skin.own." + id, 0) == 1;
 
     static string EquipKey(SkinKind kind, int who) => "skin.eq." + (int)kind + "." + (IsGlobal(kind) ? -1 : who);
 
     // 장착한 스킨 (없으면 null = 기본)
-    public static SkinDef Equipped(SkinKind kind, int who) => Get(PlayerPrefs.GetString(EquipKey(kind, who), ""));
+    public static SkinDef Equipped(SkinKind kind, int who) => Get(Prefs.GetString(EquipKey(kind, who), ""));
     public static SkinDef Equipped(SkinKind kind) => Equipped(kind, (int)CharacterData.Selected);
 
     public static void Equip(SkinDef s)
     {
         if (s == null || !Owns(s.id)) return;
-        PlayerPrefs.SetString(EquipKey(s.kind, s.who), s.id);
-        PlayerPrefs.Save();
+        Prefs.SetString(EquipKey(s.kind, s.who), s.id);
+        Prefs.Save();
     }
 
     public static void Unequip(SkinKind kind, int who)
     {
-        PlayerPrefs.SetString(EquipKey(kind, who), "");
-        PlayerPrefs.Save();
+        Prefs.SetString(EquipKey(kind, who), "");
+        Prefs.Save();
     }
 
     // 스킨을 샀을 때 (업적)
@@ -139,7 +139,7 @@ public static class SkinData
     {
         if (s == null || Owns(s.id) || CharacterData.Points < s.Price) return false;
         CharacterData.SpendPoints(s.Price);
-        PlayerPrefs.SetInt("skin.own." + s.id, 1);
+        Prefs.SetInt("skin.own." + s.id, 1);
         Equip(s);
         Bought?.Invoke(s);
         return true;

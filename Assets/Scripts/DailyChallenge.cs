@@ -108,7 +108,7 @@ public static class DailyChallenge
 
     // ================================================================= 기록 · 순위
     const string BestKey = "daily.best.";
-    public static float Best(DateTime day) => PlayerPrefs.GetFloat(BestKey + Key(day), 0f);
+    public static float Best(DateTime day) => Prefs.GetFloat(BestKey + Key(day), 0f);
     public static float RunBest => Best(runDay);       // 지금 하는 판의 날 (자정을 넘겨도 시작한 날)
 
     // 결과 화면에 보여 줄 마지막 순위 (올린 순위표 · 순위 · 전체, 받기 전에는 0)
@@ -122,7 +122,7 @@ public static class DailyChallenge
         if (daily)
         {
             string key = BestKey + Key(runDay);
-            if (seconds > PlayerPrefs.GetFloat(key, 0f)) { PlayerPrefs.SetFloat(key, seconds); PlayerPrefs.Save(); }
+            if (seconds > Prefs.GetFloat(key, 0f)) { Prefs.SetFloat(key, seconds); Prefs.Save(); }
         }
         string board = daily ? RunBoard : SteamLeaderboards.Endless;
         LastBoard = board;

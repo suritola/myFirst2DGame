@@ -28,10 +28,10 @@ public class TrailerDirector : MonoBehaviour
 
     static void TryStart()
     {
-        if (Running || PlayerPrefs.GetInt(PrefKey, 0) != 1) return;
+        if (Running || Prefs.GetInt(PrefKey, 0) != 1) return;
         if (SceneManager.GetActiveScene().name != "GameScene") return;
-        PlayerPrefs.SetInt(PrefKey, 0);
-        PlayerPrefs.Save();
+        Prefs.SetInt(PrefKey, 0);
+        Prefs.Save();
         new GameObject("TrailerDirector").AddComponent<TrailerDirector>();
     }
 

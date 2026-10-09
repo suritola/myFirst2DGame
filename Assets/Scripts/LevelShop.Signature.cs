@@ -369,11 +369,11 @@ public partial class LevelShop
         if (evolved.Count >= 3) SteamAchievements.Unlock(SteamAchievements.SkillEvolve3);
         if (GameInput.Auto) return;
         const string Key = "stats.skillEvos";
-        HashSet<string> seen = new HashSet<string>(PlayerPrefs.GetString(Key, "").Split(new[] { '|' }, System.StringSplitOptions.RemoveEmptyEntries));
+        HashSet<string> seen = new HashSet<string>(Prefs.GetString(Key, "").Split(new[] { '|' }, System.StringSplitOptions.RemoveEmptyEntries));
         if (seen.Add(CharacterData.Selected + ":" + e.key))
         {
-            PlayerPrefs.SetString(Key, string.Join("|", seen));
-            PlayerPrefs.Save();
+            Prefs.SetString(Key, string.Join("|", seen));
+            Prefs.Save();
         }
         if (seen.Count >= 15) SteamAchievements.Unlock(SteamAchievements.SkillEvolve15);
     }

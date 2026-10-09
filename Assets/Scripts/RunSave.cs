@@ -39,7 +39,7 @@ public static class RunSave
     // 튜토리얼처럼 저장하지 않는 판 (TutorialRun 이 켬)
     public static bool Disabled;
 
-    public static bool Has => PlayerPrefs.HasKey(Key) && Peek() != null;
+    public static bool Has => Prefs.HasKey(Key) && Peek() != null;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
@@ -78,7 +78,7 @@ public static class RunSave
     // 메인 메뉴에서 저장된 판 정보 보기 (이어하기 버튼 글)
     public static Data Peek()
     {
-        string json = PlayerPrefs.GetString(Key, "");
+        string json = Prefs.GetString(Key, "");
         if (string.IsNullOrEmpty(json)) return null;
         try
         {
@@ -91,8 +91,8 @@ public static class RunSave
 
     public static void Delete()
     {
-        PlayerPrefs.DeleteKey(Key);
-        PlayerPrefs.Save();
+        Prefs.DeleteKey(Key);
+        Prefs.Save();
     }
 
     // 지금 판을 저장 (메인 메뉴로 나갈 때 · 게임을 끌 때 · 다음 장에 들어갈 때)
@@ -148,8 +148,8 @@ public static class RunSave
             d.kills = Mathf.Min(sp.killedEnemy, sp.BossKillTarget);
         }
 
-        PlayerPrefs.SetString(Key, JsonUtility.ToJson(d));
-        PlayerPrefs.Save();
+        Prefs.SetString(Key, JsonUtility.ToJson(d));
+        Prefs.Save();
     }
 
     // 메인 메뉴 「이어하기」: 캐릭터 · 난이도를 맞추고 게임 씬으로

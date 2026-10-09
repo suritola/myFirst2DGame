@@ -64,7 +64,7 @@ public partial class SpecialAbilities
         hb.onClick.AddListener(() =>
         {
             g.collapsed = !g.collapsed;
-            PlayerPrefs.SetInt(g.prefKey, g.collapsed ? 1 : 0);
+            Prefs.SetInt(g.prefKey, g.collapsed ? 1 : 0);
             if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
             LayoutGroups();
             fx.Play("clank", 0.25f, 1.8f);
@@ -77,7 +77,7 @@ public partial class SpecialAbilities
         g.tiles.SetParent(g.root, false);
         g.tiles.anchorMin = g.tiles.anchorMax = g.tiles.pivot = Vector2.zero;
 
-        g.collapsed = PlayerPrefs.GetInt(prefKey, 0) == 1;
+        g.collapsed = Prefs.GetInt(prefKey, 0) == 1;
         go.SetActive(false);
         return g;
     }

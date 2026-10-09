@@ -29,7 +29,7 @@ public static class KeyBindings
         if (keys != null) return;
         keys = (KeyCode[])Defaults.Clone();
         for (int i = 0; i < keys.Length; i++)
-            keys[i] = (KeyCode)PlayerPrefs.GetInt("keys." + (GameAction)i, (int)Defaults[i]);
+            keys[i] = (KeyCode)Prefs.GetInt("keys." + (GameAction)i, (int)Defaults[i]);
     }
 
     public static KeyCode Get(GameAction a) { Load(); return keys[(int)a]; }
@@ -40,9 +40,9 @@ public static class KeyBindings
         Load();
         KeyCode old = keys[(int)a];
         for (int i = 0; i < keys.Length; i++)
-            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i)) { keys[i] = old; PlayerPrefs.SetInt("keys." + (GameAction)i, (int)old); }
+            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i)) { keys[i] = old; Prefs.SetInt("keys." + (GameAction)i, (int)old); }
         keys[(int)a] = key;
-        PlayerPrefs.SetInt("keys." + a, (int)key);
+        Prefs.SetInt("keys." + a, (int)key);
         Loc.RaiseChanged();
     }
 
@@ -55,7 +55,7 @@ public static class KeyBindings
         for (int i = 0; i < keys.Length; i++)
         {
             keys[i] = Defaults[i];
-            PlayerPrefs.DeleteKey("keys." + (GameAction)i);
+            Prefs.DeleteKey("keys." + (GameAction)i);
         }
         Loc.RaiseChanged();
     }

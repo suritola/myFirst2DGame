@@ -13,7 +13,7 @@ public class EndlessMode : MonoBehaviour
     public static float LastSeconds = -1f;
     public static int LastBosses;
     const string BestKey = "endless.bestSeconds";
-    public static float BestSeconds => PlayerPrefs.GetFloat(BestKey, 0f);
+    public static float BestSeconds => Prefs.GetFloat(BestKey, 0f);
 
     const float FirstBossAt = 90f;          // 시작 후 첫 보스
     const float BossEvery = 150f;           // 보스를 쓰러뜨린 뒤 다음 보스까지 (보스를 잡을 때마다 15초씩 짧아짐, 최소 75초)
@@ -133,8 +133,8 @@ public class EndlessMode : MonoBehaviour
         // 일일 도전은 그날 기록 · 순위표에만 (규칙이 달라 무한 모드 최고 기록과 섞지 않음)
         if (!daily && LastSeconds > BestSeconds && !GameInput.Auto)
         {
-            PlayerPrefs.SetFloat(BestKey, LastSeconds);
-            PlayerPrefs.Save();
+            Prefs.SetFloat(BestKey, LastSeconds);
+            Prefs.Save();
         }
         DailyChallenge.Submit(daily, LastSeconds, LastBosses);
     }

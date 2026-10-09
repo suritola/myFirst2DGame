@@ -95,7 +95,7 @@ public static class CharacterData
         CharacterDef d = Def(id);
         if (d.price < 0) return false;
         if (Demo.On) return Demo.CharacterAllowed(id);      // 체험판: 거너 · 검사만 (구매 없이)
-        return d.price == 0 || PlayerPrefs.GetInt(UnlockKey + (int)id, 0) == 1;
+        return d.price == 0 || Prefs.GetInt(UnlockKey + (int)id, 0) == 1;
     }
 
     // 게임에서 고른 캐릭터 (트레일러 · 배치 모드 테스트는 거너)
@@ -105,14 +105,14 @@ public static class CharacterData
         {
             if (Override.HasValue) return Override.Value;
             if (GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return CharacterId.Gunner;
-            CharacterId id = (CharacterId)Mathf.Clamp(PlayerPrefs.GetInt(SelectedKey, 0), 0, All.Length - 1);
+            CharacterId id = (CharacterId)Mathf.Clamp(Prefs.GetInt(SelectedKey, 0), 0, All.Length - 1);
             return IsUnlocked(id) ? id : CharacterId.Gunner;
         }
         set
         {
             if (!IsUnlocked(value)) return;
-            PlayerPrefs.SetInt(SelectedKey, (int)value);
-            PlayerPrefs.Save();
+            Prefs.SetInt(SelectedKey, (int)value);
+            Prefs.Save();
         }
     }
 
@@ -120,7 +120,7 @@ public static class CharacterData
     public static bool IsGunner => Selected == CharacterId.Gunner;
 
     // ================================================================= 포인트 (적 처치 등으로 쌓이고 캐릭터 구매에 씀)
-    public static int Points => PlayerPrefs.GetInt(PointsKey, 0);
+    public static int Points => Prefs.GetInt(PointsKey, 0);
 
     // 이번 판에 얻은 포인트 (게임 오버 화면에 보여 줌)
     public static int RunPoints { get; private set; }
@@ -139,15 +139,15 @@ public static class CharacterData
     {
         if (n <= 0 || GameInput.Auto || TutorialRun.Active || (Application.isBatchMode && !Override.HasValue)) return;     // 튜토리얼은 포인트를 주지 않음
         RunPoints += n;
-        PlayerPrefs.SetInt(PointsKey, Points + n);
+        Prefs.SetInt(PointsKey, Points + n);
     }
 
     // 포인트 쓰기 (스킨 상점). 모자라면 false
     public static bool SpendPoints(int n)
     {
         if (n <= 0 || Points < n) return false;
-        PlayerPrefs.SetInt(PointsKey, Points - n);
-        PlayerPrefs.Save();
+        Prefs.SetInt(PointsKey, Points - n);
+        Prefs.Save();
         return true;
     }
 
@@ -156,13 +156,13 @@ public static class CharacterData
     {
         CharacterDef d = Def(id);
         if (d.price <= 0 || IsUnlocked(id) || Points < d.price || Demo.On) return false;
-        PlayerPrefs.SetInt(PointsKey, Points - d.price);
-        PlayerPrefs.SetInt(UnlockKey + (int)id, 1);
-        PlayerPrefs.Save();
+        Prefs.SetInt(PointsKey, Points - d.price);
+        Prefs.SetInt(UnlockKey + (int)id, 1);
+        Prefs.Save();
         return true;
     }
 
-    public static void Save() => PlayerPrefs.Save();
+    public static void Save() => Prefs.Save();
 
     // 이 캐릭터가 지옥의 문에서 고를 수 있는 특수 능력인지
     public static bool InPool(int abilityId)

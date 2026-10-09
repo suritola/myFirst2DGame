@@ -16,7 +16,7 @@ public class TutorialRun : MonoBehaviour
     public static bool Active { get; private set; }
     const string SeenKey = "tutorial.play.seen";        // 한 번이라도 해 봤는지 (메인 메뉴 버튼 반짝임)
     const string DoneKey = "tutorial.play.done";
-    public static bool Seen => PlayerPrefs.GetInt(SeenKey, 0) == 1;
+    public static bool Seen => Prefs.GetInt(SeenKey, 0) == 1;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
@@ -52,8 +52,8 @@ public class TutorialRun : MonoBehaviour
     public static void Begin()
     {
         Active = true;
-        PlayerPrefs.SetInt(SeenKey, 1);
-        PlayerPrefs.Save();
+        Prefs.SetInt(SeenKey, 1);
+        Prefs.Save();
         CharacterData.Override = CharacterId.Gunner;
         RunSave.Disabled = true;
         SceneManager.LoadScene("GameScene");
@@ -98,8 +98,8 @@ public class TutorialRun : MonoBehaviour
             yield return Cleared();
         }
         finished = true;
-        PlayerPrefs.SetInt(DoneKey, 1);
-        PlayerPrefs.Save();
+        Prefs.SetInt(DoneKey, 1);
+        Prefs.Save();
         title.text = Loc.T("튜토리얼 완료!");
         body.text = Loc.T("기본 조작을 모두 익혔습니다. 곧 메인 메뉴로 돌아갑니다.");
         counter.text = "";
