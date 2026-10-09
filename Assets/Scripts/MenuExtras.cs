@@ -202,12 +202,14 @@ public static class MenuExtras
     static void InstallDifficulty(RectTransform start)
     {
         Transform parent = start.parent;
+        // 2.1.9: 이어하기가 있으면 게임 시작 버튼이 왼쪽으로 가므로, 난이도 줄은 가운데(x 0)에 고정
+        Vector2 at = new Vector2(0f, start.anchoredPosition.y);
         List<Button> buttons = new List<Button>();
-        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), start.anchoredPosition + new Vector2(0f, 72f), new Vector2(900f, 26f));
+        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), at + new Vector2(0f, 72f), new Vector2(900f, 26f));
         for (int i = 0; i < 4; i++)
         {
             Difficulty d = (Difficulty)i;
-            Button b = UIKit.MakeButton(parent, GameMode.Names[i], start.anchoredPosition + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
+            Button b = UIKit.MakeButton(parent, GameMode.Names[i], at + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
             {
                 GameMode.Current = d;
                 HighlightDifficulty(buttons, hint);
@@ -509,10 +511,12 @@ public static class SettingsUI
         }
         HighlightLang(langButtons);
 
-        SliderRow("전체 볼륨", 90f, GameSettings.Volume, v => GameSettings.Volume = v);
-        SliderRow("음악", -15f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
-        SliderRow("효과음", -120f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
-        SensitivityRow(-230f);
+        // 2.1.9: 「창이 비활성일 때 소리 끄기」 한 줄을 더 넣으려고 줄 간격 90
+        SliderRow("전체 볼륨", 110f, GameSettings.Volume, v => GameSettings.Volume = v);
+        SliderRow("음악", 20f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        SliderRow("효과음", -70f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        SensitivityRow(-160f);
+        ToggleRow("창이 비활성일 때 소리 끄기", -250f, () => GameSettings.MuteUnfocused, v => GameSettings.MuteUnfocused = v);
     }
 
     // 마우스 감도 25% ~ 300% (5% 단위, 기본 100%) · 전투 중 조준에만 적용
@@ -592,8 +596,8 @@ public static class SettingsUI
         highlightMode();
 
         // 해상도: < 1920 × 1080 >
-        RowLabel("해상도", 90f);
-        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 90f), new Vector2(320f, 50f));
+        RowLabel("해상도", 110f);
+        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 110f), new Vector2(320f, 50f));
         res.text = Screen.width + " × " + Screen.height;
         System.Action<int> step = d =>
         {
@@ -605,12 +609,14 @@ public static class SettingsUI
             res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
             Deselect();
         };
-        UIKit.MakeButton(page, "<", new Vector2(-110f, 90f), new Vector2(80f, 64f), () => step(-1), 30f);
-        UIKit.MakeButton(page, ">", new Vector2(300f, 90f), new Vector2(80f, 64f), () => step(1), 30f);
+        UIKit.MakeButton(page, "<", new Vector2(-110f, 110f), new Vector2(80f, 64f), () => step(-1), 30f);
+        UIKit.MakeButton(page, ">", new Vector2(300f, 110f), new Vector2(80f, 64f), () => step(1), 30f);
 
-        ToggleRow("수직 동기화", -20f, () => GameSettings.VSync, v => GameSettings.VSync = v);
-        ToggleRow("화면 흔들림", -130f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
-        ToggleRow("번쩍임 효과", -240f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
+        // 2.1.9: UI 크기 (모든 화면 글자 · 버튼 · HUD), 한 줄 더 넣으려고 줄 간격 90
+        CycleRow("UI 크기", 20f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
+        ToggleRow("수직 동기화", -70f, () => GameSettings.VSync, v => GameSettings.VSync = v);
+        ToggleRow("화면 흔들림", -160f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
+        ToggleRow("번쩍임 효과", -250f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
     }
 
     // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)
@@ -822,122 +828,4 @@ public static class SettingsUI
 public class SettingsInput : MonoBehaviour
 {
     void Update() => SettingsUI.Tick();
-}
-
-// ===================================================================== tutorial
-public static class TutorialUI
-{
-    static GameObject open;
-    static int page;
-
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
-    static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
-    static readonly Color Key = new Color(1f, 0.72f, 0.55f);
-
-    // 페이지: 제목, 그림(Resources/FX), 줄들(키 / 설명)
-    static readonly (string title, string icon, (string key, string text)[] rows)[] Pages =
-    {
-        ("기본 조작", "fx_keycap", new[]
-        {
-            ("{MOVE}", "이동"),
-            ("좌클릭", "마우스 방향으로 사격"),
-            ("{RELOAD}", "재장전"),
-            ("ESC", "일시정지 · 설정"),
-        }),
-        ("필살기", "fx_reticle", new[]
-        {
-            ("스킬 게이지", "시간이 지나면 차고, 적을 처치하면 잠깐 더 빨리 찹니다"),
-            ("우클릭", "게이지가 가득 차면 필살기를 씁니다"),
-            ("조준형", "누르고 있으면 시간이 느려지며 적을 조준, 떼면 발동"),
-            ("즉발형", "산탄총 · 쌍권총 · 유탄은 누르는 즉시 발동"),
-        }),
-        ("성장", "fx_prompt", new[]
-        {
-            ("레벨업", "카드를 클릭해 고르고 {INTERACT}로 확정"),
-            ("상점 제단", "적을 처치하다 보면 나타남 · 다가가서 {INTERACT}로 열기"),
-            ("상점", "능력치를 코인으로 올림"),
-            ("코인", "적이 떨어뜨림 · 코인 자석 능력으로 끌어올 수 있음"),
-        }),
-        ("무기 진화 · 영혼 트리", "fx_orb", new[]
-        {
-            ("무기 진화", "보스를 쓰러뜨릴 때마다 무기(평타)가 세 갈래 중 하나로 진화 (2번, 되돌릴 수 없음)"),
-            ("영혼 트리 ({UPGRADE})", "영혼 조각으로 무기 · 필살기 · 스킬 · 생존 · 영혼 · 재물 칸을 배움"),
-            ("운명 가지", "카드 다시 뽑기 · 시간의 틈 · 중력 우물 등 트리에서만 얻는 효과"),
-        }),
-        ("적과 보스", "fx_warn", new[]
-        {
-            ("경고 표시", "붉은 원 · 선 · 머리 위 ! 가 보이면 그 자리를 피하세요"),
-            ("중간 보스", "2장부터 단계가 오를 때마다 등장 · 영혼 조각을 많이 줌"),
-            ("보스", "리치 왕 → 지옥의 군주 → 킹 슬라임"),
-            ("특수 스킬", "보스는 체력이 절반 아래로 떨어지면 특수 스킬을 씁니다"),
-        }),
-        ("목표", "fx_rune", new[]
-        {
-            ("3개의 스테이지", "지하 묘역 → 불타는 지옥 → 초원"),
-            ("문", "보스를 쓰러뜨리면 30초 안에 문으로 들어가세요"),
-            ("행운을 빌어요!", "모든 보스를 쓰러뜨리면 승리합니다"),
-        }),
-    };
-
-    static RectTransform content;
-    static TMP_Text counter;
-    static Button prev, next;
-
-    public static void Open(Transform root)
-    {
-        if (open != null) return;
-        page = 0;
-        RectTransform win = UIKit.Modal(root, "TutorialPanel", new Vector2(1400f, 820f), out open);
-        content = UIKit.Rect("Content", win, new Vector2(0f, 30f), new Vector2(1300f, 680f));
-        counter = UIKit.Text(win, "", 26f, Parch, new Vector2(0f, -350f), new Vector2(200f, 40f));
-        prev = UIKit.MakeButton(win, "이전", new Vector2(-420f, -350f), new Vector2(220f, 70f), () => Show(page - 1));
-        next = UIKit.MakeButton(win, "다음", new Vector2(420f, -350f), new Vector2(220f, 70f), () =>
-        {
-            if (page >= Pages.Length - 1) Close();
-            else Show(page + 1);
-        });
-        UIKit.MakeButton(win, "닫기", new Vector2(610f, 360f), new Vector2(140f, 56f), Close, 22f);
-        Show(0);
-    }
-
-    static void Show(int p)
-    {
-        page = Mathf.Clamp(p, 0, Pages.Length - 1);
-        for (int i = content.childCount - 1; i >= 0; i--) Object.Destroy(content.GetChild(i).gameObject);
-
-        var pg = Pages[page];
-        UIKit.Text(content, pg.title, 54f, Gold, new Vector2(0f, 290f), new Vector2(900f, 80f));
-
-        // 그림
-        Sprite[] frames = Fx.Frames(pg.icon);
-        if (frames.Length > 0)
-        {
-            RectTransform ir = UIKit.Rect("Icon", content, new Vector2(-470f, 60f), new Vector2(220f, 220f));
-            Image img = ir.gameObject.AddComponent<Image>();
-            img.sprite = frames[0];
-            img.preserveAspect = true;
-            img.color = pg.icon == "fx_reticle" || pg.icon == "fx_rune" || pg.icon == "fx_orb" ? Gold : Color.white;
-        }
-
-        float y = 170f;
-        foreach (var (key, text) in pg.rows)
-        {
-            UIKit.Text(content, key, 30f, Key, new Vector2(-180f, y), new Vector2(300f, 60f), TextAlignmentOptions.Left);
-            UIKit.Text(content, text, 26f, Parch, new Vector2(260f, y), new Vector2(620f, 70f), TextAlignmentOptions.Left);
-            y -= 95f;
-        }
-
-        counter.text = (page + 1) + " / " + Pages.Length;
-        prev.interactable = page > 0;
-        TMP_Text nt = next.GetComponentInChildren<TMP_Text>();
-        string label = page >= Pages.Length - 1 ? "시작하기" : "다음";
-        nt.text = Loc.T(label);
-        UIKit.Remember(nt, label);
-    }
-
-    public static void Close()
-    {
-        if (open != null) Object.Destroy(open);
-        open = null;
-    }
 }
