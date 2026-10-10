@@ -61,7 +61,11 @@ public class GameplayCapture
     {
         public bool recording, autopilot, levelUpAllowed;
         public float musicVolume = 0.9f;
+        public string musicPath = "Music/bgm_boss";
         public int frames;
+        // 하이라이트 영상 연출 (2.2.1~): 펀치 줌 · 화면 흔들림 · 흰 번쩍임 (찍을 때만 카메라에 얹고 바로 되돌림)
+        public float baseZoom = 1f, punch, shake, flashAmt;
+        public Image flash;
         public Canvas captionCanvas;
         public TextMeshProUGUI caption, logo, sub;
         public Image black;
@@ -80,7 +84,7 @@ public class GameplayCapture
         {
             rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
             frame = new Texture2D(W, H, TextureFormat.RGBA32, false);
-            AudioClip clip = Resources.Load<AudioClip>("Music/bgm_boss");
+            AudioClip clip = Resources.Load<AudioClip>(musicPath);
             music = new float[clip.samples * clip.channels];
             clip.GetData(music, 0);
             musicCh = clip.channels; musicRate = clip.frequency; musicFrames = clip.samples;
@@ -131,10 +135,16 @@ public class GameplayCapture
             captionCanvas.worldCamera = cam;
             captionCanvas.enabled = withCaption;
             RenderTexture old = cam.targetTexture;
+            float size = cam.orthographicSize;
+            Vector3 pos = cam.transform.position;
+            cam.orthographicSize = size * baseZoom * (1f - 0.2f * Mathf.Clamp01(punch));
+            cam.transform.position = pos + (Vector3)(UnityEngine.Random.insideUnitCircle * shake * 0.6f);
             cam.targetTexture = rt;
             Canvas.ForceUpdateCanvases();
             cam.Render();
             cam.targetTexture = old;
+            cam.orthographicSize = size;
+            cam.transform.position = pos;
             captionCanvas.enabled = true;
             RenderTexture.active = rt;
             frame.ReadPixels(new Rect(0, 0, W, H), 0, 0);
@@ -178,6 +188,10 @@ public class GameplayCapture
         // 죽지 않고, 보여 주려는 때가 아니면 레벨업 창이 뜨지 않게
         void LateUpdate()
         {
+            punch *= 0.86f;
+            shake *= 0.85f;
+            flashAmt *= 0.8f;
+            if (flash != null) flash.color = new Color(1f, 1f, 1f, Mathf.Clamp01(flashAmt));
             object p = Find("PlayerController");
             if (p != null)
             {
@@ -407,6 +421,13 @@ public class GameplayCapture
         RectTransform br = rec.black.rectTransform;
         br.anchorMin = Vector2.zero; br.anchorMax = Vector2.one; br.offsetMin = br.offsetMax = Vector2.zero;
         rec.black.color = Color.black;
+
+        rec.flash = new GameObject("Flash", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        rec.flash.transform.SetParent(go.transform, false);
+        RectTransform fr = rec.flash.rectTransform;
+        fr.anchorMin = Vector2.zero; fr.anchorMax = Vector2.one; fr.offsetMin = fr.offsetMax = Vector2.zero;
+        rec.flash.color = new Color(1f, 1f, 1f, 0f);
+        rec.flash.raycastTarget = false;
 
         TMP_FontAsset font = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(x => x.name.StartsWith("Cafe24"));
         Material outline = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name.StartsWith("Cafe24") && m.name.Contains("Outline"));
@@ -696,6 +717,150 @@ public class GameplayCapture
         foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
         PlayerPrefs.Save();
         Time.captureFramerate = 0;
+        In("Auto", false);
+        Debug.Log("[CAP] done frames=" + rec.frames + " (" + (rec.frames / (float)Fps).ToString("0.0") + "s)");
+        yield return null;
+    }
+
+    // ================================================================= 하이라이트 영상 (2.2.1~, record.ps1 -Mode highlight)
+    // 자막 없이 긴박한 음악 + 펀치 줌 · 흔들림 · 번쩍임 · 슬로 모션, 가장 화려하게 터지는 장면만 빠르게 이어 붙임
+    static void Hit(float p, float s, float f) { rec.punch = Mathf.Max(rec.punch, p); rec.shake = Mathf.Max(rec.shake, s); rec.flashAmt = Mathf.Max(rec.flashAmt, f); }
+
+    // 슬로 모션 (게임 시간만 느려지고 음악은 그대로)
+    static IEnumerator SlowMo(float scale, float seconds)
+    {
+        int n = Mathf.Max(1, Mathf.RoundToInt(seconds * Fps));
+        for (int i = 0; i < n; i++) { Time.timeScale = Mathf.Lerp(scale, 1f, Mathf.Pow(i / (float)n, 3f)); yield return null; }
+        Time.timeScale = 1f;
+    }
+
+    static void Evolve(int id)
+    {
+        if (id < 0) return;
+        object sp = Get(Find("StageManager"), "specials");
+        if (sp != null) Call(sp, "EvolveWeapon", id);
+    }
+
+    // 그 영웅의 n번째 전용 무기 (무기 진화 형태)
+    static int KitWeapon(string hero, int nth)
+    {
+        Type sa = T("SpecialAbilities");
+        object def = T("CharacterData").GetMethod("Def").Invoke(null, new[] { Enum.Parse(T("CharacterId"), hero) });
+        int k = 0;
+        foreach (int id in (int[])Get(def, "pool"))
+            if ((bool)sa.GetMethod("KitIsWeapon").Invoke(null, new object[] { id }) && k++ == nth) return id;
+        return -1;
+    }
+
+    // 빽빽한 적 무리 한가운데서 진화 무기 필살기 → 한꺼번에 쓸려 나감
+    static IEnumerator Blast(string hero, int who, int stage, int evolve, int swarm, float lead, float hold, float zoom)
+    {
+        Debug.Log("[CAP] blast " + hero + " stage " + stage + " evolve " + evolve + " frames " + (rec != null ? rec.frames : 0));
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, stage);
+        Evolve(evolve);
+        Swarm(stage, swarm);
+        Swarm(stage, swarm / 2);
+        rec.autopilot = true;
+        yield return F(1.1f);                       // 적이 몰려올 시간 (녹화 안 함)
+        rec.baseZoom = zoom;
+        rec.recording = true;
+        Hit(1f, 0.6f, 0.9f);                       // 장면이 바뀔 때마다 번쩍 · 쿵
+        yield return F(lead);
+        yield return Ult(hold);
+        Hit(1.2f, 1.4f, 0.5f);
+        rec.StartCoroutine(SlowMo(0.3f, 1.1f));
+        yield return F(1.5f);
+        Hit(0.6f, 0.8f, 0f);
+        yield return F(0.7f);
+    }
+
+    // 보스 결계가 펼쳐지고 → 보스를 쓰러뜨려 결계가 산산조각
+    static IEnumerator BarrierBreak(string hero, int who, int stage, int evolve)
+    {
+        Debug.Log("[CAP] barrier " + hero + " stage " + stage + " frames " + (rec != null ? rec.frames : 0));
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, stage);
+        Evolve(evolve);
+        object b = SpawnBoss(stage, 0.8f);
+        rec.autopilot = true;
+        yield return F(0.8f);
+        Component bc = (Component)b;
+        Component ult = bc.GetComponent(T("BossUltimate"));
+        if (ult == null) ult = bc.gameObject.AddComponent(T("BossUltimate"));
+        yield return null;
+        ((MonoBehaviour)ult).StartCoroutine((IEnumerator)Call(ult, "Run"));
+        yield return F(3.6f);                       // 외침 화면(글자)은 찍지 않음
+        rec.baseZoom = 0.95f;
+        rec.recording = true;
+        Hit(1f, 1f, 1f);
+        yield return F(2.6f);                       // 결계 안에서 쏟아지는 공격
+        yield return Ult(0.3f);
+        yield return F(0.5f);
+        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);     // 결계가 깨지는 순간
+        Hit(1.5f, 2f, 1f);
+        rec.StartCoroutine(SlowMo(0.25f, 1.6f));
+        yield return F(2.2f);
+    }
+
+    [UnityTest]
+    public IEnumerator HighlightReel()
+    {
+        Debug.Log("[CAP] highlight start");
+        LogAssert.ignoreFailingMessages = true;
+        Directory.CreateDirectory(Out);
+        Time.captureFramerate = Fps;
+        In("Auto", true);
+        AudioListener.volume = 0f;
+        SetGameLanguage(Lang);
+        GameObject host = new GameObject("CaptureRec");
+        UnityEngine.Object.DontDestroyOnLoad(host);
+        rec = host.AddComponent<Rec>();
+        rec.musicPath = "Music/bgm_domain";         // 결계 음악 (가장 긴박함)
+        rec.musicVolume = 1f;
+        BuildOverlay();
+        rec.sub.text = "";
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+
+        yield return Load("Gunner", 1);
+        Debug.Log("[CAP] loaded");
+        rec.Begin(Path.Combine(Out, "SoulSaver_Highlight.mp4"));
+
+        int dual = 2, shotgun = 0, chain = 5, grenade = 7;      // SpecialAbilities: DualId · ShotgunId · ChainId · GrenadeId
+        yield return Blast("Gunner", 0, 1, dual, 34, 0.5f, 0.05f, 0.9f);            // 총알 폭풍
+        yield return Blast("Swordsman", 1, 2, KitWeapon("Swordsman", 0), 30, 0.6f, 0.6f, 0.85f);
+        yield return Blast("Alchemist", 4, 0, KitWeapon("Alchemist", 1), 30, 0.6f, 0.5f, 0.9f);
+        yield return BarrierBreak("Archer", 3, 1, KitWeapon("Archer", 0));          // 지옥의 군주 결계 파괴
+        yield return Blast("Gunner", 0, 3, chain, 30, 0.5f, 1.0f, 0.9f);            // 뇌운
+        yield return Blast("Rogue", 2, 1, KitWeapon("Rogue", 0), 30, 0.5f, 0.5f, 0.85f);
+        yield return Blast("Archer", 3, 2, KitWeapon("Archer", 1), 30, 0.5f, 0.9f, 0.9f);
+        yield return BarrierBreak("Swordsman", 1, 0, KitWeapon("Swordsman", 1));    // 리치 왕 결계 파괴
+        yield return Blast("Gunner", 0, 1, grenade, 40, 0.4f, 0.8f, 0.85f);         // 용암 융단폭격으로 마무리
+        yield return Blast("Gunner", 0, 2, shotgun, 40, 0.4f, 0.8f, 0.85f);
+
+        // 로고만 (자막 없음)
+        rec.autopilot = false;
+        yield return Fade(0f, 1f, 0.3f);
+        Hit(0f, 0f, 1f);
+        for (int i = 0; i <= Fps; i++)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, i / (float)Fps);
+            rec.logo.alpha = k;
+            rec.logo.transform.localScale = Vector3.one * Mathf.Lerp(1.3f, 1f, k);
+            yield return null;
+        }
+        int tail = Fps * 2;
+        for (int i = 0; i < tail; i++) { rec.musicVolume = 1f - i / (float)tail; yield return null; }
+
+        rec.End();
+        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
+        PlayerPrefs.Save();
+        Time.captureFramerate = 0;
+        Time.timeScale = 1f;
         In("Auto", false);
         Debug.Log("[CAP] done frames=" + rec.frames + " (" + (rec.frames / (float)Fps).ToString("0.0") + "s)");
         yield return null;
