@@ -495,7 +495,9 @@ public partial class SpecialAbilities : MonoBehaviour
 
             case DualId:
                 // 총알 폭풍: 1.6초 동안 두 줄기 나선으로 사방 난사 (움직이며 쓸 수 있음)
+                // 2.2.0: 캐릭터 주위 StormRange 칸까지만 날아감 (영혼 트리 「폭풍 사거리」로 +2칸씩)
                 {
+                    float range = StormRange;
                     float angle = Random.Range(0f, 360f);
                     for (float t = 0f; t < 1.6f + 0.4f * UltTrait(id); t += 0.04f)
                     {
@@ -513,6 +515,7 @@ public partial class SpecialAbilities : MonoBehaviour
                             SignatureSkills.UltShots = true;
                             ApplyGunCards(b, true, false);
                             SignatureSkills.UltShots = false;
+                            b.lifetime = Mathf.Max(0.05f, (range - 0.6f) / Mathf.Max(1f, b.speed));     // 카드로 바뀐 탄속까지 반영
                             Fx.Spawn("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }
                         angle += 22f;
@@ -774,6 +777,9 @@ public partial class SpecialAbilities : MonoBehaviour
     }
 
     public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);
+    // 총알 폭풍 사거리 (칸): 기본 6, 영혼 트리 「폭풍 사거리」 I · II 로 +2씩
+    public const float StormBaseRange = 6f;
+    public float StormRange => StormBaseRange + TreeStormRange;
 
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
     // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)

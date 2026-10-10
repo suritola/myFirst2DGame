@@ -53,7 +53,7 @@ public partial class SpecialAbilities
     {
         ShotgunId => "마우스 쪽으로 거대한 부채꼴 폭발 3연발",
         SniperId => "화면을 가로지르는 굵은 광선 (광선 위의 적이 많을수록 강함)",
-        DualId => "1.6초 동안 사방으로 총알을 난사",
+        DualId => "1.6초 동안 주위 6칸까지 사방으로 총알을 난사",
         FlameId => "마우스 위치에 적을 빨아들이며 태우는 불기둥",
         SeekerId => "영혼 구슬 다섯이 조준한 적에게 번갈아 달려듦",
         ChainId => "조준한 적들에게 하늘에서 번개가 연달아 떨어짐",

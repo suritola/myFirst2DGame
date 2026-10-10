@@ -212,6 +212,7 @@ public partial class SpecialAbilities
     public float TreeGaugeMul { get; private set; } = 1f;   // 필살기 게이지 차는 속도
     public float TreeShardMul { get; private set; } = 1f;   // 영혼 조각 획득량
     public float TreeUltRefund { get; private set; }        // 필살기를 쓴 뒤 게이지가 이만큼 남음
+    public float TreeStormRange { get; private set; }       // 총알 폭풍 사거리 + (칸, 2.2.0)
     public float TreeRateMul { get; private set; } = 1f;    // 모든 무기 발사 간격 배율
     public float TreeMagMul { get; private set; } = 1f;     // 모든 무기 탄창 배율
     public float TreeReloadMul { get; private set; } = 1f;  // 모든 무기 장전 시간 배율
@@ -295,9 +296,18 @@ public partial class SpecialAbilities
         t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 52, ult, () => UpgradeUlt(uw, UltTraitStat)));
         if (Gunner)
         {
-            // 조준형 필살기(거너)만
-            t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
-            t.Add(Node("u.slow2", "u.slow1", 1, "노려보는 눈빛 II", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 34, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+            if (UltReplaced)
+            {
+                // 쌍권총(총알 폭풍)은 조준이 없으므로 같은 자리에 사거리 (2.2.0)
+                t.Add(Node("u.storm1", "u.gauge1", 1, "폭풍 사거리", "총알 폭풍 사거리 +2칸", 18, ult, () => TreeStormRange += 2f));
+                t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +2칸", 34, ult, () => TreeStormRange += 2f));
+            }
+            else
+            {
+                // 조준형 필살기(거너)만
+                t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+                t.Add(Node("u.slow2", "u.slow1", 1, "노려보는 눈빛 II", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 34, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+            }
         }
         t.Add(Node("u.refund1", "u.gauge2", 1, "잔불", "필살기를 쓴 뒤 게이지가 15% 남습니다", 30, LvIcon(2), () => TreeUltRefund += 0.15f));
         t.Add(Node("u.refund2", "u.refund1", 1, "잔불 II", "필살기를 쓴 뒤 게이지가 15% 더 남습니다", 54, LvIcon(2), () => TreeUltRefund += 0.15f));
