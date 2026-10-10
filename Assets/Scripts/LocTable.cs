@@ -249,6 +249,14 @@ public static partial class LocTable
         { "체력을 모두 회복하고 최대 체력 +10", L("Fully restore HP and +10 max HP", "体力を全回復し、最大体力+10", "完全恢复生命并提升最大生命+10") },
         { "하나를 고르세요", L("Choose one", "ひとつ選んでください", "请选择一项") },
         { "습격!\n모두 쓰러뜨리면 보물 상자가 나타납니다", L("Ambush!\nDefeat them all to reveal a treasure chest", "襲撃！\nすべて倒すと宝箱が現れます", "伏击！\n全部击败后会出现宝箱") },
+        // 저주 제단 (Curse, 2.2.2)
+        { "저주를 받는다", L("Accept the curse", "呪いを受ける", "接受诅咒") },
+        { "이번 장 적 · 보스 체력 +30%\n경험치 · 코인 보상 +50%", L("Enemy and boss HP +30% this chapter\nEXP and coin rewards +50%", "この章の敵・ボスの体力+30%\n経験値・コイン報酬+50%", "本章敌人与首领生命+30%\n经验与金币奖励+50%") },
+        { "거절한다", L("Refuse", "断る", "拒绝") },
+        { "평소대로 싸웁니다", L("Fight as usual", "いつも通り戦います", "照常战斗") },
+        { "저주 제단", L("Cursed Altar", "呪いの祭壇", "诅咒祭坛") },
+        { "위험을 감수하면 더 큰 보상을 얻습니다", L("Take the risk for a bigger reward", "危険を冒せば、より大きな報酬を得られます", "甘冒风险，获得更大回报") },
+        { "저주를 받았다!\n적 체력 +30% · 보상 +50%", L("You are cursed!\nEnemy HP +30% · Rewards +50%", "呪いを受けた！\n敵の体力+30%・報酬+50%", "你受到了诅咒！\n敌人生命+30% · 奖励+50%") },
         // 받은 피해 출처 (AttackLabel, 2.2.2)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

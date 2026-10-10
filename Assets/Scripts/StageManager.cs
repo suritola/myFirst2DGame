@@ -113,6 +113,7 @@ public class StageManager : MonoBehaviour
     void Start()
     {
         LastStand.ResetRun();
+        Curse.Active = false;
         gameObject.AddComponent<ChapterEvents>();        // 장 중반 습격 · 엘리트 · 보물 상자 (2.2.2)
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null)
@@ -455,6 +456,7 @@ public class StageManager : MonoBehaviour
         spawner.StartStage(stage);
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
         LastStand.ResetChapter();
+        Curse.Active = false;       // 이어하기: 저장 기록의 'k' 가 다시 켬
     }
 
     // 트레일러 촬영용: 스킬 트리 닫기
@@ -683,6 +685,7 @@ public class StageManager : MonoBehaviour
         ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
         RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9)
+        StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (2.2.2)
     }
 
     // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장
