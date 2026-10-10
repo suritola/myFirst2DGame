@@ -271,7 +271,8 @@ public class PlayerController : MonoBehaviour
 
 
     // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
-    public static float NeedExp(int level) => 50 + level * 50;
+    // 1.0.6: 최고점은 그대로 두고 성장 속도만 늦춤 — 레벨마다 +50 → +65 (초반 +15%, 레벨 20쯤 +30%)
+    public static float NeedExp(int level) => 50 + level * 65;
 
     public void addDamage(int a)
     {

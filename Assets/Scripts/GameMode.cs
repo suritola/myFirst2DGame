@@ -34,7 +34,7 @@ public static class GameMode
     // 보상 기준 (1.8.8까지의 처치 수 배율). 보스 · 중간 보스처럼 한 판에 나오는 수가 정해진 보상은 이 기준으로
     static readonly float[] RewardBasis =        { 0.7f, 0.8f,  0.9f,   1f };
     // 일반 적 영혼 조각을 이만큼만 (판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게)
-    const float KillShardRate = 0.75f;
+    const float KillShardRate = 0.6f;      // 1.0.6: 0.75 → 0.6 (영혼 트리가 천천히 차게, 보스 · 상자 보상은 그대로)
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
 
     // 무한 모드 (1.8.7 조정): 초반이 너무 어렵고 후반이 지루하던 곡선을 바꿈

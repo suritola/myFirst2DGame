@@ -155,7 +155,9 @@ public partial class Shop : MonoBehaviour
     int moveSpeedBuys = 0;
 
     // 영혼 트리 '흥정' 할인을 뺀 실제 가격
-    static int Discounted(int price) => SpecialAbilities.SharedInstance != null ? Mathf.CeilToInt(price * SpecialAbilities.SharedInstance.TreeShopMul) : price;
+    // 1.0.6: 모든 상점 강화 가격 1.3배 (최고점은 그대로, 상점 성장을 늦춤) · 영혼 트리 「흥정」 할인은 그 위에
+    const float GrowthPriceMul = 1.3f;
+    static int Discounted(int price) => Mathf.CeilToInt(price * GrowthPriceMul * (SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.TreeShopMul : 1f));
 
     bool TryPay(int price)
     {
