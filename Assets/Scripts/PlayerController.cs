@@ -849,23 +849,40 @@ void Shoot()
         {
             if (target == null) continue;
 
-            Vector3 startPosition = transform.position + new Vector3(0, -0.5f, 0);
-
-            Vector2 direction = (target.transform.position - startPosition).normalized;
+            // 2.2.0: 명중률 — 방향을 첫 발 전에 한 번만 정하던 것을 매 발 다시 조준 (발밑 대신 몸 중심, 움직이는 적은 날아가는 동안 갈 자리를 앞질러)
+            Collider2D body = target.GetComponent<Collider2D>();
+            Vector3 lastPos = target.transform.position;
+            float lastTime = Time.time;
+            Vector2 velocity = Vector2.zero;
 
             for (int i = 0; i < ShotsPerTarget;  i++)
             {
                 if (target == null) break;
 
-                FaceTowards(target.transform.position);
+                Vector3 now = target.transform.position;
+                float dt = Time.time - lastTime;
+                if (dt > 0.001f) velocity = Vector2.ClampMagnitude((now - lastPos) / dt, 8f);     // 밀려난 거리로 튀지 않게
+                lastPos = now; lastTime = Time.time;
+
+                Vector3 startPosition = transform.position + new Vector3(0, -0.5f, 0);
+                Vector3 aim = body != null && body.enabled ? body.bounds.center : now;
+
+                FaceTowards(aim);
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
-                Bullet shot = CreateBullet(startPosition, direction, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
+                Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
                 // 2.2.1: 필살기 총알에도 총알 카드 · 고유 스킬(영혼 탄환 · 총열 과열 · 소각탄 · 전기탄 …), 덤 총알 · 유도 · 폭발탄은 빼고(light)
                 SignatureSkills.UltShots = true;
                 special?.ApplyGunCards(shot, true, false);
                 SignatureSkills.UltShots = false;
+                if (shot != null)
+                {
+                    // 카드로 바뀐 탄속까지 반영해 앞질러 조준
+                    float lead = Mathf.Min(0.6f, Vector2.Distance(startPosition, aim) / Mathf.Max(1f, shot.speed));
+                    Vector2 dir = (Vector2)(aim + (Vector3)(velocity * lead) - startPosition);
+                    if (dir.sqrMagnitude > 0.0001f) shot.Dir = dir.normalized;
+                }
 
                 yield return new WaitForSeconds(shootDelay);
             }
