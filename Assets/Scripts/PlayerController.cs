@@ -212,7 +212,7 @@ public class PlayerController : MonoBehaviour
     // 시작
     // =====================================
 
-    // 이동 속도 상한 (1.0.6): 빨라지는 효과(그림자 숙련 · 연쇄 처치 · 도망자의 발걸음 · 상점 · 물약 …)가 곱으로 쌓여
+    // 이동 속도 상한 (1.0.5): 빨라지는 효과(그림자 숙련 · 연쇄 처치 · 도망자의 발걸음 · 상점 · 물약 …)가 곱으로 쌓여
     // 후반 도적이 주체할 수 없이 빨라졌음 → 기본 속도의 1.3배까지는 그대로, 넘는 몫은 40%만, 최대 1.7배 (둔화는 그대로 적용)
     const float SpeedSoftCap = 1.3f, SpeedOverRate = 0.4f, SpeedHardCap = 1.7f;
     float baseMoveSpeed = -1f;

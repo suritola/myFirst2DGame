@@ -840,7 +840,7 @@ public partial class CharacterKit : MonoBehaviour
         }
     }
 
-    // 1.0.6: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
+    // 1.0.5: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
     float hasteUntil;
     bool hasted;
     IEnumerator DashHaste(float seconds, float mul)
