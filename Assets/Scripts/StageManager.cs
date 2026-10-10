@@ -190,6 +190,15 @@ public class StageManager : MonoBehaviour
         {
             RunClock.Create();
             ShowBanner(Chapters.Title(CurrentStage), 2.5f);
+            // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (2.2.2)
+            int mastery = Mastery.Level(CharacterData.Selected);
+            LevelShop shop = FindFirstObjectByType<LevelShop>();
+            if (mastery > 0 && shop != null && !Demo.On && !DailyChallenge.Active)
+            {
+                shop.GrantFreePicks(mastery);
+                ShowBanner(Chapters.Title(CurrentStage) + "
+" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString()), 3f);
+            }
         }
         Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
     }
@@ -613,6 +622,8 @@ public class StageManager : MonoBehaviour
             RunSave.Delete();           // 판이 끝났으므로 이어할 판은 지움 (2.1.9)
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);
+            if (Mastery.OnCleared(CharacterData.Selected))
+                ShowBanner(Loc.T("영웅 숙련도가 올랐다!") + "  " + Mastery.Label(CharacterData.Selected), 4f);
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }

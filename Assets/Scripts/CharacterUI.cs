@@ -101,6 +101,12 @@ public static class CharacterUI
         TMP_Text nameText = UIKit.Text(t, name, 30f, unlocked ? Gold : Dim, new Vector2(0f, -100f), new Vector2(230f, 40f));
         string sub = selected ? "선택됨" : unlocked ? d.title : developed ? "잠김" : "준비 중";
         TMP_Text subText = UIKit.Text(t, sub, 20f, selected ? new Color(0.5f, 1f, 0.6f) : Dim, new Vector2(0f, -134f), new Vector2(230f, 30f));
+        // 영웅 숙련도 (2.2.2): 마지막 보스를 쓰러뜨릴 때마다 +1 (단계마다 시작 레벨업 카드 +1) · 칸 위쪽 안
+        if (unlocked && Mastery.Level(id) > 0)
+        {
+            TMP_Text star = UIKit.Text(t, "", 20f, new Color(1f, 0.85f, 0.35f), new Vector2(0f, 142f), new Vector2(230f, 26f));
+            star.text = Mastery.Label(id);
+        }
         if (!unlocked && developed)
         {
             subText.text = Loc.T("잠김") + " · " + d.price.ToString("N0") + " P";

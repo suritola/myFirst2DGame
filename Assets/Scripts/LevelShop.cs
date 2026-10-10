@@ -163,6 +163,9 @@ public partial class LevelShop : MonoBehaviour
     // ================================================================= 쌓인 레벨업
     public int PendingLevels { get; private set; }
 
+    // 영웅 숙련도 (Mastery, 2.2.2): 경험치 요구량을 올리지 않고 고를 카드만 더 줌
+    public void GrantFreePicks(int n) { if (n > 0) AddPending(n); }
+
     public void AddPending(int n = 1)
     {
         PendingLevels += n;
