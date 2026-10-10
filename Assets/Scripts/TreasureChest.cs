@@ -6,7 +6,7 @@ using UnityEngine;
 public class TreasureChest : MonoBehaviour
 {
     static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
-    const float OpenRange = 1.6f;
+    const float OpenRange = 1.6f, Size = 1.6f;
 
     GameObject label;
     SpriteRenderer sr;
@@ -16,7 +16,11 @@ public class TreasureChest : MonoBehaviour
     public static TreasureChest Spawn(Vector3 at)
     {
         at = Hostile.ClampArena(at);
-        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", Hostile.Glow, at, 0.5f, Gold, "Effect", 8);
+        // 상자 그림 (tools/pixelart/make_choice_icons.py 의 chest) · 뒤에 금빛
+        Sprite art = Resources.Load<Sprite>("Icons/choice_chest");
+        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? Color.white : Gold, "Effect", 8);
+        GameObject halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.35f, new Color(1f, 0.82f, 0.3f, 0.45f), "Effect", 7);
+        halo.transform.SetParent(go.transform, true);
         TreasureChest c = go.AddComponent<TreasureChest>();
         c.sr = go.GetComponent<SpriteRenderer>();
         c.home = at;
@@ -32,7 +36,7 @@ public class TreasureChest : MonoBehaviour
     {
         if (opening) return;
         transform.position = home + Vector3.up * Mathf.Sin(Time.time * 3f) * 0.15f;
-        transform.localScale = Vector3.one * (0.5f + 0.06f * Mathf.Sin(Time.time * 6f));
+        transform.localScale = Vector3.one * Size * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
         if (Random.value < Time.deltaTime * 4f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 0.8f), 0.8f, Gold, 20f);
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || Time.timeScale == 0f) return;
@@ -48,9 +52,9 @@ public class TreasureChest : MonoBehaviour
         int coins = 20 + 10 * slot, shards = 20 + 10 * slot;
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("황금", Loc.T("코인 +{0}").Replace("{0}", coins.ToString()), new Color(1f, 0.82f, 0.3f)),
-            new ChoiceUI.Option("영혼", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f)),
-            new ChoiceUI.Option("생명", "체력을 모두 회복하고 최대 체력 +10", new Color(1f, 0.45f, 0.45f)),
+            new ChoiceUI.Option("황금", Loc.T("코인 +{0}").Replace("{0}", coins.ToString()), new Color(1f, 0.82f, 0.3f), "gold"),
+            new ChoiceUI.Option("영혼", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "soul"),
+            new ChoiceUI.Option("생명", "체력을 모두 회복하고 최대 체력 +10", new Color(1f, 0.45f, 0.45f), "life"),
         };
         int pick = 0;
         yield return ChoiceUI.Run("보물 상자", "하나를 고르세요", options, i => pick = i);

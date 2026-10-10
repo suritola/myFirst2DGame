@@ -270,6 +270,8 @@ public static partial class LocTable
         { "숙련 {0}/{1}", L("Mastery {0}/{1}", "熟練 {0}/{1}", "熟练 {0}/{1}") },
         { "숙련 보너스: 레벨업 카드 +{0}", L("Mastery bonus: level-up cards +{0}", "熟練ボーナス：レベルアップカード+{0}", "熟练奖励：升级卡牌+{0}") },
         { "영웅 숙련도가 올랐다!", L("Hero mastery increased!", "英雄の熟練度が上がった！", "英雄熟练度提升了！") },
+        // 고르기 창 확정 안내 (1.0.5)
+        { "더블클릭 또는 [Space]로 확정", L("Double-click or press [Space] to confirm", "ダブルクリックまたは[Space]で決定", "双击或按[Space]确认") },
         // 받은 피해 출처 (AttackLabel, 1.0.5)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

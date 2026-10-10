@@ -20,8 +20,8 @@ public static class Curse
         int pick = 1;
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("저주를 받는다", "이번 장 적 · 보스 체력 +30%\n경험치 · 코인 보상 +50%", new Color(0.8f, 0.4f, 1f)),
-            new ChoiceUI.Option("거절한다", "평소대로 싸웁니다", new Color(0.85f, 0.8f, 0.7f)),
+            new ChoiceUI.Option("저주를 받는다", "이번 장 적 · 보스 체력 +30%\n경험치 · 코인 보상 +50%", new Color(0.8f, 0.4f, 1f), "curse"),
+            new ChoiceUI.Option("거절한다", "평소대로 싸웁니다", new Color(0.85f, 0.8f, 0.7f), "refuse"),
         };
         yield return ChoiceUI.Run("저주 제단", "위험을 감수하면 더 큰 보상을 얻습니다", options, i => pick = i);
         if (pick != 0) yield break;
