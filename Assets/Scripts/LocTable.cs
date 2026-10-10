@@ -226,6 +226,9 @@ public static partial class LocTable
         { "의식이 깨졌다! 리치 왕이 휘청인다!", L("The rite is broken! The Lich King staggers!", "儀式が破れた！リッチキングがよろめく！", "仪式被打破！巫妖王踉跄了！") },
         { "지옥의 군주가 날개를 편다!", L("The Hell Lord spreads its wings!", "地獄の君主が翼を広げた！", "地狱领主展开了双翼！") },
         { "지옥이 무너진다! 가장자리가 용암으로 차오른다!", L("Hell is collapsing! Lava rises from the edges!", "地獄が崩れる！外周から溶岩が迫る！", "地狱正在崩塌！熔岩从边缘涌来！") },
+        // 최후의 보루 (LastStand, 2.2.2)
+        { "최후의 보루!", L("Last Stand!", "最後の砦！", "最后的堡垒！") },
+        { "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.", L("When your HP drops below 30%, Last Stand triggers once per chapter: 2 seconds of invincibility and a blast that pushes nearby enemies away.", "体力が30%を下回ると、章ごとに一度「最後の砦」が発動し、2秒間無敵になって周囲の敵を押し返します。", "生命低于30%时，每章触发一次「最后的堡垒」：无敌2秒并击退周围敌人。") },
         // 받은 피해 출처 (AttackLabel, 2.2.2)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

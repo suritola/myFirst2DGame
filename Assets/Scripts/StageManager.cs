@@ -112,6 +112,7 @@ public class StageManager : MonoBehaviour
 
     void Start()
     {
+        LastStand.ResetRun();
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null)
         {
@@ -452,6 +453,7 @@ public class StageManager : MonoBehaviour
         CurrentStage = stage;
         spawner.StartStage(stage);
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
+        LastStand.ResetChapter();
     }
 
     // 트레일러 촬영용: 스킬 트리 닫기
@@ -671,6 +673,7 @@ public class StageManager : MonoBehaviour
         CurrentStage = stage;
         spawner.StartStage(stage);
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
+        LastStand.ResetChapter();
         bool points = !Evo && !firstGate;
         if (points) specialPoints += 2;
 
