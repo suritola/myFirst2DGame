@@ -285,6 +285,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        GuardScreenTint();
         DamageSource.Current = DamageSource.Basic;      // 재장전 · 평타 (아래 우클릭 부분은 필살기)
         try { UpdateInput(); }
         finally { DamageSource.Current = null; }
@@ -701,7 +702,7 @@ void Shoot()
         }
         special?.BeginAim();
 
-        StartCoroutine(FadeScreen(screenFadeAlpha));
+        FadeTo(screenFadeAlpha);
 
         Time.timeScale = Skill_setTime;
     }
@@ -775,7 +776,7 @@ void Shoot()
 
         Time.timeScale = 1f;
 
-        StartCoroutine(FadeScreen(0f));
+        FadeTo(0f);
 
         StartCoroutine(ResetZoom());
 
@@ -814,7 +815,7 @@ void Shoot()
 
         Time.timeScale = 1f;
 
-        StartCoroutine(FadeScreen(0f));
+        FadeTo(0f);
 
         StartCoroutine(ResetZoom());
 
@@ -917,22 +918,36 @@ void Shoot()
     // 화면 페이드
     // =====================================
 
-    IEnumerator FadeScreen(
-        float targetAlpha
-    )
+    // 1.0.7: 조준을 빨리 끝내면 아직 진하게 바뀌던 코루틴이 흐려지는 코루틴보다 늦게 끝나 파란 화면이 남았음
+    // → 하나만 돌게 (새로 시작하면 앞의 것을 멈춤), 매 프레임 지금 색에서 움직임
+    Coroutine screenFade;
+    float screenFadeTarget;
+
+    void FadeTo(float targetAlpha)
+    {
+        if (screenFade != null) StopCoroutine(screenFade);
+        screenFadeTarget = targetAlpha;
+        screenFade = StartCoroutine(FadeScreen(targetAlpha));
+    }
+
+    IEnumerator FadeScreen(float targetAlpha)
     {
         if (skillEffectPanel == null) yield break;
-
-        UnityEngine.Color color = skillEffectPanel.color;
-
-        while (!Mathf.Approximately(color.a, targetAlpha))
+        while (skillEffectPanel != null && !Mathf.Approximately(skillEffectPanel.color.a, targetAlpha))
         {
+            Color color = skillEffectPanel.color;
             color.a = Mathf.MoveTowards(color.a, targetAlpha, screenFadeSpeed * Time.unscaledDeltaTime);
-
             skillEffectPanel.color = color;
-
             yield return null;
         }
+        screenFade = null;
+    }
+
+    // 안전장치: 조준 중이 아닌데 화면 색이 남아 있으면 흐려지게 (어떤 길로든 남지 않게)
+    void GuardScreenTint()
+    {
+        if (skillEffectPanel == null || isSkillUsing || screenFade != null) return;
+        if (skillEffectPanel.color.a > 0.001f) FadeTo(0f);
     }
 
     // =====================================
