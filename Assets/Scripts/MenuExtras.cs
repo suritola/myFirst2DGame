@@ -567,17 +567,22 @@ public static class SettingsUI
     {
         RowLabel("화면 모드", 200f);
         Button full = null, windowed = null;
-        System.Action highlightMode = () =>
+        TMP_Text res = null;
+        // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
+        System.Action<bool> highlightMode = isFull =>
         {
-            bool isFull = Screen.fullScreenMode != FullScreenMode.Windowed;
             full.GetComponent<Image>().color = isFull ? Gold : Off;
             windowed.GetComponent<Image>().color = isFull ? Off : Gold;
+            full.transform.localScale = Vector3.one * (isFull ? 1.06f : 1f);
+            windowed.transform.localScale = Vector3.one * (isFull ? 1f : 1.06f);
         };
         full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, 200f), new Vector2(250f, 64f), () =>
         {
-            Screen.SetResolution(Display.main.systemWidth, Display.main.systemHeight, FullScreenMode.FullScreenWindow);
+            int w = Display.main.systemWidth, h = Display.main.systemHeight;
+            Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
+            res.text = w + " × " + h;
             Deselect();
-            highlightMode();
+            highlightMode(true);
         }, 26f);
         windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, 200f), new Vector2(250f, 64f), () =>
         {
@@ -590,14 +595,15 @@ public static class SettingsUI
                     if (list[i].x < Display.main.systemWidth && list[i].y < Display.main.systemHeight) { r = list[i]; break; }
             }
             Screen.SetResolution(r.x, r.y, FullScreenMode.Windowed);
+            res.text = r.x + " × " + r.y;
             Deselect();
-            highlightMode();
+            highlightMode(false);
         }, 26f);
-        highlightMode();
+        highlightMode(Screen.fullScreenMode != FullScreenMode.Windowed);
 
         // 해상도: < 1920 × 1080 >
         RowLabel("해상도", 110f);
-        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 110f), new Vector2(320f, 50f));
+        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 110f), new Vector2(320f, 50f));
         res.text = Screen.width + " × " + Screen.height;
         System.Action<int> step = d =>
         {
