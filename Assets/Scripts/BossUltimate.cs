@@ -644,6 +644,19 @@ public class BossUltimate : MonoBehaviour
         foreach (GameObject g in balls) if (g != null) Destroy(g);
     }
 
+    GameObject Bouncer(Vector3 from, Color acid, float life)
+    {
+        if (Hostile.Glow == null) return null;
+        GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
+        DomainBall b = g.AddComponent<DomainBall>();
+        b.center = center;
+        b.radius = Radius - 0.6f;
+        b.velocity = Random.insideUnitCircle.normalized * 5.5f;
+        b.damage = 15f * Power;
+        b.life = Mathf.Max(1f, life);
+        return g;
+    }
+
     // 경고 원 → 위에서 떨어져(또는 솟아) 터짐
     IEnumerator Spike(Vector3 at, float r, float warn, Color color, float damage, string fx)
     {
