@@ -769,7 +769,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 조준할 수 있는 적 수: 권총 · 낫은 강화로 늘어남
     public int MaxTargets(int baseCount)
     {
-        int w = UltActive ? UltId : PistolUlt;
+        int w = UltReplaced ? UltId : PistolUlt;
         return w == PistolUlt || w == ScytheId ? baseCount + 2 * UltTrait(w) : baseCount;
     }
 
@@ -777,7 +777,10 @@ public partial class SpecialAbilities : MonoBehaviour
 
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
     // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)
-    public bool IsInstantUlt => UltActive && (UltId == ShotgunId || UltId == DualId || UltId == GrenadeId);
+    // 2.2.0: 거너는 쌍권총(총알 폭풍)만 필살기를 바꾸고, 나머지 진화 무기는 원래 조준 사격 뒤에 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
+    public bool UltReplaced => UltActive && UltId == DualId;
+    public bool UltAdds => UltActive && !UltReplaced;
+    public bool IsInstantUlt => UltReplaced;
 
     // 조준 화면 (WeaponAim)이 쓰는 값들
     public Transform PlayerTransform => player.transform;
@@ -786,18 +789,18 @@ public partial class SpecialAbilities : MonoBehaviour
     public Vector3 PlayerMuzzle => player.MuzzlePosition;
     public static Color ColorOf(int id) => WeaponColor(id);
     // 타겟팅 중 화면 색 (무기 색)
-    public Color AimTint => UltActive ? WeaponColor(UltId) : new Color(1f, 0.9f, 0.6f);
+    public Color AimTint => UltReplaced ? WeaponColor(UltId) : new Color(1f, 0.9f, 0.6f);
 
     WeaponAim aim;
     public void BeginAim()
     {
-        if (!UltActive) return;
+        if (!UltReplaced) return;
         if (aim == null) aim = new WeaponAim(this);
         aim.Begin(UltId);
     }
-    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && UltActive) aim.Update(targets, charge); }
+    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && UltReplaced) aim.Update(targets, charge); }
     public void EndAim() { if (aim != null) aim.End(); }
-    public GameObject MarkTarget(Transform target) => aim != null && UltActive ? aim.MarkTarget(target) : null;
+    public GameObject MarkTarget(Transform target) => aim != null && UltReplaced ? aim.MarkTarget(target) : null;
 
     // ================================================================= evolution
     // order: 한 번에 여러 개를 진화할 때 알림 글자를 위로 쌓는 순서

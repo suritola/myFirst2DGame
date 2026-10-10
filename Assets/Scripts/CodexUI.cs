@@ -295,7 +295,7 @@ public static class CodexUI
             foreach (int n in SpecialAbilities.Tier2Options(w))
                 paths += (paths.Length > 0 ? " / " : "") + Loc.T(SpecialAbilities.GunAugName(n, n == w));
             Card(d.icon, tint, Loc.T(SpecialAbilities.GunAugName(w, false)), gunner + " \u00B7 " + Loc.T("1차 진화"),
-                 Loc.T(SpecialAbilities.GunAugDesc(w, false)) + "  " + Accent.Tag(Loc.T("필살기") + " \u00B7 " + SpecialAbilities.UltName(w))
+                 Loc.T(SpecialAbilities.GunAugDesc(w, false)) + "  " + Accent.Tag(Loc.T(w == SpecialAbilities.DualId ? "필살기" : "필살기에 덧붙음") + " \u00B7 " + SpecialAbilities.UltName(w))
                  + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths);
         }
         // 다른 캐릭터: 1차 형태 셋 · 2차 강화 셋

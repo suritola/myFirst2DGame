@@ -681,7 +681,7 @@ void Shoot()
         if (skillEffectPanel != null)
         {
             if (!effectColorSaved) { baseEffectColor = skillEffectPanel.color; effectColorSaved = true; }
-            Color tint = special != null && special.UltActive ? Color.Lerp(baseEffectColor, special.AimTint, 0.6f) : baseEffectColor;
+            Color tint = special != null && special.UltReplaced ? Color.Lerp(baseEffectColor, special.AimTint, 0.6f) : baseEffectColor;
             tint.a = skillEffectPanel.color.a;
             skillEffectPanel.color = tint;
         }
@@ -732,7 +732,7 @@ void Shoot()
         targets.Add(closestEnemy);
 
         // 진화한 무기의 필살기면 무기다운 표식 (범위형 무기는 표식 없음)
-        if (special != null && special.UltActive)
+        if (special != null && special.UltReplaced)
         {
             GameObject weaponMark = special.MarkTarget(closestEnemy.transform);
             if (weaponMark != null) targetMarks.Add(weaponMark);
@@ -832,12 +832,14 @@ void Shoot()
         isVolleying = false;
     }
 
+    const float GunUltAddMul = 0.5f;     // CharacterKit.KitUltAddMul 과 같게
+
     IEnumerator ShootTargets()
     {
         isVolleying = true;
 
-        // 진화한 무기가 있으면 그 무기다운 일제 사격
-        if (special != null && special.UltActive)
+        // 필살기를 바꾸는 진화(쌍권총 · 총알 폭풍)면 그 무기다운 일제 사격
+        if (special != null && special.UltReplaced)
         {
             yield return StartCoroutine(special.WeaponVolley(targets, skillDamage, getHP));
             targets.Clear();
@@ -887,6 +889,10 @@ void Shoot()
                 yield return new WaitForSeconds(shootDelay);
             }
         }
+
+        // 2.2.0: 나머지 진화 무기는 원래 조준 사격 뒤에 그 무기의 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
+        if (special != null && special.UltAdds)
+            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP));
 
         targets.Clear();
         isVolleying = false;

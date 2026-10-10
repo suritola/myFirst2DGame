@@ -134,7 +134,8 @@ public partial class SpecialAbilities
         if (IsAwaken(id)) return Loc.T(AwakenDescs[id - AwakenFirst]);
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
         // 기본 공격에 붙는 능력 + 바뀌는 필살기
-        string ult = "\n<color=#9fd8ff>" + Loc.T("필살기") + " · " + UltName(id) + "</color>  ";
+        // 2.2.0~ 거너도 쌍권총만 필살기가 바뀌고, 나머지는 원래 조준 사격 뒤에 덧붙음
+        string ult = "\n<color=#9fd8ff>" + Loc.T(id == DualId ? "필살기" : "필살기에 덧붙음") + " · " + UltName(id) + "</color>  ";
         // 2.1.8~ 거너가 아니면 우클릭은 원래 필살기 그대로, 진화 무기의 궁극기는 거기에 덧붙음 (세기 50%)
         if (!Gunner) return Loc.T(CharacterKit.FormDesc(id)) + "\n<color=#9fd8ff>" + Loc.T("필살기에 덧붙음") + " · " + UltName(id) + "</color>  " + Loc.T(KitUltDesc(id));
         bool maxed = tier >= 2 && id == gunEvo1;
