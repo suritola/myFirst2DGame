@@ -833,7 +833,6 @@ public static partial class LocTable
         { "필살기에 덧붙음", L("Added to your ultimate", "必殺技に上乗せ", "附加于必杀技") },
         { "카드 다시 뽑기", L("Reroll cards", "カードを引き直す", "重抽卡牌") },
         { "레벨업 바로 열기", L("Open level-ups instantly", "レベルアップをすぐ開く", "立即打开升级") },
-        { "플레이 데이터 보내기", L("Send play data", "プレイデータを送信", "发送游戏数据") },
         { "바로 진화!", L("Evolves now!", "今すぐ進化！", "立即进化！") },
         // 2.1.9 판 중간 저장 (RunSave)
         { "이어하기", L("Continue", "つづきから", "继续游戏") },

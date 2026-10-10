@@ -20,7 +20,6 @@ public static class GameSettings
     const string CursorKey = "settings.gameCursor";
     const string AutoLevelKey = "settings.autoLevelUp";
     const string MuteKey = "settings.muteUnfocused";
-    const string ShareKey = "settings.shareData";
     const string UiScaleKey = "settings.uiScale";
     const string MouseSensKey = "settings.mouseSensitivity";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
@@ -31,7 +30,7 @@ public static class GameSettings
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
     static bool shake = true, flash = true, vsync = true;
-    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp, muteUnfocused = true, shareData = true;
+    static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp, muteUnfocused = true;
     static int uiScale = 2;
     static int damageNumbers;
 
@@ -82,7 +81,6 @@ public static class GameSettings
         gameCursor = Prefs.GetInt(CursorKey, 1) == 1;
         autoLevelUp = Prefs.GetInt(AutoLevelKey, 0) == 1;
         muteUnfocused = Prefs.GetInt(MuteKey, 1) == 1;
-        shareData = Prefs.GetInt(ShareKey, 1) == 1;
         uiScale = Mathf.Clamp(Prefs.GetInt(UiScaleKey, 2), 0, UiScales.Length - 1);
         mouseSens = Mathf.Clamp(Prefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
     }
@@ -169,13 +167,6 @@ public static class GameSettings
     {
         get { Load(); return muteUnfocused; }
         set { Load(); muteUnfocused = value; Prefs.SetInt(MuteKey, value ? 1 : 0); }
-    }
-
-    // 익명 플레이 데이터 보내기 (Telemetry) · 2.2.1~ · 기본 켬, 끄면 모아 둔 것도 지움
-    public static bool ShareData
-    {
-        get { Load(); return shareData; }
-        set { Load(); shareData = value; Prefs.SetInt(ShareKey, value ? 1 : 0); if (!value) Telemetry.ClearPending(); }
     }
 
     // UI 크기: 모든 화면의 글자 · 버튼 · HUD (CanvasScaler 기준 해상도를 나눔) · 2.1.9~

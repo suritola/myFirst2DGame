@@ -644,14 +644,12 @@ public static class SettingsUI
     static void BuildGameplay()
     {
         // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90
-        // 2.2.1: 「플레이 데이터 보내기」 한 줄을 더 넣으려고 줄 간격 90 → 75
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
-        CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
-        ToggleRow("색각 이상 모드", 50f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
-        ToggleRow("키 아이콘", -25f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
-        ToggleRow("게임 커서", -100f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
-        ToggleRow("레벨업 바로 열기", -175f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v);
-        ToggleRow("플레이 데이터 보내기", -250f, () => GameSettings.ShareData, v => GameSettings.ShareData = v);   // 익명 판 기록 (Telemetry)
+        CycleRow("피해 숫자", 110f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
+        ToggleRow("색각 이상 모드", 20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
+        ToggleRow("키 아이콘", -70f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
+        ToggleRow("게임 커서", -160f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
+        ToggleRow("레벨업 바로 열기", -250f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v);
     }
 
     // 누를 때마다 다음 값으로
