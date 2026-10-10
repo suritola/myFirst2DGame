@@ -563,7 +563,7 @@ public partial class CharacterKit : MonoBehaviour
                 bool recast = Time.time < recastUntil;
                 if (GameInput.UltDown && !Dashing && (full || recast)) ultAiming = true;
                 if (!ultAiming) break;
-                DrawUltAim(true, false);
+                DrawUltAim(true, AddedUltShown && !recast);      // 1.0.7: 게이지 돌진이면 덧붙은 궁극기 범위도
                 if (GameInput.UltHeld && !GameInput.UltUp) break;
                 CancelUltAim();
                 if (Dashing || !(full || Time.time < recastUntil)) break;
@@ -608,6 +608,9 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAimLine != null) ultAimLine.enabled = false;
         if (ultAimRing != null) ultAimRing.enabled = false;
     }
+
+    // 무기 진화 뒤 덧붙는 궁극기가 있으면 그 범위도 조준 중에 보여 줌 (1.0.7)
+    bool AddedUltShown => Special != null && Special.KitWeaponUltActive;
 
     // dash: 도적은 먼저 돌진하므로 돌진 경로와 도착 지점 기준 범위를 보여 줌 · shape: 전용 무기 궁극기 범위까지
     void DrawUltAim(bool dash, bool shape = true)
@@ -705,10 +708,12 @@ public partial class CharacterKit : MonoBehaviour
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
         ring.startWidth = ring.endWidth = 0.1f + 0.15f * charge;
         if (sword && Random.value < 0.4f) Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
+        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.7: 덧붙는 궁극기(예: 망치 대지 진동의 충격파 길)도 차징하는 동안 보여 줌
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         charging = false;
         ring.enabled = false;
+        CancelUltAim();
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐
@@ -928,10 +933,12 @@ public partial class CharacterKit : MonoBehaviour
         aimRing.enabled = true;
         Hostile.SetArc(aimRing, at, 4f * UltMul, 0f, 360f);
         aimRing.startColor = aimRing.endColor = new Color(0.6f, 1f, 0.5f, 0.5f + 0.3f * Mathf.Sin(Time.time * 14f));
+        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.7: 덧붙는 궁극기 범위도
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         aiming = false;
         aimRing.enabled = false;
+        CancelUltAim();
         StartCoroutine(ArrowRain(at));
         KitUltAdd(0f);
         Spend(gauge);
