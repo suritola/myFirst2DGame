@@ -13,6 +13,7 @@ using Steamworks;
 // 체험판 (1.9.2~): 빌드할 때 -demo 를 주면 SOULSAVER_DEMO 가 켜짐 (BuildScript, tools/steam-upload.ps1 -Demo)
 //   1장 지하 묘역 + 리치 왕까지 · 거너 · 검사 · 쉬움 난이도
 //   리치 왕을 쓰러뜨리면 (거너는 무기 진화까지 보여 준 뒤) 「정식판에서 계속」 화면과 위시리스트 버튼
+//   2.2.1~: 메인 메뉴 · 게임 오버 오른쪽 위에도 위시리스트 버튼 (끝 화면까지 가지 않고 그만두는 사람이 많아서)
 //   제품 이름이 Soul Saver Demo 라 저장 데이터는 정식판과 따로
 public static class Demo
 {
@@ -38,6 +39,20 @@ public static class Demo
         }
 #endif
         Application.OpenURL(StoreUrl);
+    }
+
+    // 화면 구석에 붙는 금색 「위시리스트에 추가」 버튼 (체험판에서만, 정식판은 null)
+    public static Button AddWishlistButton(Transform parent, Vector2 edge, Vector2 offset)
+    {
+        if (!On || parent == null) return null;
+        UIKit.EnsureStyle();
+        Button b = UIKit.MakeButton(parent, "위시리스트에 추가", Vector2.zero, new Vector2(300f, 64f), OpenStore, 26f);
+        b.name = "WishlistButton";
+        b.GetComponent<Image>().color = new Color(1f, 0.85f, 0.45f);
+        RectTransform r = (RectTransform)b.transform;
+        r.pivot = edge;
+        UIKit.Pin(r, edge, offset);
+        return b;
     }
 
     // ================================================================= 체험판 끝 화면

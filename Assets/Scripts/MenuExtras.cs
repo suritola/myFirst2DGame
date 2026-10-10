@@ -39,6 +39,7 @@ public static class MenuExtras
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
             ar.anchoredPosition = new Vector2(0f, 40f);
             canvas.gameObject.AddComponent<QuickRestart>();
+            Demo.AddWishlistButton(canvas.transform, new Vector2(1f, 1f), new Vector2(-30f, -30f));     // 체험판: 오른쪽 위 (피해 패널 위)
         }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
@@ -132,6 +133,7 @@ public static class MenuExtras
         nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
+        Demo.AddWishlistButton(sr.parent, new Vector2(1f, 1f), new Vector2(-30f, -170f));        // 체험판: 패치노트 아래
         PatchNotesUI.OpenOnLaunch(sr.root);
     }
 
