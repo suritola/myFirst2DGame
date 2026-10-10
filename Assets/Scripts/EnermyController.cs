@@ -389,12 +389,12 @@ public class EnermyController : MonoBehaviour
             
 
             enemySpawner.killedEnemy++;
-            if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, transform.position, Quaternion.identity);
+            if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
             for (int i = 0; i < coinDrop; i++)
             {
                 Vector2 drop = transform.position;
                 if (i > 0) drop += new Vector2(Random.Range(-1.5f, 1.5f), Random.Range(-1.5f, 1.5f));
-                CoinTag.Register(Instantiate(coin, drop, Quaternion.identity));
+                CoinTag.Register(Instantiate(coin, Hostile.ClampArena(drop), Quaternion.identity));
             }
         }
         Destroy(gameObject);

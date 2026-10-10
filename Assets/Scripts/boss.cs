@@ -347,13 +347,13 @@ public class bosss : MonoBehaviour
 
 
             enemySpawner.killedEnemy++;
-            if (Random.Range(0, 100) < chanceofHP) Instantiate(hp, transform.position, Quaternion.identity);
+            if (Random.Range(0, 100) < chanceofHP) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
             for (int i = 0; i < coinDrop; i++)
             {
                 float rx = Random.Range(-5f, 5f);
                 float ry = Random.Range(-5f, 5f);
                 Vector2 drop = new Vector2(transform.position.x + rx, transform.position.y + ry);
-                CoinTag.Register(Instantiate(coin, drop, Quaternion.identity));
+                CoinTag.Register(Instantiate(coin, Hostile.ClampArena(drop), Quaternion.identity));
             }
         }
 

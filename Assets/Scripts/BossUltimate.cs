@@ -349,7 +349,7 @@ public class BossUltimate : MonoBehaviour
             d.z = 0f;
             if (d.sqrMagnitude >= edge * edge) continue;
             if (d.sqrMagnitude < 0.01f) d = Vector3.right;
-            Vector3 to = center + d.normalized * edge;
+            Vector3 to = EdgeInArena(d, edge);
             to.z = pos.z;
             // 안쪽 깊이 있던 잡몹이 튕겨 나갈 때만 불꽃 (벽에 막히는 잡몹은 조용히)
             if ((to - pos).sqrMagnitude > 1.5f * 1.5f && sparks++ < 6)
@@ -358,6 +358,20 @@ public class BossUltimate : MonoBehaviour
             }
             e.transform.position = to;
         }
+    }
+
+    // 결계 가장자리 중 맵 안인 자리 (2.2.0: 결계가 맵 가장자리 근처면 바깥 방향 그대로 밀어 맵 밖으로 나갔음)
+    // 밀던 방향에서 좌우로 조금씩 돌려 가며 맵 안인 가장자리를 찾고, 없으면 맵 안으로 맞춤
+    Vector3 EdgeInArena(Vector3 d, float edge)
+    {
+        Vector3 n = d.normalized;
+        for (int step = 0; step <= 12; step++)
+        {
+            float a = 15f * ((step + 1) / 2) * (step % 2 == 0 ? 1f : -1f);
+            Vector3 to = center + Quaternion.Euler(0f, 0f, a) * n * edge;
+            if (Hostile.InArena(to)) return to;
+        }
+        return Hostile.ClampArena(center + n * edge);
     }
 
     void Confine(PlayerController p, float r = Radius)

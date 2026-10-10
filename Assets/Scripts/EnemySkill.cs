@@ -808,12 +808,17 @@ public static class Hostile
         return false;
     }
 
+    static EnemySpawner arenaSpawner;
     public static Vector3 ClampArena(Vector3 p)
     {
-        EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
+        // 결계 밀어내기 · 드롭처럼 자주 부르므로 찾은 스포너를 기억해 둠
+        if (arenaSpawner == null) arenaSpawner = Object.FindFirstObjectByType<EnemySpawner>();
+        EnemySpawner sp = arenaSpawner;
         if (sp == null) return p;
         return new Vector3(Mathf.Clamp(p.x, sp.spawnAreaMin.x, sp.spawnAreaMax.x), Mathf.Clamp(p.y, sp.spawnAreaMin.y, sp.spawnAreaMax.y + 1.5f), 0f);
     }
+    // 맵 안인지 (가장자리 조금 안쪽까지)
+    public static bool InArena(Vector3 p) => ((Vector2)(ClampArena(p) - p)).sqrMagnitude < 0.0001f;
 }
 
 // 경고 표시: 굵은 테두리 + 차오르는 안쪽 + 발동 순간까지 좁혀 드는 고리
