@@ -165,7 +165,7 @@ public static class PatchNotesUI
         open = null;
     }
 
-    // 마크다운 몇 가지만 TMP 서식으로: # 제목 · ## 소제목 · - 목록 · **굵게** (글꼴에 없는 이모지는 뺌)
+    // 마크다운 몇 가지만 TMP 서식으로: # 제목 · ## 소제목 · ### 작은 제목 · - 목록 · **굵게** (글꼴에 없는 이모지는 뺌)
     static string Format(string md)
     {
         StringBuilder sb = new StringBuilder();
@@ -174,7 +174,8 @@ public static class PatchNotesUI
             string line = Regex.Replace(raw, @"[\uD800-\uDFFF️‍]", "").TrimEnd();
             line = Regex.Replace(line, @"\*\*(.+?)\*\*", "<color=#F5D478>$1</color>");
             string t = line.TrimStart();
-            if (t.StartsWith("## ")) sb.Append("\n<size=120%><color=#C9A0FF>").Append(t.Substring(3).Trim()).Append("</color></size>\n");
+            if (t.StartsWith("### ")) sb.Append("<size=108%><color=#9FD8FF>").Append(t.Substring(4).Trim()).Append("</color></size>\n");    // 여러 버전을 합친 패치노트의 작은 제목
+            else if (t.StartsWith("## ")) sb.Append("\n<size=120%><color=#C9A0FF>").Append(t.Substring(3).Trim()).Append("</color></size>\n");
             else if (t.StartsWith("# ")) sb.Append("<size=125%><color=#F5D478>").Append(t.Substring(2).Trim()).Append("</color></size>\n");
             else if (t.StartsWith("- ")) sb.Append("<indent=2%>•</indent><indent=5%>").Append(t.Substring(2)).Append("</indent>\n");
             else if (t.Length > 0 && line.StartsWith(" ")) sb.Append("<indent=5%><color=#A89C86>").Append(t).Append("</color></indent>\n");
