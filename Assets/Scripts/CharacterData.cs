@@ -34,7 +34,8 @@ public static class CharacterData
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
             weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
-            hp = 2f, damage = 4f, attackSpeed = 0.55f, gauge = 0.85f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
+            hp = 1.3f, damage = 4f, attackSpeed = 0.55f,     // 1.0.5: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것)
+            gauge = 0.85f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
             name = "도적", title = "그림자 칼날", body = "rogue", held = "shuriken",

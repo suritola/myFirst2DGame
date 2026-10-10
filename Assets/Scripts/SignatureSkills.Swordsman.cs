@@ -56,8 +56,14 @@ public partial class SignatureSkills
     {
         GameObject g = c.gameObject;
         // 혈갑: 벤 적마다 보호막
+        // 1.0.5 너프: 벤 적마다 0.6 ~ 1.5% (예전 1.2 ~ 3%), 한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음
+        // (몰린 적을 베는 동안 맞는 족족 다시 가득 차서 검사가 절대 죽지 않았음)
         int bg = L("s.bloodguard");
-        if (bg > 0) shield = Mathf.Min(ShieldCap, shield + player.PlayerMaxHealth * 0.006f * (1 + bg));     // 1.2 ~ 3% (몰린 적을 한 번 베면 가득 차던 것 줄임)
+        if (bg > 0 && bloodHits < 3 && Time.time >= shieldPauseUntil)
+        {
+            bloodHits++;
+            shield = Mathf.Min(ShieldCap, shield + player.PlayerMaxHealth * 0.003f * (1 + bg));
+        }
         // 검무: 벨 때마다 이동 속도 (한 번 휘두를 때 한 중첩)
         if (L("s.dance") > 0 && !danceCounted)
         {
@@ -90,11 +96,15 @@ public partial class SignatureSkills
     }
 
     bool danceCounted;
-    float ShieldCap => player.PlayerMaxHealth * V(L("s.bloodguard"), 0.1f, 0.05f) * (E("se.blood") ? 2f : 1f);
+    int bloodHits;              // 이번 휘두르기에 혈갑을 쌓은 적 수
+    float shieldPauseUntil;     // 보호막이 맞은 뒤 다시 쌓이기 시작하는 때
+    // 1.0.5: 최대 6 ~ 15% (예전 10 ~ 25%), 피의 성채 1.5배 (예전 2배)
+    float ShieldCap => player.PlayerMaxHealth * V(L("s.bloodguard"), 0.06f, 0.03f) * (E("se.blood") ? 1.5f : 1f);
 
     void OnAfterSwing(Vector3 origin, Vector2 dir, float reach, int hits)
     {
         danceCounted = false;
+        bloodHits = 0;
         int tr = L("s.trail");
         if (tr <= 0) return;
         Vector3 at = origin + (Vector3)(dir * reach * 0.55f);
@@ -188,6 +198,7 @@ public partial class SignatureSkills
         if (shield <= 0f || dmg <= 0f) return dmg;
         float absorbed = Mathf.Min(shield, dmg);
         shield -= absorbed;
+        shieldPauseUntil = Time.time + 1.5f;
         if (shield <= 0.01f)
         {
             shield = 0f;

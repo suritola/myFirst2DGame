@@ -11,7 +11,7 @@ public static partial class LocTable
         // ---------------- 카드 설명 고침 (2.0.7~): 검사 밸런스 · 숫자 보강 · 진화 무기 필살기에도 적용
         A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
         A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
-        A("벤 적 하나당 최대 체력의 1.2 ~ 3%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (몸이 붉게 빛남)", "Each enemy you cut builds a shield worth 1.2–3% of max health that absorbs damage first. (Your body glows red)", "斬った敵1体ごとに最大体力の1.2〜3%のシールドがたまり、受けるダメージを先に防ぎます。（体が赤く光る）", "每斩中一名敌人，积累相当于最大生命1.2~3%的护盾，优先吸收伤害。（身体发出红光）");
+        A("벤 적 하나당 최대 체력의 0.6 ~ 1.5%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음 · 몸이 붉게 빛남)", "Each enemy you cut builds a shield worth 0.6–1.5% of max health that absorbs damage first. (Up to 3 enemies per swing; stops building for 1.5s after the shield is hit · your body glows red)", "斬った敵1体ごとに最大体力の0.6〜1.5%のシールドがたまり、受けるダメージを先に防ぎます。（1回の振りで最大3体、シールドが攻撃を受けた後1.5秒はたまらない・体が赤く光る）", "每斩中一名敌人，积累相当于最大生命0.6~1.5%的护盾，优先吸收伤害。（每次挥砍最多3名，护盾受击后1.5秒内不再积累 · 身体发出红光）");
         A("회전 베기를 쓴 뒤 1.5 ~ 4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "After a Spin Slash you swing faster for 1.5–4s; the longer you charged, the longer it lasts.", "回転斬りの後1.5〜4秒間、振りが速くなります。長くためるほど長く続きます。", "回旋斩后1.5~4秒内挥砍加快，蓄力越久持续越长。");
         A("회전 베기를 모으는 동안 범위 안의 적을 초당 2.5칸씩 끌어당깁니다. (보스 제외)", "While charging Spin Slash, pull enemies in range toward you at 2.5 tiles/s. (Not bosses)", "回転斬りをためている間、範囲内の敵を毎秒2.5マス引き寄せます。（ボス除く）", "蓄力回旋斩时，以每秒2.5格的速度拉近范围内的敌人。（首领除外）");
         A("적을 벤 휘두르기마다 1.5초 동안 이동 속도가 오릅니다. (최대 5중첩, 계속 베면 유지)", "Each swing that cuts an enemy raises move speed for 1.5s. (Up to 5 stacks, kept while you keep cutting)", "敵を斬った振りごとに1.5秒間移動速度が上がります。（最大5重、斬り続ければ維持）", "每次斩中敌人的挥砍提升1.5秒移动速度。（最多5层，持续斩击即可保持）");
@@ -285,7 +285,7 @@ public static partial class LocTable
         A("천검 궤적", "Thousand-Blade Trail", "千剣の軌跡", "千剑轨迹");
         A("칼날 잔상이 사라질 때 그 자리에서 검기가 사방으로 날아갑니다.", "When a blade afterimage fades, sword waves fly out from it in all directions.", "刃の残像が消えるとき、その場から剣気が四方へ飛びます。", "刀刃残影消失时，剑气从原地向四方飞出。");
         A("피의 성채", "Blood Bastion", "血の城砦", "血之堡垒");
-        A("보호막 최대치가 두 배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", "Max shield doubles, and a blood wave bursts the moment it breaks. (200% attack)", "シールド最大値が2倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力200%）", "护盾上限翻倍，护盾破碎的瞬间爆发血之波动。（攻击力200%）");
+        A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (200% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力200%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力200%）");
         A("폭풍의 눈", "Eye of the Storm", "嵐の目", "风暴之眼");
         A("회전 베기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", "After Spin Slash, a vortex pulls in and keeps cutting nearby enemies for 3s.", "回転斬りの後3秒間、渦が周りの敵を吸い込みながら斬り続けます。", "回旋斩后3秒内，漩涡吸入周围敌人并持续斩击。");
         A("광검무", "Frenzied Blade Dance", "狂剣舞", "狂剑舞");
