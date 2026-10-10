@@ -166,9 +166,14 @@ public class SkinShopUI : MonoBehaviour
                     string sheet = s != null ? s.id : d.body ?? "gunner_nogun";
                     List<Sprite> l = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + sheet));
                     l.Sort((a, b) => Num(a.name).CompareTo(Num(b.name)));
-                    // 달리기 프레임 (다른 캐릭터 2~5, 거너는 시트 앞쪽 몇 장)
+                    // 달리기 프레임 (다른 캐릭터 2~5)
                     if (d.body != null && l.Count >= 6) return new[] { l[2], l[3], l[4], l[5] };
-                    return l.Count > 0 ? l.GetRange(0, Mathf.Min(4, l.Count)).ToArray() : new Sprite[0];
+                    // 거너 (1.0.7): 시트가 줄마다 동작이고 줄 끝에 「idle」 · 「Run」 같은 빨간 글씨가 그려져 있어,
+                    // 이름 순서로 앞 네 장을 쓰면 서 있기 · 글씨 · 말하기가 섞여 이상한 프레임이 끼었음 → 위에서 네 번째 줄(달리기)의 네 장만
+                    List<Sprite> run = l.FindAll(sp => sp.texture != null && Mathf.RoundToInt(sp.rect.y) == sp.texture.height - 32 * 4 && sp.rect.x < 32 * 4);
+                    run.Sort((a2, b2) => a2.rect.x.CompareTo(b2.rect.x));
+                    if (run.Count > 0) return run.ToArray();
+                    return l.Count > 0 ? new[] { l[0] } : new Sprite[0];
                 }
             case SkinKind.Weapon:
                 {
