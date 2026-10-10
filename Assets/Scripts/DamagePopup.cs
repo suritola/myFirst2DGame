@@ -32,7 +32,7 @@ public class DamagePopup : MonoBehaviour
         NextCrit = false;
         if (target == null || damage <= 0f || GameSettings.DamageNumbers == 2) return;
         int k = target.GetInstanceID();
-        bool isBoss = fromBoss || target.CompareTag("boss");
+        bool isBoss = fromBoss;      // 보스 본체만 (같은 "boss" 태그인 등불 · 묘비는 일반 숫자)
         // 치명타는 다른 숫자와 합치지 않고 따로 크게
         if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && Time.time - p.lastAdd < (isBoss ? BossMerge : Merge))
         {

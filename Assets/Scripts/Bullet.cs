@@ -152,6 +152,14 @@ public class Bullet : MonoBehaviour
 
                 // 스킬 게이지는 이제 시간으로 참 (SkillGauge)
             }
+            else if (collision.TryGetComponent(out BossPart part))
+            {
+                // 보스가 만든 부술 수 있는 것 (리치 왕의 등불 · 묘비 · 영혼구, 2.2.1)
+                if (part.Broken) return;
+                if (hitOnce != null && !hitOnce.Add(part.GetInstanceID())) return;
+                part.Hit(damage);
+                remainPene--;
+            }
 
 
             // 총알 삭제

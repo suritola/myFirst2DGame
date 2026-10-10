@@ -26,6 +26,7 @@ public class BossUltimate : MonoBehaviour
 
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
     const float Duration = 15f;
+    const float SlimeDuration = 9f;     // 2.2.1: 1장 킹 슬라임 결계는 짧고 단순하게 (튕기는 덩어리 최대 3 · 산성 비만)
     const float Power = 1.25f;            // BossSkills 와 같은 피해 배율
 
     static readonly (string title, string line, Color color)[] Info =
@@ -133,7 +134,7 @@ public class BossUltimate : MonoBehaviour
         // 멈췄던 화면이 풀리는 순간 옆의 잡몹 · 날아오던 탄 · 보스 몸통에 한꺼번에 맞지 않게 (결계가 다 펼쳐지고 1.2초까지 무적)
         if (player != null) player.GrantInvincibility(2f);
         yield return Expand(info.color);
-        float until = Time.time + Duration;
+        float until = Time.time + (kind == 2 ? SlimeDuration : Duration);
         int hurtBefore = PlayerController.HurtCount;
         IEnumerator attack = kind == 0 ? LichBarrage(until) : kind == 1 ? HellBarrage(until) : kind == 2 ? SlimeBarrage(until) : MirrorBarrage(until);
         StartCoroutine(attack);
@@ -613,18 +614,17 @@ public class BossUltimate : MonoBehaviour
         Hostile.Play("zap", 0.6f, 0.9f);
     }
 
-    // 산성 범람 (킹 슬라임): 결계 벽에 튕기는 슬라임 덩어리 + 쏟아지는 산성 비 + 번갈아 솟는 줄무늬 간헐천
+    // 산성 범람 (킹 슬라임): 결계 벽에 튕기는 슬라임 덩어리 + 쏟아지는 산성 비 (2.2.1~ 9초 · 덩어리 최대 3 · 줄무늬 간헐천 없음)
     IEnumerator SlimeBarrage(float until)
     {
         Color acid = Info[2].color;
-        float nextBall = Time.time, nextRain = Time.time + 0.3f, nextStripe = Time.time + 1.2f;
-        int stripe = 0;
+        float nextBall = Time.time, nextRain = Time.time + 0.3f;
         List<GameObject> balls = new List<GameObject>();
         while (Time.time < until)
         {
             PlayerController p = Hostile.Player;
-            // 피하기 쉽게 (2.1): 튕기는 산성 덩어리 최대 8 → 5개 · 1.4초마다, 산성 비 1.3초마다 3곳 · 예고 1.3초, 줄무늬 세 줄에 한 줄 · 4초마다 · 예고 1.5초
-            if (Time.time >= nextBall && balls.Count < 5)
+            // 피하기 쉽게: 튕기는 산성 덩어리 1.4초마다 (최대 3), 산성 비 1.3초마다 3곳 · 예고 1.3초
+            if (Time.time >= nextBall && balls.Count < 3)
             {
                 nextBall = Time.time + 1.4f;
                 balls.Add(Bouncer(boss != null ? boss.transform.position : center, acid, until - Time.time));
@@ -638,53 +638,10 @@ public class BossUltimate : MonoBehaviour
                     StartCoroutine(Spike(at, 1.8f, 1.3f, acid, 16f * Power, "fx_geyser"));
                 }
             }
-            if (Time.time >= nextStripe)
-            {
-                nextStripe = Time.time + 4f;
-                StartCoroutine(Stripes(stripe++ % 3, acid));
-            }
             balls.RemoveAll(g => g == null);
             yield return null;
         }
         foreach (GameObject g in balls) if (g != null) Destroy(g);
-    }
-
-    // 줄무늬 간헐천: 결계를 가로줄로 나눠 세 줄에 한 줄씩 (터지지 않는 두 줄로 피함 · 예전 한 줄 건너 한 줄은 너무 빽빽했음)
-    IEnumerator Stripes(int odd, Color acid)
-    {
-        const float w = 2.6f;
-        List<(Vector3 a, Vector3 b)> rows = new List<(Vector3, Vector3)>();
-        int i = 0;
-        for (float y = -Radius + w * 0.5f; y < Radius; y += w, i++)
-        {
-            if (i % 3 != odd) continue;
-            float half = Mathf.Sqrt(Mathf.Max(0f, Radius * Radius - y * y));
-            Vector3 a = center + new Vector3(-half, y), b = center + new Vector3(half, y);
-            rows.Add((a, b));
-            Hostile.Line(a, b, w, 1.5f, new Color(acid.r, acid.g, acid.b, 0.75f));
-            Warn((a + b) * 0.5f, 1.5f, 1.3f);
-        }
-        yield return new WaitForSeconds(1.5f);
-        PlayerController p = Hostile.Player;
-        foreach (var r in rows)
-        {
-            for (float k = 0f; k <= 1f; k += 0.12f) Fx.Spawn("fx_geyser", Vector3.Lerp(r.a, r.b, k) + Vector3.up * 1.4f, 3f, Color.white, 18f, 0f, 14);
-            if (p != null && Hostile.DistanceToSegment(p.transform.position, r.a, r.b) < w * 0.5f) p.TryHit(18f * Power);
-        }
-        Hostile.Play("hiss", 0.7f, 0.8f);
-    }
-
-    GameObject Bouncer(Vector3 from, Color acid, float life)
-    {
-        if (Hostile.Glow == null) return null;
-        GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
-        DomainBall b = g.AddComponent<DomainBall>();
-        b.center = center;
-        b.radius = Radius - 0.6f;
-        b.velocity = Random.insideUnitCircle.normalized * 5.5f;
-        b.damage = 15f * Power;
-        b.life = Mathf.Max(1f, life);
-        return g;
     }
 
     // 경고 원 → 위에서 떨어져(또는 솟아) 터짐

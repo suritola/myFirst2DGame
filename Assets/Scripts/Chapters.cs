@@ -35,7 +35,7 @@ public static class Chapters
         Loc.T("{0}장").Replace("{0}", Number(stage).ToString()) + " · " + Loc.T(StageNames[Mathf.Clamp(stage, 0, StageNames.Length - 1)]);
 
     // ---------------------------------------------------------------- 세기 맞추기
-    // 장마다 원래 세기 (스테이지 번호 순서): 잡몹 평균 체력 · 적이 주는 피해 · 처치 보상 · 보스 체력(킹 슬라임은 분열 합계) · 보스까지 처치 수
+    // 장마다 원래 세기 (스테이지 번호 순서): 잡몹 평균 체력 · 적이 주는 피해 · 처치 보상 · 보스 체력(킹 슬라임은 2.2.1~ 예전 분열 합계를 한 몸에 · 프리팹도 5950) · 보스까지 처치 수
     static readonly float[] Hp = { 9f, 51f, 53f, 63f };
     static readonly float[] Hurt = { 8.3f, 16.6f, 17.2f, 19.6f };
     static readonly float[] Reward = { 32f, 51f, 73f, 85f };
@@ -56,7 +56,7 @@ public static class Chapters
     // 2.2.0: 곡선을 더 가파르게 — 1 · 2장은 더 쉽게, 3장은 원래보다 조금 · 4장은 확실히 세게
     static readonly float[] EaseHp = { 0.42f, 0.8f, 1.08f, 1.2f };
     static readonly float[] EaseHurt = { 0.42f, 0.8f, 1.08f, 1.2f };
-    static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.08f, 1.2f };
+    static readonly float[] EaseBoss = { 0.55f, 0.88f, 0.8f, 1.2f };     // 2.2.1 보스 개편: 3장 지옥의 군주는 3단계 · 용암이 생겨 체력은 4장보다 조금 낮게 (1장 264 < 2장 2112 < 3장 4760 < 4장 5040)
     static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
     static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
     static readonly float[] EaseAlive = { 0.5f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율

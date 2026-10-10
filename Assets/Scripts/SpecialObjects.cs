@@ -20,7 +20,9 @@ public static class Specials
             return;
         }
         bosss b = go.GetComponent<bosss>();
-        if (b != null) b.TakeDamage(damage, knock, dir);
+        if (b != null) { b.TakeDamage(damage, knock, dir); return; }
+        // 보스가 만든 부술 수 있는 것 (리치 왕의 등불 · 묘비 · 영혼구, 2.2.1)
+        if (go.TryGetComponent(out BossPart part)) part.Hit(damage);
     }
 
     // 물리 검색 결과를 담는 재사용 목록 (OverlapCircleAll 은 부를 때마다 새 배열을 만듦)

@@ -184,7 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 6
-  setEnemyHP: 2800
+  setEnemyHP: 5950
   EnemyHealth: 0
   KilledEnemy: 0
   coin: {fileID: 3721139401337131225, guid: 4396825abc2ee134baa6fdebf0551e35, type: 3}
@@ -193,8 +193,8 @@ MonoBehaviour:
   chanceofHP: 100
   hitsPerSummon: 14
   contactDamage: 40
-  expReward: 500
-  coinDrop: 60
+  expReward: 1375
+  coinDrop: 120
   summonInterval: 5
   summonCount: 3
   enragedSummonInterval: 3.5

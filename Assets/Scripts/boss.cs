@@ -51,36 +51,27 @@ public class bosss : MonoBehaviour
 
     public bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
 
-    // 킹 슬라임 (bossKind 2): 쓰러질 때마다 분열 (1마리 → 2마리 → 3마리)
+    // 2.2.1 보스 개편: 리치 왕 「망자의 의식」 동안 무적 · 의식이 깨진 뒤 휘청이는 동안 받는 피해 배율 (BossSkills.Reborn)
+    [HideInInspector] public bool invulnerable;
+    [HideInInspector] public float damageTakenMul = 1f;
+
+    // 킹 슬라임 (bossKind 2): 2.2.1~ 분열하지 않음 (예전 1 → 2 → 3마리 분열 때문에 1장 보스가 가장 세게 느껴졌음)
+    // 보스바 · 결계가 쓰는 슬라임 목록과 번호는 그대로 둠 (한 마리만 들어감)
     [HideInInspector] public int slimeGen = 1;
     // 분열한 슬라임마다 고정 번호 (보스바 줄 · 이름 「킹 슬라임 n」이 끝까지 이 개체를 따라감)
     [HideInInspector] public int barSlot;
     static readonly List<bosss> slimes = new List<bosss>();
-    static int gen2Deaths;
-    static int gen3Spawned;
-    static bool slimeBossCleared;    // 마지막 두 마리가 거의 같이 쓰러져도 보스 처치는 한 번만
-    const int Gen2Hp = 900;            // 3장 마지막 보스인데 2장 보스보다 약해 금방 녹던 것 (예전 1400 · 600 · 280)
-    const int Gen3Hp = 450;
-    // 난이도 배율 (첫 킹 슬라임이 나올 때 정해서 분열한 슬라임에도 같게)
-    static float slimeMul = 1f;
-    static int ScaledHp(int hp) => Mathf.RoundToInt(hp * slimeMul);
-    // 난이도 배율을 이미 적용했는지 (분열 복제에는 적용된 값이 넘어감)
+    static bool slimeBossCleared;    // 보스 처치는 한 번만
+    // 난이도 배율을 이미 적용했는지
     [HideInInspector] public bool difficultyApplied;
     bool IsSlime => bossKind == 2;
 
-    // 남은 체력 합계 (아직 분열하지 않은 몫 포함)
+    // 남은 체력 합계
     static int SlimeRemaining()
     {
         int sum = 0;
-        bool gen1Alive = false;
         foreach (bosss s in slimes)
-        {
-            if (s == null || s.isDead) continue;
-            sum += Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
-            if (s.slimeGen == 1) gen1Alive = true;
-        }
-        if (gen1Alive) sum += 2 * ScaledHp(Gen2Hp);
-        sum += (3 - gen3Spawned) * ScaledHp(Gen3Hp);
+            if (s != null && !s.isDead) sum += Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
         return sum;
     }
 
@@ -92,50 +83,7 @@ public class bosss : MonoBehaviour
         into.Sort((a, b) => a.barSlot.CompareTo(b.barSlot));
     }
 
-    void Split()
-    {
-        int count = slimeGen == 1 ? 2 : (gen2Deaths++ == 0 ? 2 : 1);
-        // 대점프로 공중에 떠 있다 쓰러지면 떨어질 자리에서 갈라짐 (구르는 중이면 기운 채로 복제되지 않게 똑바로)
-        BossSkills mySkills = GetComponent<BossSkills>();
-        Vector3 at = mySkills != null && mySkills.airborne ? mySkills.landing : transform.position;
-        for (int i = 0; i < count; i++)
-        {
-            Vector3 offset = (Vector3)(Random.insideUnitCircle.normalized * 3f);
-            GameObject clone = Instantiate(gameObject, Hostile.ClampArena(at + offset), Quaternion.identity);
-            clone.transform.localScale = transform.localScale * 0.75f;
-            BossSkills cloneSkills = clone.GetComponent<BossSkills>();
-            if (cloneSkills != null) cloneSkills.airborne = false;
-            bosss b = clone.GetComponent<bosss>();
-            b.barSlot = FreeSlot();
-            // 바로 목록에 넣음: Start(다음 프레임) 전에 다른 슬라임이 쓰러지면 남은 체력이 0으로 계산돼 보스바가 꺼지던 문제
-            slimes.Add(b);
-            b.slimeGen = slimeGen + 1;
-            b.setEnemyHP = ScaledHp(slimeGen == 1 ? Gen2Hp : Gen3Hp);
-            b.EnemyHealth = b.setEnemyHP;
-            b.casting = false;
-            b.coinDrop = slimeGen == 1 ? 15 : 10;
-            b.expReward = expReward / 2;
-            b.summonCount = 1;
-            b.enragedSummonCount = 2;
-            clone.GetComponent<SpriteRenderer>().color = Color.white;
-            if (slimeGen + 1 == 3) gen3Spawned++;
-            Fx.Spawn("fx_puddle", clone.transform.position, 3f, new Color(0.55f, 1f, 0.35f), 12f);
-        }
-        Fx.Spawn("fx_shock", transform.position, 9f, new Color(0.55f, 1f, 0.35f), 16f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(slimeGen == 1 ? Loc.T("킹 슬라임이 둘로 갈라졌다!") : Loc.T("슬라임이 또 갈라진다!"), 2f);
-    }
     public bool IsDead => isDead;
-
-    // 살아 있는 슬라임이 쓰지 않는 가장 작은 번호
-    static int FreeSlot()
-    {
-        for (int n = 0; ; n++)
-        {
-            bool used = false;
-            foreach (bosss s in slimes) if (s != null && !s.isDead && s.barSlot == n) { used = true; break; }
-            if (!used) return n;
-        }
-    }
 
     void Summon(int count)
     {
@@ -157,7 +105,6 @@ public class bosss : MonoBehaviour
             // 2.1.1~: 장 순서가 바뀌어도 그 자리(몇 번째 장)의 원래 세기로 (Chapters)
             int chapter = Chapters.CurrentStage;
             float hpMul = GameMode.BossHpMul * Chapters.BossHpMul(chapter), rw = Chapters.RewardMul(chapter);
-            if (IsSlime && slimeGen == 1) slimeMul = hpMul;
             setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(setEnemyHP * hpMul));
             // 보스는 처치 수와 상관없이 정해진 수만 나오므로 고정 배율
             expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul * rw);
@@ -174,22 +121,16 @@ public class bosss : MonoBehaviour
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
         // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)
-        if (!IsSlime || slimeGen == 1) StoryDirector.PlayBossIntro(transform, bossKind);
-        // 분열로 복제된 슬라임은 스킬 컴포넌트를 이미 가지고 있음
+        StoryDirector.PlayBossIntro(transform, bossKind);
         BossSkills skills = GetComponent<BossSkills>();
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();
         skills.kind = bossKind;
         if (GetComponent<BossUltimate>() == null) gameObject.AddComponent<BossUltimate>();     // 필살기 "결계"
         if (IsSlime)
         {
-            if (slimeGen == 1)
-            {
-                slimes.Clear();
-                gen2Deaths = 0;
-                gen3Spawned = 0;
-                slimeBossCleared = false;
-            }
-            if (!slimes.Contains(this)) slimes.Add(this);       // 분열한 슬라임은 Split 에서 이미 넣음
+            slimes.Clear();
+            slimeBossCleared = false;
+            slimes.Add(this);
         }
         ready = true;
     }
@@ -237,6 +178,13 @@ public class bosss : MonoBehaviour
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
         if (isDead || !ready) return;
+        if (invulnerable)
+        {
+            // 의식 중 무적: 맞은 자리에 막히는 불꽃만
+            Fx.Spawn("fx_spark", transform.position + (Vector3)(Random.insideUnitCircle * 0.6f), 1f, new Color(0.7f, 0.6f, 1f), 26f);
+            return;
+        }
+        damage *= damageTakenMul;
 
         // 치명타: 보스도 모든 캐릭터의 공격 · 스킬에 치명타를 맞음 (거너 평타 총알은 쏠 때 이미 굴림)
         if (!SpecialAbilities.CritRolled && SpecialAbilities.SharedInstance != null) damage = SpecialAbilities.SharedInstance.RollCrit(damage);
@@ -298,13 +246,7 @@ public class bosss : MonoBehaviour
 
         isDead = true;
 
-        // 킹 슬라임은 분열하고, 마지막 한 마리가 쓰러질 때만 보스전이 끝남
-        bool lastOne = true;
-        if (IsSlime)
-        {
-            if (a == 1 && slimeGen < 3) Split();
-            lastOne = SlimeRemaining() <= 0;
-        }
+        bool lastOne = !IsSlime || SlimeRemaining() <= 0;
         if (lastOne) bossbar.bossSpawn = false;
         spriteRenderer.color = Color.white;
         if (a == 1)

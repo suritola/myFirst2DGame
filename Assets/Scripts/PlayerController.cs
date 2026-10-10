@@ -999,6 +999,7 @@ void Shoot()
     {
         if (collision.CompareTag("boss"))
         {
+            if (collision.GetComponent<BossPart>() != null) return;     // 등불 · 묘비 · 영혼구는 닿아도 몸통 피해 없음 (영혼구는 스스로 터짐)
             bosss boss = collision.GetComponent<bosss>();
             TryHit(boss != null ? boss.contactDamage : bossContactDamage);
         }
