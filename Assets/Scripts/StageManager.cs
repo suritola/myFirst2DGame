@@ -196,8 +196,7 @@ public class StageManager : MonoBehaviour
             if (mastery > 0 && shop != null && !Demo.On && !DailyChallenge.Active)
             {
                 shop.GrantFreePicks(mastery);
-                ShowBanner(Chapters.Title(CurrentStage) + "
-" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString()), 3f);
+                ShowBanner(Chapters.Title(CurrentStage) + "\n" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString()), 3f);
             }
         }
         Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
