@@ -8,17 +8,17 @@ public partial class SpecialAbilities
 {
     static readonly (int id, string name, string desc)[] KitUlts =
     {
-        (KitHammer, "대지 진동", "망치로 땅을 연달아 내리쳐 앞으로 나아가는 충격파 여섯 번을 일으킵니다. (공격력 300%씩, 기절)"),
-        (KitWhip, "뱀의 춤", "채찍검을 사방 열두 방향으로 휘몰아칩니다. (공격력 200%씩)"),
-        (KitLance, "기사 돌격", "무적 상태로 멀리 돌격해 지나간 적을 모두 날려 버립니다. (공격력 700%)"),
+        (KitHammer, "대지 진동", "망치로 땅을 연달아 내리쳐 앞으로 나아가는 충격파 여섯 번을 일으킵니다. (공격력 240%씩, 기절)"),
+        (KitWhip, "뱀의 춤", "채찍검을 사방 열두 방향으로 휘몰아칩니다. (공격력 160%씩)"),
+        (KitLance, "기사 돌격", "무적 상태로 멀리 돌격해 지나간 적을 모두 날려 버립니다. (공격력 560%)"),
         (KitBlowgun, "독안개", "마우스 위치에 5초 동안 독안개를 퍼뜨려 안의 적에게 중독을 계속 쌓습니다."),
         (KitCards, "잭팟", "카드 52장을 소용돌이치듯 사방으로 뿌립니다. 조커도 잔뜩 섞여 있습니다."),
         (KitWire, "거미줄 감옥", "주변을 와이어로 둘러싼 뒤 조여 들어가며 닿는 적을 벱니다."),
-        (KitNetBow, "대형 그물", "마우스 위치에 거대한 그물을 던져 3초 동안 모두 묶고 피해를 줍니다. (공격력 300%)"),
-        (KitJavelin, "창의 벽", "투창 아홉 자루를 한 줄로 늘어세워 한꺼번에 던집니다. (공격력 400%씩)"),
+        (KitNetBow, "대형 그물", "마우스 위치에 거대한 그물을 던져 3초 동안 모두 묶고 피해를 줍니다. (공격력 240%)"),
+        (KitJavelin, "창의 벽", "투창 아홉 자루를 한 줄로 늘어세워 한꺼번에 던집니다. (공격력 320%씩)"),
         (KitBurstBow, "천 개의 화살", "3초 동안 가까운 적들을 자동으로 겨눠 화살을 퍼붓습니다."),
         (KitQuicksilver, "수은 폭풍", "수은 구슬 열여섯 개를 사방으로 튕겨 보냅니다."),
-        (KitMagnet, "블랙홀 플라스크", "마우스 위치에 3초 동안 모든 것을 빨아들이는 소용돌이를 만든 뒤 크게 폭발합니다. (공격력 800%)"),
+        (KitMagnet, "블랙홀 플라스크", "마우스 위치에 3초 동안 모든 것을 빨아들이는 소용돌이를 만든 뒤 크게 폭발합니다. (공격력 640%)"),
         (KitFirework, "불꽃 축제", "3초 동안 적들 머리 위로 폭죽 스무 발을 터뜨립니다."),
     };
 
@@ -75,7 +75,7 @@ public partial class SpecialAbilities
         fx.Play("levelup", 0.5f, 1.3f);
         Hostile.Shake(0.15f);
         // 캐릭터 우클릭 강화(영혼 트리 · 상점)도 진화한 궁극기에 그대로
-        float D = Damage * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f) * mul;
+        float D = KitD * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f) * mul;
         // 도적: 출혈 돌진으로 파고든 뒤 궁극기 (그림자 숙련이 계속 쓸모 있게)
         if (dash && CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
         else StartCoroutine(KitUltRoutine(id, D));

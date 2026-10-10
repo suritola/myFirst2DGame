@@ -22,50 +22,50 @@ public partial class SpecialAbilities
 
     static readonly (string name, SpecialKind kind, string desc)[] KitDefs =
     {
-        ("전쟁 망치", SpecialKind.Weapon, "가까운 땅을 내리찍어 주변 적에게 피해를 주고 잠깐 기절시킵니다. (공격력 250%)\n진화: 범위 증가, 기절 두 배"),
+        ("전쟁 망치", SpecialKind.Weapon, "가까운 땅을 내리찍어 주변 적에게 피해를 주고 잠깐 기절시킵니다. (공격력 200%)\n진화: 범위 증가, 기절 두 배"),
         ("채찍검", SpecialKind.Weapon, "길게 휘어지는 칼날 채찍. 끝부분에 맞은 적은 두 배 가까운 피해를 받습니다.\n진화: 더 길고, 끝 피해 증가"),
-        ("기창", SpecialKind.Weapon, "창을 앞세워 짧게 돌격하며 지나간 적을 찌르고 밀쳐냅니다. (공격력 180%)\n진화: 더 멀리, 돌격 중 무적"),
-        ("전투 함성", SpecialKind.Skill, "크게 외쳐 주변 적을 밀쳐내고 6초 동안 공격력이 40% 오릅니다.\n진화: 공격력 +60%"),
-        ("심판의 대검", SpecialKind.Skill, "마우스 위치에 하늘에서 거대한 검이 떨어져 크게 베고 기절시킵니다. (공격력 800%)\n진화: 대검 세 자루"),
-        ("대지 가르기", SpecialKind.Skill, "마우스 쪽으로 땅을 길게 갈라 한 줄의 적에게 피해를 주고 느리게 만듭니다. (공격력 300%)\n진화: 세 갈래로 갈라짐"),
-        ("불굴", SpecialKind.Passive, "잃은 체력이 많을수록 공격력이 오릅니다. (최대 +50%)\n진화: 최대 +80%"),
-        ("전투 열기", SpecialKind.Passive, "적을 처치할 때마다 4초 동안 공격 속도 +6% (최대 5중첩).\n진화: +8%, 최대 8중첩"),
+        ("기창", SpecialKind.Weapon, "창을 앞세워 짧게 돌격하며 지나간 적을 찌르고 밀쳐냅니다. (공격력 140%)\n진화: 더 멀리, 돌격 중 무적"),
+        ("전투 함성", SpecialKind.Skill, "크게 외쳐 주변 적을 밀쳐내고 6초 동안 공격력이 30% 오릅니다.\n진화: 공격력 +45%"),
+        ("심판의 대검", SpecialKind.Skill, "마우스 위치에 하늘에서 거대한 검이 떨어져 크게 베고 기절시킵니다. (공격력 640%)\n진화: 대검 세 자루"),
+        ("대지 가르기", SpecialKind.Skill, "마우스 쪽으로 땅을 길게 갈라 한 줄의 적에게 피해를 주고 느리게 만듭니다. (공격력 240%)\n진화: 세 갈래로 갈라짐"),
+        ("불굴", SpecialKind.Passive, "잃은 체력이 많을수록 공격력이 오릅니다. (최대 +40%)\n진화: 최대 +60%"),
+        ("전투 열기", SpecialKind.Passive, "적을 처치할 때마다 4초 동안 공격 속도 +5% (최대 5중첩).\n진화: +6%, 최대 8중첩"),
 
         ("독침 대롱", SpecialKind.Weapon, "누르고 있으면 독침을 빠르게 붑니다. 맞은 적은 중독이 쌓입니다. (최대 5중첩)\n진화: 최대 10중첩"),
         ("도박 카드", SpecialKind.Weapon, "카드 세 장을 던집니다. 카드마다 피해가 제각각이고, 가끔 조커가 터집니다.\n진화: 다섯 장, 조커 확률 두 배"),
         ("살상 와이어", SpecialKind.Weapon, "클릭한 곳에 와이어 고리를 박습니다. 고리를 잇는 줄에 닿은 적은 계속 베입니다. (고리 3개)\n진화: 고리 5개"),
-        ("죽음의 표식", SpecialKind.Skill, "마우스 근처의 적에게 표식. 3초 뒤 큰 피해로 터집니다. 그 전에 쓰러지면 쿨타임 초기화. (공격력 1000%)\n진화: 표식 세 개"),
+        ("죽음의 표식", SpecialKind.Skill, "마우스 근처의 적에게 표식. 3초 뒤 큰 피해로 터집니다. 그 전에 쓰러지면 쿨타임 초기화. (공격력 800%)\n진화: 표식 세 개"),
         ("마름쇠", SpecialKind.Skill, "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 두 배"),
         ("소매치기", SpecialKind.Skill, "순식간에 주변 적 6명 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 1개 더 떨어뜨립니다.\n진화: 8명"),
-        ("회피 본능", SpecialKind.Passive, "받는 공격을 20% 확률로 피합니다.\n진화: 30%"),
-        ("연쇄 처치", SpecialKind.Passive, "적을 처치하면 2초 동안 이동 속도 +20%, 모든 스킬 쿨타임 0.3초 감소.\n진화: 쿨타임 0.6초 감소"),
+        ("회피 본능", SpecialKind.Passive, "받는 공격을 15% 확률로 피합니다.\n진화: 25%"),
+        ("연쇄 처치", SpecialKind.Passive, "적을 처치하면 2초 동안 이동 속도 +15%, 모든 스킬 쿨타임 0.3초 감소.\n진화: 쿨타임 0.6초 감소"),
 
         ("그물 활", SpecialKind.Weapon, "맞은 자리에 그물이 펼쳐져 주변 적을 묶습니다.\n진화: 그물이 더 넓고 오래"),
-        ("투창", SpecialKind.Weapon, "모든 적을 꿰뚫는 무거운 창. 멀리 날아갈수록 피해가 커집니다. (최대 공격력 300%)\n진화: 최대 400%"),
-        ("속사 활", SpecialKind.Weapon, "한 번 누르면 화살 세 발을 눈 깜짝할 새 연달아 쏩니다. (발당 공격력 70%)\n진화: 다섯 발"),
-        ("매의 급습", SpecialKind.Skill, "사냥 매를 날려 마우스 근처의 적을 차례로 덮칩니다. (적마다 공격력 250%)\n진화: 더 많은 적"),
-        ("돌풍 화살", SpecialKind.Skill, "거센 바람을 두른 거대한 화살. 한 줄을 꿰뚫고 적을 멀리 날려 버립니다. (공격력 300%)\n진화: 화살이 두 배 커짐"),
+        ("투창", SpecialKind.Weapon, "모든 적을 꿰뚫는 무거운 창. 멀리 날아갈수록 피해가 커집니다. (최대 공격력 240%)\n진화: 최대 400%"),
+        ("속사 활", SpecialKind.Weapon, "한 번 누르면 화살 세 발을 눈 깜짝할 새 연달아 쏩니다. (발당 공격력 60%)\n진화: 다섯 발"),
+        ("매의 급습", SpecialKind.Skill, "사냥 매를 날려 마우스 근처의 적을 차례로 덮칩니다. (적마다 공격력 200%)\n진화: 더 많은 적"),
+        ("돌풍 화살", SpecialKind.Skill, "거센 바람을 두른 거대한 화살. 한 줄을 꿰뚫고 적을 멀리 날려 버립니다. (공격력 240%)\n진화: 화살이 두 배 커짐"),
         ("사냥꾼의 집중", SpecialKind.Skill, "5초 동안 활시위를 순식간에 가득 당깁니다.\n진화: 8초"),
-        ("전리품 사냥", SpecialKind.Passive, "적을 처치할 때마다 최대 체력 +0.5 (최대 +40).\n진화: +1 (최대 +80)"),
-        ("거리 유지", SpecialKind.Passive, "5칸 안에 적이 없으면 공격력이 30% 오릅니다.\n진화: +50%"),
+        ("전리품 사냥", SpecialKind.Passive, "적을 처치할 때마다 최대 체력 +0.4 (최대 +30).\n진화: +0.8 (최대 +60)"),
+        ("거리 유지", SpecialKind.Passive, "5칸 안에 적이 없으면 공격력이 25% 오릅니다.\n진화: +40%"),
 
         ("수은 구슬", SpecialKind.Weapon, "벽과 적에게 튕겨 다니는 수은 구슬. 네 번 튕기면 터집니다.\n진화: 일곱 번 튕김"),
-        ("자석 폭탄", SpecialKind.Weapon, "떨어진 자리로 주변 적을 끌어모은 뒤 폭발합니다. (공격력 220%)\n진화: 더 넓게 끌어당기고 두 번 폭발"),
+        ("자석 폭탄", SpecialKind.Weapon, "떨어진 자리로 주변 적을 끌어모은 뒤 폭발합니다. (공격력 180%)\n진화: 더 넓게 끌어당기고 두 번 폭발"),
         ("폭죽 발사기", SpecialKind.Weapon, "마우스 위치로 폭죽을 쏘아 올려 색색의 불꽃으로 터뜨립니다.\n진화: 불꽃 다섯 → 여덟 갈래"),
         ("현자의 돌", SpecialKind.Skill, "6초 동안 던지는 플라스크가 모두 불안정해져 크게 폭발합니다.\n진화: 9초"),
         ("시간 역행 물약", SpecialKind.Skill, "3초 전의 자리로 되돌아가고, 그때 체력이 더 많았다면 되찾습니다.\n진화: 쿨타임 감소"),
         ("거대화 물약", SpecialKind.Skill, "5초 동안 몸이 커져 받는 피해가 절반, 닿는 적을 밀쳐내며 피해를 줍니다.\n진화: 8초"),
-        ("연금 순환", SpecialKind.Passive, "스킬을 쓸 때마다 체력 5% 회복, 다른 스킬 쿨타임 1초 감소.\n진화: 체력 8%, 2초 감소"),
+        ("연금 순환", SpecialKind.Passive, "스킬을 쓸 때마다 체력 4% 회복, 다른 스킬 쿨타임 1초 감소.\n진화: 체력 6%, 2초 감소"),
         ("불안정 연구", SpecialKind.Passive, "불안정한 플라스크가 나올 확률이 15% → 35%, 불안정 폭발이 불을 붙입니다.\n진화: 50%"),
 
-        ("기사의 맹세", SpecialKind.Passive, "체력이 가득 차 있는 동안 공격력이 20% 오릅니다.\n진화: +35%"),
-        ("강철 갑옷", SpecialKind.Passive, "받는 피해가 15% 줄지만 이동 속도가 5% 느려집니다.\n진화: 피해 -25%, 느려지지 않음"),
-        ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타가 두 배로 아픕니다.\n진화: 2초, 2.5배"),
-        ("도망자의 발걸음", SpecialKind.Passive, "맞으면 1.5초 동안 이동 속도가 40% 빨라집니다.\n진화: +60%"),
-        ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 35% 늘어납니다.\n진화: +70%"),
+        ("기사의 맹세", SpecialKind.Passive, "체력이 가득 차 있는 동안 공격력이 15% 오릅니다.\n진화: +25%"),
+        ("강철 갑옷", SpecialKind.Passive, "받는 피해가 12% 줄지만 이동 속도가 5% 느려집니다.\n진화: 피해 -20%, 느려지지 않음"),
+        ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타가 1.7배로 아픕니다.\n진화: 2초, 2.1배"),
+        ("도망자의 발걸음", SpecialKind.Passive, "맞으면 1.5초 동안 이동 속도가 30% 빨라집니다.\n진화: +45%"),
+        ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 25% 늘어납니다.\n진화: +50%"),
         ("사냥 본능", SpecialKind.Passive, "적을 20마리 처치할 때마다 다음 화살 3발이 저절로 가득 당겨집니다.\n진화: 12마리마다"),
-        ("비상 물약", SpecialKind.Passive, "체력이 25% 아래로 떨어지면 체력 30%를 곧바로 회복합니다. (쿨타임 45초)\n진화: 쿨타임 30초"),
-        ("금속 변환", SpecialKind.Passive, "적을 처치하면 10% 확률로 적이 금으로 변해 코인 3개를 줍니다.\n진화: 20%"),
+        ("비상 물약", SpecialKind.Passive, "체력이 25% 아래로 떨어지면 체력 25%를 곧바로 회복합니다. (쿨타임 45초)\n진화: 쿨타임 30초"),
+        ("금속 변환", SpecialKind.Passive, "적을 처치하면 8% 확률로 적이 금으로 변해 코인 3개를 줍니다.\n진화: 15%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -236,7 +236,7 @@ public partial class SpecialAbilities
                     fx.SetRing(previewRing, at, r, new Color(col.r, col.g, col.b, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
-                    Smash(at, r, WDamage * 2.5f, evo ? 1f : 0.5f);
+                    Smash(at, r, KitWD * 2.5f, evo ? 1f : 0.5f);
                     break;
                 }
             case KitWhip:
@@ -245,7 +245,7 @@ public partial class SpecialAbilities
                     fx.SetLine(aimLine, m, m + (Vector3)(dir * len), new Color(col.r, col.g, col.b, 0.3f), 0.06f);
                     if (!held || !Ready()) break;
                     BeginShot(0, out _, out _);
-                    Whip(m, dir, len, WDamage * 0.9f, evo ? 2.5f : 1.8f);
+                    Whip(m, dir, len, KitWD * 0.9f, evo ? 2.5f : 1.8f);
                     break;
                 }
             case KitLance:
@@ -254,7 +254,7 @@ public partial class SpecialAbilities
                     fx.SetLine(aimLine, m, m + (Vector3)(dir * (dist + 1.5f)), new Color(col.r, col.g, col.b, 0.4f), 0.1f);
                     if (!down || lancing || !Ready()) break;
                     BeginShot(0, out _, out _);
-                    StartCoroutine(LanceCharge(dir, dist, 0.12f, WDamage * 1.8f, 2.5f, evo));
+                    StartCoroutine(LanceCharge(dir, dist, 0.12f, KitWD * 1.8f, 2.5f, evo));
                     break;
                 }
 
@@ -263,9 +263,9 @@ public partial class SpecialAbilities
                 if (!held || !Ready()) break;
                 {
                     BeginShot(1, out Vector3 s, out _);
-                    Bullet b = KitProjectile(s, dir, WDamage * 0.4f, player.pene, 55f, "fx_arrow", 0.3f, new Color(0.55f, 1f, 0.4f), false);
+                    Bullet b = KitProjectile(s, dir, KitWD * 0.4f, player.pene, 55f, "fx_arrow", 0.3f, new Color(0.55f, 1f, 0.4f), false);
                     int max = evo ? 10 : 5;
-                    float per = WDamage * 0.25f;
+                    float per = KitWD * 0.25f;
                     if (b != null) b.onHitEnemy += (bb, c) => Poison.Apply(c.gameObject, per, max);
                 }
                 break;
@@ -322,7 +322,7 @@ public partial class SpecialAbilities
             case KitBurstBow:
                 if (!down || !Ready()) break;
                 BeginShot(1, out _, out _);
-                StartCoroutine(BurstRoutine(evo ? 5 : 3, WDamage * 0.7f));
+                StartCoroutine(BurstRoutine(evo ? 5 : 3, KitWD * 0.7f));
                 break;
 
             // ---------------- 연금술사
@@ -330,7 +330,7 @@ public partial class SpecialAbilities
                 if (!down || !Ready()) break;
                 {
                     BeginShot(1, out Vector3 s, out _);
-                    Bullet b = KitProjectile(s, dir, WDamage * 0.9f, 9999, 26f, "fx_orb", 0.6f, new Color(0.85f, 0.9f, 1f), false);
+                    Bullet b = KitProjectile(s, dir, KitWD * 0.9f, 9999, 26f, "fx_orb", 0.6f, new Color(0.85f, 0.9f, 1f), false);
                     if (b != null) Quicksilver(b, evo ? 7 : 4, WDamage);
                 }
                 break;
@@ -342,7 +342,7 @@ public partial class SpecialAbilities
                     fx.SetRing(previewRing, land, pull, new Color(0.7f, 0.6f, 1f, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(1, out Vector3 s, out _);
-                    float dmg = WDamage * 2.2f;
+                    float dmg = KitWD * 2.2f;
                     int blasts = evo ? 2 : 1;
                     FlaskLob.Throw(s, land, 0.4f, 0.8f, new Color(0.7f, 0.6f, 1f), p => StartCoroutine(MagnetPull(p, pull, 1.2f, dmg, blasts, 2.6f)));
                     break;
@@ -354,7 +354,7 @@ public partial class SpecialAbilities
                     fx.SetRing(previewRing, land, 2.2f, new Color(1f, 0.8f, 0.4f, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(1, out Vector3 s, out _);
-                    StartCoroutine(FireworkRoutine(s, land, evo ? 8 : 5, WDamage * 0.7f));
+                    StartCoroutine(FireworkRoutine(s, land, evo ? 8 : 5, KitWD * 0.7f));
                     break;
                 }
         }
@@ -463,7 +463,7 @@ public partial class SpecialAbilities
         wireTick -= Time.deltaTime;
         if (wireTick > 0f) return;
         wireTick = 0.2f;
-        float dmg = Damage * WeaponDamageMul(KitWire) * 0.5f;
+        float dmg = KitD * WeaponDamageMul(KitWire) * 0.5f;
         for (int i = 0; i < wires.Count - (loop ? 0 : 1); i++)
         {
             Vector3 a = wires[i].pos, b = wires[(i + 1) % wires.Count].pos;
@@ -602,7 +602,7 @@ public partial class SpecialAbilities
             case KitWarCry:
                 warCryUntil = Time.time + 6f;
                 foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 5f))
-                    if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, Damage * 0.5f, (c.transform.position - pos).normalized, 4f);
+                    if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, KitD * 0.5f, (c.transform.position - pos).normalized, 4f);
                 Fx.Spawn("fx_shock", pos, 11f, new Color(1f, 0.75f, 0.4f, 0.85f), 16f);
                 fx.FloatText(pos, Loc.T("전투 함성!"), new Color(1f, 0.75f, 0.4f), 5f, 0f);
                 fx.Play("roar", 0.9f, 1.1f);
@@ -632,7 +632,7 @@ public partial class SpecialAbilities
                 for (int i = 0; i < (evo ? 20 : 12); i++)
                 {
                     Vector3 at = KitClamp(pos + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(1.2f, 5f)));
-                    Caltrop.Place(at, Damage * 0.8f);
+                    Caltrop.Place(at, KitD * 0.8f);
                 }
                 fx.Play("clank", 0.6f, 1.6f);
                 fx.Play("crackle", 0.4f, 1.8f);
@@ -656,7 +656,7 @@ public partial class SpecialAbilities
                 }
             case KitGale:
                 {
-                    Bullet b = KitProjectile(player.MuzzlePosition, dir, Damage * 3f, 9999, 38f, "fx_arrow", evo ? 3f : 1.6f, new Color(0.7f, 1f, 0.95f), false);
+                    Bullet b = KitProjectile(player.MuzzlePosition, dir, KitD * 3f, 9999, 38f, "fx_arrow", evo ? 3f : 1.6f, new Color(0.7f, 1f, 0.95f), false);
                     if (b != null)
                     {
                         b.hitOnce = new HashSet<int>();
@@ -708,7 +708,7 @@ public partial class SpecialAbilities
         if (Has(KitCycle))
         {
             bool e = IsEvolved(KitCycle);
-            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.08f : 0.05f));
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.06f : 0.04f));
             ReduceCooldowns(e ? 2f : 1f, id);
             Fx.Spawn("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
         }
@@ -745,7 +745,7 @@ public partial class SpecialAbilities
                 yield return null;
             }
             if (sword != null) sword.transform.position = s + Vector3.up * 1.5f;
-            Smash(s, 3.5f, Damage * 8f, 1f);
+            Smash(s, 3.5f, KitD * 8f, 1f);
             fx.Play("bigboom", 0.7f, 0.9f);
             Hostile.Shake(0.3f);
             yield return new WaitForSeconds(0.1f);
@@ -764,7 +764,7 @@ public partial class SpecialAbilities
             foreach (Collider2D c in Physics2D.OverlapCircleAll(p, 1.3f))
             {
                 if ((!c.CompareTag("enermy") && !c.CompareTag("boss")) || !hit.Add(c)) continue;
-                Specials.Damage(c.gameObject, Damage * 3f, Vector3.up, 1f);
+                Specials.Damage(c.gameObject, KitD * 3f, Vector3.up, 1f);
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null) e.Slow(0.4f, 2f);
             }
@@ -799,7 +799,7 @@ public partial class SpecialAbilities
             yield return null;
         }
         if (mark != null) Destroy(mark.gameObject);
-        Specials.Damage(t.gameObject, Damage * 10f, Vector3.zero, 1f);
+        Specials.Damage(t.gameObject, KitD * 10f, Vector3.zero, 1f);
         Fx.Spawn("fx_deathburst", t.position, 3f, new Color(1f, 0.35f, 0.4f), 18f);
         fx.Play("crack", 0.9f, 0.8f);
         Hostile.Shake(0.15f);
@@ -814,7 +814,7 @@ public partial class SpecialAbilities
             if (t == null) continue;
             Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
             player.transform.position = KitClamp(t.position + (Vector3)(Random.insideUnitCircle.normalized * 1f));
-            Specials.Damage(t.gameObject, Damage * 1.5f, Vector3.zero, 0.5f);
+            Specials.Damage(t.gameObject, KitD * 1.5f, Vector3.zero, 0.5f);
             EnermyController e = t.GetComponent<EnermyController>();
             if (e != null) e.coinDrop += coins;
             Fx.Spawn("fx_sparkle", t.position, 1.2f, new Color(1f, 0.85f, 0.3f), 20f);
@@ -847,7 +847,7 @@ public partial class SpecialAbilities
                 yield return null;
             }
             if (t == null) continue;
-            Specials.Damage(t.gameObject, Damage * 2.5f, (t.position - from).normalized, 1f);
+            Specials.Damage(t.gameObject, KitD * 2.5f, (t.position - from).normalized, 1f);
             Fx.Spawn("fx_slash", t.position, 1.8f, new Color(1f, 0.9f, 0.7f), 24f, Random.Range(0f, 360f), 16);
             fx.Play("slash", 0.5f, 1.8f);
             yield return new WaitForSeconds(0.04f);
@@ -866,6 +866,11 @@ public partial class SpecialAbilities
     float appliedDmg = 1f, appliedRate = 1f, appliedSpeed = 1f;
     float giantTick;
 
+    // 1.0.6: 영웅 특수 능력 전체 하향 — 피해를 주는 무기 · 스킬 · 궁극기는 0.8배 (설명의 공격력 %도 0.8배)
+    const float KitPower = 0.8f;
+    float KitD => Damage * KitPower;
+    float KitWD => WDamage * KitPower;
+
     public bool KitFocusActive => Time.time < focusUntil;
     public bool KitStoneActive => Time.time < stoneUntil;
     public float KitUnstableChance => Has(KitVolatile) ? (IsEvolved(KitVolatile) ? 0.5f : 0.35f) : 0.15f;
@@ -879,16 +884,16 @@ public partial class SpecialAbilities
         {
             bool e = IsEvolved(KitUnyielding);
             float lost = 1f - Mathf.Clamp01(player.PlayerHealth / Mathf.Max(1f, player.PlayerMaxHealth));
-            dmg *= 1f + Mathf.Min(e ? 0.8f : 0.5f, lost * (e ? 1f : 0.6f));
+            dmg *= 1f + Mathf.Min(e ? 0.6f : 0.4f, lost * (e ? 0.8f : 0.5f));
         }
         if (Time.time > fervorUntil) fervor = 0;
-        rate *= 1f + fervor * (IsEvolved(KitFervor) ? 0.08f : 0.06f);
-        if (Time.time < warCryUntil) dmg *= IsEvolved(KitWarCry) ? 1.6f : 1.4f;
-        if (Time.time < spreeUntil) speed *= 1.2f;
-        if (Has(KitOath) && player.PlayerHealth >= player.PlayerMaxHealth * 0.99f) dmg *= IsEvolved(KitOath) ? 1.35f : 1.2f;
-        if (Time.time < fugitiveUntil) speed *= IsEvolved(KitFugitive) ? 1.6f : 1.4f;
+        rate *= 1f + fervor * (IsEvolved(KitFervor) ? 0.06f : 0.05f);
+        if (Time.time < warCryUntil) dmg *= IsEvolved(KitWarCry) ? 1.45f : 1.3f;
+        if (Time.time < spreeUntil) speed *= 1.15f;
+        if (Has(KitOath) && player.PlayerHealth >= player.PlayerMaxHealth * 0.99f) dmg *= IsEvolved(KitOath) ? 1.25f : 1.15f;
+        if (Time.time < fugitiveUntil) speed *= IsEvolved(KitFugitive) ? 1.45f : 1.3f;
         if (Has(KitKeepDistance) && Specials.NearestEnemy(player.transform.position, 5f) == null)
-            dmg *= IsEvolved(KitKeepDistance) ? 1.5f : 1.3f;
+            dmg *= IsEvolved(KitKeepDistance) ? 1.4f : 1.25f;
         ApplyDynamic(dmg, rate, speed);
 
         UpdateWires();
@@ -967,7 +972,7 @@ public partial class SpecialAbilities
                 fx.Play("chime", 0.5f, 1.5f);
             }
         }
-        if (Has(KitGoldConvert) && Random.value < (IsEvolved(KitGoldConvert) ? 0.2f : 0.1f))
+        if (Has(KitGoldConvert) && Random.value < (IsEvolved(KitGoldConvert) ? 0.15f : 0.08f))
         {
             Coin c = FindFirstObjectByType<Coin>();
             if (c != null) c.AddCoin(3);
@@ -977,8 +982,8 @@ public partial class SpecialAbilities
         if (Has(KitTrophy))
         {
             bool e = IsEvolved(KitTrophy);
-            float add = e ? 1f : 0.5f;
-            if (trophyHp < (e ? 80f : 40f))
+            float add = e ? 0.8f : 0.4f;
+            if (trophyHp < (e ? 60f : 30f))
             {
                 trophyHp += add;
                 player.PlayerMaxHealth += add;
@@ -990,7 +995,7 @@ public partial class SpecialAbilities
     // 도적 회피 본능 (PlayerController.TryHit)
     public bool KitDodge()
     {
-        if (!Has(KitEvasion) || Random.value >= (IsEvolved(KitEvasion) ? 0.3f : 0.2f)) return false;
+        if (!Has(KitEvasion) || Random.value >= (IsEvolved(KitEvasion) ? 0.25f : 0.15f)) return false;
         fx.FloatText(player.transform.position, Loc.T("회피!"), new Color(0.8f, 0.7f, 1f), 4.5f, 0.2f);
         Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.8f, 0.7f, 1f, 0.7f), 20f);
         fx.Play("whoosh", 0.5f, 2f);
@@ -1012,7 +1017,7 @@ public partial class SpecialAbilities
         if (Time.time - lastHurt < (evo ? 2f : 3f)) return 1f;
         lastHurt = Time.time;                   // 한 번 쓰면 다시 기다림
         Fx.Spawn("fx_stealth", player.transform.position, 1.6f, new Color(0.7f, 0.5f, 1f, 0.8f), 20f);
-        return evo ? 2.5f : 2f;
+        return evo ? 2.1f : 1.7f;
     }
 
     // 플레이어가 맞았을 때 (OnPlayerHurt)
@@ -1023,7 +1028,7 @@ public partial class SpecialAbilities
         if (Has(KitEmergency) && Time.time >= emergencyReady && player.PlayerHealth > 0f && player.PlayerHealth < player.PlayerMaxHealth * 0.25f)
         {
             emergencyReady = Time.time + (IsEvolved(KitEmergency) ? 30f : 45f);
-            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.3f);
+            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.25f);
             Fx.Spawn("fx_levelup", player.transform.position + Vector3.up, 3.5f, new Color(0.6f, 1f, 0.6f), 14f, 0f, 30);
             fx.FloatText(player.transform.position, Loc.T("비상 물약!"), new Color(0.5f, 1f, 0.5f), 5f, 0f);
             fx.Play("bubble", 0.8f, 1.2f);
@@ -1054,7 +1059,7 @@ public partial class SpecialAbilities
             damage = RollCrit(damage);
             if (TreeExecute > 0f && e.EnemyHealth <= e.setEnemyHP * 0.2f) damage *= 1f + TreeExecute;
         }
-        if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.7f : 1.35f;
+        if (Has(KitWeakspot) && e.EnemyHealth >= e.setEnemyHP * 0.999f) damage *= IsEvolved(KitWeakspot) ? 1.5f : 1.25f;
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null) damage *= kit.TargetDamageMul(e);
         // 저주 전이: 화상 · 독 · 출혈을 스스로 못 거는 캐릭터는 공격이 25% 확률로 3초 출혈 (옮길 상태 이상이 생기게)
@@ -1067,8 +1072,8 @@ public partial class SpecialAbilities
     void KitOnEquip(int id, bool evolving)
     {
         if (player == null || id != KitPlate) return;
-        if (!evolving) { player.def += 0.15f; player.speed *= 0.95f; }
-        else { player.def += 0.1f; player.speed /= 0.95f; }
+        if (!evolving) { player.def += 0.12f; player.speed *= 0.95f; }
+        else { player.def += 0.08f; player.speed /= 0.95f; }
     }
 
     // HUD 아이콘 아래 짧은 상태 · 툴팁의 자세한 상태 (캐릭터 능력)
