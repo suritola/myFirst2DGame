@@ -36,7 +36,7 @@ public partial class SignatureSkills
         int s = L("s.soul");
         if (s > 0 && souls > 0)
         {
-            mul += souls * V(s, 0.04f, 0.02f);
+            mul += souls * V(s, 0.03f, 0.01f);     // 1.0.5 하향: 영혼 하나당 4 ~ 10% → 3 ~ 6%, 최대 10 → 8 (한 번에 +100% → +48%)
             souls = 0;
         }
         if (counterReady)
@@ -180,9 +180,9 @@ public partial class SignatureSkills
     {
         float mul = 1f;
         int r = L("s.riposte");
-        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.3f, 0.15f);
+        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.2f, 0.1f);       // 1.0.5 하향: 30 ~ 75% → 20 ~ 50% (근접이라 거의 늘 켜져 있었음)
         int g = L("s.giant");
-        if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.12f, 0.08f);
+        if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.08f, 0.05f);     // 1.0.5 하향: 12 ~ 36% → 8 ~ 23%
         return mul;
     }
 
@@ -190,7 +190,7 @@ public partial class SignatureSkills
 
     void SwordKilled(Vector3 pos)
     {
-        if (L("s.soul") > 0) souls = Mathf.Min(10, souls + 1);
+        if (L("s.soul") > 0) souls = Mathf.Min(8, souls + 1);
     }
 
     float SwordTaken(float dmg)

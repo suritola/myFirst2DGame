@@ -24,7 +24,7 @@ public static partial class LocTable
         A("평타로 벤 적 하나당 체력을 회복합니다. (한 번 휘두를 때 최대 3마리까지)", "Heal for each enemy your basic attack cuts. (Up to 3 per swing)", "通常攻撃で斬った敵1体ごとに体力を回復します。（1回の振りで最大3体まで）", "普通攻击每斩中一名敌人恢复生命。（每次挥砍最多3名）");
         A("평타를 휘두르면 베기 범위 안으로 날아오는 적 투사체를 모두 베어 없앱니다.", "Your basic swing cuts down every enemy projectile within its arc.", "通常攻撃を振ると、斬撃範囲に飛んでくる敵の投射物をすべて斬り消します。", "普通攻击挥砍时，斩灭挥砍范围内飞来的所有敌方投射物。");
         A("우클릭 회전 베기를 모으는 동안 받는 피해가 줄어듭니다.", "Take less damage while charging Spin Slash.", "右クリックの回転斬りをためている間、受けるダメージが減ります。", "蓄力右键回旋斩时，受到的伤害降低。");
-        A("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 2배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "Every few swings, one becomes a heavy strike with 1.4x reach and 2x damage. (Rank 3: the heavy strike also sends out a shockwave)", "何回か振るごとに1回は射程1.4倍・ダメージ2倍の強打になります。（3段階：強打に周囲の衝撃波）", "每挥砍几次，就有一次变为射程1.4倍、伤害2倍的强力一击。（3级：强力一击附带周围冲击波）");
+        A("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 1.6배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "Every few swings, one becomes a heavy strike with 1.4x reach and 1.6x damage. (Rank 3: the heavy strike also sends out a shockwave)", "何回か振るごとに1回は射程1.4倍・ダメージ1.6倍の強打になります。（3段階：強打に周囲の衝撃波）", "每挥砍几次，就有一次变为射程1.4倍、伤害1.6倍的强力一击。（3级：强力一击附带周围冲击波）");
         A("회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다. (0.3초마다 공격력 35%)", "After Spin Slash, a blade gale whirls around you cutting nearby foes. (35% attack every 0.3s)", "回転斬りの後、刃の風が体を包んで回り周りを斬ります。（0.3秒ごとに攻撃力35%）", "回旋斩后，刀风环绕身体旋转斩击周围。（每0.3秒攻击力35%）");
         A("화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.", "Arrow Rain leaves thornbushes that slow and prick enemies.", "矢の雨が落ちた場所に茨が残り、敵を遅くして刺します。", "箭雨落下处留下荆棘丛，减速并刺伤敌人。");
         A("대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.", "The Grand Flask bursts into small flasks that scatter and explode again.", "大爆発フラスコが爆発すると小さなフラスコが散らばって再び爆発します。", "大爆炸烧瓶爆炸时小烧瓶四散并再次爆炸。");
@@ -170,7 +170,7 @@ public static partial class LocTable
         A("회전 베기가 끝나고 잠시 뒤 한 번 더 작은 회전 베기가 일어납니다.", "A moment after Spin Slash, a smaller echo spin follows.", "回転斬りの少し後、もう一度小さな回転斬りが起こります。", "回旋斩结束片刻后再发生一次较小的回旋斩。");
         A("잔향 피해", "Echo damage", "残響ダメージ", "余响伤害");
         A("영혼 흡수", "Soul Drinker", "魂吸収", "灵魂吸收");
-        A("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기가 강해집니다. (최대 10, 벨 때 모두 씀)", "Each kill stores a soul in your blade, empowering your next swing. (Up to 10, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大10、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多10个，挥砍时全部消耗）");
+        A("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기가 강해집니다. (최대 8, 벨 때 모두 씀)", "Each kill stores a soul in your blade, empowering your next swing. (Up to 8, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大8、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多8个，挥砍时全部消耗）");
         A("영혼 하나당 피해", "Damage per soul", "魂1つあたりのダメージ", "每个灵魂伤害");
 
         // ================================================================= 도적

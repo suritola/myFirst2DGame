@@ -330,7 +330,7 @@ public partial class CharacterKit : MonoBehaviour
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
-            Specials.Damage(c.gameObject, Damage * sig * (combo ? 2f : 1f) * SwingHitMul(c, to.magnitude, reach), to.normalized, combo ? 4f : 3f);
+            Specials.Damage(c.gameObject, Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.5: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
             OnSwingHit(c, hits == 0);
             SignatureSkills.SwingHit(c);
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
