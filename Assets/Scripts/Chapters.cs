@@ -53,14 +53,15 @@ public static class Chapters
     // 초원이 1장으로 온 뒤 체력 · 피해만 맞춰서는 너무 어려웠음 (적이 나오는 간격 · 한 화면 최대 수 · 속도 · 스킬은 원래 3장 그대로였음)
     // 2.1.6: 그래도 1장이 어려워서 한 단계 더 낮춤
     // → 1장은 확 낮추고 2장은 조금, 3장부터 원래 세기 (자리 순서: 1장 · 2장 · 3장 · 4장)
-    static readonly float[] EaseHp = { 0.5f, 0.9f, 1f, 1f };
-    static readonly float[] EaseHurt = { 0.5f, 0.9f, 1f, 1f };
-    static readonly float[] EaseBoss = { 0.65f, 0.95f, 1f, 1f };
-    static readonly float[] EaseReward = { 1.1f, 1.05f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
-    static readonly float[] EaseSpawn = { 1.7f, 1.1f, 1f, 1f };     // 적이 나오는 간격 배율 (클수록 드묾)
-    static readonly float[] EaseAlive = { 0.55f, 0.9f, 1f, 1f };     // 한 화면 최대 적 수 배율
-    static readonly float[] EaseSpeed = { 0.8f, 0.95f, 1f, 1f };
-    static readonly float[] EaseSkill = { 1.6f, 1.1f, 1f, 1f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
+    // 2.2.0: 곡선을 더 가파르게 — 1 · 2장은 더 쉽게, 3장은 원래보다 조금 · 4장은 확실히 세게
+    static readonly float[] EaseHp = { 0.42f, 0.8f, 1.08f, 1.2f };
+    static readonly float[] EaseHurt = { 0.42f, 0.8f, 1.08f, 1.2f };
+    static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.08f, 1.2f };
+    static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
+    static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
+    static readonly float[] EaseAlive = { 0.5f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율
+    static readonly float[] EaseSpeed = { 0.75f, 0.9f, 1f, 1.04f };
+    static readonly float[] EaseSkill = { 1.8f, 1.2f, 0.95f, 0.88f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
 
     static float Ease(float[] t, int stage) => IsClassic || stage < 0 || stage >= t.Length ? 1f : t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)];
 
