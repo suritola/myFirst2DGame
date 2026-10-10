@@ -1359,7 +1359,7 @@ public static partial class LocTable
         { "모든 무기 장전 시간 -10%", L("All weapons reload 10% faster", "全武器のリロード時間 -10%", "所有武器装填时间 -10%") },
         { "모든 무기 탄창 +20%", L("All weapons magazine +20%", "全武器の弾倉 +20%", "所有武器弹匣 +20%") },
         { "모든 무기 피해 +10%", L("All weapons damage +10%", "全武器のダメージ +10%", "所有武器伤害 +10%") },
-        { "모든 무기 피해 +6% (다음 무기에도 이어짐)", L("All weapons damage +6% (carries over to your next weapon)", "全武器のダメージ +6% (次の武器にも引き継がれる)", "所有武器伤害 +6% (会延续到下一把武器)") },
+        { "모든 무기 피해 +6% (진화해도 이어짐)", L("All weapons damage +6% (kept after evolving)", "全武器のダメージ +6% (進化しても引き継がれる)", "所有武器伤害 +6% (进化后仍保留)") },
         { "모든 무기 피해 +8%", L("All weapons damage +8%", "全武器のダメージ +8%", "所有武器伤害 +8%") },
         { "모든 스킬 쿨타임 -8%", L("All skill cooldowns -8%", "全スキルのクールタイム -8%", "所有技能冷却 -8%") },
         { "모든 총알 관통 +1", L("All bullets pierce +1", "全ての弾の貫通 +1", "所有子弹穿透 +1") },

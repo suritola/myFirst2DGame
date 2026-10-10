@@ -457,10 +457,10 @@ public partial class SpecialAbilities
         string wname = EvolutionName(w, historyTier.TryGetValue(w, out int tr) ? tr : 1);
         Sprite icon = EvolutionIcon(w);
         if (w < 0 && Gunner) icon = Resources.Load<Sprite>("Weapons/weapon_pistol");
-        t.Add(RawNode(k, "w.dmg1", 0, Loc.T("숙련: ") + wname, Loc.T("모든 무기 피해 +6% (다음 무기에도 이어짐)"), 12, icon, () => AddAttack(0.06f)));
+        t.Add(RawNode(k, "w.dmg1", 0, Loc.T("숙련: ") + wname, Loc.T("모든 무기 피해 +6% (진화해도 이어짐)"), 12, icon, () => AddAttack(0.06f)));
         if (w < 0)
         {
-            // 권총: 기본기를 다지는 숙련 (모두 다음 무기에도 이어짐)
+            // 권총: 기본기를 다지는 숙련 (모두 진화해도 이어짐)
             t.Add(Node(k + ".a", k, 0, "빠른 손", "모든 무기 발사 간격 -6%", 16, icon, () => AddRate(0.94f)));
             t.Add(Node(k + ".b", k + ".a", 0, Gunner ? "명사수" : "날카로운 감각", "치명타 확률 +6%", 26, icon, () => TreeCrit += 0.06f));
             if (Gunner) t.Add(Node(k + ".c", k + ".b", 0, "총잡이의 감", "모든 무기 장전 시간 -10%", 36, icon, () => AddReload(0.9f)));
