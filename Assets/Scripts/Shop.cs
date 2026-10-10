@@ -320,11 +320,8 @@ public partial class Shop : MonoBehaviour
 
     public IEnumerator StartGameCountdown()
     {
-        if (pause != null)
-        {
-            pause.SetActive(true);
-            isPause = true;
-        }
+        isPause = true;
+        if (pause != null) pause.SetActive(true);
 
 
         Time.timeScale = 0f;
@@ -340,11 +337,12 @@ public partial class Shop : MonoBehaviour
         if (pause != null)
         {
             pause.SetActive(false);
-            isPause = false;
         }
+        isPause = false;
 
-
-        Time.timeScale = 1f;
+        // 1.0.7: 일시정지 메뉴가 열려 있으면 지금 풀지 않고, 메뉴를 닫을 때 흐르게
+        if (ESCmenu.IsOpen) ESCmenu.ResumeAt(1f);
+        else Time.timeScale = 1f;
     }
 
 
