@@ -246,8 +246,8 @@ public partial class SpecialAbilities
         Sprite atk = StatIcon(0), def = StatIcon(1), spd = StatIcon(2), rel = StatIcon(3), mov = StatIcon(4);
 
         // ---------------- 0 무기: 모든 무기에 공통 (진화해도 이어짐)
-        t.Add(Node("w.dmg1", null, 0, "무기 화력", "모든 무기 피해 +10%", 6, atk, () => AddAttack(0.1f)));
-        Chain(t, "w.dmg", 2, 5, "w.dmg1", 0, "무기 화력", "모든 무기 피해 +10%", new[] { 14, 26, 42, 64 }, atk, () => AddAttack(0.1f));
+        t.Add(Node("w.dmg1", null, 0, "무기 화력", "모든 무기 피해 +8%", 6, atk, () => AddAttack(0.08f)));     // 1.0.6 전체 하향: +10 → +8%
+        Chain(t, "w.dmg", 2, 5, "w.dmg1", 0, "무기 화력", "모든 무기 피해 +8%", new[] { 14, 26, 42, 64 }, atk, () => AddAttack(0.08f));
         t.Add(Node("w.rate1", "w.dmg1", 0, "연사 강화", "모든 무기 발사 간격 -8%", 10, spd, () => AddRate(0.92f)));
         Chain(t, "w.rate", 2, 4, "w.rate1", 0, "연사 강화", "모든 무기 발사 간격 -8%", new[] { 22, 38, 60 }, spd, () => AddRate(0.92f));
         bool ammo = Gunner || (Kit != null && Kit.UsesAmmo);
@@ -285,8 +285,8 @@ public partial class SpecialAbilities
             t.Add(RawNode("u.kit2", "u.kit1", 1, un + " " + Loc.T("강화") + " II", un + " " + Loc.T("위력 +10%"), 30, ult, () => { if (Kit != null) Kit.ultMul += 0.1f; }));
             t.Add(RawNode("u.kit3", "u.kit2", 1, un + " " + Loc.T("강화") + " III", un + " " + Loc.T("위력 +10%"), 50, ult, () => { if (Kit != null) Kit.ultMul += 0.1f; }));
         }
-        t.Add(Node("u.power1", null, 1, "필살 위력", "필살기 피해 +20%", 8, ult, () => TreeUltPower += 0.2f));
-        Chain(t, "u.power", 2, 4, "u.power1", 1, "필살 위력", "필살기 피해 +20%", new[] { 20, 36, 56 }, ult, () => TreeUltPower += 0.2f);
+        t.Add(Node("u.power1", null, 1, "필살 위력", "필살기 피해 +15%", 8, ult, () => TreeUltPower += 0.15f));     // 1.0.6 전체 하향: +20 → +15%
+        Chain(t, "u.power", 2, 4, "u.power1", 1, "필살 위력", "필살기 피해 +15%", new[] { 20, 36, 56 }, ult, () => TreeUltPower += 0.15f);
         t.Add(Node("u.gauge1", "u.power1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", 12, LvIcon(2), () => TreeGaugeMul += 0.12f));
         Chain(t, "u.gauge", 2, 3, "u.gauge1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", new[] { 26, 44 }, LvIcon(2), () => TreeGaugeMul += 0.12f);
         // 필살기 특성: 무기마다 다름 (권총 타겟 수 · 화염 회오리 지속 · 레일건 굵기 …), 진화해도 이어짐
