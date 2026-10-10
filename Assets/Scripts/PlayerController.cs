@@ -883,6 +883,7 @@ void Shoot()
                 Vector3 aim = body != null && body.enabled ? body.bounds.center : now;
 
                 FaceTowards(aim);
+                PlayerMotion.Of(this).Recoil(aim - startPosition, 0.6f);      // 몸동작 (1.0.5)
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 

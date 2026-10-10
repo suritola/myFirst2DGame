@@ -714,6 +714,7 @@ public partial class CharacterKit : MonoBehaviour
             // 회전 베기: 누른 만큼 강해짐
             float dmg = Damage * (3f + 5f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
+            PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.5)
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Spawn("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -725,6 +726,7 @@ public partial class CharacterKit : MonoBehaviour
         else
         {
             float dmg = Damage * (4f + 8f * charge) * UltMul * SignatureSkills.BigFlaskMul();     // 증폭 용액
+            PlayerMotion.Of(this).Throw(0.35f, (Vector2)(at - transform.position));     // 몸동작: 플라스크 던지기
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {
                 DamageCircle(p, radius, dmg, 3f);
@@ -770,6 +772,7 @@ public partial class CharacterKit : MonoBehaviour
         player.GrantInvincibility(time + (mastery >= 3 ? 0.8f : 0.4f));
         if (card[2] > 0) StartCoroutine(ShadowClone(from, 1f + card[2]));
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        PlayerMotion.Of(this).Lunge(time + 0.1f, dir);      // 몸동작: 출혈 돌진
         Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
         Play("whoosh", 1f, 1.4f);
         Play("slash", 0.7f, 1.5f);
@@ -876,6 +879,7 @@ public partial class CharacterKit : MonoBehaviour
     IEnumerator ArrowRain(Vector3 center)
     {
         Play("bowtwang", 0.8f, 0.85f);
+        PlayerMotion.Of(this).Recoil(Vector2.up + (Vector2)(center - transform.position).normalized * 0.3f, 1.5f);     // 몸동작: 하늘로 쏘며 뒤로 젖혀짐 (1.0.5)
         float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         SignatureSkills.Rain(center, radius);

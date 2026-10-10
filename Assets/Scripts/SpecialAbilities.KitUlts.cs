@@ -114,15 +114,20 @@ public partial class SpecialAbilities
         {
             // ---------------- 검사
             case KitHammer:
+                // 몸동작 (1.0.5): 크게 뛰어올라 첫 내려찍기, 이어서 작게 들썩이며 땅을 두드림
+                PlayerMotion.Of(player).Leap(0.45f, 2.6f, dir);
+                yield return new WaitForSeconds(0.45f);
                 for (int i = 1; i <= 6; i++)
                 {
                     Vector3 p = me + (Vector3)(dir * (i * 2.2f));
                     if (Hostile.IsWall(p)) break;
+                    if (i > 1) PlayerMotion.Of(player).Pound(dir);
                     Smash(p, evo ? 3f : 2.5f, D * 3f, 0.8f);
                     yield return new WaitForSeconds(0.12f);
                 }
                 break;
             case KitWhip:
+                PlayerMotion.Of(player).Spin(1f, 3f);
                 for (int i = 0; i < 12; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 30f) * dir;
@@ -131,6 +136,7 @@ public partial class SpecialAbilities
                 }
                 break;
             case KitLance:
+                PlayerMotion.Of(player).Lunge(0.5f, dir);
                 yield return StartCoroutine(LanceCharge(dir, evo ? 20f : 16f, 0.35f, D * 7f, 6f, true));
                 Hostile.Shake(0.3f);
                 fx.Play("bigboom", 0.6f, 1.1f);
@@ -138,6 +144,7 @@ public partial class SpecialAbilities
 
             // ---------------- 도적
             case KitBlowgun:
+                PlayerMotion.Of(player).Recoil(dir, 1.2f);
                 {
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 6f : 5f;
@@ -156,6 +163,7 @@ public partial class SpecialAbilities
                     break;
                 }
             case KitCards:
+                PlayerMotion.Of(player).Spin(1.2f, 4f);
                 for (int i = 0; i < 52; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 27.7f) * dir;
@@ -165,6 +173,7 @@ public partial class SpecialAbilities
                 }
                 break;
             case KitWire:
+                PlayerMotion.Of(player).Cast(1.2f);
                 {
                     Vector3 c0 = player.transform.position;
                     LineRenderer web = fx.NewLine("WebPrison", false, 18);
@@ -199,6 +208,7 @@ public partial class SpecialAbilities
 
             // ---------------- 궁수
             case KitNetBow:
+                PlayerMotion.Of(player).Throw(0.4f, dir);
                 {
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 8.5f : 7f;
@@ -208,6 +218,7 @@ public partial class SpecialAbilities
                     break;
                 }
             case KitJavelin:
+                PlayerMotion.Of(player).Throw(0.45f, dir);
                 {
                     Vector2 side = new Vector2(-dir.y, dir.x);
                     for (int i = -4; i <= 4; i++)
@@ -220,6 +231,7 @@ public partial class SpecialAbilities
                     break;
                 }
             case KitBurstBow:
+                PlayerMotion.Of(player).Recoil(dir, 1.2f);
                 for (float t = 0f; t < 3f; t += 1f / 15f)
                 {
                     List<Transform> near = NearestEnemies(player.transform.position, 16f, 3);
@@ -233,6 +245,7 @@ public partial class SpecialAbilities
 
             // ---------------- 연금술사
             case KitQuicksilver:
+                PlayerMotion.Of(player).Spin(0.8f, 2f);
                 for (int i = 0; i < 16; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 22.5f) * dir;
@@ -242,6 +255,7 @@ public partial class SpecialAbilities
                 fx.Play("glassclink", 0.8f, 0.8f);
                 break;
             case KitMagnet:
+                PlayerMotion.Of(player).Cast(1f);
                 {
                     Vector3 at = KitClamp(mouse);
                     yield return StartCoroutine(MagnetPull(at, evo ? 11f : 9f, 3f, D * 8f, 1, 5f));
@@ -250,6 +264,7 @@ public partial class SpecialAbilities
                     break;
                 }
             case KitFirework:
+                PlayerMotion.Of(player).Cast(1.5f);
                 for (int i = 0; i < 20; i++)
                 {
                     List<Transform> near = NearestEnemies(player.transform.position + (Vector3)(Random.insideUnitCircle * 6f), 18f, 4);

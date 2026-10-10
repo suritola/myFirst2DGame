@@ -427,6 +427,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     Vector3 start = player.MuzzlePosition;
                     Vector2 dir = AimDir();
                     player.FaceTowards(MouseWorld());
+                    PlayerMotion.Of(player).Recoil(dir, 2f);            // 몸동작: 큰 반동 (1.0.5)
                     const float range = 11f, half = 35f;
                     foreach (Collider2D col in Physics2D.OverlapCircleAll(start, range))
                     {
@@ -451,6 +452,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case SniperId:
+                PlayerMotion.Of(player).Brace(0.5f, AimDir());       // 몸동작: 웅크려 충전 → 큰 반동
                 // 관통 레일건: 충전 뒤 화면을 가로지르는 굵은 광선 (조준한 적이 많을수록 강함)
                 {
                     float wide = 1f + 0.3f * UltTrait(id);
@@ -494,6 +496,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case DualId:
+                PlayerMotion.Of(player).Spin(1.6f + 0.4f * UltTrait(id), 4f);     // 몸동작: 돌며 난사
                 // 총알 폭풍: 1.6초 동안 두 줄기 나선으로 사방 난사 (움직이며 쓸 수 있음)
                 // 2.2.0: 캐릭터 주위 StormRange 칸까지만 날아감 (영혼 트리 「폭풍 사거리」로 +3칸씩)
                 {
@@ -527,6 +530,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case FlameId:
+                PlayerMotion.Of(player).Cast(1f);
                 // 화염 회오리: 마우스 위치에 불기둥이 생겨 적에게 다가가며 빨아들이고 태움
                 {
                     GameObject go = new GameObject("FireTornado");
@@ -545,6 +549,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case SeekerId:
+                PlayerMotion.Of(player).Cast(1.2f);
                 // 영혼 떼: 영혼 구슬 다섯이 주위를 돌다 조준한 적에게 번갈아 달려듦 (4초)
                 {
                     GameObject go = new GameObject("SoulSwarm");
@@ -561,6 +566,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case ChainId:
+                PlayerMotion.Of(player).Cast(2.5f);
                 // 뇌운: 2.5초 동안 하늘에서 번개가 조준한 적들에게 연달아 떨어짐
                 {
                     float storm = 2.5f + 0.8f * UltTrait(id);
@@ -590,6 +596,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case ScytheId:
+                PlayerMotion.Of(player).Spin(1.2f, 3f);
                 // 죽음의 춤: 무적 상태로 조준한 적들 사이를 순간이동하며 벤 뒤 제자리로 돌아옴
                 // 카메라는 플레이어를 따라가지 않고 움직이는 범위의 가운데에 고정
                 {
@@ -649,6 +656,7 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case GrenadeId:
+                PlayerMotion.Of(player).Throw(0.4f, AimDir());
                 // 용암 융단폭격: 플레이어에서 마우스 쪽으로 줄지어 운석이 떨어짐
                 {
                     Vector3 start = player.transform.position;
