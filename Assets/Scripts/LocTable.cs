@@ -264,6 +264,8 @@ public static partial class LocTable
         { "생명의 정수", L("Essence of Life", "生命の精髄", "生命精华") },
         { "최대 체력 +20, 체력 모두 회복", L("Max HP +20 and fully restore HP", "最大体力+20、体力全回復", "最大生命+20，完全恢复生命") },
         { "보스 보상", L("Boss Reward", "ボス報酬", "首领奖励") },
+        // 빌드 시너지 (2.2.2)
+        { "시너지", L("Synergy", "シナジー", "协同") },
         // 받은 피해 출처 (AttackLabel, 2.2.2)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },
