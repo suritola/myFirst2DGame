@@ -67,7 +67,11 @@ public class RunStats : MonoBehaviour
     public static void Hurt(float amount, string callerFile)
     {
         if (!runActive || amount <= 0f) return;
-        string key = System.IO.Path.GetFileNameWithoutExtension(callerFile ?? "") switch
+        string file = System.IO.Path.GetFileNameWithoutExtension(callerFile ?? "");
+        // 2.2.2: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
+        string named = file == "EnemySkill" || file == "BossSkills" || file == "BossUltimate"
+            ? (AttackLabel.Pending ?? AttackLabel.FromStack()) : null;
+        string key = named ?? file switch
         {
             "EnermyController" => "적과 부딪힘",
             "EnemySkill" => "적 스킬",
@@ -106,7 +110,7 @@ public class RunStats : MonoBehaviour
     }
 
     // 피해 출처 이름 (특수 능력은 능력 이름 그대로 번역표에 있음)
-    public static string SourceName(string key) => Loc.T(key);
+    public static string SourceName(string key) => AttackLabel.Translate(key);
 
     void OnEnable() => EnermyController.Killed += OnKill;
     void OnDisable() => EnermyController.Killed -= OnKill;

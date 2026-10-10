@@ -104,7 +104,7 @@ public class EnemySkill : MonoBehaviour
     }
 
     // 스킬 이름 (쓰는 동안 머리 위에 보여 줌)
-    static string SkillName(EnemySkillType t) => t switch
+    public static string SkillName(EnemySkillType t) => t switch
     {
         EnemySkillType.BoneSpike => "뼈 가시", EnemySkillType.Leap => "도약", EnemySkillType.Blink => "순간이동",
         EnemySkillType.XLaser => "십자 광선", EnemySkillType.SelfDestruct => "자폭", EnemySkillType.Pounce => "덮치기",
@@ -616,6 +616,7 @@ public class HazardZone : MonoBehaviour
     public float tickDamage;
     public float slow;          // 0이면 감속 없음, 0.55 = 55% 속도
     public float fps = 8f;
+    public string label;        // 받은 피해 출처 (AttackLabel, 만든 스킬 이름)
     float age;
     float tick;
     FxAnim visual;
@@ -629,6 +630,7 @@ public class HazardZone : MonoBehaviour
         z.life = life;
         z.tickDamage = tickDamage;
         z.slow = slow;
+        z.label = AttackLabel.FromStack();
         z.visual = Fx.Play(fx, pos, radius * (fx == "fx_puddle" ? 1.1f : 2.2f), color, z.fps, 0f, fx == "fx_puddle" ? 1 : 16, true, life);
         if (z.visual != null && fx == "fx_puddle")
         {
@@ -651,7 +653,9 @@ public class HazardZone : MonoBehaviour
             if (tick >= 0.6f)
             {
                 tick = 0f;
+                AttackLabel.Pending = label;
                 p.TryHit(tickDamage);
+                AttackLabel.Pending = null;
             }
         }
         if (age >= life) Destroy(gameObject);
@@ -765,6 +769,7 @@ public static class Hostile
         h.damage = damage;
         h.radius = radius;
         h.life = life;
+        h.label = AttackLabel.FromStack() ?? "적 탄환";
         return h;
     }
 
@@ -1027,6 +1032,7 @@ public class HostileProjectile : MonoBehaviour
     public bool spin;
     public bool fiery;
     public bool pierceWalls;
+    public string label;        // 받은 피해 출처 (AttackLabel, 쏜 스킬 이름)
     float puff;
     float trail;
     SpriteRenderer body;
@@ -1074,7 +1080,10 @@ public class HostileProjectile : MonoBehaviour
         }
 
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(transform.position, p.transform.position) < radius + 0.4f && p.TryHit(damage))
+        AttackLabel.Pending = label;
+        bool hitPlayer = p != null && Vector2.Distance(transform.position, p.transform.position) < radius + 0.4f && p.TryHit(damage);
+        AttackLabel.Pending = null;
+        if (hitPlayer)
         {
             Hostile.Burst(transform.position, 1f, GetComponent<SpriteRenderer>().color);
             Destroy(gameObject);
