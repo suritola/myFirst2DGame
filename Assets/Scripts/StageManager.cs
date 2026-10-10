@@ -114,7 +114,7 @@ public class StageManager : MonoBehaviour
     {
         LastStand.ResetRun();
         Curse.Active = false;
-        gameObject.AddComponent<ChapterEvents>();        // 장 중반 습격 · 엘리트 · 보물 상자 (2.2.2)
+        gameObject.AddComponent<ChapterEvents>();        // 장 중반 습격 · 엘리트 · 보물 상자 (1.0.5)
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null)
         {
@@ -190,7 +190,7 @@ public class StageManager : MonoBehaviour
         {
             RunClock.Create();
             ShowBanner(Chapters.Title(CurrentStage), 2.5f);
-            // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (2.2.2)
+            // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (1.0.5)
             int mastery = Mastery.Level(CharacterData.Selected);
             LevelShop shop = FindFirstObjectByType<LevelShop>();
             if (mastery > 0 && shop != null && !Demo.On && !DailyChallenge.Active)
@@ -396,7 +396,7 @@ public class StageManager : MonoBehaviour
         StartCoroutine(PortalCountdown(fromStage));
     }
 
-    // 보스 보상 3택 (2.2.2): 무기 진화 뒤 하나를 고름 — 공격력 · 영혼 조각 · 생명력 (판 중간 저장 'a' · 'h')
+    // 보스 보상 3택 (1.0.5): 무기 진화 뒤 하나를 고름 — 공격력 · 영혼 조각 · 생명력 (판 중간 저장 'a' · 'h')
     IEnumerator BossReward()
     {
         if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) yield break;
@@ -723,7 +723,7 @@ public class StageManager : MonoBehaviour
         ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
         RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9)
-        StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (2.2.2)
+        StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (1.0.5)
     }
 
     // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장

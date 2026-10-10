@@ -220,7 +220,7 @@ public class EnemySpawner : MonoBehaviour
 
     static float Weight(float[] weights, int i) => weights != null && i < weights.Length ? weights[i] : 0f;
 
-    // 장 중반 「습격」 (ChapterEvents, 2.2.2): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
+    // 장 중반 「습격」 (ChapterEvents, 1.0.5): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
     public System.Collections.Generic.List<GameObject> SpawnAmbush(Vector3 center, int count, float radius)
     {
         var list = new System.Collections.Generic.List<GameObject>();

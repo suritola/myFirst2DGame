@@ -131,7 +131,7 @@ public static class GameMode
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
     static float D(DailyStat s) => DailyChallenge.Mul(s);
-    public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul;     // 저주 제단 (2.2.2)
+    public static float EnemyHpMul => EnemyHp[I] * Ramp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul;     // 저주 제단 (1.0.5)
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, Ramp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 여러 장 중 하나를 고르는 창 (2.2.2): 보물 상자 · 보스 보상 3택 · 저주 제단
+// 여러 장 중 하나를 고르는 창 (1.0.5): 보물 상자 · 보스 보상 3택 · 저주 제단
 // 열린 동안 게임이 멈추고, 카드를 누르거나 숫자 1 · 2 · 3 으로 고름 (ESC 메뉴 · 보스 결계는 열리지 않음)
 public class ChoiceUI : MonoBehaviour
 {

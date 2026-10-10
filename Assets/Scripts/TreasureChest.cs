@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-// 보물 상자 (2.2.2): 습격을 이겨 내거나 중간 보스 · 엘리트를 쓰러뜨리면 나옴 (ChapterEvents)
+// 보물 상자 (1.0.5): 습격을 이겨 내거나 중간 보스 · 엘리트를 쓰러뜨리면 나옴 (ChapterEvents)
 // 다가가면 열리고 셋 중 하나를 고름: 코인 · 영혼 조각 · 체력 모두 회복 + 최대 체력 +10
 public class TreasureChest : MonoBehaviour
 {

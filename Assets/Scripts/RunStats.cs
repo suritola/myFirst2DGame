@@ -68,7 +68,7 @@ public class RunStats : MonoBehaviour
     {
         if (!runActive || amount <= 0f) return;
         string file = System.IO.Path.GetFileNameWithoutExtension(callerFile ?? "");
-        // 2.2.2: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
+        // 1.0.5: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
         string named = file == "EnemySkill" || file == "BossSkills" || file == "BossUltimate"
             ? (AttackLabel.Pending ?? AttackLabel.FromStack()) : null;
         string key = named ?? file switch

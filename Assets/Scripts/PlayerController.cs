@@ -1065,7 +1065,7 @@ void Shoot()
         ShowHurt(taken);
         special?.OnPlayerHurt();
         SignatureSkills.Hurt(taken);
-        LastStand.Check(this);      // 체력 30% 아래: 장마다 한 번 2초 무적 + 밀쳐 내기 (2.2.2)
+        LastStand.Check(this);      // 체력 30% 아래: 장마다 한 번 2초 무적 + 밀쳐 내기 (1.0.5)
 
         if (PlayerHealth <= 0) StartCoroutine(DeathSequence());
 

@@ -142,7 +142,7 @@ public partial class SpecialAbilities
         if (HasAug(FlameId))
         {
             bool hell = AugMaxed(FlameId);
-            float range = hell ? 6.5f : 5f, half = hell ? 30f : 24f;     // 2.2.2: 쌍발 총구만 고르던 것 → 다른 진화 강화
+            float range = hell ? 6.5f : 5f, half = hell ? 30f : 24f;     // 1.0.5: 쌍발 총구만 고르던 것 → 다른 진화 강화
             float hit = Damage * (hell ? 0.65f : 0.45f) * AugPower(FlameId);
             foreach (Collider2D c in Specials.Overlap(start, range, gunHits))
             {

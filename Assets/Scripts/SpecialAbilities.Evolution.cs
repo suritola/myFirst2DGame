@@ -212,7 +212,7 @@ public partial class SpecialAbilities
     public float TreeGaugeMul { get; private set; } = 1f;   // 필살기 게이지 차는 속도
     public float TreeShardMul { get; private set; } = 1f;   // 영혼 조각 획득량
     public float TreeUltRefund { get; private set; }        // 필살기를 쓴 뒤 게이지가 이만큼 남음
-    public float TreeBigShardMul { get; private set; } = 1f;    // 보스 · 중간 보스 영혼 조각 (영혼 끝 칸 「영혼 수확」, 2.2.2)
+    public float TreeBigShardMul { get; private set; } = 1f;    // 보스 · 중간 보스 영혼 조각 (영혼 끝 칸 「영혼 수확」, 1.0.5)
     public float TreeStormRange { get; private set; }       // 총알 폭풍 사거리 + (칸, 2.2.0)
     public float TreeRateMul { get; private set; } = 1f;    // 모든 무기 발사 간격 배율
     public float TreeMagMul { get; private set; } = 1f;     // 모든 무기 탄창 배율
@@ -348,7 +348,7 @@ public partial class SpecialAbilities
         t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
         t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +1 회복", 20, LvIcon(11), () => p.healOnKill += 1f));
         t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +1 회복", 40, LvIcon(11), () => p.healOnKill += 1f));
-        // 2.2.2: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
+        // 1.0.5: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
         t.Add(Node("s.laststand", "s.guard2", 3, "꺾이지 않는 의지", "「최후의 보루」가 장마다 한 번 더 발동합니다", 44, def, () => LastStand.Extra += 1));
         t.Add(Node("s.revive", "s.barrier2", 3, "되살아난 영혼", "판마다 한 번, 쓰러질 피해를 받으면 체력 40%로 되살아납니다", 90, def, () => TreeRevives += 1));
 
