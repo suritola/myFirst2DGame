@@ -6,9 +6,10 @@ using UnityEngine;
 public class TreasureChest : MonoBehaviour
 {
     static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
-    const float OpenRange = 1.6f, Size = 1.6f;
+    // 1.0.5: 더 잘 보이게 — 크기 1.6 → 2.6, 크고 숨 쉬는 후광, 하늘로 솟는 빛기둥, 화면 밖이면 가장자리에 방향 표시
+    const float OpenRange = 2.2f, Size = 2.6f;
 
-    GameObject label;
+    GameObject label, halo, pillar, pointer;
     SpriteRenderer sr;
     Vector3 home;
     bool opening;
@@ -19,12 +20,17 @@ public class TreasureChest : MonoBehaviour
         // 상자 그림 (tools/pixelart/make_choice_icons.py 의 chest) · 뒤에 금빛
         Sprite art = Resources.Load<Sprite>("Icons/choice_chest");
         GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? Color.white : Gold, "Effect", 8);
-        GameObject halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.35f, new Color(1f, 0.82f, 0.3f, 0.45f), "Effect", 7);
-        halo.transform.SetParent(go.transform, true);
         TreasureChest c = go.AddComponent<TreasureChest>();
         c.sr = go.GetComponent<SpriteRenderer>();
         c.home = at;
-        c.label = SkillTag.Show(go.transform, Loc.T("보물 상자"), 1.6f);
+        c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(1f, 0.82f, 0.3f, 0.6f), "Effect", 7);
+        c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(1f, 0.85f, 0.4f, 0.4f), "Effect", 6);
+        c.pillar.transform.localScale = new Vector3(0.22f, 2.6f, 1f);
+        c.pointer = SpecialAbilities.MakeSprite("ChestPointer", art != null ? art : Hostile.Glow, at, 0.9f, Color.white, "Effect", 40);
+        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, 0.25f, new Color(1f, 0.82f, 0.3f, 0.7f), "Effect", 39);
+        pointerGlow.transform.SetParent(c.pointer.transform, true);
+        c.pointer.SetActive(false);
+        c.label = SkillTag.Show(go.transform, Loc.T("보물 상자"), 2.6f);
         Fx.Spawn("fx_soulburst", at, 3.5f, Gold, 18f);
         ShockRing.Spawn(at, 0.4f, 3f, 0.4f, Gold, 0.3f);
         Hostile.Play("chime", 0.8f, 1.3f);
@@ -35,9 +41,17 @@ public class TreasureChest : MonoBehaviour
     void Update()
     {
         if (opening) return;
-        transform.position = home + Vector3.up * Mathf.Sin(Time.time * 3f) * 0.15f;
-        transform.localScale = Vector3.one * Size * (1f + 0.06f * Mathf.Sin(Time.time * 6f));
-        if (Random.value < Time.deltaTime * 4f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 0.8f), 0.8f, Gold, 20f);
+        float t = Time.time;
+        transform.position = home + Vector3.up * Mathf.Sin(t * 3f) * 0.2f;
+        transform.localScale = Vector3.one * Size * (1f + 0.07f * Mathf.Sin(t * 6f));
+        if (halo != null)
+        {
+            halo.transform.localScale = Vector3.one * (0.6f + 0.1f * Mathf.Sin(t * 4f));
+            halo.GetComponent<SpriteRenderer>().color = new Color(1f, 0.82f, 0.3f, 0.5f + 0.2f * Mathf.Sin(t * 4f));
+        }
+        if (pillar != null) pillar.GetComponent<SpriteRenderer>().color = new Color(1f, 0.85f, 0.4f, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
+        if (Random.value < Time.deltaTime * 9f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.4f), 1.2f, Gold, 20f);
+        UpdatePointer(t);
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || Time.timeScale == 0f) return;
         if (Vector2.Distance(p.transform.position, home) <= OpenRange) StartCoroutine(OpenChest(p));
@@ -75,8 +89,28 @@ public class TreasureChest : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // 화면 밖이면 화면 가장자리(안쪽으로 조금)에 상자 그림이 상자 쪽을 가리킴
+    void UpdatePointer(float t)
+    {
+        Camera cam = Camera.main;
+        if (pointer == null || cam == null || !cam.orthographic) return;
+        Vector3 c = cam.transform.position;
+        float hh = cam.orthographicSize, hw = hh * cam.aspect;
+        Vector2 d = home - c;
+        bool inside = Mathf.Abs(d.x) < hw - 0.5f && Mathf.Abs(d.y) < hh - 0.5f;
+        pointer.SetActive(!inside);
+        if (inside) return;
+        float sx = (hw - 1.2f) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - 1.2f) / Mathf.Max(0.001f, Mathf.Abs(d.y));
+        Vector2 edge = d * Mathf.Min(sx, sy);
+        pointer.transform.position = new Vector3(c.x + edge.x, c.y + edge.y, 0f);
+        pointer.transform.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(t * 8f));
+    }
+
     void OnDestroy()
     {
         if (label != null) Destroy(label);
+        if (halo != null) Destroy(halo);
+        if (pillar != null) Destroy(pillar);
+        if (pointer != null) Destroy(pointer);
     }
 }
