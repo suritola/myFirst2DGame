@@ -257,6 +257,13 @@ public static partial class LocTable
         { "저주 제단", L("Cursed Altar", "呪いの祭壇", "诅咒祭坛") },
         { "위험을 감수하면 더 큰 보상을 얻습니다", L("Take the risk for a bigger reward", "危険を冒せば、より大きな報酬を得られます", "甘冒风险，获得更大回报") },
         { "저주를 받았다!\n적 체력 +30% · 보상 +50%", L("You are cursed!\nEnemy HP +30% · Rewards +50%", "呪いを受けた！\n敵の体力+30%・報酬+50%", "你受到了诅咒！\n敌人生命+30% · 奖励+50%") },
+        // 보스 보상 3택 (2.2.2)
+        { "전설의 힘", L("Legendary Might", "伝説の力", "传说之力") },
+        { "공격력 +10% (이번 판 내내)", L("Attack +10% (for the rest of the run)", "攻撃力+10%（このラン中ずっと）", "攻击力+10%（本局持续）") },
+        { "영혼 조각 다발", L("Soul Shard Bundle", "魂のかけらの束", "一束灵魂碎片") },
+        { "생명의 정수", L("Essence of Life", "生命の精髄", "生命精华") },
+        { "최대 체력 +20, 체력 모두 회복", L("Max HP +20 and fully restore HP", "最大体力+20、体力全回復", "最大生命+20，完全恢复生命") },
+        { "보스 보상", L("Boss Reward", "ボス報酬", "首领奖励") },
         // 받은 피해 출처 (AttackLabel, 2.2.2)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

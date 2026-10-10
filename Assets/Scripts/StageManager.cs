@@ -376,14 +376,47 @@ public class StageManager : MonoBehaviour
         Hints.Show("soultree_btn", "영혼 조각이 모이면 [{UPGRADE}]로 영혼 트리를 열어 무기 · 필살기 · 생존 · 영혼 칸을 배우세요.");
     }
 
-    IEnumerator EvolutionThenPortal(string banner, float time)
+    IEnumerator EvolutionThenPortal(string banner, float time, bool evolve)
     {
         int fromStage = CurrentStage;
-        yield return Evolution(true);
+        if (evolve) yield return Evolution(true);
         // 진화 창이 뜨기 전에 이미 문으로 들어갔으면 안내 · 카운트다운은 생략
+        if (CurrentStage != fromStage) yield break;
+        yield return BossReward();
         if (CurrentStage != fromStage) yield break;
         ShowBanner(banner, time);
         StartCoroutine(PortalCountdown(fromStage));
+    }
+
+    // 보스 보상 3택 (2.2.2): 무기 진화 뒤 하나를 고름 — 공격력 · 영혼 조각 · 생명력 (판 중간 저장 'a' · 'h')
+    IEnumerator BossReward()
+    {
+        if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) yield break;
+        yield return new WaitForSecondsRealtime(0.5f);
+        while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
+        int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
+        ChoiceUI.Option[] options =
+        {
+            new ChoiceUI.Option("전설의 힘", "공격력 +10% (이번 판 내내)", new Color(1f, 0.6f, 0.3f)),
+            new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f)),
+            new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f)),
+        };
+        int pick = 0;
+        yield return ChoiceUI.Run("보스 보상", "하나를 고르세요", options, i => pick = i);
+        PlayerController p = Hostile.Player;
+        if (p == null) yield break;
+        if (pick == 0)
+        {
+            p.damage *= 1.1f;
+            RunSave.Record("a10");
+        }
+        else if (pick == 1) SoulShards.Add(shards, p.transform.position, false);
+        else
+        {
+            p.PlayerMaxHealth += 20f;
+            p.PlayerHealth = p.PlayerMaxHealth;
+            RunSave.Record("h20");
+        }
     }
 
     // ================================================================= 특수 능력 포인트
@@ -570,12 +603,7 @@ public class StageManager : MonoBehaviour
             // 다음 장으로 가는 문 (2.1.1~ 장 순서는 Chapters: 초원 → 지하 묘역 → 불타는 지옥 → 영혼의 심연)
             string text = Loc.T(Defeated[Mathf.Clamp(stage, 0, 3)]) + "\n" + Loc.T(Gate[Mathf.Clamp(next, 0, 3)]);
             if (portal != null) portal.SetActive(true);
-            if (Evo) StartCoroutine(EvolutionThenPortal(text, 3.5f));
-            else
-            {
-                ShowBanner(text, 3.5f);
-                StartCoroutine(PortalCountdown(stage));
-            }
+            StartCoroutine(EvolutionThenPortal(text, 3.5f, Evo));     // 무기 진화(진화 캐릭터) → 보스 보상 3택 → 문
         }
         else
         {
