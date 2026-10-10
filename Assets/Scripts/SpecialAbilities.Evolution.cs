@@ -212,6 +212,7 @@ public partial class SpecialAbilities
     public float TreeGaugeMul { get; private set; } = 1f;   // 필살기 게이지 차는 속도
     public float TreeShardMul { get; private set; } = 1f;   // 영혼 조각 획득량
     public float TreeUltRefund { get; private set; }        // 필살기를 쓴 뒤 게이지가 이만큼 남음
+    public float TreeBigShardMul { get; private set; } = 1f;    // 보스 · 중간 보스 영혼 조각 (영혼 끝 칸 「영혼 수확」, 2.2.2)
     public float TreeStormRange { get; private set; }       // 총알 폭풍 사거리 + (칸, 2.2.0)
     public float TreeRateMul { get; private set; } = 1f;    // 모든 무기 발사 간격 배율
     public float TreeMagMul { get; private set; } = 1f;     // 모든 무기 탄창 배율
@@ -347,11 +348,15 @@ public partial class SpecialAbilities
         t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
         t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +1 회복", 20, LvIcon(11), () => p.healOnKill += 1f));
         t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +1 회복", 40, LvIcon(11), () => p.healOnKill += 1f));
+        // 2.2.2: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
+        t.Add(Node("s.laststand", "s.guard2", 3, "꺾이지 않는 의지", "「최후의 보루」가 장마다 한 번 더 발동합니다", 44, def, () => LastStand.Extra += 1));
+        t.Add(Node("s.revive", "s.barrier2", 3, "되살아난 영혼", "판마다 한 번, 쓰러질 피해를 받으면 체력 40%로 되살아납니다", 90, def, () => TreeRevives += 1));
 
         // ---------------- 4 영혼 (예전 거너 패시브가 여기로)
         t.Add(Node("o.root", null, 4, "영혼 각성", "영혼 조각 획득량 +15%", 8, soulIcon, () => TreeShardMul += 0.15f));
         t.Add(Node("o.root2", "o.root", 4, "영혼 각성 II", "영혼 조각 획득량 +15%", 30, soulIcon, () => TreeShardMul += 0.15f));
         t.Add(Node("o.root3", "o.root2", 4, "영혼 각성 III", "영혼 조각 획득량 +20%", 60, soulIcon, () => TreeShardMul += 0.2f));
+        t.Add(Node("o.harvest", "o.root2", 4, "영혼 수확", "보스 · 중간 보스가 주는 영혼 조각 2배", 48, soulIcon, () => TreeBigShardMul = 2f));
         for (int i = 0; i < myPassives.Count; i++) AddPassive(t, myPassives[i], 22 + 6 * i, 48 + 8 * i);
 
         // ---------------- 5 재물
@@ -360,6 +365,7 @@ public partial class SpecialAbilities
         Chain(t, "g.coin", 2, 3, "g.coin1", 5, "황금 손길", "처치 시 코인 확률 +6%", new[] { 22, 40 }, LvIcon(1), () => TreeGoldChance += 0.06f);
         t.Add(Node("g.magnet1", "g.coin1", 5, "흥정", "떠돌이 상점 가격 -10%", 12, LvIcon(1), () => TreeShopMul *= 0.9f));
         t.Add(Node("g.magnet2", "g.magnet1", 5, "흥정 II", "떠돌이 상점 가격 -10%", 28, LvIcon(1), () => TreeShopMul *= 0.9f));
+        t.Add(Node("g.fate", "g.magnet2", 5, "운명 바꾸기", "레벨업 카드 다시 뽑기 +3", 34, LvIcon(4), () => rerolls += 3));
         t.Add(Node("g.exp1", "g.coin1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", 12, LvIcon(4), () => TreeInsight += 5));
         Chain(t, "g.exp", 2, 3, "g.exp1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", new[] { 28, 46 }, LvIcon(4), () => TreeInsight += 5);
         t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
@@ -719,7 +725,7 @@ public static class SoulShards
     {
         if (n <= 0) return;
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
-        if (sp != null) n = Mathf.Max(1, Mathf.RoundToInt(n * sp.TreeShardMul));
+        if (sp != null) n = Mathf.Max(1, Mathf.RoundToInt(n * sp.TreeShardMul * (announce ? sp.TreeBigShardMul : 1f)));
         Amount += n;
         Total += n;
         Changed?.Invoke();

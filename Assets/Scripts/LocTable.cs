@@ -229,6 +229,16 @@ public static partial class LocTable
         // 최후의 보루 (LastStand, 2.2.2)
         { "최후의 보루!", L("Last Stand!", "最後の砦！", "最后的堡垒！") },
         { "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.", L("When your HP drops below 30%, Last Stand triggers once per chapter: 2 seconds of invincibility and a blast that pushes nearby enemies away.", "体力が30%を下回ると、章ごとに一度「最後の砦」が発動し、2秒間無敵になって周囲の敵を押し返します。", "生命低于30%时，每章触发一次「最后的堡垒」：无敌2秒并击退周围敌人。") },
+        // 영혼 트리 가지 끝 칸 (2.2.2)
+        { "꺾이지 않는 의지", L("Unbroken Will", "折れない意志", "不屈意志") },
+        { "「최후의 보루」가 장마다 한 번 더 발동합니다", L("Last Stand triggers one more time per chapter", "「最後の砦」が章ごとにもう一度発動します", "「最后的堡垒」每章多触发一次") },
+        { "되살아난 영혼", L("Risen Soul", "蘇る魂", "复苏之魂") },
+        { "판마다 한 번, 쓰러질 피해를 받으면 체력 40%로 되살아납니다", L("Once per run, revive with 40% HP when you would fall", "一回のランにつき一度、倒れるダメージを受けると体力40%で蘇ります", "每局一次，受到致命伤害时以40%生命复活") },
+        { "영혼이 되살아났다!", L("Your soul rises again!", "魂が蘇った！", "灵魂复苏了！") },
+        { "영혼 수확", L("Soul Harvest", "魂の収穫", "灵魂收割") },
+        { "보스 · 중간 보스가 주는 영혼 조각 2배", L("Soul shards from bosses and mid-bosses x2", "ボス・中ボスの魂のかけら2倍", "首领与精英首领给予的灵魂碎片×2") },
+        { "운명 바꾸기", L("Rewrite Fate", "運命を変える", "改写命运") },
+        { "레벨업 카드 다시 뽑기 +3", L("Level-up card rerolls +3", "レベルアップカードの引き直し+3", "升级卡牌重抽+3") },
         // 받은 피해 출처 (AttackLabel, 2.2.2)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

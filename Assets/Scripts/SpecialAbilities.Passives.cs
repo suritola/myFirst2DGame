@@ -62,10 +62,26 @@ public partial class SpecialAbilities
         Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
 
+    // 영혼 트리 생존 끝 칸 「되살아난 영혼」: 판마다 한 번 체력 40%로 (2.2.2)
+    public int TreeRevives;
+    bool revivedByTree;
+
     // 불사의 맹세: 한 판에 한 번
     public bool TryUndying()
     {
-        if (!Has(UndyingId) || undyingUses >= UndyingMaxUses) return false;
+        revivedByTree = false;
+        if (!Has(UndyingId) || undyingUses >= UndyingMaxUses)
+        {
+            if (TreeRevives <= 0) return false;
+            TreeRevives--;
+            revivedByTree = true;
+            fx.Play("pulse", 1f, 0.6f);
+            fx.Play("chime", 1f, 0.9f);
+            fx.Shake(0.4f, 0.3f);
+            Flash(player.transform.position, 6f, new Color(0.6f, 0.95f, 1f, 0.8f), 0.6f);
+            if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("영혼이 되살아났다!"), 2f);
+            return true;
+        }
         undyingUses++;
         fx.Play("pulse", 1f, 0.6f);
         fx.Play("chime", 1f, 0.7f);
@@ -78,7 +94,7 @@ public partial class SpecialAbilities
     int UndyingMaxUses => IsEvolved(UndyingId) ? 2 : 1;
 
     // 부활할 때 체력 (진화하면 절반)
-    public float UndyingReviveHealth(float maxHealth) => IsEvolved(UndyingId) ? maxHealth * 0.5f : 1f;
+    public float UndyingReviveHealth(float maxHealth) => revivedByTree ? maxHealth * 0.4f : IsEvolved(UndyingId) ? maxHealth * 0.5f : 1f;
 
     // 탄창 저주: 탄창의 마지막 한 발 (진화하면 두 발)
     public bool IsLastBulletCursed(int bulletsBeforeShot) => Has(CurseId) && bulletsBeforeShot >= 1 && bulletsBeforeShot <= (IsEvolved(CurseId) ? 2 : 1);
