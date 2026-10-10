@@ -31,6 +31,13 @@ foreach ($d in "Assets", "Packages", "ProjectSettings") {
 $capDir = Join-Path $CopyDir "Assets\Capture"
 New-Item -ItemType Directory -Force $capDir | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "GameplayCapture.cs"), (Join-Path $PSScriptRoot "GameplayCapture.asmdef") $capDir
+# 하이라이트 음악: 직접 합성한 웅장한 트레일러 음악 (make_trailer_music.py → Assets/Capture/Resources/TrailerMusic.wav, 복사본에만)
+if ($Mode -eq "highlight") {
+    $musicDir = Join-Path $capDir "Resources"
+    New-Item -ItemType Directory -Force $musicDir | Out-Null
+    & py -X utf8 (Join-Path $PSScriptRoot "make_trailer_music.py") (Join-Path $musicDir "TrailerMusic.wav")
+    if ($LASTEXITCODE -ne 0) { throw "트레일러 음악 만들기 실패" }
+}
 $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 (Get-Content $settings -Raw) -replace "(?m)^  productName: .*$", "  productName: Soul Saver Capture" | Set-Content $settings -NoNewline
 
@@ -52,7 +59,7 @@ foreach ($l in $Lang) {
     Select-String -Path $log -Pattern "\[CAP\] done" | ForEach-Object { $_.Line }
     $mp4 = Join-Path $Out $(if ($Mode -eq "highlight") { "SoulSaver_Highlight.mp4" } else { "SoulSaver_Trailer_$l.mp4" })
     if (-not (Test-Path $mp4)) { Get-Content $log -Tail 40; throw "$l 영상이 만들어지지 않았습니다 (Unity 종료 코드 $($p.ExitCode))" }
-    Write-Host ("완료: {0} ({1:N1} MB), 스크린샷 {2}장" -f $mp4, ((Get-Item $mp4).Length / 1MB), (Get-ChildItem (Join-Path $Out "screenshots")).Count)
+    Write-Host ("완료: {0} ({1:N1} MB), 스크린샷 {2}장" -f $mp4, ((Get-Item $mp4).Length / 1MB), (Get-ChildItem (Join-Path $Out "screenshots") -ErrorAction SilentlyContinue).Count)
 }
 
 # 복사본을 원래대로 (다음 빌드에 촬영 코드가 섞이지 않게)

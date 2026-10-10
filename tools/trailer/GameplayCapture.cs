@@ -820,7 +820,7 @@ public class GameplayCapture
         GameObject host = new GameObject("CaptureRec");
         UnityEngine.Object.DontDestroyOnLoad(host);
         rec = host.AddComponent<Rec>();
-        rec.musicPath = "Music/bgm_domain";         // 결계 음악 (가장 긴박함)
+        rec.musicPath = "TrailerMusic";             // 직접 합성한 웅장한 트레일러 음악 (make_trailer_music.py, 장면 전환 · 필살기 · 결계 파괴에 충격음을 맞춤)
         rec.musicVolume = 1f;
         BuildOverlay();
         rec.sub.text = "";
