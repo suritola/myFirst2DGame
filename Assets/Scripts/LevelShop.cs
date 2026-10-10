@@ -131,6 +131,7 @@ public partial class LevelShop : MonoBehaviour
             UpdateLvShopContent();
             pendingSlot = -1;
             RefreshCards();
+            PlayRerollFx();             // 1.0.7: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
             n = sp.Rerolls;
             open = n > 0;
         }
