@@ -299,8 +299,8 @@ public partial class SpecialAbilities
             if (UltReplaced)
             {
                 // 쌍권총(총알 폭풍)은 조준이 없으므로 같은 자리에 사거리 (2.2.0)
-                t.Add(Node("u.storm1", "u.gauge1", 1, "폭풍 사거리", "총알 폭풍 사거리 +2칸", 18, ult, () => TreeStormRange += 2f));
-                t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +2칸", 34, ult, () => TreeStormRange += 2f));
+                t.Add(Node("u.storm1", "u.gauge1", 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
+                t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +3칸", 34, ult, () => TreeStormRange += 3f));
             }
             else
             {

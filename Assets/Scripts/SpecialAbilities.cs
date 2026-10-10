@@ -495,7 +495,7 @@ public partial class SpecialAbilities : MonoBehaviour
 
             case DualId:
                 // 총알 폭풍: 1.6초 동안 두 줄기 나선으로 사방 난사 (움직이며 쓸 수 있음)
-                // 2.2.0: 캐릭터 주위 StormRange 칸까지만 날아감 (영혼 트리 「폭풍 사거리」로 +2칸씩)
+                // 2.2.0: 캐릭터 주위 StormRange 칸까지만 날아감 (영혼 트리 「폭풍 사거리」로 +3칸씩)
                 {
                     float range = StormRange;
                     float angle = Random.Range(0f, 360f);
@@ -777,8 +777,8 @@ public partial class SpecialAbilities : MonoBehaviour
     }
 
     public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);
-    // 총알 폭풍 사거리 (칸): 기본 6, 영혼 트리 「폭풍 사거리」 I · II 로 +2씩
-    public const float StormBaseRange = 6f;
+    // 총알 폭풍 사거리 (칸): 기본 18 (6은 너무 짧았음), 영혼 트리 「폭풍 사거리」 I · II 로 +3씩
+    public const float StormBaseRange = 18f;
     public float StormRange => StormBaseRange + TreeStormRange;
 
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
