@@ -115,6 +115,7 @@ public class StageManager : MonoBehaviour
         LastStand.ResetRun();
         Curse.Active = false;
         gameObject.AddComponent<ChapterEvents>();        // 장 중반 습격 · 엘리트 · 보물 상자 (1.0.5)
+        gameObject.AddComponent<GrowthPrompts>();        // 머리 위 「레벨업 [Space]」 · 「영혼 트리 [T]」 알림 (1.0.7)
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null)
         {

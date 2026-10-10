@@ -272,6 +272,9 @@ public static partial class LocTable
         { "영웅 숙련도가 올랐다!", L("Hero mastery increased!", "英雄の熟練度が上がった！", "英雄熟练度提升了！") },
         // 고르기 창 확정 안내 (1.0.5)
         { "더블클릭 또는 [Space]로 확정", L("Double-click or press [Space] to confirm", "ダブルクリックまたは[Space]で決定", "双击或按[Space]确认") },
+        // 레벨업 · 영혼 트리 알림 (1.0.7)
+        { "레벨업 카드를 아직 고르지 않았습니다!", L("You still have level-up cards to pick!", "まだレベルアップカードを選んでいません！", "还有升级卡牌未选择！") },
+        { "영혼 트리에서 배울 칸이 있습니다!", L("You can learn new soul tree nodes!", "魂のツリーで覚えられるマスがあります！", "灵魂树中有可学习的节点！") },
         // 받은 피해 출처 (AttackLabel, 1.0.5)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },

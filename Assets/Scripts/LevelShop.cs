@@ -197,7 +197,7 @@ public partial class LevelShop : MonoBehaviour
             r.SetParent(canvas.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
-            r.sizeDelta = new Vector2(780f, 48f);
+            r.sizeDelta = new Vector2(900f, 62f);       // 1.0.7: 780 × 48 → 900 × 62 (눈에 잘 띄게)
             Image bg = pendingBadge.GetComponent<Image>();
             bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
             bg.raycastTarget = false;
@@ -214,7 +214,7 @@ public partial class LevelShop : MonoBehaviour
             if (UIKit.FontMaterial != null) pendingText.fontSharedMaterial = UIKit.FontMaterial;
             pendingText.enableAutoSizing = true;
             pendingText.fontSizeMin = 14f;
-            pendingText.fontSizeMax = 24f;
+            pendingText.fontSizeMax = 30f;
             pendingText.alignment = TextAlignmentOptions.Center;
             pendingText.raycastTarget = false;
         }
@@ -224,6 +224,8 @@ public partial class LevelShop : MonoBehaviour
         ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
+        pendingBadge.GetComponent<Image>().color = Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
+        pendingBadge.transform.localScale = Vector3.one * (1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree)
         {
