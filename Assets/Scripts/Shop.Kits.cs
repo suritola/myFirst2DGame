@@ -5,7 +5,7 @@ using UnityEngine;
 //   검사     베기 사거리 · 베기 각도 · 회전 베기 위력
 //   도적     투척 속도 · 표창 회수 속도 · 표창 주머니 (효과는 거너와 같고 이름만)
 //   궁수     시위 당기는 속도(공격 속도) · 관통력 · 화살비 위력
-//   연금술사 투척 속도(그대로) · 폭발 범위 · 대폭발 위력
+//   연금술사 투척 속도(그대로) · 폭발 범위 · 대폭발 플라스크 위력
 public partial class Shop
 {
     const int KitMaxBuys = 5;
@@ -145,7 +145,7 @@ public partial class Shop
                     next = Pct(k.blastMul + 0.08f);
                     break;
                 default:
-                    label = Char == CharacterId.Swordsman ? "회전 베기 위력" : Char == CharacterId.Archer ? "화살비 위력" : "대폭발 위력";
+                    label = Char == CharacterId.Swordsman ? "회전 베기 위력" : Char == CharacterId.Archer ? "화살비 위력" : "대폭발 플라스크 위력";
                     now = Pct(k.ultMul);
                     next = Pct(k.ultMul + 0.1f);
                     break;

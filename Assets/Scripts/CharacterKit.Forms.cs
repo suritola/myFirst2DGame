@@ -83,7 +83,7 @@ public partial class CharacterKit
         SpecialAbilities.KitCards => "표창 피해가 제각각 (50~170%), 가끔 조커가 폭발합니다.",
         SpecialAbilities.KitWire => "표창에 맞은 적과 가까운 적 하나가 줄로 묶여 1초 동안 70% 느려집니다.",
         SpecialAbilities.KitNetBow => "반 이상 당긴 화살이 맞은 자리에 그물을 펼쳐 주변 적을 잠깐 묶습니다.",
-        SpecialAbilities.KitJavelin => "가득 당긴 화살이 모든 적을 꿰뚫고 멀리 날아갈수록 강해집니다. (최대 200%)",
+        SpecialAbilities.KitJavelin => "가득 당긴 화살이 모든 적을 꿰뚫고 멀리 날아갈수록 피해가 증가합니다. (최대 200%)",
         SpecialAbilities.KitBurstBow => "시위를 25% 더 빨리 당기고, 반 이상 당긴 화살은 적을 하나 더 꿰뚫습니다.",
         SpecialAbilities.KitQuicksilver => "플라스크가 터진 뒤 가까운 적에게 한 번 더 튕겨 터집니다. (피해 70%)",
         SpecialAbilities.KitMagnet => "플라스크가 터지기 전에 주변 적을 끌어모읍니다.",

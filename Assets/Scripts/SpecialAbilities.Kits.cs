@@ -60,7 +60,7 @@ public partial class SpecialAbilities
 
         ("기사의 맹세", SpecialKind.Passive, "체력이 가득 차 있는 동안 공격력이 15% 오릅니다.\n진화: +25%"),
         ("강철 갑옷", SpecialKind.Passive, "받는 피해가 12% 줄지만 이동 속도가 5% 느려집니다.\n진화: 피해 -20%, 느려지지 않음"),
-        ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타가 1.7배로 아픕니다.\n진화: 2초, 2.1배"),
+        ("그림자 은신", SpecialKind.Passive, "3초 동안 맞지 않으면 다음 평타의 피해가 1.7배로 증가합니다.\n진화: 2초, 2.1배"),
         ("도망자의 발걸음", SpecialKind.Passive, "맞으면 1.5초 동안 이동 속도가 30% 빨라집니다.\n진화: +45%"),
         ("약점 간파", SpecialKind.Passive, "체력이 가득한 적에게 주는 피해가 25% 늘어납니다.\n진화: +50%"),
         ("사냥 본능", SpecialKind.Passive, "적을 20마리 처치할 때마다 다음 화살 3발이 저절로 가득 당겨집니다.\n진화: 12마리마다"),

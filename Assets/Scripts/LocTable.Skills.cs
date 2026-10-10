@@ -19,7 +19,7 @@ public static partial class LocTable
         A("회전 베기 0.45초 뒤 범위 85%의 잔향 회전 베기가 한 번 더 일어납니다.", "0.45s after Spin Slash, an echo spin with 85% radius strikes again.", "回転斬りの0.45秒後、範囲85%の残響回転斬りがもう一度起こります。", "回旋斩0.45秒后，再发生一次范围85%的余响回旋斩。");
         A("화살비가 쏟아지는 동안 그 안의 적이 받는 피해가 늘어납니다.", "Enemies inside Arrow Rain take more damage while it falls.", "矢の雨が降る間、その中の敵が受けるダメージが増えます。", "箭雨落下期间，其中的敌人受到的伤害提升。");
         A("화살비가 끝나면 가운데에 거대한 유성 화살이 떨어집니다.", "When Arrow Rain ends, a giant meteor arrow strikes its center.", "矢の雨が終わると中央に巨大な流星の矢が落ちます。", "箭雨结束时，一支巨大的流星箭落在中央。");
-        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크가 강해집니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
+        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크의 피해가 증가합니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
         A("대폭발 플라스크를 모으는 동안 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Grand Flask, small flasks rain on nearby enemies. (50% attack)", "大爆発フラスコをためている間、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力大爆炸烧瓶时，小烧瓶落向周围敌人并爆炸。（攻击力50%）");
         A("평타로 벤 적 하나당 체력을 회복합니다. (한 번 휘두를 때 최대 3마리까지)", "Heal for each enemy your basic attack cuts. (Up to 3 per swing)", "通常攻撃で斬った敵1体ごとに体力を回復します。（1回の振りで最大3体まで）", "普通攻击每斩中一名敌人恢复生命。（每次挥砍最多3名）");
         A("평타를 휘두르면 베기 범위 안으로 날아오는 적 투사체를 모두 베어 없앱니다.", "Your basic swing cuts down every enemy projectile within its arc.", "通常攻撃を振ると、斬撃範囲に飛んでくる敵の投射物をすべて斬り消します。", "普通攻击挥砍时，斩灭挥砍范围内飞来的所有敌方投射物。");
@@ -118,7 +118,7 @@ public static partial class LocTable
         A("적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 40%씩)", "Kills burst into shrapnel in every direction. (40% attack each)", "敵を倒すとその場で破片が四方に飛び散ります。（攻撃力40%ずつ）", "击杀敌人时在原地向四周迸出破片。（每片攻击力40%）");
         A("파편 수", "Shards", "破片の数", "破片数量");
         A("총열 과열", "Barrel Heat", "銃身過熱", "枪管过热");
-        A("쉬지 않고 쏠수록 총열이 달아올라 총알이 아파집니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
+        A("쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
         A("최대 피해", "Max damage", "最大ダメージ", "最大伤害");
         A("영혼 탄환", "Soul Rounds", "魂の弾丸", "灵魂弹");
         A("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "While your ultimate gauge is full, and for shots fired by your ultimate, bullets become soul rounds that hit harder and pierce one more enemy. (Non-bullet ultimates just deal more damage)", "必殺技ゲージが満タンの間と必殺技で撃った弾が魂弾になり、より痛く敵をもう1体貫きます。（弾でない必殺技はダメージのみ増加）", "必杀槽满时以及必杀技射出的子弹会变为灵魂弹，伤害更高并多穿透一名敌人。（非子弹类必杀技仅提升伤害）");
@@ -170,7 +170,7 @@ public static partial class LocTable
         A("회전 베기가 끝나고 잠시 뒤 한 번 더 작은 회전 베기가 일어납니다.", "A moment after Spin Slash, a smaller echo spin follows.", "回転斬りの少し後、もう一度小さな回転斬りが起こります。", "回旋斩结束片刻后再发生一次较小的回旋斩。");
         A("잔향 피해", "Echo damage", "残響ダメージ", "余响伤害");
         A("영혼 흡수", "Soul Drinker", "魂吸収", "灵魂吸收");
-        A("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기가 강해집니다. (최대 8, 벨 때 모두 씀)", "Each kill stores a soul in your blade, empowering your next swing. (Up to 8, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大8、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多8个，挥砍时全部消耗）");
+        A("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기의 피해가 증가합니다. (최대 8, 벨 때 모두 씀)", "Each kill stores a soul in your blade, empowering your next swing. (Up to 8, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大8、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多8个，挥砍时全部消耗）");
         A("영혼 하나당 피해", "Damage per soul", "魂1つあたりのダメージ", "每个灵魂伤害");
 
         // ================================================================= 도적
@@ -184,7 +184,7 @@ public static partial class LocTable
         A("출혈이 3초 넘게 이어진 적은 남은 출혈이 한꺼번에 터집니다.", "Enemies bleeding for over 3s take all remaining bleed at once.", "出血が3秒以上続いた敵は、残りの出血が一度に弾けます。", "流血超过3秒的敌人，剩余流血伤害一次性爆发。");
         A("폭발 피해", "Burst damage", "爆発ダメージ", "爆发伤害");
         A("급습 표창", "Ambush Stars", "急襲手裏剣", "突袭飞镖");
-        A("출혈 돌진이 끝난 뒤 2초 동안 표창이 더 아픕니다.", "Your shuriken hit harder for 2s after Bleed Dash.", "出血突進の後2秒間、手裏剣が痛くなります。", "流血突进后2秒内飞镖伤害提升。");
+        A("출혈 돌진이 끝난 뒤 2초 동안 표창의 피해가 증가합니다.", "Your shuriken hit harder for 2s after Bleed Dash.", "出血突進の後2秒間、手裏剣が痛くなります。", "流血突进后2秒内飞镖伤害提升。");
         A("급습 피해", "Ambush damage", "急襲ダメージ", "突袭伤害");
         A("회전 표창", "Boomerang Star", "回転手裏剣", "回旋飞镖");
         A("던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다.", "Thrown shuriken come back a moment later, cutting again.", "投げた手裏剣が少し後に戻ってきて、もう一度斬ります。", "掷出的飞镖片刻后折返，再斩一次。");
@@ -210,7 +210,7 @@ public static partial class LocTable
         A("가득 당긴 화살이 지나간 길에 3초 동안 바람길이 남아, 그 위에 서 있으면 빨라집니다.", "Fully drawn arrows leave a wind lane for 3s; standing on it makes you faster.", "引き絞った矢の通り道に3秒間風の道が残り、その上にいると速くなります。", "满弓之箭飞过的路径留下3秒风道，站在其上移动更快。");
         A("바람길 이동 속도", "Speed on wind lane", "風の道の移動速度", "风道移动速度");
         A("집중 호흡", "Focused Breath", "集中呼吸", "专注呼吸");
-        A("가득 당긴 화살을 연달아 쏠수록 다음 화살이 강해집니다. (최대 5중첩, 덜 당겨 쏘면 사라짐)", "Each consecutive full-draw shot empowers the next. (Up to 5 stacks, lost on a partial draw)", "引き絞った矢を続けて撃つほど次の矢が強くなります。（最大5重、引き切らずに撃つと消える）", "连续射出满弓之箭会强化下一箭。（最多5层，未拉满射击则清空）");
+        A("가득 당긴 화살을 연달아 쏠수록 다음 화살의 피해가 증가합니다. (최대 5중첩, 덜 당겨 쏘면 사라짐)", "Each consecutive full-draw shot empowers the next. (Up to 5 stacks, lost on a partial draw)", "引き絞った矢を続けて撃つほど次の矢が強くなります。（最大5重、引き切らずに撃つと消える）", "连续射出满弓之箭会强化下一箭。（最多5层，未拉满射击则清空）");
         A("가시 씨앗", "Thorn Seeds", "棘の種", "荆棘种子");
         A("화살이 맞힌 자리에 작은 가시 덤불이 자라 적을 느리게 하고 찌릅니다.", "Arrows plant a small thornbush where they hit, slowing and pricking enemies.", "矢が当たった場所に小さな茨が育ち、敵を遅くして刺します。", "箭矢命中处长出小荆棘丛，减速并刺伤敌人。");
         A("덤불 지속", "Bush duration", "茂みの持続", "荆棘持续");
@@ -245,7 +245,7 @@ public static partial class LocTable
         A("한 적이 화염 · 빙결 · 산성 시약에 모두 맞으면 원소 붕괴가 일어나 큰 피해를 줍니다.", "An enemy hit by fire, frost, and acid reagents undergoes elemental collapse for heavy damage.", "1体の敵が火炎・氷結・酸の試薬すべてを受けると元素崩壊が起き、大ダメージを与えます。", "同一敌人被火焰、冰冻、酸性试剂全部命中时引发元素崩坏，造成巨大伤害。");
         A("붕괴 피해", "Collapse damage", "崩壊ダメージ", "崩坏伤害");
         A("증폭 용액", "Amplifying Solution", "増幅溶液", "增幅溶液");
-        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크가 강해집니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
+        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크의 피해가 증가합니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
         A("적 하나당", "Per enemy", "敵1体ごと", "每名敌人");
         A("조수 개조", "Assistant Upgrade", "助手改造", "助手改造");
         A("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "Your Homunculus loads fire, frost, and acid in turn and its flasks hit harder. (Requires Homunculus)", "ホムンクルスが投げるフラスコに火炎・氷結・酸の試薬を交互に詰め、より強く爆発させます。（ホムンクルスが必要）", "侏儒助手投掷的烧瓶轮流装入火焰、冰冻、酸性试剂，爆炸更强。（需要侏儒助手）");
@@ -319,7 +319,7 @@ public static partial class LocTable
         A("사냥꾼의 낙인", "Hunter's Brand", "狩人の烙印", "猎人烙印");
         A("표식이 붙은 적이 쓰러지면 폭발하고, 표식 효과가 두 배가 됩니다.", "Marked enemies explode on death, and the mark's effect doubles.", "標的が付いた敵が倒れると爆発し、標的の効果が2倍になります。", "被标记的敌人死亡时爆炸，标记效果翻倍。");
         A("만궁", "Full Draw Mastery", "満弓", "满弓");
-        A("다섯 번째 적을 꿰뚫는 화살이 폭발하고, 분열한 화살도 꿰뚫을수록 강해집니다.", "Arrows explode on their fifth pierce, and split arrows also grow stronger as they pierce.", "5体目を貫いた矢が爆発し、分裂した矢も貫くほど強くなります。", "穿透第五名敌人的箭会爆炸，分裂箭也会越穿越强。");
+        A("다섯 번째 적을 꿰뚫는 화살이 폭발하고, 분열한 화살도 꿰뚫을수록 피해가 증가합니다.", "Arrows explode on their fifth pierce, and split arrows also grow stronger as they pierce.", "5体目を貫いた矢が爆発し、分裂した矢も貫くほど強くなります。", "穿透第五名敌人的箭会爆炸，分裂箭也会越穿越强。");
         A("천공의 사냥", "Hunt from the Heavens", "天空の狩り", "天穹狩猎");
         A("유성이 세 개 떨어지고, 떨어진 자리에 별빛이 3초 동안 남아 적을 태웁니다.", "Three meteors fall, each leaving starlight that burns enemies for 3s.", "流星が3つ落ち、落ちた場所に星の光が3秒間残って敵を焼きます。", "落下三颗流星，落点留下3秒星光灼烧敌人。");
         A("타오르는 늪", "Burning Swamp", "燃える沼", "燃烧沼泽");
