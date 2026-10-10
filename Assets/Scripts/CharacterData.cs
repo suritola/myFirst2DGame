@@ -28,15 +28,13 @@ public static class CharacterData
             description = "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "타겟팅 필살기", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
-            damage = 0.95f, range = 0f, mag = 8,     // 1.0.6 전체 하향: 1.05 → 0.95
-            price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
+            damage = 1.05f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
             weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
-            hp = 1.3f, damage = 2.7f, attackSpeed = 0.55f,     // 1.0.6 전체 하향: 3.4 → 2.7
-                // 1.0.5: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
+            hp = 1.3f, damage = 3.4f, attackSpeed = 0.55f,     // 1.0.5: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
             gauge = 0.85f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
@@ -44,24 +42,21 @@ public static class CharacterData
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
-            hp = 0.85f, damage = 0.9f, attackSpeed = 1.4f,     // 1.0.6 전체 하향: 1 → 0.9
-            gauge = 1.2f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
+            hp = 0.85f, damage = 1f, attackSpeed = 1.4f, gauge = 1.2f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
             weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살비를 떨어뜨릴 위치를 조정하고, 떼면 쏟아붓습니다",
-            hp = 0.95f, damage = 1.1f, attackSpeed = 1f,     // 1.0.6 전체 하향: 1.25 → 1.1
-            gauge = 1.15f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
+            hp = 0.95f, damage = 1.25f, attackSpeed = 1f, gauge = 1.15f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
             color = new Color(0.45f, 0.8f, 0.4f) },
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
-            hp = 1f, damage = 0.72f, attackSpeed = 0.75f,     // 1.0.6 전체 하향: 0.8 → 0.72
-            gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
+            hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
         Coming(), Coming(), Coming(), Coming(), Coming(),
     };
