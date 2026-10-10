@@ -7,10 +7,13 @@ using UnityEngine;
 public class DamagePopup : MonoBehaviour
 {
     const float Life = 0.75f, Merge = 0.15f, Rise = 1.3f;
+    // 2.2.0: 보스 피해가 거의 안 보였음 (큰 몸 꼭대기 위 · 화면 밖에 작게 떴다 금방 사라짐)
+    // → 몸 위쪽 안에서, 화면 안으로 맞춰, 1.8배 크게 · 주황 금색 · 두꺼운 테두리 · 더 오래, 연타는 더 길게 모아 큰 숫자로
+    const float BossLife = 1.15f, BossMerge = 0.35f, BossRise = 1.8f, BossSize = 1.8f;
     const int MaxActive = 80;
 
     static TMP_FontAsset font;
-    static Material material;
+    static Material material, bossMaterial;
     static readonly Dictionary<int, DamagePopup> byTarget = new Dictionary<int, DamagePopup>();
     static int active;
 
@@ -19,18 +22,19 @@ public class DamagePopup : MonoBehaviour
 
     TextMeshPro text;
     int key;
-    bool crit;
+    bool crit, boss;
     float amount, t, lastAdd, size = 1f;
     Vector3 start;
 
-    public static void Show(Transform target, float damage, SpriteRenderer body)
+    public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false)
     {
         bool isCrit = NextCrit;
         NextCrit = false;
         if (target == null || damage <= 0f || GameSettings.DamageNumbers == 2) return;
         int k = target.GetInstanceID();
+        bool isBoss = fromBoss || target.CompareTag("boss");
         // 치명타는 다른 숫자와 합치지 않고 따로 크게
-        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && Time.time - p.lastAdd < Merge)
+        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && Time.time - p.lastAdd < (isBoss ? BossMerge : Merge))
         {
             p.Add(damage);
             return;
@@ -39,6 +43,21 @@ public class DamagePopup : MonoBehaviour
 
         float top = body != null ? body.bounds.max.y : target.position.y + 1f;
         Vector3 at = new Vector3(target.position.x + Random.Range(-0.3f, 0.3f), top + 0.35f, 0f);
+        if (isBoss)
+        {
+            // 몸 위쪽 안에서 (머리 위 멀리 · 화면 밖으로 나가지 않게)
+            float y = body != null ? Mathf.Lerp(body.bounds.center.y, body.bounds.max.y, 0.55f) : target.position.y + 0.8f;
+            float halfW = body != null ? body.bounds.extents.x * 0.5f : 0.6f;
+            at = new Vector3(target.position.x + Random.Range(-halfW, halfW), y, 0f);
+            Camera cam = Camera.main;
+            if (cam != null && cam.orthographic)
+            {
+                Vector3 c = cam.transform.position;
+                float hh = cam.orthographicSize, hw = hh * cam.aspect;
+                at.x = Mathf.Clamp(at.x, c.x - hw + 1.2f, c.x + hw - 1.2f);
+                at.y = Mathf.Clamp(at.y, c.y - hh + 0.8f, c.y + hh - BossRise - 1f);
+            }
+        }
 
         // 다 떠오른 숫자를 버리지 않고 다시 씀 (맞을 때마다 글자 오브젝트를 새로 만들고 지우지 않게)
         if (isCrit)
@@ -62,6 +81,8 @@ public class DamagePopup : MonoBehaviour
             mr.sortingLayerName = "Effect";
             mr.sortingOrder = 40;
         }
+        p.GetComponent<MeshRenderer>().sortingOrder = isBoss ? 45 : 40;
+        p.text.fontSharedMaterial = isBoss && bossMaterial != null ? bossMaterial : material;
         p.transform.position = at;
         p.transform.localScale = Vector3.one;
         p.text.fontSize = GameSettings.DamageNumbers == 1 ? 15f : 11f;
@@ -71,6 +92,7 @@ public class DamagePopup : MonoBehaviour
         p.t = 0f;
         p.size = 1f;
         p.crit = isCrit;
+        p.boss = isBoss;
         p.live = true;
         p.gameObject.SetActive(true);
         if (!isCrit) byTarget[k] = p;
@@ -109,6 +131,11 @@ public class DamagePopup : MonoBehaviour
         material.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.3f);
         material.SetColor(ShaderUtilities.ID_OutlineColor, new Color(0.08f, 0.05f, 0.08f, 1f));
         material.SetFloat(ShaderUtilities.ID_FaceDilate, 0.15f);
+        // 보스 숫자: 테두리를 더 두껍게 (보스 몸 위에서도 또렷이)
+        bossMaterial = new Material(material);
+        bossMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.42f);
+        bossMaterial.SetColor(ShaderUtilities.ID_OutlineColor, new Color(0.25f, 0.02f, 0.02f, 1f));
+        bossMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, 0.25f);
         return true;
     }
 
@@ -130,16 +157,22 @@ public class DamagePopup : MonoBehaviour
             text.color = new Color(1f, 0.82f, 0.15f);
             size = 1.9f + 0.4f * k;
         }
+        // 보스: 늘 주황 금색으로 크게 (치명타는 더 크게)
+        if (boss)
+        {
+            if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.4f, 0.15f), k);
+            size *= BossSize;
+        }
     }
 
     void Update()
     {
         t += Time.deltaTime;
-        float k = t / Life;
+        float k = t / (boss ? BossLife : Life);
         if (k >= 1f) { Release(); return; }
         float up = 1f - (1f - k) * (1f - k);
         float pop = t < 0.08f ? (crit ? 1.8f - 0.8f * (t / 0.08f) : 1.35f - 0.35f * (t / 0.08f)) : 1f;
-        transform.position = start + new Vector3(0f, Rise * up, 0f);
+        transform.position = start + new Vector3(0f, (boss ? BossRise : Rise) * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
         Color c = text.color;
         c.a = k < 0.6f ? 1f : 1f - (k - 0.6f) / 0.4f;

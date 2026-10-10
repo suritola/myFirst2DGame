@@ -248,7 +248,7 @@ public class bosss : MonoBehaviour
         EnemyHealth -= damage;
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         if (EnemyHealth > 0) BossUltimate.OnBossHit(this, damage);       // 필살기 게이지 (센 한 방일수록 많이)
-        DamagePopup.Show(transform, damage, spriteRenderer);
+        DamagePopup.Show(transform, damage, spriteRenderer, true);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 
         transform.position += dir * knockBack * knockBackTaken;
