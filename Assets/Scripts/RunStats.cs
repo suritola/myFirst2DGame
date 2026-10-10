@@ -289,6 +289,7 @@ public class RunStats : MonoBehaviour
             bool fresh = !System.IO.File.Exists(path);
             System.Text.StringBuilder b = new System.Text.StringBuilder();
             if (fresh) b.AppendLine(Header);
+            int rowStart = b.Length;
             string E(int i, bool time) => i < Evolutions.Count ? (time ? Evolutions[i].Value.ToString("0") : Evolutions[i].Key.Replace(",", " ")) : "";
             b.Append(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")).Append(',')
              .Append(Application.version).Append(',')
@@ -317,6 +318,8 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(Sum(DamageTaken).ToString("0")).Append(',').Append(By(DamageTaken))
              .Append(',').Append(result == "death" ? LastHurtBy : "").AppendLine();
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
+            // 2.2.1: 같은 한 줄을 익명 플레이 데이터로도 (설정에서 끌 수 있음)
+            Telemetry.Send(Header, b.ToString(rowStart, b.Length - rowStart).TrimEnd());
         }
         catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }
     }
