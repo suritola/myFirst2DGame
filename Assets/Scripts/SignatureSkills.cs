@@ -367,6 +367,7 @@ public partial class SignatureSkills : MonoBehaviour
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
             loop.frames = f;
             loop.spin = spin ? -900f : 0f;
+            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.5)
         }
         return b;
     }

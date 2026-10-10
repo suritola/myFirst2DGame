@@ -249,6 +249,7 @@ public partial class CharacterKit : MonoBehaviour
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
             loop.frames = f;
             loop.spin = spin ? -900f : 0f;
+            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.5)
         }
         return b;
     }
@@ -1006,7 +1007,7 @@ public partial class CharacterKit : MonoBehaviour
         if (card[0] > 0)
         {
             // 검기: 휘두른 방향으로 적을 꿰뚫는 칼바람이 날아감
-            Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.2f + 0.2f * card[0]), 9999, 26f, 14f, "fx_swordwave", 2.6f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
+            Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.2f + 0.2f * card[0]), 9999, 22f, 14f, "fx_swordwave", 3.4f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
         }
         // 근접 특성: 휘두르는 동안 받는 피해 절반
         swingGuardUntil = Time.time + 0.3f;
