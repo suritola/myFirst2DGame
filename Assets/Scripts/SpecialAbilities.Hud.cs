@@ -27,6 +27,7 @@ public partial class SpecialAbilities
 
     HudGroup weaponGroup, skillGroup, passiveGroup;
     const int PistolRow = -1;
+    const int EvoRow = -2;      // 1.0.7: 진화한 무기 칸 (마우스를 올리면 진화 능력 · 덧붙은 궁극기 설명)
     const float TileSize = 58f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
     static readonly Color TileBorder = new Color(0.3f, 0.26f, 0.34f, 0.95f);
     static readonly Color TileActive = new Color(0.96f, 0.75f, 0.3f, 1f);
@@ -124,6 +125,7 @@ public partial class SpecialAbilities
         if (weaponGroup == null) return;
         List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
         if (weapons.Count > 0 && !UsesEvolution) w.Add(PistolRow);    // 진화 방식은 권총으로 돌아가지 않음
+        if (UsesEvolution && EvolutionTier > 0) w.Insert(0, EvoRow);  // 지금 진화한 무기가 어떤 능력인지 볼 수 있게 (1.0.7)
         foreach (int id in equipped)
         {
             if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
@@ -210,6 +212,7 @@ public partial class SpecialAbilities
 
     Sprite TileIcon(int id)
     {
+        if (id == EvoRow) return MainWeaponIcon;
         if (id == PistolRow) return Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
         return abilities[id].icon;
     }
@@ -259,6 +262,7 @@ public partial class SpecialAbilities
     // 쿨타임 원만 (글자를 만들지 않음)
     float TileCool(int id)
     {
+        if (id == EvoRow) return 0f;
         if (id == PistolRow)
         {
             CharacterKit kit = CharacterKit.Instance;
@@ -290,6 +294,17 @@ public partial class SpecialAbilities
         string label = "", key = "";
         int id = t.id;
 
+        if (id == EvoRow)
+        {
+            // 진화 단계 표시 (I · II), 금빛 테두리
+            t.border.color = TileActive;
+            t.cooldown.fillAmount = 0f;
+            string tierText = EvolutionTier >= 2 ? "II" : "I";
+            if (t.label.text != tierText) t.label.text = tierText;
+            if (t.keyCap.gameObject.activeSelf) t.keyCap.gameObject.SetActive(false);
+            if (t.key.text != "") t.key.text = "";
+            return;
+        }
         if (id == PistolRow || abilities[id].kind == SpecialKind.Weapon)
         {
             active = id == PistolRow ? !WeaponActive : CurrentWeapon == id;
@@ -375,6 +390,7 @@ public partial class SpecialAbilities
     // ================================================================= 툴팁
     string TileTitle(int id)
     {
+        if (id == EvoRow) return Loc.T("무기 진화") + "  · " + EvolutionName(EvoStep(EvolutionTier), EvolutionTier);
         if (id == PistolRow) return Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon) + "  · " + Loc.T("기본 무기");
         SpecialDef def = abilities[id];
         string kind = def.kind == SpecialKind.Weapon ? Loc.T("무기") : def.kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브");
@@ -383,6 +399,18 @@ public partial class SpecialAbilities
 
     string TileBody(int id)
     {
+        if (id == EvoRow)
+        {
+            // 1차 · 2차 진화마다 능력과 (덧붙은) 궁극기
+            string all = "";
+            for (int tier = 1; tier <= Mathf.Min(2, EvolutionTier); tier++)
+            {
+                int step = EvoStep(tier);
+                if (step < 0) continue;
+                all += (all.Length > 0 ? "\n\n" : "") + "<color=#F5D478>" + EvolutionName(step, tier) + "</color>\n" + EvolutionDesc(step, tier);
+            }
+            return all;
+        }
         string state;
         string body;
         if (id == PistolRow)
@@ -409,6 +437,18 @@ public partial class SpecialAbilities
             else state = PassiveState(id, true);
         }
         return body + (state.Length > 0 ? "\n\n<color=#F5D478>" + state + "</color>" : "");
+    }
+}
+
+// (SpecialAbilities) 1 · 2차 진화로 고른 것: 거너는 무기 번호, 다른 영웅은 형태 · 강화
+public partial class SpecialAbilities
+{
+    int EvoStep(int tier)
+    {
+        if (Gunner) return tier >= 2 ? (gunEvo2 >= 0 ? gunEvo2 : gunEvo1) : gunEvo1;
+        CharacterKit k = Kit;
+        if (k == null) return -1;
+        return tier >= 2 ? (k.augment >= 0 ? k.augment : k.form) : k.form;
     }
 }
 
