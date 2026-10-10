@@ -220,6 +220,24 @@ public class EnemySpawner : MonoBehaviour
 
     static float Weight(float[] weights, int i) => weights != null && i < weights.Length ? weights[i] : 0f;
 
+    // 장 중반 「습격」 (ChapterEvents, 2.2.2): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
+    public System.Collections.Generic.List<GameObject> SpawnAmbush(Vector3 center, int count, float radius)
+    {
+        var list = new System.Collections.Generic.List<GameObject>();
+        float off = Random.Range(0f, Mathf.PI * 2f);
+        for (int i = 0; i < count; i++)
+        {
+            float a = off + i * Mathf.PI * 2f / count;
+            Vector3 at = Hostile.ClampArena(center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (radius + Random.Range(-1f, 1f)));
+            GameObject go = Instantiate(Pick(Phase.weights), at, Quaternion.identity);
+            if (go.TryGetComponent(out EnermyController ec)) ec.countsTowardBoss = true;
+            Fx.Spawn("fx_smoke", at, 2f, new Color(0.8f, 0.7f, 0.9f), 18f);
+            spawnedEnemys++;
+            list.Add(go);
+        }
+        return list;
+    }
+
     // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
     public void SummonMinions(Vector3 here, int count)
     {

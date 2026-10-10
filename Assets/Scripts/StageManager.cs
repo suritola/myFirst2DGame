@@ -113,6 +113,7 @@ public class StageManager : MonoBehaviour
     void Start()
     {
         LastStand.ResetRun();
+        gameObject.AddComponent<ChapterEvents>();        // 장 중반 습격 · 엘리트 · 보물 상자 (2.2.2)
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         if (spawner != null)
         {

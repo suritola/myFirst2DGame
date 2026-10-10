@@ -194,6 +194,7 @@ public static class RunSave
                     case 't': if (specials != null) specials.ReplayNode(arg); break;
                     case 's': sm.ReplayPicks(ParseIds(arg)); break;
                     case 'b': if (int.TryParse(arg, out int b) && coinShop != null) coinShop.ReplayBuy(b); break;
+                    case 'h': if (float.TryParse(arg, out float h)) p.PlayerMaxHealth += h; break;     // 보물 상자 「생명」 (2.2.2)
                 }
             }
         }

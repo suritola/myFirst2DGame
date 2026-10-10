@@ -91,7 +91,7 @@ public class BossUltimate : MonoBehaviour
         }
         if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
         if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
-        if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ESCmenu.IsOpen) return;
+        if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ChoiceUI.Open || ESCmenu.IsOpen) return;
         // 킹 슬라임: 살아 있는 덩어리 중 체력이 가장 많은 하나만 씀
         if (kind == 2 && !IsStrongestSlime()) return;
         PlayerController p = Hostile.Player;
