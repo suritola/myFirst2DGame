@@ -8,7 +8,7 @@ using UnityEngine;
 // 무한 모드 · 튜토리얼 · 체험판 · 자동 촬영에서는 쉼. StageManager 가 붙임
 public class ChapterEvents : MonoBehaviour
 {
-    const float AmbushAt = 0.3f, EliteAt = 0.55f, AmbushTimeout = 35f;
+    const float AmbushAt = 0.3f, EliteAt = 0.55f, AmbushTimeout = 50f, AmbushRadius = 40f;     // 1.0.5: 둘레 8 → 40칸 (훨씬 넓게 둘러쌈)
 
     EnemySpawner sp;
     int stage = -1;
@@ -61,7 +61,7 @@ public class ChapterEvents : MonoBehaviour
         {
             ambushDone = true;
             int slot = Chapters.SlotOf(stage);
-            ambush = sp.SpawnAmbush(p.transform.position, 14 + 3 * slot, 8f);
+            ambush = sp.SpawnAmbush(p.transform.position, 14 + 3 * slot, AmbushRadius);
             ambushUntil = Time.time + AmbushTimeout;
             sm.ShowBanner(Loc.T("습격!\n모두 쓰러뜨리면 보물 상자가 나타납니다"), 3f);
             Hostile.Play("roar", 0.6f, 1.1f);
