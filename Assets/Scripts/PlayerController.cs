@@ -212,8 +212,21 @@ public class PlayerController : MonoBehaviour
     // 시작
     // =====================================
 
+    // 이동 속도 상한 (1.0.6): 빨라지는 효과(그림자 숙련 · 연쇄 처치 · 도망자의 발걸음 · 상점 · 물약 …)가 곱으로 쌓여
+    // 후반 도적이 주체할 수 없이 빨라졌음 → 기본 속도의 1.3배까지는 그대로, 넘는 몫은 40%만, 최대 1.7배 (둔화는 그대로 적용)
+    const float SpeedSoftCap = 1.3f, SpeedOverRate = 0.4f, SpeedHardCap = 1.7f;
+    float baseMoveSpeed = -1f;
+    float CappedSpeed(float raw)
+    {
+        if (baseMoveSpeed <= 0f) return raw;
+        float r = raw / baseMoveSpeed;
+        if (r > SpeedSoftCap) r = Mathf.Min(SpeedHardCap, SpeedSoftCap + (r - SpeedSoftCap) * SpeedOverRate);
+        return baseMoveSpeed * r;
+    }
+
     void Start()
     {
+        baseMoveSpeed = speed * CharacterData.Current.move;        // 영웅 기본 이동 배율까지 (CharacterKit 이 곱하는 값)
         EnermyController.Killed += HealOnKill;
         SpriteOutline.Player(gameObject);       // 1.8.7 밝은 윤곽선 (적 무리 속에서도 잘 보이게)
 
@@ -490,7 +503,7 @@ public class PlayerController : MonoBehaviour
 
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
         float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
-        if (!isSkillUsing) transform.Translate(move * speed * slowMul * kitMul * SignatureSkills.MoveMul * Time.fixedDeltaTime);
+        if (!isSkillUsing) transform.Translate(move * CappedSpeed(speed * kitMul * SignatureSkills.MoveMul) * slowMul * Time.fixedDeltaTime);
     }
 
     // =====================================

@@ -840,11 +840,18 @@ public partial class CharacterKit : MonoBehaviour
         }
     }
 
+    // 1.0.6: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
+    float hasteUntil;
+    bool hasted;
     IEnumerator DashHaste(float seconds, float mul)
     {
+        hasteUntil = Time.time + seconds;
+        if (hasted) yield break;
+        hasted = true;
         player.speed *= mul;
-        yield return new WaitForSeconds(seconds);
+        while (Time.time < hasteUntil) yield return null;
         if (player != null) player.speed /= mul;
+        hasted = false;
     }
 
     // 이번 프레임에 지나간 구간 전체 (프레임이 길어도 건너뛰지 않게)
